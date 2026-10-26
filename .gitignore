@@ -47,6 +47,8 @@ local.properties
 *.ipa
 /artifacts/
 /TestResults/
+Tests/**/bin/
+Tests/**/obj/
 *.log
 /sysinfo.txt
 /mono_crash.*

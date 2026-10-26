@@ -6,9 +6,28 @@
 
 ## 当前状态
 
-仓库已初始化，当前包含项目说明、Git 忽略规则和许可证。**尚未创建 Unity 工程，也没有可运行的游戏或 APK。**
+已创建 Unity 工程并实现 **2048 v0.1.0**：中文大厅、4×4 滑动棋盘、合并动画、分数与最高纪录、胜利后继续、失败重开、声音/触感设置，以及带备份恢复的本地存档。
 
-首个计划实现的游戏是 2048，之后逐步增加蓄力跳跃、堆叠拾取消除等自研玩法。使用自己的代码与素材，不直接复制其他游戏的实现或资源。
+Android 开发测试 APK 可通过下方命令构建。后续逐步增加蓄力跳跃、堆叠拾取消除等自研玩法；使用自己的代码与素材，不直接复制其他游戏的实现或资源。
+
+## 开发与运行
+
+固定 **Unity 6000.3.27f1（Apple Silicon）**，安装 Android Build Support 及配套 SDK/NDK/OpenJDK。C# 使用 VS Code + Unity 扩展，独立测试使用 .NET 10.0.403。完整环境、IDE 和构建步骤见 [开发说明](docs/development.md)。
+
+在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。手机在棋盘上滑动操作，编辑器还支持鼠标滑动和方向键。
+
+```bash
+scripts/check-environment.sh
+scripts/test-core.sh
+scripts/test-input.sh
+scripts/test-persistence.sh
+scripts/build-android.sh
+scripts/install-android.sh DEVICE_SERIAL
+```
+
+APK 输出到 `artifacts/builds/XanaduYonder-0.1.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
+
+[架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 当前范围
 
@@ -26,7 +45,7 @@ XanaduYonder 是独立项目，与 [DawnYew](https://github.com/duanyao-0516/Daw
 ## 开发约定
 
 - 默认分支为 `master`。
-- 正式创建 Unity 工程时固定编辑器的具体版本，并提交 `ProjectSettings/ProjectVersion.txt` 与可复现的构建说明；当前不预填尚未验证的版本或运行命令。
+- 编辑器版本固定在 `ProjectSettings/ProjectVersion.txt`，依赖固定在 `Packages/`；升级时同步更新构建说明并重新验证 Android 真机。
 - 游戏规则与表现分开；规则使用可测试的 C#，场景、动画和输入由 Unity 承担。
 - 每款游戏使用稳定标识、独立资源和版本化本地存档。大厅负责进入、暂停、返回及资源释放。
 - 以真实 Android 设备检查输入、动效、性能和生命周期；编辑器运行正常不能代替设备验证。

@@ -1,0 +1,10 @@
+{
+  "name": "XanaduYonder.Editor",
+  "rootNamespace": "XanaduYonder.EditorTools",
+  "references": [
+    "XanaduYonder.Core",
+    "XanaduYonder.Runtime"
+  ],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

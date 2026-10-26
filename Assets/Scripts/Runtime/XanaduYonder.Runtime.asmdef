@@ -1,0 +1,6 @@
+{
+  "name": "XanaduYonder.Runtime",
+  "rootNamespace": "XanaduYonder.Runtime",
+  "references": ["XanaduYonder.Core", "UnityEngine.UI"],
+  "autoReferenced": true
+}
