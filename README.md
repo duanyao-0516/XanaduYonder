@@ -8,7 +8,7 @@
 
 已创建 Unity 工程并实现 **2048 v0.1.0**：中文大厅、4×4 滑动棋盘、合并动画、分数与最高纪录、胜利后继续、失败重开、声音/触感设置，以及带备份恢复的本地存档。
 
-Android 开发测试 APK 可通过下方命令构建。后续逐步增加蓄力跳跃、堆叠拾取消除等自研玩法；使用自己的代码与素材，不直接复制其他游戏的实现或资源。
+Android 安装包见 [GitHub Releases](https://github.com/duanyao-0516/XanaduYonder/releases)。正式版使用独立发布签名，关闭开发调试标记；开发测试 APK 和正式 APK 均可按下方说明构建。后续逐步增加蓄力跳跃、堆叠拾取消除等自研玩法；使用自己的代码与素材，不直接复制其他游戏的实现或资源。
 
 ## 开发与运行
 
@@ -27,7 +27,9 @@ scripts/install-android.sh DEVICE_SERIAL
 
 APK 输出到 `artifacts/builds/XanaduYonder-0.1.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 
-[架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.1.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装，GitHub 发布页同时提供 SHA-256 校验文件。
+
+[架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 当前范围
 

@@ -28,26 +28,60 @@ namespace XanaduYonder.EditorTools
             RunOrFail(() =>
             {
                 Prepare();
-                if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
-                    throw new InvalidOperationException("Install this Editor's Android Build Support, SDK/NDK and OpenJDK modules.");
-                var output = Path.GetFullPath("artifacts/builds/XanaduYonder-" + Version + ".apk");
-                Directory.CreateDirectory(Path.GetDirectoryName(output));
-                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-                {
-                    scenes = new[] { ScenePath },
-                    locationPathName = output,
-                    target = BuildTarget.Android,
-                    targetGroup = BuildTargetGroup.Android,
-                    // Debuggable APK permits adb run-as for local persistence verification.
-                    // No script debugger or profiler connection is enabled.
-                    options = BuildOptions.Development | BuildOptions.StrictMode
-                });
-                if (report.summary.result != BuildResult.Succeeded)
-                    throw new InvalidOperationException($"Android build {report.summary.result}: {report.summary.totalErrors} errors.");
-                if (!File.Exists(output))
-                    throw new IOException("Unity reported success but the APK does not exist: " + output);
-                Debug.Log($"Android APK: {output} ({new FileInfo(output).Length} bytes)");
+                BuildApk(".apk", BuildOptions.Development | BuildOptions.StrictMode);
             });
+        }
+
+        // Called by build-release.sh. This intermediate is not a distributable release:
+        // the script replaces its debug signature with the private release identity.
+        public static void BuildAndroidRelease()
+        {
+            RunOrFail(() =>
+            {
+                var development = EditorUserBuildSettings.development;
+                var allowDebugging = EditorUserBuildSettings.allowDebugging;
+                var connectProfiler = EditorUserBuildSettings.connectProfiler;
+                var customKeystore = PlayerSettings.Android.useCustomKeystore;
+                try
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    // Private signing credentials never enter Unity or ProjectSettings.
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    BuildApk("-release-intermediate.apk", BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    EditorUserBuildSettings.development = development;
+                    EditorUserBuildSettings.allowDebugging = allowDebugging;
+                    EditorUserBuildSettings.connectProfiler = connectProfiler;
+                    PlayerSettings.Android.useCustomKeystore = customKeystore;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        private static void BuildApk(string suffix, BuildOptions options)
+        {
+            if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
+                throw new InvalidOperationException("Install this Editor's Android Build Support, SDK/NDK and OpenJDK modules.");
+            var output = Path.GetFullPath("artifacts/builds/XanaduYonder-" + Version + suffix);
+            Directory.CreateDirectory(Path.GetDirectoryName(output));
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = new[] { ScenePath },
+                locationPathName = output,
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+                options = options
+            });
+            if (report.summary.result != BuildResult.Succeeded)
+                throw new InvalidOperationException($"Android build {report.summary.result}: {report.summary.totalErrors} errors.");
+            if (!File.Exists(output))
+                throw new IOException("Unity reported success but the APK does not exist: " + output);
+            Debug.Log($"Android APK: {output} ({new FileInfo(output).Length} bytes)");
         }
 
         public static void ValidatePersistence()
