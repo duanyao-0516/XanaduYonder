@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
+using XanaduYonder.Runtime.Jump;
 
 namespace XanaduYonder.Runtime
 {
@@ -30,8 +31,12 @@ namespace XanaduYonder.Runtime
         private Text scoreText;
         private Text bestText;
         private Text lobbyBestText;
+        private Text lobbyJumpBestText;
+        private JumpPage jumpPage;
         private Text status;
-        private bool inGame;
+        private enum Page { Lobby, Game2048, Jump }
+        private Page activePage;
+        private bool inGame => activePage == Page.Game2048;
         private bool animating;
         private bool paused;
         private bool focused = true;
@@ -52,6 +57,7 @@ namespace XanaduYonder.Runtime
             BuildCanvas();
             BuildLobby();
             BuildGame();
+            BuildJump();
             var statusBand = UiFactory.Band(frame, "Status", 1250, 48, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 48, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -91,19 +97,60 @@ namespace XanaduYonder.Runtime
             var navigation = UiFactory.Band(root, "Lobby navigation", 0, 106, 0);
             UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 42, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
-            var introduction = UiFactory.Band(root, "Lobby introduction", 166, 238, .25f);
-            UiFactory.Label(introduction, "小小一局，\n慢慢向前。", 56, 0, 608, 164, 59, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 186, 608, 52, 25, UiFactory.Muted);
-            var cardBand = UiFactory.Band(root, "Lobby game", 478, 530, .55f);
-            var card = UiFactory.Panel(cardBand, "2048 game card", 56, 0, 608, 530, UiFactory.Ink);
-            UiFactory.Label(card.transform, "01   /   数字益智", 32, 28, 450, 40, 22, UiFactory.Hex("C9D8B8"));
-            UiFactory.Label(card.transform, "2048", 28, 88, 552, 160, 126, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(card.transform, "轻轻一滑，让相同的数字相遇。", 32, 276, 548, 48, 26, Color.white);
-            lobbyBestText = UiFactory.Label(card.transform, "", 32, 339, 548, 42, 22, UiFactory.Hex("C9D8B8"));
-            UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 415, 544, 78, EnterGame);
-            var details = UiFactory.Band(root, "Lobby details", 1088, 112, .88f);
-            UiFactory.Label(details, "一台手机，一个属于你的小游戏角落。", 56, 0, 608, 50, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Label(details, "无需联网  ·  无广告  ·  自动存档", 56, 66, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var introduction = UiFactory.Band(root, "Lobby introduction", 132, 180, .12f);
+            UiFactory.Label(introduction, "小小一局，慢慢向前。", 56, 0, 608, 92, 44, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 100, 608, 52, 25, UiFactory.Muted);
+            var cardBand = UiFactory.Band(root, "Lobby 2048", 348, 350, .35f);
+            var card = UiFactory.Panel(cardBand, "2048 game card", 56, 0, 608, 350, UiFactory.Ink);
+            UiFactory.Label(card.transform, "01   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Hex("C9D8B8"));
+            UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, Color.white);
+            lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Hex("C9D8B8"));
+            UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame);
+            var jumpBand = UiFactory.Band(root, "Lobby jump", 730, 350, .70f);
+            var jumpCard = UiFactory.Panel(jumpBand, "Jump game card", 56, 0, 608, 350, UiFactory.Hex("E4E9D3"));
+            UiFactory.Label(jumpCard.transform, "02   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(jumpCard.transform, "跳一跳", 28, 74, 350, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(jumpCard.transform, "按住，松手，再远一点。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyJumpBestText = UiFactory.Label(jumpCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            AddJumpPreview(jumpCard.transform);
+            UiFactory.Button(jumpCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterJump, true);
+            var details = UiFactory.Band(root, "Lobby details", 1156, 54, 1);
+            UiFactory.Label(details, "无需联网  ·  无广告  ·  自动存档", 56, 0, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+        }
+
+        private static void AddJumpPreview(Transform parent)
+        {
+            var platform = UiFactory.Rect(parent, "Jump platform preview", 432, 66, 140, 125).gameObject.AddComponent<RawImage>();
+            platform.texture = Resources.Load<Texture2D>("Jump/Preview/platform");
+            platform.raycastTarget = false;
+            var pawn = UiFactory.Rect(parent, "Jump pawn preview", 482, 24, 25, 69).gameObject.AddComponent<RawImage>();
+            pawn.texture = Resources.Load<Texture2D>("Jump/Preview/pawn");
+            pawn.raycastTarget = false;
+        }
+
+        private void BuildJump()
+        {
+            var root = UiFactory.Rect(frame, "Jump page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            jumpPage = root.gameObject.AddComponent<JumpPage>();
+            jumpPage.Initialize(root, ShowLobby, OpenSettings,
+                () => activePage == Page.Jump && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog);
+            jumpPage.Changed += RefreshJumpBest;
+            jumpPage.Leave();
+        }
+
+        private void RefreshJumpBest() { lobbyJumpBestText.text = "你的最高纪录   " + jumpPage.BestScore; }
+
+        private void EnterJump()
+        {
+            StopAnimation();
+            CloseModal();
+            activePage = Page.Jump;
+            lobbyPage.SetActive(false);
+            gamePage.SetActive(false);
+            jumpPage.Enter();
         }
 
         private void BuildGame()
@@ -143,7 +190,8 @@ namespace XanaduYonder.Runtime
         private void EnterGame()
         {
             CloseModal();
-            inGame = true;
+            jumpPage.Leave();
+            activePage = Page.Game2048;
             lobbyPage.SetActive(false);
             gamePage.SetActive(true);
             board.Render(game.GetSnapshot());
@@ -156,7 +204,8 @@ namespace XanaduYonder.Runtime
         {
             StopAnimation();
             CloseModal();
-            inGame = false;
+            jumpPage.Leave();
+            activePage = Page.Lobby;
             gamePage.SetActive(false);
             lobbyPage.SetActive(true);
             RefreshScores();
@@ -188,6 +237,7 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (!inGame || modal != null || paused || !focused) return;
             if (game.HasWon && !game.HasAcknowledgedWin)
                 ShowDialog("你好，2048！", "你已经完成这次挑战。\n还可以继续，看看数字能走多远。", "继续挑战", () =>
@@ -225,6 +275,7 @@ namespace XanaduYonder.Runtime
             UiFactory.Button(panel, "声音  ·  " + (data.SoundEnabled ? "开启" : "关闭"), 32, 178, 532, 70, () =>
             {
                 data.SoundEnabled = !data.SoundEnabled;
+                if (!data.SoundEnabled) feedback.Stop();
                 Save();
                 CloseModal();
                 OpenSettings();
@@ -288,12 +339,17 @@ namespace XanaduYonder.Runtime
             scoreText.text = game.Score.ToString();
             bestText.text = data.BestScore.ToString();
             lobbyBestText.text = "你的最高纪录   " + data.BestScore;
+            RefreshJumpBest();
         }
 
-        private void SetStatus(string message) { if (status != null) status.text = message; }
+        private void SetStatus(string message)
+        {
+            if (status != null) status.text = saveFailed ? saveWarning : jumpPage?.SaveError ?? message;
+        }
 
         private void Save()
         {
+            jumpPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -315,6 +371,8 @@ namespace XanaduYonder.Runtime
 
         private void StopAnimation()
         {
+            feedback?.Stop();
+            jumpPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -330,7 +388,7 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (modal != null) dismissModal?.Invoke();
-                else if (inGame) ShowLobby();
+                else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
             }
