@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
+using XanaduYonder.Runtime.Sheep;
 
 namespace XanaduYonder.Runtime
 {
@@ -32,9 +33,11 @@ namespace XanaduYonder.Runtime
         private Text bestText;
         private Text lobbyBestText;
         private Text lobbyJumpBestText;
+        private Text lobbySheepRecordText;
         private JumpPage jumpPage;
+        private SheepPage sheepPage;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump }
+        private enum Page { Lobby, Game2048, Jump, Sheep }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -58,6 +61,7 @@ namespace XanaduYonder.Runtime
             BuildLobby();
             BuildGame();
             BuildJump();
+            BuildSheep();
             var statusBand = UiFactory.Band(frame, "Status", 1250, 48, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 48, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -97,26 +101,66 @@ namespace XanaduYonder.Runtime
             var navigation = UiFactory.Band(root, "Lobby navigation", 0, 106, 0);
             UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 42, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
-            var introduction = UiFactory.Band(root, "Lobby introduction", 132, 180, .12f);
+            // Card dimensions and gaps stay fixed; additional games extend this content instead of shrinking it.
+            var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 132, 720, 1092);
+            UiFactory.Stretch(viewport);
+            viewport.offsetMin = new Vector2(0, 96);
+            viewport.offsetMax = new Vector2(0, -132);
+            var scrollSurface = viewport.gameObject.AddComponent<Image>();
+            scrollSurface.color = Color.clear;
+            scrollSurface.raycastTarget = true;
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1416);
+            content.anchorMin = content.anchorMax = new Vector2(.5f, 1);
+            content.pivot = new Vector2(.5f, 1);
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = content;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.elasticity = .12f;
+            scroll.decelerationRate = .10f;
+            scroll.scrollSensitivity = 36;
+
+            var introduction = UiFactory.Rect(content, "Lobby introduction", 0, 0, 720, 180);
             UiFactory.Label(introduction, "小小一局，慢慢向前。", 56, 0, 608, 92, 44, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 100, 608, 52, 25, UiFactory.Muted);
-            var cardBand = UiFactory.Band(root, "Lobby 2048", 348, 350, .35f);
-            var card = UiFactory.Panel(cardBand, "2048 game card", 56, 0, 608, 350, UiFactory.Ink);
+            var card = UiFactory.Panel(content, "2048 game card", 56, 216, 608, 350, UiFactory.Ink);
             UiFactory.Label(card.transform, "01   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Hex("C9D8B8"));
             UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, Color.white);
             lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Hex("C9D8B8"));
             UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame);
-            var jumpBand = UiFactory.Band(root, "Lobby jump", 730, 350, .70f);
-            var jumpCard = UiFactory.Panel(jumpBand, "Jump game card", 56, 0, 608, 350, UiFactory.Hex("E4E9D3"));
+            var jumpCard = UiFactory.Panel(content, "Jump game card", 56, 590, 608, 350, UiFactory.Hex("E4E9D3"));
             UiFactory.Label(jumpCard.transform, "02   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(jumpCard.transform, "跳一跳", 28, 74, 350, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(jumpCard.transform, "按住，松手，再远一点。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbyJumpBestText = UiFactory.Label(jumpCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddJumpPreview(jumpCard.transform);
             UiFactory.Button(jumpCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterJump, true);
-            var details = UiFactory.Band(root, "Lobby details", 1156, 54, 1);
-            UiFactory.Label(details, "无需联网  ·  无广告  ·  自动存档", 56, 0, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var sheepCard = UiFactory.Panel(content, "Sheep game card", 56, 964, 608, 350, UiFactory.Hex("EEE7D3"));
+            UiFactory.Label(sheepCard.transform, "03   /   层层三消", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sheepCard.transform, "旸了个旸", 28, 74, 380, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sheepCard.transform, "翻开一层，凑齐三个。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            AddSheepPreview(sheepCard.transform);
+            UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1342, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+        }
+
+        private static void AddSheepPreview(Transform parent)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var tile = UiFactory.Rect(parent, "Sheep tile preview " + i, 420 + i * 52, i == 1 ? 66 : 82, 64, 72);
+                var backing = tile.gameObject.AddComponent<RawImage>();
+                backing.texture = Resources.Load<Texture2D>("Sheep/Tiles/block_bg");
+                backing.raycastTarget = false;
+                var icon = UiFactory.Rect(tile, "Tile icon", 0, 0, 64, 72).gameObject.AddComponent<RawImage>();
+                icon.texture = Resources.Load<Texture2D>("Sheep/Tiles/block_" + (i + 1));
+                icon.raycastTarget = false;
+            }
         }
 
         private static void AddJumpPreview(Transform parent)
@@ -143,10 +187,36 @@ namespace XanaduYonder.Runtime
 
         private void RefreshJumpBest() { lobbyJumpBestText.text = "你的最高纪录   " + jumpPage.BestScore; }
 
+        private void BuildSheep()
+        {
+            var root = UiFactory.Rect(frame, "Sheep page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            sheepPage = root.gameObject.AddComponent<SheepPage>();
+            sheepPage.Initialize(root, ShowLobby, OpenSettings,
+                () => activePage == Page.Sheep && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog);
+            sheepPage.Changed += RefreshSheepRecord;
+            sheepPage.Leave();
+        }
+
+        private void RefreshSheepRecord() { lobbySheepRecordText.text = "累计通关   " + sheepPage.CompletedRuns + " 次"; }
+
+        private void EnterSheep()
+        {
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            activePage = Page.Sheep;
+            lobbyPage.SetActive(false);
+            gamePage.SetActive(false);
+            sheepPage.Enter();
+        }
+
         private void EnterJump()
         {
             StopAnimation();
             CloseModal();
+            sheepPage.Leave();
             activePage = Page.Jump;
             lobbyPage.SetActive(false);
             gamePage.SetActive(false);
@@ -191,6 +261,7 @@ namespace XanaduYonder.Runtime
         {
             CloseModal();
             jumpPage.Leave();
+            sheepPage.Leave();
             activePage = Page.Game2048;
             lobbyPage.SetActive(false);
             gamePage.SetActive(true);
@@ -205,6 +276,7 @@ namespace XanaduYonder.Runtime
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
+            sheepPage.Leave();
             activePage = Page.Lobby;
             gamePage.SetActive(false);
             lobbyPage.SetActive(true);
@@ -238,6 +310,7 @@ namespace XanaduYonder.Runtime
         private void CheckEndState()
         {
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
+            if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
             if (!inGame || modal != null || paused || !focused) return;
             if (game.HasWon && !game.HasAcknowledgedWin)
                 ShowDialog("你好，2048！", "你已经完成这次挑战。\n还可以继续，看看数字能走多远。", "继续挑战", () =>
@@ -340,16 +413,18 @@ namespace XanaduYonder.Runtime
             bestText.text = data.BestScore.ToString();
             lobbyBestText.text = "你的最高纪录   " + data.BestScore;
             RefreshJumpBest();
+            RefreshSheepRecord();
         }
 
         private void SetStatus(string message)
         {
-            if (status != null) status.text = saveFailed ? saveWarning : jumpPage?.SaveError ?? message;
+            if (status != null) status.text = saveFailed ? saveWarning : sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
         }
 
         private void Save()
         {
             jumpPage?.Save();
+            sheepPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -373,6 +448,7 @@ namespace XanaduYonder.Runtime
         {
             feedback?.Stop();
             jumpPage?.Suspend();
+            sheepPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
