@@ -1,0 +1,82 @@
+# Unity-generated directories. Keep the Unity project at the repository root.
+# Preserve Assets/, Packages/, ProjectSettings/, and their source metadata.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Bb]uild/
+/[Bb]uilds/
+/.utmp/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/[Ee]xportedObj/
+/UIElementsSchema/
+
+# IDE-generated files and personal settings
+/.vs/
+/.idea/
+/.vscode/
+/.consulo/
+/*.csproj
+/*.unityproj
+/*.sln
+/*.slnx
+/*.suo
+/*.pidb
+/*.booproj
+/*.svd
+/*.pdb
+/*.mdb
+/*.opendb
+/*.VC.db
+*.DotSettings.user
+*.userprefs
+
+# Android/Gradle caches and local SDK configuration
+.gradle/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+local.properties
+
+# Builds and generated reports
+*.apk
+*.aab
+*.apk.idsig
+*.ipa
+/artifacts/
+/TestResults/
+*.log
+/sysinfo.txt
+/mono_crash.*
+
+# Machine-local work, credentials, and signing material
+/.local/
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.mobileprovision
+*.ulf
+*.alf
+*.lic
+release-signing.properties
+release-password.txt
+**/signing/**/password.txt
+google-services.json
+GoogleService-Info.plist
+
+# OS files and editor backups
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+*.blend1
+*.blend1.meta
