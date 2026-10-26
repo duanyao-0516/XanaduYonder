@@ -6,14 +6,14 @@
 
 ## 当前状态
 
-当前本地开发版本为 **v0.2.0**，包含两款可离线游玩的游戏：
+当前版本为 **v0.2.0**，包含两款可离线游玩的游戏：
 
 - **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 
 两款游戏各自保存对局和最高分，共用大厅、声音与触感设置。跳一跳的独立存档不会改动 v0.1.0 的 2048 存档协议。
 
-[GitHub Releases](https://github.com/duanyao-0516/XanaduYonder/releases) 当前已发布 **v0.1.0（2048）**；v0.2.0 安装包在本地构建，尚未上传。正式版使用独立发布签名，关闭开发调试标记；开发测试 APK 和正式 APK 均可按下方说明构建。后续逐步增加堆叠拾取消除等自研玩法；使用自己的代码和自制或明确授权的素材，来源见第三方许可说明。
+下载 [v0.2.0 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)。正式版使用独立发布签名，关闭开发调试标记，可覆盖升级 v0.1.0 正式版；开发测试 APK 和正式 APK 均可按下方说明构建。后续逐步增加堆叠拾取消除等自研玩法；使用自己的代码和自制或明确授权的素材，来源见第三方许可说明。
 
 ## 开发与运行
 
@@ -34,9 +34,9 @@ scripts/install-android.sh DEVICE_SERIAL
 
 APK 输出到 `artifacts/builds/XanaduYonder-0.2.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 
-正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.2.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；已发布的 v0.1.0 在 GitHub 发布页提供 APK 和 SHA-256 校验文件。
+正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.2.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装，GitHub 发布页提供 APK 和 SHA-256 校验文件。
 
-[跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 当前范围
 

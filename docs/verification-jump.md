@@ -67,4 +67,4 @@ SHA-256：`306f96f3016e5c586b32cc00c20650844cb2b14270b5f940e46612cf36945efa`。
 
 ## 交付边界
 
-代码位于本地功能分支 `p/duanyao.0516/feature/jump-game`。本任务生成了本地正式 APK，未替换远端 master 或已发布的 v0.1.0 GitHub Release。
+开发与验收在 `p/duanyao.0516/feature/jump-game` 完成。后续经项目所有者授权，版本按 `master` 与 `v0.2.0` 标签发布；产物、升级方式与发布入口见 [v0.2.0 发布记录](releases/v0.2.0.md)。v0.1.0 Release 保留。
