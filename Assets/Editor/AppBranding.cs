@@ -32,9 +32,8 @@ namespace XanaduYonder.EditorTools
                 importer.SaveAndReimport();
             }
             var logo = AssetDatabase.LoadAssetAtPath<Texture2D>(LogoPath);
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(LogoPath);
-            if (logo == null || sprite == null || logo.width != logo.height)
-                throw new InvalidOperationException("The app logo must import as a square texture and a single sprite.");
+            if (logo == null || logo.width != logo.height)
+                throw new InvalidOperationException("The app logo must import as a square texture.");
 
             PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { logo }, IconKind.Any);
 #if UNITY_ANDROID
@@ -46,29 +45,25 @@ namespace XanaduYonder.EditorTools
             ConfigureIcons(AndroidPlatformIconKind.Round, logo);
 #pragma warning restore CS0618
 #endif
-            PlayerSettings.SplashScreen.show = true;
+            // BrandSplash renders the complete original image at an explicit size at runtime.
+            // Disable Unity's native splash so its automatic logo sizing cannot enlarge it again.
+            PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.showUnityLogo = false;
             PlayerSettings.SplashScreen.backgroundColor = Color.white;
             PlayerSettings.SplashScreen.overlayOpacity = 0;
             PlayerSettings.SplashScreen.background = null;
             PlayerSettings.SplashScreen.backgroundPortrait = null;
             PlayerSettings.SplashScreen.blurBackgroundImage = false;
-            PlayerSettings.SplashScreen.animationMode = PlayerSettings.SplashScreen.AnimationMode.Static;
-            PlayerSettings.SplashScreen.unityLogoStyle = PlayerSettings.SplashScreen.UnityLogoStyle.DarkOnLight;
-            PlayerSettings.SplashScreen.drawMode = PlayerSettings.SplashScreen.DrawMode.AllSequential;
-            // Unity's supported minimum is two seconds, followed by its native fade-out.
-            PlayerSettings.SplashScreen.logos = new[] { PlayerSettings.SplashScreenLogo.Create(2, sprite) };
-            PlayerSettings.SplashScreen.showUnityLogo = false;
+            PlayerSettings.SplashScreen.logos = Array.Empty<PlayerSettings.SplashScreenLogo>();
 
             var configured = PlayerSettings.SplashScreen.logos;
-            if (!PlayerSettings.SplashScreen.show || PlayerSettings.SplashScreen.showUnityLogo ||
-                configured.Length != 1 || configured[0].logo != sprite ||
+            if (PlayerSettings.SplashScreen.show || PlayerSettings.SplashScreen.showUnityLogo || configured.Length != 0 ||
                 PlayerSettings.SplashScreen.overlayOpacity != 0 || PlayerSettings.SplashScreen.backgroundColor != Color.white)
-                throw new InvalidOperationException("The app-only splash screen settings did not apply.");
+                throw new InvalidOperationException("The native splash screen was not disabled for the runtime brand splash.");
             var defaults = PlayerSettings.GetIcons(NamedBuildTarget.Unknown, IconKind.Any);
             if (defaults.Length == 0 || defaults[0] != logo)
                 throw new InvalidOperationException("The default application icon did not apply.");
-            Debug.Log("XanaduYonder branding verified: XY_logo app icons; own splash only, white background, 2 seconds.");
+            Debug.Log("XanaduYonder branding verified: original XY_logo app icons; native splash disabled for BrandSplash.");
         }
 
 #if UNITY_ANDROID
@@ -114,7 +109,7 @@ namespace XanaduYonder.EditorTools
     }
 
 #if UNITY_ANDROID
-    // Android 12+ shows its own starting window before Unity can render the configured splash.
+    // Android 12+ shows its own starting window before Unity can render the runtime splash.
     // Unity's stock theme points that window at a transparent color; use the actual launcher icon.
     public sealed class AppLaunchTheme : IPostGenerateGradleAndroidProject
     {
@@ -126,6 +121,7 @@ namespace XanaduYonder.EditorTools
             var launcher = Path.Combine(Path.GetDirectoryName(path), "launcher");
             if (!Directory.Exists(launcher))
                 throw new DirectoryNotFoundException("The generated Android launcher module is missing: " + launcher);
+            PreserveAdaptiveIconMargins(launcher);
             var foundAndroid12 = false;
             foreach (var relative in new[] { "values/styles.xml", "values-v21/styles.xml", "values-v31/styles.xml" })
             {
@@ -161,6 +157,37 @@ namespace XanaduYonder.EditorTools
             if (!foundAndroid12)
                 throw new InvalidOperationException("The generated Android 12 launch theme was not found; app branding is incomplete.");
             Debug.Log("XanaduYonder Android launch theme verified: app_icon on white before the custom splash.");
+        }
+
+        private static void PreserveAdaptiveIconMargins(string launcher)
+        {
+            XNamespace android = "http://schemas.android.com/apk/res/android";
+            const string image = "@mipmap/ic_launcher_foreground";
+            const string insetFraction = "16.666667%";
+            foreach (var name in new[] { "app_icon.xml", "app_icon_round.xml" })
+            {
+                var file = Path.Combine(launcher, "src/main/res/mipmap-anydpi-v26", name);
+                if (!File.Exists(file)) throw new FileNotFoundException("The generated adaptive icon is missing: " + file);
+                var document = XDocument.Load(file);
+                var foreground = document.Root?.Element("foreground");
+                var directImage = (string)foreground?.Attribute(android + "drawable");
+                var insetImage = (string)foreground?.Element("inset")?.Attribute(android + "drawable");
+                if (document.Root?.Name != "adaptive-icon" || foreground == null ||
+                    (directImage != image && insetImage != image))
+                    throw new InvalidOperationException("Unexpected adaptive icon foreground in " + file);
+
+                // Android displays the central 72 dp of each 108 dp layer. Insetting the whole
+                // unchanged image by 1/6 per edge compensates for that 1.5x magnification.
+                // Percentages also preserve the same logo/white-margin ratio at any display size.
+                foreground.Attribute(android + "drawable")?.Remove();
+                foreground.ReplaceNodes(new XElement("inset", new XAttribute(android + "drawable", image),
+                    new XAttribute(android + "insetLeft", insetFraction),
+                    new XAttribute(android + "insetTop", insetFraction),
+                    new XAttribute(android + "insetRight", insetFraction),
+                    new XAttribute(android + "insetBottom", insetFraction)));
+                document.Save(file);
+            }
+            Debug.Log("XanaduYonder adaptive icons verified: original image margins preserved with a 1/6 inset per edge.");
         }
 
         private static void SetItem(XElement style, string name, string value)

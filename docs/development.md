@@ -100,6 +100,8 @@ gh auth status
 
 ## 应用图标与启动标识
 
-`Assets/Branding/XY_logo.png` 原样使用项目所有者提供的图像。每次构建的 `AppBranding.Configure()` 配置默认及 Android Legacy/Round/Adaptive 图标，并验证 Unity Splash 只包含自己的 Logo，白底、静态显示2秒后淡出；这是 Unity 支持的最短 Logo 时长。Android 12 系统启动窗口也使用应用图标；Gradle生成后回调覆盖实际Activity主题的白色背景。
+`Assets/Branding/XY_logo.png` 原样使用项目所有者提供的完整图像，不裁剪或修改原图像素。每次构建的 `AppBranding.Configure()` 配置默认及 Android Legacy/Round/Adaptive 图标。Legacy/Round 位图保留原图中的 Logo 与白边比例；Adaptive 图标在生成的 XML 中给完整前景图像添加每边 `1/6`（`16.666667%`）的 inset，抵消 Android 将 108 dp 图层的中央 72 dp 显示为图标造成的放大，使可见图标内的 Logo 与白边比例保持与原图一致。机制见 [AdaptiveIconDrawable 官方说明](https://developer.android.com/reference/android/graphics/drawable/AdaptiveIconDrawable)与 [InsetDrawable 比例内缩说明](https://developer.android.com/reference/android/graphics/drawable/InsetDrawable)。
 
-Unity 6 Personal 允许关闭或定制Unity启动标识，见[官方发行说明](https://unity.com/releases/editor/whats-new/6000.0.0f1)与[6000.3 Player Settings](https://docs.unity3d.com/6000.3/Documentation/Manual/class-PlayerSettingsAndroid.html)。构建日志应出现 `branding verified` 和 `Android launch theme verified`；仍需冷启动录像确认实际系统窗口和Unity启动阶段。
+Unity 原生 Splash 和 Unity 标识均禁用，原生 Logo 列表清空。Bootstrap 上的 `BrandSplash` 使用独立 Canvas 居中显示完整原图，图片宽度为屏幕短边的 `0.5`，白底静止显示 `1.75` 秒后用 `0.25` 秒淡出。Android 12 系统启动窗口保持白底，引用经过上述 inset 修正的 `app_icon`；Gradle 生成后回调同时覆盖实际 Activity 主题的窗口背景。
+
+Unity 6 Personal 允许关闭或定制 Unity 启动标识，见[官方发行说明](https://unity.com/releases/editor/whats-new/6000.0.0f1)与 [6000.3 Player Settings](https://docs.unity3d.com/6000.3/Documentation/Manual/class-PlayerSettingsAndroid.html)。构建后需检查生成的 Adaptive XML、原生 Splash 禁用配置，并通过系统应用图标截图及冷启动录像确认留白比例、Android 原生窗口与 `BrandSplash` 的显示效果。

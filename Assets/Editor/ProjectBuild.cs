@@ -177,8 +177,14 @@ namespace XanaduYonder.EditorTools
                 var existing = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
                 foreach (var root in existing.GetRootGameObjects())
                 {
-                    if (root.GetComponentInChildren<AppController>(true) != null)
+                    var app = root.GetComponentInChildren<AppController>(true);
+                    if (app != null)
+                    {
+                        ConfigureLaunchArtwork(app);
+                        if (!EditorSceneManager.SaveScene(existing, ScenePath))
+                            throw new IOException("Failed to save bootstrap launch artwork: " + ScenePath);
                         return;
+                    }
                 }
                 throw new InvalidOperationException(ScenePath + " is missing AppController. Restore the bootstrap scene before building.");
             }
@@ -194,9 +200,21 @@ namespace XanaduYonder.EditorTools
             camera.allowHDR = false;
             camera.allowMSAA = false;
             cameraObject.transform.position = new Vector3(0, 0, -10);
-            new GameObject("XanaduYonder App", typeof(AppController));
+            var controller = new GameObject("XanaduYonder App", typeof(AppController)).GetComponent<AppController>();
+            ConfigureLaunchArtwork(controller);
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new IOException("Failed to save bootstrap scene: " + ScenePath);
+        }
+
+        private static void ConfigureLaunchArtwork(AppController app)
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Branding/XY_logo.png");
+            if (texture == null || texture.width != texture.height)
+                throw new InvalidOperationException("The complete square launch artwork is missing.");
+            var splash = app.GetComponent<BrandSplash>();
+            if (splash == null) splash = app.gameObject.AddComponent<BrandSplash>();
+            splash.Logo = texture;
+            EditorUtility.SetDirty(splash);
         }
 
         private static void RunOrFail(Action action)
