@@ -208,6 +208,47 @@ internal static class Program
 
     private static void GestureChecks()
     {
+        Run("early hold survives landing with its original duration", delegate {
+            var gesture = new ChargeGesture(); double seconds;
+            gesture.StartFlight();
+            Assert(gesture.Begin(1, 10.1) && gesture.IsCharging, "airborne press is owned and can show feedback");
+            gesture.FinishFlight();
+            Assert(gesture.Release(1, 10.9, false, out seconds), "held press releases after landing");
+            Near(seconds, .8, "early portion of visible charge is retained");
+            Assert(!gesture.Release(1, 11, false, out seconds), "one release commits only once");
+        });
+        Run("airborne tap never queues a delayed jump", delegate {
+            var gesture = new ChargeGesture(); double seconds;
+            gesture.StartFlight(); gesture.Begin(1, 10.1);
+            Assert(!gesture.Release(1, 10.2, false, out seconds) && seconds == 0, "cannot jump while airborne");
+            gesture.FinishFlight();
+            Assert(!gesture.IsCharging && !gesture.Release(1, 11, false, out seconds), "landing does not replay a released tap");
+            Assert(gesture.Begin(1, 11) && gesture.Release(1, 11.8, false, out seconds), "fresh landing press works");
+        });
+        Run("early hold cancels across lifecycle and other fingers cannot steal it", delegate {
+            var gesture = new ChargeGesture(); double seconds;
+            gesture.StartFlight(); gesture.Begin(1, 10);
+            Assert(!gesture.Begin(2, 10.1) && !gesture.Release(2, 10.2, false, out seconds), "pending owner cannot be stolen");
+            gesture.Cancel(); gesture.FinishFlight();
+            Assert(!gesture.Release(1, 11, false, out seconds), "stale UP after suspend cannot jump");
+            gesture.StartFlight(); gesture.Begin(1, 12); gesture.FinishFlight();
+            Assert(!gesture.Release(1, 13, true, out seconds), "system cancellation cannot commit after landing");
+        });
+        Run("rapid chained jumps commit each matching release exactly once", delegate {
+            var gesture = new ChargeGesture(); var game = new JumpGame(17); double seconds;
+            var time = 0.0;
+            for (var i = 0; i < 50; i++)
+            {
+                var charge = CenterCharge(game.GetSnapshot());
+                Assert(gesture.Begin(1, time), "next press accepted during previous flight");
+                gesture.FinishFlight();
+                Assert(gesture.Release(1, time + charge, false, out seconds), "release accepted after landing");
+                Assert(game.Jump(seconds).Outcome == JumpOutcome.Perfect, "retained hold produces intended distance");
+                gesture.StartFlight();
+                time += charge + .1;
+            }
+            Assert(game.GetSnapshot().Steps == 50 && game.GetSnapshot().Score == 2550, "chain scores once per release");
+        });
         Run("charge requires one matching release", delegate {
             var gesture = new ChargeGesture(); double seconds;
             Assert(!gesture.Release(1, 1, false, out seconds) && seconds == 0, "release needs owner");

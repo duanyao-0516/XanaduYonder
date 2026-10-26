@@ -36,6 +36,8 @@ namespace XanaduYonder.Runtime.Jump
         private int animationVersion;
         private bool visible;
         private bool animating;
+        private float chargeAmount;
+        private float landingCompression;
 
         private sealed class Platform
         {
@@ -119,6 +121,8 @@ namespace XanaduYonder.Runtime.Jump
             if (stage == null || snapshot == null) return;
             animationVersion++;
             animating = false;
+            chargeAmount = 0;
+            landingCompression = 0;
             HideParticles();
             // A restore/restart can arrive with a different origin. Discard only visual history.
             if (rendered == null || rendered.Steps != snapshot.Steps || snapshot.Steps == 0)
@@ -134,12 +138,19 @@ namespace XanaduYonder.Runtime.Jump
 
         public void SetCharge(float normalized)
         {
+            chargeAmount = Mathf.Clamp01(normalized);
             if (rendered == null || animating || rendered.IsGameOver) return;
-            var charge = Mathf.Clamp01(normalized);
-            var squash = 1 - charge * .09f;
+            ApplyRestingPose();
+        }
+
+        private void ApplyRestingPose()
+        {
+            var charge = chargeAmount;
+            var squash = 1 - charge * .09f - landingCompression * .12f;
             ScalePlatform(current, squash);
             SetPawn(Point(rendered.PlayerX, rendered.PlayerZ), PlatformTop * squash, Quaternion.identity,
-                new Vector3(1 + .19f * charge, 1 - .36f * charge, 1 + .19f * charge));
+                new Vector3(1 + .19f * charge + .17f * landingCompression,
+                    1 - .36f * charge - .23f * landingCompression, 1 + .19f * charge + .17f * landingCompression));
         }
 
         public IEnumerator Animate(JumpSnapshot before, JumpResult result, JumpSnapshot after)
@@ -147,6 +158,9 @@ namespace XanaduYonder.Runtime.Jump
             if (stage == null || before == null || after == null) yield break;
             var token = ++animationVersion;
             animating = true;
+            chargeAmount = 0;
+            landingCompression = 0;
+            ScalePlatform(next, 1);
             var start = Point(result.StartX, result.StartZ);
             var end = Point(result.EndX, result.EndZ);
             var direction = end - start;
@@ -194,25 +208,6 @@ namespace XanaduYonder.Runtime.Jump
             }
 
             var landed = result.Outcome == JumpOutcome.Landed || result.Outcome == JumpOutcome.Perfect;
-            var platform = landed ? next : current;
-            elapsed = 0;
-            while (elapsed < .2f)
-            {
-                if (token != animationVersion) yield break;
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / .2f);
-                var compression = Mathf.Sin(t * Mathf.PI);
-                ScalePlatform(platform, 1 - .12f * compression);
-                SetPawn(end, PlatformTop * (1 - .12f * compression), Quaternion.identity,
-                    new Vector3(1 + .17f * compression, 1 - .23f * compression, 1 + .17f * compression));
-                LandingParticles(end, t, result.Outcome == JumpOutcome.Perfect);
-                yield return null;
-            }
-            if (token != animationVersion) yield break;
-            HideParticles();
-            ScalePlatform(platform, 1);
-            SetPawn(end, PlatformTop, Quaternion.identity, Vector3.one);
-
             if (landed)
             {
                 var offset = Point(result.TargetX, result.TargetZ);
@@ -220,31 +215,43 @@ namespace XanaduYonder.Runtime.Jump
                 previous = current;
                 current = next;
                 next = recycled;
-                Configure(next, offset + Point(after.NextX, after.NextZ), (float)after.NextHalfSize, NextStep(after.Steps));
-                var from = new Framing { Focus = cameraFocus, Size = cameraSize };
-                var to = Frame(after, offset);
-                elapsed = 0;
-                while (elapsed < .42f)
-                {
-                    if (token != animationVersion) yield break;
-                    elapsed += Time.unscaledDeltaTime;
-                    var t = Smooth(Mathf.Clamp01(elapsed / .42f));
-                    ApplyFrame(Lerp(from, to, t));
-                    ScalePlatform(next, Mathf.Lerp(.03f, 1, t));
-                    yield return null;
-                }
-                if (token != animationVersion) yield break;
+                Configure(next, Point(after.NextX, after.NextZ), (float)after.NextHalfSize, NextStep(after.Steps));
                 MovePlatform(previous, previous.Position - offset);
                 MovePlatform(current, Vector3.zero);
-                MovePlatform(next, Point(after.NextX, after.NextZ));
-                ScalePlatform(next, 1);
-                SetPawn(Point(after.PlayerX, after.PlayerZ), PlatformTop, Quaternion.identity, Vector3.one);
-                to.Focus -= offset;
-                ApplyFrame(to);
+                // Publish the landed coordinate system before accepting the next charge.
+                ApplyFrame(new Framing { Focus = cameraFocus - offset, Size = cameraSize });
             }
-            else ApplyFrame(Frame(after, Vector3.zero));
             rendered = after;
             animating = false;
+            ApplyRestingPose();
+            // The page's flight completes here. Camera/bounce no longer hold its input gate.
+            StartCoroutine(Settle(token, landed, result.Outcome == JumpOutcome.Perfect));
+        }
+
+        private IEnumerator Settle(int token, bool newPlatform, bool perfect)
+        {
+            var from = new Framing { Focus = cameraFocus, Size = cameraSize };
+            var to = Frame(rendered, Vector3.zero);
+            var elapsed = 0f;
+            const float cameraDuration = .24f;
+            const float bounceDuration = .14f;
+            while (elapsed < cameraDuration)
+            {
+                if (token != animationVersion) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                var t = Smooth(Mathf.Clamp01(elapsed / cameraDuration));
+                ApplyFrame(Lerp(from, to, t));
+                if (newPlatform) ScalePlatform(next, Mathf.Lerp(.03f, 1, t));
+                var bounce = Mathf.Clamp01(elapsed / bounceDuration);
+                landingCompression = Mathf.Sin(bounce * Mathf.PI);
+                ApplyRestingPose();
+                LandingParticles(Point(rendered.PlayerX, rendered.PlayerZ), bounce, perfect);
+                yield return null;
+            }
+            if (token != animationVersion) yield break;
+            landingCompression = 0;
+            ApplyRestingPose();
+            HideParticles();
         }
 
         public void Suspend(JumpSnapshot committed)

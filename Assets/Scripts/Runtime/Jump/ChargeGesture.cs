@@ -5,6 +5,7 @@ namespace XanaduYonder.Runtime.Jump
         private bool isCharging;
         private int owner;
         private double startedAt;
+        private bool inFlight;
 
         public bool IsCharging { get { return isCharging; } }
 
@@ -22,12 +23,16 @@ namespace XanaduYonder.Runtime.Jump
             seconds = 0;
             if (!isCharging || owner != id) return false;
             isCharging = false;
-            if (cancelled || !ValidTime(time) || time < startedAt) return false;
+            if (cancelled || inFlight || !ValidTime(time) || time < startedAt) return false;
             seconds = time - startedAt;
             return true;
         }
 
         public void Cancel() { isCharging = false; }
+
+        // Keep a new DOWN during flight, but never queue a release for later execution.
+        public void StartFlight() { Cancel(); inFlight = true; }
+        public void FinishFlight() { inFlight = false; }
 
         private static bool ValidTime(double time)
         {

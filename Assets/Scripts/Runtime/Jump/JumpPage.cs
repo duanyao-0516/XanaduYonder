@@ -132,15 +132,17 @@ namespace XanaduYonder.Runtime.Jump
             CancelCharge();
             StopAllCoroutines();
             animating = false;
+            gesture.FinishFlight();
             if (game != null && scene != null) scene.Suspend(game.GetSnapshot());
         }
 
-        private bool AcceptsInput => visible && !animating && !game.GetSnapshot().IsGameOver && shellAcceptsInput();
+        private bool AcceptsInput => visible && !game.GetSnapshot().IsGameOver && shellAcceptsInput();
 
         private void BeginCharge(int pointer)
         {
-            if (!AcceptsInput || !gesture.Begin(pointer, Time.realtimeSinceStartupAsDouble)) return;
-            chargeStarted = Time.realtimeSinceStartupAsDouble;
+            var now = Time.realtimeSinceStartupAsDouble;
+            if (!AcceptsInput || !gesture.Begin(pointer, now)) return;
+            chargeStarted = now;
             hint.text = "松手，跳向下一个平台";
             feedback.BeginCharge(soundEnabled());
         }
@@ -159,6 +161,7 @@ namespace XanaduYonder.Runtime.Jump
             Save();
             RefreshScores();
             animating = true;
+            gesture.StartFlight();
             feedback.Jump(soundEnabled());
             StartCoroutine(Animate(before, result));
         }
@@ -167,6 +170,7 @@ namespace XanaduYonder.Runtime.Jump
         {
             yield return scene.Animate(before, result, game.GetSnapshot());
             animating = false;
+            gesture.FinishFlight();
             if (result.Outcome == JumpOutcome.Missed)
             {
                 hint.text = "差一点，再试一次";
@@ -179,8 +183,9 @@ namespace XanaduYonder.Runtime.Jump
             else
             {
                 feedback.Land(result.Outcome == JumpOutcome.Perfect, soundEnabled(), hapticsEnabled());
-                hint.text = result.Outcome == JumpOutcome.Stayed ? "还在原平台，再多蓄力一点" :
-                    result.Outcome == JumpOutcome.Perfect ? "正中中心！  +" + result.DeltaScore : "稳稳落地  +" + result.DeltaScore;
+                if (!gesture.IsCharging)
+                    hint.text = result.Outcome == JumpOutcome.Stayed ? "还在原平台，再多蓄力一点" :
+                        result.Outcome == JumpOutcome.Perfect ? "正中中心！  +" + result.DeltaScore : "稳稳落地  +" + result.DeltaScore;
             }
             RefreshScores();
             CheckEndState();
