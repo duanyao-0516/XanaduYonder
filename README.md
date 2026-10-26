@@ -6,21 +6,22 @@
 
 ## 当前状态
 
-当前源码的开发版本为 **v0.3.0**，接入三款可离线游玩的游戏：
+当前版本为 **v0.3.0**，接入四款可离线游玩的游戏：
 
 - **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
+- **成语接龙**：同字/同音双模式、机器/用户双开局、左右对话、免费提示与三次提示小结、可点击释义和本地生词本。
 - **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。三款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，新游戏使用独立 `sheep-v1.json`，不修改已有游戏的存档协议。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，成语接龙使用 `idiom-v1.json` 与独立的 `idiom-notebook-v1.json`，不修改已有游戏的存档协议。
 
-**当前公开发布的版本仍为 v0.2.0**，包含 2048 和跳一跳，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)。v0.3.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+**最新正式版本为 v0.3.0**，新增旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 ## 开发与运行
 
 固定 **Unity 6000.3.27f1（Apple Silicon）**，安装 Android Build Support 及配套 SDK/NDK/OpenJDK。C# 使用 VS Code + Unity 扩展，独立测试使用 .NET 10.0.403。完整环境、IDE 和构建步骤见 [开发说明](docs/development.md)。
 
-在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击。
+在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击；成语接龙输入后点击发送，点击气泡查看释义。
 
 ```bash
 scripts/check-environment.sh
@@ -32,6 +33,9 @@ scripts/test-jump-persistence.sh
 scripts/test-sheep.sh
 scripts/test-sheep-persistence.sh
 scripts/test-sheep-layouts.sh
+scripts/test-idiom.sh
+scripts/test-idiom-persistence.sh
+scripts/test-idiom-resources.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -40,7 +44,15 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
-[旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+
+## 成语接龙与离线词库
+
+成语接龙已接入，内置 42,851 个可玩成语；双模式、开局选择、三次提示小结和生词本的页面说明见[成语接龙玩法与 UI](docs/idiom-game.md)。使用 `scripts/test-idiom-data.sh` 验证清洗规则，运行 `python3 -B scripts/import-idioms.py` 离线整理两个固定版本的词库。缺少原始文件时可加 `--fetch` 下载；产物、冲突隔离和复现方式见[成语数据清洗说明](docs/idiom-data.md)。
+
+运行资源位于 `Assets/Resources/Idioms`，普通构建不需要下载或运行清洗。重新导出用 `python3 scripts/pack-idioms.py`；只在进入游戏时加载索引，释义按分片读取。
+
+多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-0.3.0-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；不要用普通安装脚本代替这项隔离配置。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
 
 ## 当前范围
 

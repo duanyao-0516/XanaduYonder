@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "ruleVersion": "idiom-clean-v1",
+  "repositories": {
+    "jingmo": {"url": "https://github.com/hefengbao/jingmo-data", "commit": "dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72", "license": "MIT"},
+    "xinhua": {"url": "https://github.com/pwxcoo/chinese-xinhua", "commit": "fe6d6c2e8baa82187f4c96bbe042e43f96c05666", "license": "MIT"}
+  },
+  "files": [
+    {"source": "jingmo", "cacheName": "jingmo-v5-1.json", "expectedRecords": 10000, "sha256": "b25d7062e4a4c8a9c0b11affee749896816b5f66bea94627cd38979b6729a96f", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/api/chinese_idiom_v5_1.json"},
+    {"source": "jingmo", "cacheName": "jingmo-v5-2.json", "expectedRecords": 10000, "sha256": "a63257e6e53eadfa97818eb6532984ac7c21b7afd76ff9c29d42a928b7337dfc", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/api/chinese_idiom_v5_2.json"},
+    {"source": "jingmo", "cacheName": "jingmo-v5-3.json", "expectedRecords": 10000, "sha256": "315cc19da27f504eecd2ccebc0503ad42fc3e2fef77f76d58e10063e19be129c", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/api/chinese_idiom_v5_3.json"},
+    {"source": "jingmo", "cacheName": "jingmo-v5-4.json", "expectedRecords": 10000, "sha256": "cdd202c0ab8874c94fa6258873a079d9befe630b2c5402e114d5e9b270ec9bb6", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/api/chinese_idiom_v5_4.json"},
+    {"source": "jingmo", "cacheName": "jingmo-v5-5.json", "expectedRecords": 9639, "sha256": "7472a7b27ca3b41efca32ab327533eea7398a2f95533fa213e023d368ae0729d", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/api/chinese_idiom_v5_5.json"},
+    {"source": "xinhua", "cacheName": "xinhua-idiom.json", "expectedRecords": 30895, "sha256": "1d4b4f454ce1c416d6a1ab2369d6e66c0ff99e04390172eef70790499e21ce19", "url": "https://raw.githubusercontent.com/pwxcoo/chinese-xinhua/fe6d6c2e8baa82187f4c96bbe042e43f96c05666/data/idiom.json"}
+  ],
+  "licenses": [
+    {"source": "jingmo", "cacheName": "jingmo-data-LICENSE", "sha256": "a19557c715bfbec568bde1f1f7c5cc1e9e5828650d1a4e8534220abccefd811a", "url": "https://raw.githubusercontent.com/hefengbao/jingmo-data/dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72/LICENSE"},
+    {"source": "xinhua", "cacheName": "xinhua-LICENSE", "sha256": "4cc347022d0f50a5ddd45de1caf34aa1cf6ad71e68fa712b0fd30ab9b05e2da8", "url": "https://raw.githubusercontent.com/pwxcoo/chinese-xinhua/fe6d6c2e8baa82187f4c96bbe042e43f96c05666/LICENSE"}
+  ],
+  "font": {"path": "Assets/Resources/Fonts/NotoSansCJKsc-Regular.otf", "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b"}
+}

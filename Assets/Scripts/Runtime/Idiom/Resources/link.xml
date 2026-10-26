@@ -1,0 +1,7 @@
+<linker>
+  <!-- Definition DTO setters are reached through Newtonsoft on IL2CPP. -->
+  <assembly fullname="XanaduYonder.Runtime">
+    <type fullname="XanaduYonder.Runtime.Idiom.IdiomDefinition" preserve="all" />
+    <type fullname="XanaduYonder.Runtime.Idiom.IdiomCitation" preserve="all" />
+  </assembly>
+</linker>

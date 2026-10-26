@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
+using XanaduYonder.Runtime.Idiom;
 
 namespace XanaduYonder.Runtime
 {
@@ -36,8 +37,10 @@ namespace XanaduYonder.Runtime
         private Text lobbySheepRecordText;
         private JumpPage jumpPage;
         private SheepPage sheepPage;
+        private IdiomPage idiomPage;
+        private Text lobbyIdiomRecordText;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump, Sheep }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -126,27 +129,81 @@ namespace XanaduYonder.Runtime
             var introduction = UiFactory.Rect(content, "Lobby introduction", 0, 0, 720, 180);
             UiFactory.Label(introduction, "小小一局，慢慢向前。", 56, 0, 608, 92, 44, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 100, 608, 52, 25, UiFactory.Muted);
-            var card = UiFactory.Panel(content, "2048 game card", 56, 216, 608, 350, UiFactory.Ink);
-            UiFactory.Label(card.transform, "01   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Hex("C9D8B8"));
+            var cardCount = 0;
+            var card = AddLobbyCard(content, "2048", cardCount++, UiFactory.Ink);
+            UiFactory.Label(card.transform, cardCount.ToString("00") + "   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Hex("C9D8B8"));
             UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, Color.white);
             lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Hex("C9D8B8"));
             UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame);
-            var jumpCard = UiFactory.Panel(content, "Jump game card", 56, 590, 608, 350, UiFactory.Hex("E4E9D3"));
-            UiFactory.Label(jumpCard.transform, "02   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
+            var jumpCard = AddLobbyCard(content, "Jump", cardCount++, UiFactory.Hex("E4E9D3"));
+            UiFactory.Label(jumpCard.transform, cardCount.ToString("00") + "   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(jumpCard.transform, "跳一跳", 28, 74, 350, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(jumpCard.transform, "按住，松手，再远一点。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbyJumpBestText = UiFactory.Label(jumpCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddJumpPreview(jumpCard.transform);
             UiFactory.Button(jumpCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterJump, true);
-            var sheepCard = UiFactory.Panel(content, "Sheep game card", 56, 964, 608, 350, UiFactory.Hex("EEE7D3"));
-            UiFactory.Label(sheepCard.transform, "03   /   层层三消", 32, 22, 450, 36, 21, UiFactory.Accent);
+            var sheepCard = AddLobbyCard(content, "Sheep", cardCount++, UiFactory.Hex("EEE7D3"));
+            UiFactory.Label(sheepCard.transform, cardCount.ToString("00") + "   /   层层三消", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(sheepCard.transform, "旸了个旸", 28, 74, 380, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(sheepCard.transform, "翻开一层，凑齐三个。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddSheepPreview(sheepCard.transform);
             UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1342, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var idiomCard = AddLobbyCard(content, "Idiom", cardCount++, UiFactory.Hex("E1EBDD"));
+            UiFactory.Label(idiomCard.transform, cardCount.ToString("00") + "   /   一词一世界", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(idiomCard.transform, "成语接龙", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
+            var footerTop = 216 + cardCount * 374 + 4;
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            content.sizeDelta = new Vector2(720, footerTop + 74);
+        }
+
+        private static Image AddLobbyCard(Transform parent, string name, int index, Color color)
+        {
+            return UiFactory.Panel(parent, name + " game card", 56, 216 + index * 374, 608, 350, color);
+        }
+
+        private void BuildIdiom()
+        {
+            if (idiomPage != null) return;
+            var root = UiFactory.Rect(frame, "Idiom page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            idiomPage = root.gameObject.AddComponent<IdiomPage>();
+            idiomPage.Initialize(root, ShowLobby,
+                () => activePage == Page.Idiom && modal == null && !paused &&
+                    (focused || (idiomPage.KeyboardVisible && idiomPage.KeyboardForeground)),
+                SetStatus, OpenIdiomModal, CloseModal);
+            idiomPage.Changed += RefreshIdiomRecord;
+        }
+
+        private RectTransform OpenIdiomModal(string title, float height, Action back)
+        {
+            var panel = CreateModal(title, height);
+            dismissModal = back;
+            return panel;
+        }
+
+        private void RefreshIdiomRecord()
+        {
+            if (idiomPage != null) lobbyIdiomRecordText.text = idiomPage.BestLabel;
+        }
+
+        private void EnterIdiom()
+        {
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            sheepPage.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
+            activePage = Page.Idiom;
+            lobbyPage.SetActive(false);
+            gamePage.SetActive(false);
+            BuildIdiom();
+            if (status != null) status.gameObject.SetActive(false);
+            idiomPage.Enter();
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -206,6 +263,9 @@ namespace XanaduYonder.Runtime
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Sheep;
             lobbyPage.SetActive(false);
             gamePage.SetActive(false);
@@ -217,6 +277,9 @@ namespace XanaduYonder.Runtime
             StopAnimation();
             CloseModal();
             sheepPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Jump;
             lobbyPage.SetActive(false);
             gamePage.SetActive(false);
@@ -262,6 +325,9 @@ namespace XanaduYonder.Runtime
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Game2048;
             lobbyPage.SetActive(false);
             gamePage.SetActive(true);
@@ -277,6 +343,9 @@ namespace XanaduYonder.Runtime
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Lobby;
             gamePage.SetActive(false);
             lobbyPage.SetActive(true);
@@ -309,6 +378,7 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
             if (!inGame || modal != null || paused || !focused) return;
@@ -379,7 +449,7 @@ namespace XanaduYonder.Runtime
             };
         }
 
-        private Transform CreateModal(string title)
+        private RectTransform CreateModal(string title, float requestedHeight = 488)
         {
             StopAnimation();
             CloseModal();
@@ -389,10 +459,11 @@ namespace XanaduYonder.Runtime
             modal = overlay.gameObject;
             var modalFrame = UiFactory.Rect(modal.transform, "Dialog safe area", 0, 0, 720, 1320);
             modalFrame.gameObject.AddComponent<SafeDesignFrame>().Initialize(modalFrame, canvasRoot);
-            var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, 596, 488, UiFactory.Paper);
+            var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, modalFrame.rect.height - 64));
+            var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, 596, height, UiFactory.Paper);
             UiFactory.Center(panel.rectTransform);
-            UiFactory.Label(panel.transform, title, 32, 36, 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            return panel.transform;
+            UiFactory.Label(panel.transform, title, 32, 36, 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
+            return panel.rectTransform;
         }
 
         private void CloseModal()
@@ -414,17 +485,22 @@ namespace XanaduYonder.Runtime
             lobbyBestText.text = "你的最高纪录   " + data.BestScore;
             RefreshJumpBest();
             RefreshSheepRecord();
+            RefreshIdiomRecord();
         }
 
         private void SetStatus(string message)
         {
-            if (status != null) status.text = saveFailed ? saveWarning : sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
+            var pageError = activePage == Page.Idiom ? idiomPage?.SaveError :
+                activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
+                activePage == Page.Lobby ? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+            if (status != null) status.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
         private void Save()
         {
             jumpPage?.Save();
             sheepPage?.Save();
+            idiomPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -449,6 +525,7 @@ namespace XanaduYonder.Runtime
             feedback?.Stop();
             jumpPage?.Suspend();
             sheepPage?.Suspend();
+            idiomPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -460,10 +537,11 @@ namespace XanaduYonder.Runtime
 
         private void Update()
         {
-            if (paused || !focused) return;
+            if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (modal != null) dismissModal?.Invoke();
+                else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
@@ -477,14 +555,21 @@ namespace XanaduYonder.Runtime
         private void OnApplicationPause(bool value)
         {
             paused = value;
-            if (value) { StopAnimation(); feedback?.Stop(); Save(); }
+            if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }
 
         private void OnApplicationFocus(bool value)
         {
             focused = value;
-            if (!value) { StopAnimation(); feedback?.Stop(); Save(); }
+            if (!value)
+            {
+                // Android's soft input dialog sends focus(false) while the Activity
+                // remains resumed. Real backgrounding is handled by OnApplicationPause.
+                if (activePage != Page.Idiom) StopAnimation();
+                feedback?.Stop();
+                Save();
+            }
             else CheckEndState();
         }
 

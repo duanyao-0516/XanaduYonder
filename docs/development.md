@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -33,6 +33,10 @@ scripts/test-jump.sh
 scripts/test-jump-persistence.sh
 scripts/test-sheep.sh
 scripts/test-sheep-persistence.sh
+scripts/test-sheep-layouts.sh
+scripts/test-idiom.sh
+scripts/test-idiom-persistence.sh
+scripts/test-idiom-resources.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -43,7 +47,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-构建输出为 `artifacts/builds/XanaduYonder-0.3.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.3.0、Android versionCode 为 3；公开发布版本仍为 [v0.2.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)，构建本地 APK 不等于发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
+构建输出为 `artifacts/builds/XanaduYonder-0.3.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.3.0、Android versionCode 为 3；正式产物见 [v0.3.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
 
 如需单独创建/检查启动场景与构建设置：
 

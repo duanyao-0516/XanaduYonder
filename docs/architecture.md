@@ -1,14 +1,15 @@
 # 架构与存档契约
 
-当前开发版 v0.3.0 接入 2048、跳一跳和旸了个旸。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。当前公开 Release 仍为 v0.2.0；本页描述源码中的模块契约。
+v0.3.0 接入 2048、跳一跳、旸了个旸和成语接龙。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，发布情况见[版本记录](releases/v0.3.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
 | 2048 | `Game2048` / `BoardView` | `xanaduyonder-v1.json` | 对局、最高分及共用声音/触感设置 |
 | 跳一跳 | `Core/Jump` / `JumpPage`、`JumpSceneView` | `jump-v1.json` | 对局、最高分 |
 | 旸了个旸 | `Core/Sheep` / `SheepPage`、`SheepBoardView` | `sheep-v1.json` | 对局、累计通关、胜利已计数标记 |
+| 成语接龙 | `Core/Idiom` / `IdiomPage`、虚拟列表 | `idiom-v1.json`、`idiom-notebook-v1.json` | 双模式对局、草稿、最佳数量、共用生词本 |
 
-[跳一跳模块](jump-game.md)与[旸了个旸模块](sheep-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
+[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)与[成语接龙模块](idiom-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
 
 ## 职责
 
@@ -60,6 +61,14 @@
 `SheepGame` 拥有棋盘、7 格卡槽、移出区、三消与道具状态；`SheepBoardLayout` 根据关卡和布局编号派生几何位置；`SheepLevelGenerator` 构造初始局和一条可解取牌顺序。`SheepPage` 在取牌或使用道具后先保存模型，再播放表现；连续快速点击可接续已提交的新状态。完整挑战获胜时先更新 `CompletedRuns/WinRecorded` 再写盘，避免恢复终局后重复计数。
 
 `SheepSaveCodec` 严格校验 schemaVersion 1、gameId `sheep`、固定字段、JSON token 类型、牌数与位置列表、道具/撤回状态和胜利计数一致性，文件限制 128 KiB、深度 8。`SheepSaveStore` 仅访问 `sheep-v1.json` 及对应 `.bak/.tmp`；损坏主档尝试合法备份，写入失败不清空旧档。详见[字段契约](sheep-game.md#独立存档)。
+
+## 成语接龙的独立边界
+
+`IdiomGame` 拥有完整回合、双方已用集合、提示次数、结束原因和确定性随机状态；`IdiomLexicon` 拥有首字/首音索引。有效提交先完成用户词与 APP 回复的原子规则更新，再保存、呈现；动画不阻止下一次合法输入。
+
+`IdiomPage` 负责双模式、对话列表、草稿与弹窗。只进入成语页时加载压缩目录，详情按分片读取并保留最多 4 个缓存分片。Android 键盘通过独立桥接计算可见区域；IME 抢焦与应用切后台分别处理，暂停前保留草稿并结束原生编辑会话。
+
+`IdiomSaveStore` 与 `IdiomNotebookStore` 各自只访问对应主档、备份、临时文件。严格检查版本、字段类型与完整状态；对局上限 4 MiB，生词本最多 50,000 项/32 MiB。坏档或不兼容档案不会直接覆盖；明确确认后先归档原文件，再保存已读取的当前记录，无法读取时才创建新记录。其他小游戏的数据协议保持独立。
 
 ## 验证层次
 

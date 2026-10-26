@@ -140,6 +140,15 @@ namespace XanaduYonder.Runtime
         private Vector2 lastCanvasSize;
         private RectTransform frame;
         private RectTransform canvas;
+        private bool widthOnly;
+
+        // Text input pages must reflow when Android resizes their window for IME,
+        // instead of uniformly shrinking the entire page to a 1320-unit minimum.
+        public bool WidthOnly
+        {
+            get { return widthOnly; }
+            set { if (widthOnly == value) return; widthOnly = value; Refresh(); }
+        }
 
         public void Initialize(RectTransform frameRect, RectTransform canvasRect)
         {
@@ -165,7 +174,7 @@ namespace XanaduYonder.Runtime
             lastCanvasSize = canvasSize;
             var width = canvasSize.x * safeArea.width / Screen.width;
             var height = canvasSize.y * safeArea.height / Screen.height;
-            var scale = Mathf.Min(width / UiFactory.DesignWidth, height / UiFactory.DesignHeight);
+            var scale = widthOnly ? width / UiFactory.DesignWidth : Mathf.Min(width / UiFactory.DesignWidth, height / UiFactory.DesignHeight);
             frame.anchorMin = frame.anchorMax = new Vector2(.5f, .5f);
             frame.pivot = new Vector2(.5f, .5f);
             frame.sizeDelta = new Vector2(width / scale, height / scale);

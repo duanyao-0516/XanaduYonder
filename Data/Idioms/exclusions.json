@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {"word": "击石弹丝", "reason": "京墨读音和释义疑似错配到其他成语；保留原文，待来源核对。", "evidence": ["jingmo:word=击石弹丝", "xinhua:word=击石弹丝"]},
+    {"word": "云开雾散", "reason": "京墨拼音存在重复音节且与另一来源不同；保留原文，待核对。", "evidence": ["jingmo:word=云开雾散", "xinhua:word=云开雾散"]},
+    {"word": "屏气凝神", "reason": "京墨缺释义，新华补充释义含疑似错字；不得仅因补齐而自动放行。", "evidence": ["jingmo:word=屏气凝神", "xinhua:word=屏气凝神"]},
+    {"word": "安分守已", "reason": "与安分守己并存，存在疑似错字；不自动改字或建立别名，先隔离核对。", "evidence": ["jingmo:word=安分守已", "xinhua:word=安分守已"]}
+  ]
+}
