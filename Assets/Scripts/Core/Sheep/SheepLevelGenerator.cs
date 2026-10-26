@@ -5,13 +5,23 @@ namespace XanaduYonder.Core.Sheep
 {
     public static class SheepLevelGenerator
     {
-        public static GeneratedSheepBoard Generate(int level, uint seed)
+        public static GeneratedSheepBoard Generate(int level, uint seed, int previousLayoutId = -1)
         {
             if (level < 1 || level > 2) throw new ArgumentOutOfRangeException("level");
             uint random = seed == 0 ? 0x6D2B79F5u : seed;
-            // Mix small consecutive seeds before selecting one of only three variants.
+            // Mix small consecutive seeds before selecting a layout.
             SheepRandom.Index(ref random, int.MaxValue);
-            int layoutId = SheepRandom.Index(ref random, 3);
+            int layoutId;
+            if (level == 1) layoutId = SheepRandom.Index(ref random, SheepBoardLayout.NewLayoutStart);
+            else
+            {
+                int count = SheepBoardLayout.ChallengeLayoutCount - SheepBoardLayout.NewLayoutStart;
+                bool excludePrevious = previousLayoutId >= SheepBoardLayout.NewLayoutStart &&
+                    previousLayoutId < SheepBoardLayout.ChallengeLayoutCount;
+                int choice = SheepRandom.Index(ref random, count - (excludePrevious ? 1 : 0));
+                layoutId = SheepBoardLayout.NewLayoutStart + choice;
+                if (excludePrevious && layoutId >= previousLayoutId) layoutId++;
+            }
             SheepPosition[] positions = SheepBoardLayout.GetPositions(level, layoutId);
             int[] solution = RemovalOrder(positions, ref random);
             var kinds = new int[positions.Length];

@@ -146,6 +146,7 @@ namespace XanaduYonder.EditorTools
             QualitySettings.vSyncCount = 0;
             QualitySettings.antiAliasing = 0;
             QualitySettings.shadows = ShadowQuality.Disable;
+            AppBranding.Configure();
             SetLegacyInput();
             EnsureBootstrapScene();
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };

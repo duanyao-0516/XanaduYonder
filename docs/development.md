@@ -97,3 +97,9 @@ gh auth status
 应提交 `Assets/` 及其 `.meta`、`Packages/manifest.json`、`Packages/packages-lock.json`、`ProjectSettings/`、测试和脚本。`Library/`、IDE 生成的 `.sln/.csproj`、测试 `bin/obj`、APK、设备截图/日志、签名与许可均不提交。
 
 开发环境建议预留约 60 GB，且只保留需要的编辑器版本与平台模块。Android 工具链与个人已有的 Android Studio SDK 分开管理，避免版本混用。
+
+## 应用图标与启动标识
+
+`Assets/Branding/XY_logo.png` 原样使用项目所有者提供的图像。每次构建的 `AppBranding.Configure()` 配置默认及 Android Legacy/Round/Adaptive 图标，并验证 Unity Splash 只包含自己的 Logo，白底、静态显示2秒后淡出；这是 Unity 支持的最短 Logo 时长。Android 12 系统启动窗口也使用应用图标；Gradle生成后回调覆盖实际Activity主题的白色背景。
+
+Unity 6 Personal 允许关闭或定制Unity启动标识，见[官方发行说明](https://unity.com/releases/editor/whats-new/6000.0.0f1)与[6000.3 Player Settings](https://docs.unity3d.com/6000.3/Documentation/Manual/class-PlayerSettingsAndroid.html)。构建日志应出现 `branding verified` 和 `Android launch theme verified`；仍需冷启动录像确认实际系统窗口和Unity启动阶段。

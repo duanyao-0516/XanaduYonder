@@ -62,8 +62,8 @@ namespace XanaduYonder.Runtime
             BuildGame();
             BuildJump();
             BuildSheep();
-            var statusBand = UiFactory.Band(frame, "Status", 1250, 48, 1);
-            status = UiFactory.Label(statusBand, "", 56, 0, 608, 48, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
+            status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
             SetStatus(saveWarning ?? "所有玩法离线可用 · 进度自动保存");
             Debug.Log("XanaduYonder ready; save=" + store.SavePath);

@@ -79,11 +79,11 @@ namespace XanaduYonder.Core.Sheep
             switch (tool)
             {
                 case SheepTool.RemoveThree:
-                    return !state.RemoveUsed && state.Tray.Length > 0 && state.Reserve.Length + Math.Min(3, state.Tray.Length) <= 6;
+                    return state.Tray.Length > 0 && state.Reserve.Length + Math.Min(3, state.Tray.Length) <= 6;
                 case SheepTool.Undo:
-                    return !state.UndoUsed && state.LastPickedId >= 0;
+                    return state.LastPickedId >= 0;
                 case SheepTool.Shuffle:
-                    if (phase != SheepPhase.Playing || state.ShuffleUsed) return false;
+                    if (phase != SheepPhase.Playing) return false;
                     int boardCount = 0;
                     foreach (SheepLocation location in state.Locations) if (location == SheepLocation.Board) boardCount++;
                     return boardCount >= 2;

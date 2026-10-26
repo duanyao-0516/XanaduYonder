@@ -43,36 +43,36 @@ namespace XanaduYonder.Runtime.Sheep
             UiFactory.Button(nav, "‹  大厅", 56, 34, 150, 58, lobby);
             UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
             UiFactory.Button(nav, "设置", 552, 34, 112, 58, settings);
-            var heading = UiFactory.Band(root, "Sheep heading", 110, 104, .04f);
-            UiFactory.Label(heading, "旸了个旸", 56, 0, 440, 88, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var heading = UiFactory.Band(root, "Sheep heading", 102, 92, .04f);
+            UiFactory.Label(heading, "旸了个旸", 56, 0, 440, 84, 58, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "03 / 层层三消", 464, 24, 200, 42, 20, UiFactory.Muted, TextAnchor.MiddleRight);
-            var stats = UiFactory.Band(root, "Sheep progress", 214, 44, .12f);
-            levelText = UiFactory.Label(stats, "", 56, 0, 300, 44, 25, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            progress = UiFactory.Label(stats, "", 340, 0, 324, 44, 21, UiFactory.Muted, TextAnchor.MiddleRight);
-            var stageBand = UiFactory.Band(root, "Sheep board", 276, 540, .30f);
-            var stage = UiFactory.Panel(stageBand, "Layered tile board", 32, 0, 656, 540, UiFactory.Hex("E9EEDB")).rectTransform;
-            var reserveBand = UiFactory.Band(root, "Sheep reserve", 832, 110, .62f);
-            var reserve = UiFactory.Rect(reserveBand, "Move-out reserve", 56, 0, 608, 110);
-            var trayBand = UiFactory.Band(root, "Sheep tray", 958, 126, .78f);
-            var tray = UiFactory.Panel(trayBand, "Seven-slot tray", 48, 0, 624, 124, UiFactory.Hex("E1E8CE")).rectTransform;
+            var stats = UiFactory.Band(root, "Sheep progress", 198, 38, .12f);
+            levelText = UiFactory.Label(stats, "", 56, 0, 300, 38, 25, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
+            progress = UiFactory.Label(stats, "", 340, 0, 324, 38, 21, UiFactory.Muted, TextAnchor.MiddleRight);
+            var stageBand = UiFactory.Band(root, "Sheep board", 248, 630, .30f);
+            var stage = UiFactory.Panel(stageBand, "Layered tile board", 32, 0, 656, 630, UiFactory.Hex("E9EEDB")).rectTransform;
+            var reserveBand = UiFactory.Band(root, "Sheep reserve", 888, 104, .62f);
+            var reserve = UiFactory.Rect(reserveBand, "Move-out reserve", 56, 0, 608, 104);
+            var trayBand = UiFactory.Band(root, "Sheep tray", 1008, 136, .78f);
+            var tray = UiFactory.Panel(trayBand, "Seven-slot tray", 48, 0, 624, 136, UiFactory.Hex("E1E8CE")).rectTransform;
             board = new SheepBoardView(root, stage, tray, reserve, Pick);
 
-            var tools = UiFactory.Band(root, "Sheep tools", 1104, 76, .92f);
-            removeButton = UiFactory.Button(tools, "移出 ×1", 56, 0, 192, 70, () => UseTool(SheepTool.RemoveThree));
-            undoButton = UiFactory.Button(tools, "撤回 ×1", 264, 0, 192, 70, () => UseTool(SheepTool.Undo));
-            shuffleButton = UiFactory.Button(tools, "洗牌 ×1", 472, 0, 192, 70, () => UseTool(SheepTool.Shuffle));
+            var tools = UiFactory.Band(root, "Sheep tools", 1156, 62, .92f);
+            removeButton = UiFactory.Button(tools, "移出", 56, 0, 192, 62, () => UseTool(SheepTool.RemoveThree));
+            undoButton = UiFactory.Button(tools, "撤回", 264, 0, 192, 62, () => UseTool(SheepTool.Undo));
+            shuffleButton = UiFactory.Button(tools, "洗牌", 472, 0, 192, 62, () => UseTool(SheepTool.Shuffle));
             removeLabel = removeButton.GetComponentInChildren<Text>();
             undoLabel = undoButton.GetComponentInChildren<Text>();
             shuffleLabel = shuffleButton.GetComponentInChildren<Text>();
-            var actions = UiFactory.Band(root, "Sheep actions", 1194, 46, 1);
-            UiFactory.Button(actions, "重开本关", 56, 0, 190, 46, ConfirmRestart);
-            UiFactory.Button(actions, "玩法", 534, 0, 130, 46, ShowHelp);
-            hint = UiFactory.Label(actions, "只取未被盖住的牌", 252, 0, 278, 46, 20, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var actions = UiFactory.Band(root, "Sheep actions", 1232, 40, 1);
+            UiFactory.Button(actions, "重开本关", 56, 0, 190, 40, ConfirmRestart);
+            UiFactory.Button(actions, "玩法", 534, 0, 130, 40, ShowHelp);
+            hint = UiFactory.Label(actions, "只取未被盖住的牌", 252, 0, 278, 40, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
 
             // Result controls occupy the board only. Available rescue tools and reserve stay reachable below.
-            var resultBand = UiFactory.Band(root, "Sheep result", 276, 540, .30f);
+            var resultBand = UiFactory.Band(root, "Sheep result", 248, 630, .30f);
             resultPanel = resultBand.gameObject;
-            var panel = UiFactory.Panel(resultBand, "Round result", 88, 78, 544, 390, UiFactory.Paper);
+            var panel = UiFactory.Panel(resultBand, "Round result", 88, 120, 544, 390, UiFactory.Paper);
             panel.raycastTarget = true;
             resultTitle = UiFactory.Label(panel.transform, "", 24, 24, 496, 64, 36, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             resultMessage = UiFactory.Label(panel.transform, "", 32, 100, 480, 94, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -84,10 +84,10 @@ namespace XanaduYonder.Runtime.Sheep
             Debug.Log("XanaduYonder sheep ready; save=" + store.SavePath);
         }
 
-        private static SheepGame NewGame(int level)
+        private static SheepGame NewGame(int level, int previousLayoutId = -1)
         {
             var seed = unchecked((uint)DateTime.UtcNow.Ticks ^ (uint)Environment.TickCount);
-            return new SheepGame(level, seed == 0 ? 1u : seed);
+            return new SheepGame(SheepLevelGenerator.Generate(level, seed == 0 ? 1u : seed, previousLayoutId).Snapshot);
         }
 
         public void Enter()
@@ -159,19 +159,20 @@ namespace XanaduYonder.Runtime.Sheep
             var snapshot = game.GetSnapshot();
             levelText.text = snapshot.Level == 1 ? "第 1 关 · 热身" : "第 2 关 · 挑战";
             progress.text = "已消 " + game.ClearedCount + "  /  余 " + game.RemainingCount;
-            UpdateTool(removeButton, removeLabel, "移出", snapshot.RemoveUsed, game.CanUseTool(SheepTool.RemoveThree));
-            UpdateTool(undoButton, undoLabel, "撤回", snapshot.UndoUsed, game.CanUseTool(SheepTool.Undo));
-            UpdateTool(shuffleButton, shuffleLabel, "洗牌", snapshot.ShuffleUsed, game.CanUseTool(SheepTool.Shuffle));
-            hint.text = snapshot.Tray.Length >= 6 ? "卡槽只剩 1 格！" : "只取未被盖住的牌";
+            UpdateTool(removeButton, removeLabel, "移出", game.CanUseTool(SheepTool.RemoveThree));
+            UpdateTool(undoButton, undoLabel, "撤回", game.CanUseTool(SheepTool.Undo));
+            UpdateTool(shuffleButton, shuffleLabel, "洗牌", game.CanUseTool(SheepTool.Shuffle));
+            hint.text = snapshot.Tray.Length >= 6 ? "卡槽只剩 1 格！" :
+                snapshot.Reserve.Length == 6 ? "移出区已满，先点回" : "只取未被盖住的牌";
             if (game.Phase == SheepPhase.Lost) hint.text = "可用道具解困";
             else if (game.Phase == SheepPhase.Won) hint.text = "全部清空！";
             Changed?.Invoke();
         }
 
-        private static void UpdateTool(Button button, Text label, string title, bool used, bool canUse)
+        private static void UpdateTool(Button button, Text label, string title, bool canUse)
         {
             button.interactable = canUse;
-            label.text = title + (used ? " · 已用" : " ×1");
+            label.text = title;
             label.color = canUse ? UiFactory.Ink : UiFactory.Muted;
         }
 
@@ -184,7 +185,7 @@ namespace XanaduYonder.Runtime.Sheep
             var won = game.Phase == SheepPhase.Won;
             resultTitle.text = won ? (snapshot.Level == 1 ? "热身完成！" : "旸了个旸，过关！") : "卡槽满了，再想一想";
             resultMessage.text = won ? (snapshot.Level == 1 ? "接下来，挑战更多图案与叠层。" : "这一轮的牌已经全部消除。\n累计通关 " + data.CompletedRuns + " 次")
-                : (game.CanUseTool(SheepTool.Revive) ? "免费复活可移出前三张。\n下方尚未使用的移出、撤回也可解困。" : "本关的复活机会已用完。\n仍可尝试下方可用道具，或重新挑战。");
+                : (game.CanUseTool(SheepTool.Revive) ? "免费复活可移出前三张。\n下方的移出、撤回也可解困。" : "本关的复活机会已用完。\n仍可尝试下方可用道具，或重新挑战。");
             resultPrimary.interactable = won || game.CanUseTool(SheepTool.Revive);
             resultPrimaryLabel.text = won ? (snapshot.Level == 1 ? "进入第 2 关  →" : "再闯一轮")
                 : (snapshot.ReviveUsed ? "复活已使用" : "免费复活 ×1");
@@ -206,7 +207,8 @@ namespace XanaduYonder.Runtime.Sheep
 
         private void StartLevel(int level)
         {
-            Suspend(); game = NewGame(level); data.WinRecorded = false;
+            var previousLayoutId = game.GetSnapshot().Level == level ? game.GetSnapshot().LayoutId : -1;
+            Suspend(); game = NewGame(level, previousLayoutId); data.WinRecorded = false;
             Save(); Refresh();
             setStatus(warning ?? (level == 1 ? "从热身开始，找齐三张相同图案。" : "挑战开始：先观察叠层，再安排卡槽。"));
         }
@@ -222,7 +224,7 @@ namespace XanaduYonder.Runtime.Sheep
         private void ShowHelp()
         {
             if (!AcceptsInput) return;
-            showDialog("旸了个旸 · 玩法", "只取未被盖住的牌，三个相同即消除。\n卡槽装满 7 张失败，清空全部牌过关。\n移出前三张；撤回最近未消除的一张。\n洗牌重排场上图案，道具每关各一次。\n免费复活一次，第2关全清记一次通关。", "知道了", CheckEndState, null, null);
+            showDialog("旸了个旸 · 玩法", "只取未被盖住的牌，三个相同即消除。\n卡槽满7张失败，第2关全清记一次通关。\n移出前三张至移出区，最多暂存6张。\n撤回最近未消除的一张，洗牌重排场上。\n三种道具不限次数，复活每关一次。", "知道了", CheckEndState, null, null);
         }
 
         public void Save()

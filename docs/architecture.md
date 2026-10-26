@@ -64,3 +64,5 @@
 ## 验证层次
 
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
+
+本轮旸了个旸修订保留 `sheep-v1.json` 的字段协议及旧布局0..2。used 布尔改作三种道具的历史记录，配额不再由它们决定；复活仍一次。新挑战布局3..14采用多岛与错位叠层，并排除连续重开的上一布局。额外布局测试入口为 `scripts/test-sheep-layouts.sh`。

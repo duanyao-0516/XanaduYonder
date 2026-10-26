@@ -17,7 +17,10 @@ internal static class Program
         Check("Absent input returns a reason without partial state", () => Reject(null, "absent input"));
         Check("Both levels round trip with exact 64-bit completion counts", RoundTrip);
         Check("Literal schema fixture decodes without serializer defaults", KnownPayload);
+        Check("Legacy challenge layouts and historical used flags still restore", LegacyChallengeState);
         Check("Slot order, reserve and tool state survive a real played game", PlayedRoundTrip);
+        Check("Historical used flags preserve unlimited tool eligibility after JSON and disk restore", ReusableToolsRoundTrip);
+        Check("Six reserve cards from repeated removes survive schema 1 storage", RepeatedRemoveRoundTrip);
         Check("Won tutorial and recorded challenge remain distinguishable", WinningRoundTrip);
         Check("Lost and revived games retain exact tray and tool state", LostAndRevivedRoundTrip);
         Check("Every required field rejects missing and explicit null", RequiredFields);
@@ -88,6 +91,89 @@ internal static class Program
         Assert(decoded.Game.Kinds.Length == 18 && decoded.Game.Kinds.Count(kind => kind == 2) == 6, "Fixture card counts changed.");
         Assert(decoded.Game.Tray.Length == 0 && decoded.Game.Reserve.Length == 0 && decoded.Game.LastPickedId == -1, "Missing fields got defaults.");
         Assert(decoded.CompletedRuns == 9007199254740993L && !decoded.WinRecorded, "Literal completion count lost precision.");
+    }
+
+    private static void ReusableToolsRoundTrip()
+    {
+        var generated = SheepLevelGenerator.Generate(2, 23);
+        var game = new SheepGame(generated.Snapshot);
+        var id = generated.SolutionIds[0];
+        Assert(game.Pick(id).Changed && game.UseTool(SheepTool.Undo), "First undo fixture failed.");
+        Assert(game.Pick(id).Changed && game.UseTool(SheepTool.RemoveThree), "First remove fixture failed.");
+        Assert(game.UseTool(SheepTool.Shuffle), "First shuffle fixture failed.");
+        Assert(game.Pick(id).Changed, "Reserve pick fixture failed.");
+        var source = new SheepSaveData { Game = game.GetSnapshot(), CompletedRuns = 12 };
+        Assert(source.Game.RemoveUsed && source.Game.UndoUsed && source.Game.ShuffleUsed, "Expected historical flags from real actions.");
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
+        EqualState(source, decoded);
+        WithDirectory(directory =>
+        {
+            var store = new SheepSaveStore(directory);
+            Assert(store.TrySave(decoded, out error), error);
+            var disk = new SheepSaveStore(directory).Load(out var warning);
+            EqualState(decoded, disk);
+            Assert(warning == null, warning);
+            var resumed = new SheepGame(disk.Game);
+            Assert(resumed.CanUseTool(SheepTool.RemoveThree) && resumed.CanUseTool(SheepTool.Undo) && resumed.CanUseTool(SheepTool.Shuffle),
+                "Historical flags cannot impose quotas after restoring old schema 1 data.");
+            Assert(resumed.UseTool(SheepTool.Undo) && resumed.GetSnapshot().Reserve.SequenceEqual(new[] { id }), "Reused undo did not restore reserve.");
+            Assert(resumed.Pick(id).Changed && resumed.UseTool(SheepTool.RemoveThree), "Reused remove failed after restore.");
+            Assert(resumed.UseTool(SheepTool.Shuffle) && resumed.UseTool(SheepTool.Shuffle), "Repeated shuffles failed after restore.");
+            var next = new SheepSaveData { Game = resumed.GetSnapshot(), CompletedRuns = 12 };
+            Assert(store.TrySave(next, out error), error);
+            EqualState(next, new SheepSaveStore(directory).Load(out warning));
+        });
+    }
+
+    private static void LegacyChallengeState()
+    {
+        // v0.3.0 used these three layout ids. Card 143 is the highest right blind-stack card in each.
+        foreach (var layoutId in new[] { 0, 1, 2 })
+        {
+            var state = new SheepSnapshot
+            {
+                Level = 2, LayoutId = layoutId, RandomState = 17,
+                Kinds = Enumerable.Range(0, 144).Select(id => id / 9).ToArray(),
+                Locations = new SheepLocation[144], Tray = new[] { 143 }, Reserve = new[] { 131 },
+                RemoveUsed = true, UndoUsed = true, ShuffleUsed = true,
+                LastPickedId = 143, LastSource = (int)SheepLocation.Board, LastReserveIndex = -1
+            };
+            state.Locations[143] = SheepLocation.Tray;
+            state.Locations[131] = SheepLocation.Reserve;
+            var source = new SheepSaveData { Game = state, CompletedRuns = 7 };
+            Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
+            EqualState(source, decoded);
+            foreach (var tool in new[] { SheepTool.RemoveThree, SheepTool.Undo, SheepTool.Shuffle })
+            {
+                var game = new SheepGame(decoded.Game);
+                Assert(game.CanUseTool(tool) && game.UseTool(tool), "Legacy used flag still blocks " + tool);
+                Assert(game.GetSnapshot().TryValidate(out error), error);
+            }
+        }
+    }
+
+    private static void RepeatedRemoveRoundTrip()
+    {
+        var game = new SheepGame(2, 29);
+        while (game.GetSnapshot().Tray.Length < 6)
+        {
+            var state = game.GetSnapshot();
+            var id = Enumerable.Range(0, state.Kinds.Length).Where(game.CanPick)
+                .OrderBy(card => state.Tray.Count(slot => state.Kinds[slot] == state.Kinds[card])).First();
+            Assert(game.Pick(id).Changed && game.Phase != SheepPhase.Lost, "Could not create six-card fixture.");
+        }
+        Assert(game.UseTool(SheepTool.RemoveThree) && game.UseTool(SheepTool.RemoveThree), "Two move actions must be allowed.");
+        var source = new SheepSaveData { Game = game.GetSnapshot() };
+        Assert(source.Game.Reserve.Length == 6 && source.Game.RemoveUsed && !source.Game.ReviveUsed, "Repeated move does not need a revival flag.");
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
+        EqualState(source, decoded);
+        WithDirectory(directory =>
+        {
+            var store = new SheepSaveStore(directory);
+            Assert(store.TrySave(source, out error), error);
+            EqualState(source, new SheepSaveStore(directory).Load(out var warning));
+            Assert(warning == null, warning);
+        });
     }
 
     private static void LostAndRevivedRoundTrip()

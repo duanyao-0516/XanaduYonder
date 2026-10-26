@@ -10,6 +10,7 @@ namespace XanaduYonder.Core.Sheep
         public SheepLocation[] Locations;
         public int[] Tray, Reserve;
         public uint RandomState;
+        // The first three flags record historical use for schema 1 compatibility, not remaining quotas.
         public bool RemoveUsed, UndoUsed, ShuffleUsed, ReviveUsed;
         public int LastPickedId = -1, LastSource = -1, LastReserveIndex = -1;
 
@@ -31,7 +32,7 @@ namespace XanaduYonder.Core.Sheep
         {
             error = null;
             if (Level < 1 || Level > 2) return Invalid("Unsupported level.", out error);
-            if (LayoutId < 0 || LayoutId > 2) return Invalid("Unsupported layout.", out error);
+            if (!SheepBoardLayout.IsSupported(Level, LayoutId)) return Invalid("Unsupported layout.", out error);
             if (RandomState == 0) return Invalid("Random state must be nonzero.", out error);
             int total = Level == 1 ? 18 : 144, kindCount = Level == 1 ? 3 : 16;
             if (Kinds == null || Locations == null || Tray == null || Reserve == null) return Invalid("Card arrays are required.", out error);
@@ -63,7 +64,7 @@ namespace XanaduYonder.Core.Sheep
             for (int id = 0; id < total; id++)
                 if ((Locations[id] == SheepLocation.Tray || Locations[id] == SheepLocation.Reserve) != seen[id])
                     return Invalid("Card locations disagree with storage lists.", out error);
-            int reserveLimit = (RemoveUsed ? 3 : 0) + (ReviveUsed ? 3 : 0);
+            int reserveLimit = RemoveUsed ? 6 : (ReviveUsed ? 3 : 0);
             if (Reserve.Length > reserveLimit || (RemoveUsed && outsideBoard == 0) || (ReviveUsed && (Level == 1 || outsideBoard < 7)))
                 return Invalid("Tool flags disagree with moved cards.", out error);
             if (LastPickedId == -1)
@@ -78,6 +79,8 @@ namespace XanaduYonder.Core.Sheep
                 {
                     if (LastReserveIndex != -1 || !SheepBoardLayout.IsExposed(SheepBoardLayout.GetPositions(Level, LayoutId), Locations, LastPickedId))
                         return Invalid("Undo board source is covered or has a reserve index.", out error);
+                    if ((RemoveUsed && outsideBoard < 2) || (ReviveUsed && outsideBoard < 8))
+                        return Invalid("Undo would erase the card history required by tool flags.", out error);
                 }
                 else if (LastSource == (int)SheepLocation.Reserve)
                 {
