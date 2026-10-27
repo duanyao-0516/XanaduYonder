@@ -1,14 +1,17 @@
 # 架构与存档契约
 
-当前开发版 v0.3.0 接入 2048、跳一跳和旸了个旸。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。当前公开 Release 仍为 v0.2.0；本页描述源码中的模块契约。
+本 Zuma 分支基于 v0.3.0，接入 2048、跳一跳、旸了个旸和 Zuma。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述该分支的模块契约。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
 | 2048 | `Game2048` / `BoardView` | `xanaduyonder-v1.json` | 对局、最高分及共用声音/触感设置 |
 | 跳一跳 | `Core/Jump` / `JumpPage`、`JumpSceneView` | `jump-v1.json` | 对局、最高分 |
 | 旸了个旸 | `Core/Sheep` / `SheepPage`、`SheepBoardView` | `sheep-v1.json` | 对局、累计通关、胜利已计数标记 |
+| Zuma | `Core/Zuma` / `ZumaPage`、`ZumaView` | `zuma-v1.json` | 18×4 最佳成绩、完整对局、结果提交/确认标记 |
 
 [跳一跳模块](jump-game.md)与[旸了个旸模块](sheep-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
+
+Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-10-27-zuma-design.md)和[验证记录](verification-zuma.md)，保持以下旧存档协议不变。独立横屏画布采用 1280×720 设计尺寸，退出后恢复大厅方向；原竖屏布局常量保持不变。
 
 ## 职责
 
@@ -62,6 +65,10 @@
 `SheepSaveCodec` 严格校验 schemaVersion 1、gameId `sheep`、固定字段、JSON token 类型、牌数与位置列表、道具/撤回状态和胜利计数一致性，文件限制 128 KiB、深度 8。`SheepSaveStore` 仅访问 `sheep-v1.json` 及对应 `.bak/.tmp`；损坏主档尝试合法备份，写入失败不清空旧档。详见[字段契约](sheep-game.md#独立存档)。
 
 ## 验证层次
+
+Zuma 的纯规则由 `ZumaGame` 拥有，`ZumaPage` 调度导航、输入、运行与保存。`ZumaLevelCache` 保存纯路径数据，独立于可释放的视觉资源，使退出后仍能校验和重试保存。`ZumaSaveStore` 独占 `zuma-v1.json/.bak/.tmp`，未知版本及无法可靠识别的超限文件受写保护。成绩提交和结果确认分别持久化，声音/触感只通过宿主回调写入原公共设置。
+
+Zuma 失焦/后台时取消触摸、冻结模拟并同步保存，回前台显示暂停。有效发射、换球、导航及每 2 秒运行周期保存；失败保留 dirty 内存并重试。新测试入口为 `scripts/test-zuma.sh`、`scripts/test-zuma-input.sh`、`scripts/test-zuma-persistence.sh` 和 `python3 scripts/test-zuma-assets.py`。
 
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
 

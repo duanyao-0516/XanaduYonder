@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
+using XanaduYonder.Runtime.Zuma;
 
 namespace XanaduYonder.Runtime
 {
@@ -36,8 +37,9 @@ namespace XanaduYonder.Runtime
         private Text lobbySheepRecordText;
         private JumpPage jumpPage;
         private SheepPage sheepPage;
+        private ZumaPage zumaPage;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump, Sheep }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Zuma }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -62,6 +64,7 @@ namespace XanaduYonder.Runtime
             BuildGame();
             BuildJump();
             BuildSheep();
+            BuildZuma();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -110,7 +113,7 @@ namespace XanaduYonder.Runtime
             scrollSurface.color = Color.clear;
             scrollSurface.raycastTarget = true;
             viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1416);
+            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1790);
             content.anchorMin = content.anchorMax = new Vector2(.5f, 1);
             content.pivot = new Vector2(.5f, 1);
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
@@ -146,7 +149,52 @@ namespace XanaduYonder.Runtime
             lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddSheepPreview(sheepCard.transform);
             UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1342, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var zumaCard = UiFactory.Panel(content, "Zuma game card", 56, 1338, 608, 350, UiFactory.Hex("394F35"));
+            UiFactory.Label(zumaCard.transform, "04   /   神庙弹珠", 32, 22, 450, 36, 21, UiFactory.Hex("DAD7A4"));
+            UiFactory.Label(zumaCard.transform, "Zuma", 28, 74, 540, 90, 62, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(zumaCard.transform, "转动青蛙，让同色弹珠相遇。", 32, 170, 548, 40, 25, Color.white);
+            UiFactory.Label(zumaCard.transform, "横屏游玩  ·  18 张地图  ·  4 档难度", 32, 216, 548, 38, 21, UiFactory.Hex("DAD7A4"));
+            UiFactory.Button(zumaCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterZuma);
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1716, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+        }
+
+        private void BuildZuma()
+        {
+            // Keep the session host active when either canvas is hidden, so lifecycle saves still run.
+            var host = new GameObject("Zuma session host");
+            host.transform.SetParent(transform, false);
+            zumaPage = host.AddComponent<ZumaPage>();
+            zumaPage.Initialize(FinishZumaExit, () => data.SoundEnabled, () => data.HapticsEnabled,
+                SetZumaSetting, feedback);
+        }
+
+        private void EnterZuma()
+        {
+            if (activePage == Page.Zuma) return;
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            sheepPage.Leave();
+            Save();
+            activePage = Page.Zuma;
+            canvasRoot.gameObject.SetActive(false);
+            zumaPage.Enter();
+        }
+
+        private void FinishZumaExit()
+        {
+            activePage = Page.Lobby;
+            canvasRoot.gameObject.SetActive(true);
+            ShowLobby();
+        }
+
+        private bool SetZumaSetting(bool soundSetting, bool enabled)
+        {
+            if (soundSetting) data.SoundEnabled = enabled;
+            else data.HapticsEnabled = enabled;
+            if (!data.SoundEnabled) feedback.Stop();
+            Save();
+            return !saveFailed;
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -273,6 +321,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            if (activePage == Page.Zuma && zumaPage.IsVisible) { zumaPage.Exit(); return; }
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
@@ -418,13 +467,14 @@ namespace XanaduYonder.Runtime
 
         private void SetStatus(string message)
         {
-            if (status != null) status.text = saveFailed ? saveWarning : sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
+            if (status != null) status.text = saveFailed ? saveWarning : zumaPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
         }
 
         private void Save()
         {
             jumpPage?.Save();
             sheepPage?.Save();
+            zumaPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -442,6 +492,7 @@ namespace XanaduYonder.Runtime
                 saveWarning = null;
                 SetStatus("进度已保存。");
             }
+            zumaPage?.CommonSettingsSaved(!saveFailed);
         }
 
         private void StopAnimation()
@@ -449,6 +500,7 @@ namespace XanaduYonder.Runtime
             feedback?.Stop();
             jumpPage?.Suspend();
             sheepPage?.Suspend();
+            zumaPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -463,6 +515,7 @@ namespace XanaduYonder.Runtime
             if (paused || !focused) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
                 if (modal != null) dismissModal?.Invoke();
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
@@ -477,6 +530,7 @@ namespace XanaduYonder.Runtime
         private void OnApplicationPause(bool value)
         {
             paused = value;
+            zumaPage?.HostActivity(!paused && focused);
             if (value) { StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }
@@ -484,10 +538,11 @@ namespace XanaduYonder.Runtime
         private void OnApplicationFocus(bool value)
         {
             focused = value;
+            zumaPage?.HostActivity(!paused && focused);
             if (!value) { StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }
 
-        private void OnApplicationQuit() { Save(); }
+        private void OnApplicationQuit() { zumaPage?.Suspend(); Save(); }
     }
 }

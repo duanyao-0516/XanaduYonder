@@ -32,6 +32,29 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        // Side-by-side device verification must never downgrade or replace the user's installed app.
+        public static void BuildZumaPreview()
+        {
+            RunOrFail(() =>
+            {
+                Prepare();
+                var identifier = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var product = PlayerSettings.productName;
+                try
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".zumapreview");
+                    PlayerSettings.productName = "Xanadu Zuma Preview";
+                    BuildApk("-zuma-preview.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, identifier);
+                    PlayerSettings.productName = product;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()
@@ -121,7 +144,8 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            // Startup remains portrait; the Zuma page requests fixed landscape only while active.
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
