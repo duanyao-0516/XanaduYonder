@@ -6,15 +6,17 @@
 
 ## 当前状态
 
-当前源码的开发版本为 **v0.3.0**，接入三款可离线游玩的游戏：
+当前源码的开发版本为 **v0.4.0**，接入四款可离线游玩的游戏：
 
 - **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 - **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。三款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，新游戏使用独立 `sheep-v1.json`，不修改已有游戏的存档协议。
+- **数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示与暂停续局。
 
-**当前公开发布的版本仍为 v0.2.0**，包含 2048 和跳一跳，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)。v0.3.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，数独使用独立 `sudoku-v1.json`，不修改已有游戏的存档协议。
+
+**当前公开发布的版本仍为 v0.2.0**，包含 2048 和跳一跳，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)。v0.4.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 ## 开发与运行
 
@@ -32,15 +34,19 @@ scripts/test-jump-persistence.sh
 scripts/test-sheep.sh
 scripts/test-sheep-persistence.sh
 scripts/test-sheep-layouts.sh
+scripts/test-sudoku.sh
+scripts/test-sudoku-content.sh --bank
+scripts/test-sudoku-persistence.sh
+scripts/test-sudoku-session.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
+APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 
-正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
+正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.4.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
-[旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[数独玩法与接入](docs/sudoku-game.md) · [数独验证记录](docs/verification-sudoku.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 当前范围
 

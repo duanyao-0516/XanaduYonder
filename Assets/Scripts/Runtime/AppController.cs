@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
+using XanaduYonder.Runtime.Sudoku;
 
 namespace XanaduYonder.Runtime
 {
@@ -34,10 +35,12 @@ namespace XanaduYonder.Runtime
         private Text lobbyBestText;
         private Text lobbyJumpBestText;
         private Text lobbySheepRecordText;
+        private Text lobbySudokuRecordText;
         private JumpPage jumpPage;
         private SheepPage sheepPage;
+        private SudokuPage sudokuPage;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump, Sheep }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Sudoku }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -62,6 +65,7 @@ namespace XanaduYonder.Runtime
             BuildGame();
             BuildJump();
             BuildSheep();
+            BuildSudoku();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -110,7 +114,7 @@ namespace XanaduYonder.Runtime
             scrollSurface.color = Color.clear;
             scrollSurface.raycastTarget = true;
             viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1416);
+            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1790);
             content.anchorMin = content.anchorMax = new Vector2(.5f, 1);
             content.pivot = new Vector2(.5f, 1);
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
@@ -146,7 +150,18 @@ namespace XanaduYonder.Runtime
             lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddSheepPreview(sheepCard.transform);
             UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1342, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var sudokuCard = UiFactory.Panel(content, "Sudoku game card", 56, 1338, 608, 350, UiFactory.Hex("DFE8DE"));
+            UiFactory.Label(sudokuCard.transform, "04   /   九宫推理", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sudokuCard.transform, "数独", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sudokuCard.transform, "九宫之间，找到唯一。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbySudokuRecordText = UiFactory.Label(sudokuCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            for (int i = 0; i < 9; i++)
+            {
+                var square = UiFactory.Panel(sudokuCard.transform, "Sudoku preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, UiFactory.Paper, false);
+                UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
+            }
+            UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, 1716, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -201,8 +216,29 @@ namespace XanaduYonder.Runtime
 
         private void RefreshSheepRecord() { lobbySheepRecordText.text = "累计通关   " + sheepPage.CompletedRuns + " 次"; }
 
+        private void BuildSudoku()
+        {
+            var root = UiFactory.Rect(frame, "Sudoku page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            sudokuPage = root.gameObject.AddComponent<SudokuPage>();
+            sudokuPage.Initialize(root, ShowLobby, OpenSettings,
+                () => activePage == Page.Sudoku && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus);
+            sudokuPage.Changed += RefreshSudokuRecord;
+            sudokuPage.Leave();
+        }
+
+        private void RefreshSudokuRecord() { lobbySudokuRecordText.text = "四档难度 · 已完成 " + sudokuPage.CompletedCount + " / 2,000 关"; }
+
+        private void EnterSudoku()
+        {
+            StopAnimation(); CloseModal(); jumpPage.Leave(); sheepPage.Leave();
+            activePage = Page.Sudoku; lobbyPage.SetActive(false); gamePage.SetActive(false); sudokuPage.Enter();
+        }
+
         private void EnterSheep()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
@@ -214,6 +250,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterJump()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             sheepPage.Leave();
@@ -259,6 +296,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterGame()
         {
+            sudokuPage.Leave();
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
@@ -273,6 +311,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
@@ -311,6 +350,7 @@ namespace XanaduYonder.Runtime
         {
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
+            if (activePage == Page.Sudoku) { sudokuPage.CheckEndState(); return; }
             if (!inGame || modal != null || paused || !focused) return;
             if (game.HasWon && !game.HasAcknowledgedWin)
                 ShowDialog("你好，2048！", "你已经完成这次挑战。\n还可以继续，看看数字能走多远。", "继续挑战", () =>
@@ -414,17 +454,19 @@ namespace XanaduYonder.Runtime
             lobbyBestText.text = "你的最高纪录   " + data.BestScore;
             RefreshJumpBest();
             RefreshSheepRecord();
+            RefreshSudokuRecord();
         }
 
         private void SetStatus(string message)
         {
-            if (status != null) status.text = saveFailed ? saveWarning : sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
+            if (status != null) status.text = saveFailed ? saveWarning : sudokuPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError ?? message;
         }
 
         private void Save()
         {
             jumpPage?.Save();
             sheepPage?.Save();
+            sudokuPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -464,6 +506,7 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (modal != null) dismissModal?.Invoke();
+                else if (activePage == Page.Sudoku) sudokuPage.Back();
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
@@ -477,6 +520,7 @@ namespace XanaduYonder.Runtime
         private void OnApplicationPause(bool value)
         {
             paused = value;
+            sudokuPage?.SetForeground(!paused && focused);
             if (value) { StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }
@@ -484,6 +528,7 @@ namespace XanaduYonder.Runtime
         private void OnApplicationFocus(bool value)
         {
             focused = value;
+            sudokuPage?.SetForeground(!paused && focused);
             if (!value) { StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }

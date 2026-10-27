@@ -1,14 +1,15 @@
 # 架构与存档契约
 
-当前开发版 v0.3.0 接入 2048、跳一跳和旸了个旸。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。当前公开 Release 仍为 v0.2.0；本页描述源码中的模块契约。
+当前开发版 v0.4.0 接入 2048、跳一跳、旸了个旸和数独。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。当前公开 Release 仍为 v0.2.0；本页描述源码中的模块契约。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
 | 2048 | `Game2048` / `BoardView` | `xanaduyonder-v1.json` | 对局、最高分及共用声音/触感设置 |
 | 跳一跳 | `Core/Jump` / `JumpPage`、`JumpSceneView` | `jump-v1.json` | 对局、最高分 |
 | 旸了个旸 | `Core/Sheep` / `SheepPage`、`SheepBoardView` | `sheep-v1.json` | 对局、累计通关、胜利已计数标记 |
+| 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuPage`、`SudokuBoardView` | `sudoku-v1.json` | 对局、撤回、计时、提示、模式、关卡完成记录 |
 
-[跳一跳模块](jump-game.md)与[旸了个旸模块](sheep-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
+[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)和[数独模块](sudoku-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
 
 ## 职责
 
@@ -66,3 +67,13 @@
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
 
 本轮旸了个旸修订保留 `sheep-v1.json` 的字段协议及旧布局0..2。used 布尔改作三种道具的历史记录，配额不再由它们决定；复活仍一次。新挑战布局3..14采用多岛与错位叠层，并排除连续重开的上一布局。额外布局测试入口为 `scripts/test-sheep-layouts.sh`。
+
+## 数独的独立边界
+
+`SudokuGame` 拥有正式数字、候选、撤回、错误与提示配额；`SudokuControls` 将普通/快速和正式/铅笔四种输入模式映射成规则操作。`SudokuSession` 拥有暂停、计时、当前已消耗次数的帮助及完成记录。`SudokuPage` 负责 Unity 呈现、输入和异步请求生命周期。
+
+内置题库有四档各 500 道题，题面与唯一答案固定版本。答案计算、唯一性搜索、逻辑难度评级和完整提示证据重放在开发机完成。客户端启动只检查资源 SHA-256、题面与答案一致性、答案行列宫合法性；填写时直接比对内置答案。题库导入与校验见[内容管线](sudoku-content.md)。
+
+提示从当前正确盘面重新构建候选，在后台线程中进行一步逻辑推导，有取消检查和 200ms 预算。无支持技巧或超预算时明确提供直接揭晓。主线程只接受仍属于当前会话、请求、盘面 revision 且在前台未暂停的结果，并在展示时扣除一次配额；过期、取消和计算失败不扣次。帮助与扣次同次保存，重看同一帮助不重复扣次，任何盘面变化令其失效。
+
+数独存档单独校验所有 JSON token、候选、合法动作历史、累计错误/提示、关卡 ID 和终局一致性，以临时文件 flush 后原子替换主档。原三款游戏的协议未改动。新增四个测试入口分别检查规则、真实文件持久化、会话生命周期和完整题库证明，Android 验证范围记录在[数独验证报告](verification-sudoku.md)。

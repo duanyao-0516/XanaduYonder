@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；数独点击格子和数字，支持铅笔候选与快速输入。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -33,6 +33,11 @@ scripts/test-jump.sh
 scripts/test-jump-persistence.sh
 scripts/test-sheep.sh
 scripts/test-sheep-persistence.sh
+scripts/test-sheep-layouts.sh
+scripts/test-sudoku.sh
+scripts/test-sudoku-persistence.sh
+scripts/test-sudoku-session.sh
+scripts/test-sudoku-content.sh --bank
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -43,7 +48,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-构建输出为 `artifacts/builds/XanaduYonder-0.3.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.3.0、Android versionCode 为 3；公开发布版本仍为 [v0.2.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)，构建本地 APK 不等于发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
+构建输出为 `artifacts/builds/XanaduYonder-0.4.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.4.0、Android versionCode 为 4；公开发布版本仍为 [v0.2.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)，构建本地 APK 不等于发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
 
 如需单独创建/检查启动场景与构建设置：
 
@@ -74,7 +79,7 @@ scripts/build-release.sh
 
 脚本缺少签名配置时立即失败。Unity 子进程不会收到上述变量，只生成关闭 Development Build、脚本调试与 profiler 连接的中间 APK；签名配置不进入 Unity 的 `ProjectSettings`。构建入口在结束或抛出异常时恢复原来的 Development 和自定义签名开关。
 
-脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入；拒绝 debuggable APK，并在签名验证成功后原子替换 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`。中间文件不会作为发布产物保留。脚本返回非零代表本次失败，即使目录中存在较早的正式 APK，也不能将其当作本次构建成功。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
+脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入；拒绝 debuggable APK，并在签名验证成功后原子替换 `artifacts/builds/XanaduYonder-0.4.0-android-arm64.apk`。中间文件不会作为发布产物保留。脚本返回非零代表本次失败，即使目录中存在较早的正式 APK，也不能将其当作本次构建成功。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
 
 Unity 日志为 `artifacts/logs/build-android-release.log`，本地签名验证日志为 `artifacts/logs/sign-android-release.log`。只上传最终 APK、校验和及公开发布说明；不要上传 keystore、口令、私有签名日志或整个构建目录。后续版本必须使用同一发布密钥才能覆盖升级。正式签名与现有开发签名不同，Android 会拒绝直接覆盖开发包；测试迁移前应先保护设备存档，不能直接卸载并丢失进度。
 
