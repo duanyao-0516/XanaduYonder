@@ -6,14 +6,16 @@
 
 ## 当前状态
 
-当前版本为 **v0.3.0**，接入四款可离线游玩的游戏：
+最新正式发行版为 **v0.3.0**，包含四款可离线游玩的游戏：
 
 - **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 - **成语接龙**：同字/同音双模式、机器/用户双开局、左右对话、免费提示与三次提示小结、可点击释义和本地生词本。
 - **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录，不修改已有游戏的存档协议。
+当前开发代码还包含 **06 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。**05 保留给另一个工作树开发的数独**。06 与成语接龙的双人、个性化学习功能尚未随 v0.3.0 正式发布。
+
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，当前开发版成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录，不修改其他游戏的存档协议。
 
 **最新正式版本为 v0.3.0**，新增旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -37,6 +39,8 @@ scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
 scripts/test-idiom-ui.sh
+scripts/test-watermelon.sh
+scripts/test-watermelon-persistence.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -56,6 +60,16 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 运行资源位于 `Assets/Resources/Idioms`，普通构建不需要下载或运行清洗。重新导出用 `python3 scripts/pack-idioms.py`；只在进入游戏时加载索引，释义按分片读取。
 
 多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-0.3.0-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；不要用普通安装脚本代替这项隔离配置。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
+
+## 06 · 合成大西瓜
+
+在容器上方左右拖动，松手投下当前物体；相同等级碰撞后合成更高一级。三种主题各有 11 级，切换主题保留当前对局与物理尺寸。新物体从前 5 级中随机生成，合并按原等级加分。达成第 11 级后可选择继续挑战；最高等级物体不再合并。警戒线使用持续 2 秒的越线宽限，并排除刚生成、仍在快速运动的物体，减少短暂弹跳导致的失败。
+
+游戏使用独立 Unity `PhysicsScene2D`，规则与存档由可独立测试的 C# 模块负责。`watermelon-v1.json` 保存棋盘中的物体位置与运动状态、当前及下一颗、随机序列、得分、最高分和主题，另有损坏恢复备份；不修改已有游戏的存档。大厅仍使用固定卡片高度与滚动列表。
+
+素材经用户授权，从 [idootop/watermelon](https://github.com/idootop/watermelon) 的固定版本导入。只使用 33 张图片与 4 个音效，游戏逻辑为原创 C#，没有复制其 AGPL-3.0 Dart 源码。文件来源、主题顺序及 SHA-256 见[素材清单](docs/watermelon-assets.md)。
+
+独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.3.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。本次尚未发布新版。
 
 ## 当前范围
 
