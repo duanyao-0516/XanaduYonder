@@ -46,6 +46,7 @@ namespace XanaduYonder.Runtime
         private Text lobbyWatermelonRecordText;
         private SudokuPage sudokuPage;
         private Text status;
+        private Text lobbyStatus;
         private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
@@ -108,14 +109,14 @@ namespace XanaduYonder.Runtime
             var root = UiFactory.Rect(frame, "Lobby", 0, 0, 720, 1320);
             UiFactory.Stretch(root);
             lobbyPage = root.gameObject;
-            var navigation = UiFactory.Band(root, "Lobby navigation", 0, 106, 0);
-            UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 42, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
+            var navigation = UiFactory.Band(root, "Lobby navigation", 0, 92, 0);
+            UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 30, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 22, 58, 58, OpenSettings);
             // Card dimensions and gaps stay fixed; additional games extend this content instead of shrinking it.
-            var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 132, 720, 1092);
+            var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 108, 720, 1196);
             UiFactory.Stretch(viewport);
-            viewport.offsetMin = new Vector2(0, 96);
-            viewport.offsetMax = new Vector2(0, -132);
+            viewport.offsetMin = new Vector2(0, 16);
+            viewport.offsetMax = new Vector2(0, -108);
             var scrollSurface = viewport.gameObject.AddComponent<Image>();
             scrollSurface.color = Color.clear;
             scrollSurface.raycastTarget = true;
@@ -137,12 +138,13 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(introduction, "小小一局，慢慢向前。", 56, 0, 608, 92, 44, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 100, 608, 52, 25, UiFactory.Muted);
             var cardCount = 0;
-            var card = AddLobbyCard(content, "2048", cardCount++, UiFactory.Ink);
-            UiFactory.Label(card.transform, cardCount.ToString("00") + "   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Hex("C9D8B8"));
-            UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, Color.white);
-            lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Hex("C9D8B8"));
-            UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame);
+            var card = AddLobbyCard(content, "2048", cardCount++, UiFactory.Hex("E3E9DF"));
+            UiFactory.Label(card.transform, cardCount.ToString("00") + "   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            lobbyBestText.resizeTextForBestFit = true; lobbyBestText.resizeTextMinSize = 14; lobbyBestText.resizeTextMaxSize = 21;
+            UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame, true);
             var jumpCard = AddLobbyCard(content, "Jump", cardCount++, UiFactory.Hex("E4E9D3"));
             UiFactory.Label(jumpCard.transform, cardCount.ToString("00") + "   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(jumpCard.transform, "跳一跳", 28, 74, 350, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -157,23 +159,6 @@ namespace XanaduYonder.Runtime
             lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
             AddSheepPreview(sheepCard.transform);
             UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
-            var idiomCard = AddLobbyCard(content, "Idiom", cardCount++, UiFactory.Hex("E1EBDD"));
-            UiFactory.Label(idiomCard.transform, cardCount.ToString("00") + "   /   一词一世界", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(idiomCard.transform, "成语接龙", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
-            var sudokuCard = AddLobbyCard(content, "Sudoku", cardCount++, UiFactory.Hex("DFE8DE"));
-            UiFactory.Label(sudokuCard.transform, cardCount.ToString("00") + "   /   九宫推理", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(sudokuCard.transform, "数独", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(sudokuCard.transform, "九宫之间，找到唯一。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbySudokuRecordText = UiFactory.Label(sudokuCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            for (int i = 0; i < 9; i++)
-            {
-                var square = UiFactory.Panel(sudokuCard.transform, "Sudoku preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, UiFactory.Paper, false);
-                UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
-            }
-            UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
             var watermelonCard = AddLobbyCard(content, "Watermelon", cardCount++, UiFactory.Hex("F1E4C4"));
             UiFactory.Label(watermelonCard.transform, cardCount.ToString("00") + "   /   碰碰合成", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(watermelonCard.transform, "合成大西瓜", 28, 74, 460, 90, 54, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -183,9 +168,27 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(watermelonCard.transform, "小小一颗，合成满满的快乐。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbyWatermelonRecordText = UiFactory.Label(watermelonCard.transform, "水果 / 表情 / 校徽  ·  三种主题", 32, 216, 548, 38, 21, UiFactory.Accent);
             UiFactory.Button(watermelonCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterWatermelon, true);
+            var idiomCard = AddLobbyCard(content, "Idiom", cardCount++, UiFactory.Hex("E1EBDD"));
+            UiFactory.Label(idiomCard.transform, cardCount.ToString("00") + "   /   一词一世界", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(idiomCard.transform, "成语接龙", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
+            var sudokuCard = AddLobbyCard(content, "Sudoku", cardCount++, UiFactory.Hex("DFE8DE"));
+            UiFactory.Label(sudokuCard.transform, cardCount.ToString("00") + "   /   九宫推理", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sudokuCard.transform, "数独", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sudokuCard.transform, "九宫之间，找到唯一。", 32, 166, 548, 34, 25, UiFactory.Ink);
+            lobbySudokuRecordText = UiFactory.Label(sudokuCard.transform, "", 32, 206, 548, 58, 18, UiFactory.Accent);
+            for (int i = 0; i < 9; i++)
+            {
+                var square = UiFactory.Panel(sudokuCard.transform, "Sudoku preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, UiFactory.Paper, false);
+                UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
+            }
+            UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
-            content.sizeDelta = new Vector2(720, footerTop + 74);
+            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 进度自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            content.sizeDelta = new Vector2(720, footerTop + 108);
         }
 
         private static Image AddLobbyCard(Transform parent, string name, int index, Color color)
@@ -344,7 +347,12 @@ namespace XanaduYonder.Runtime
             sudokuPage.Leave();
         }
 
-        private void RefreshSudokuRecord() { lobbySudokuRecordText.text = "四档难度 · 已完成 " + sudokuPage.CompletedCount + " / 2,000 关"; }
+        private void RefreshSudokuRecord()
+        {
+            lobbySudokuRecordText.text = "四档难度 · 已完成 " + sudokuPage.CompletedCount + "/2000关\n" +
+                "入门 " + sudokuPage.CompletedCountForDifficulty(0) + " · 简单 " + sudokuPage.CompletedCountForDifficulty(1) +
+                " · 中等 " + sudokuPage.CompletedCountForDifficulty(2) + " · 困难 " + sudokuPage.CompletedCountForDifficulty(3);
+        }
 
         private void EnterSudoku()
         {
@@ -450,7 +458,7 @@ namespace XanaduYonder.Runtime
             idiomPage?.Leave();
             watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
-            if (status != null) status.gameObject.SetActive(true);
+            if (status != null) status.gameObject.SetActive(false);
             activePage = Page.Lobby;
             gamePage.SetActive(false);
             lobbyPage.SetActive(true);
@@ -603,10 +611,10 @@ namespace XanaduYonder.Runtime
 
         private void RefreshScores()
         {
-            data.BestScore = Math.Max(data.BestScore, game.Score);
+            Update2048Records();
             scoreText.text = game.Score.ToString();
             bestText.text = data.BestScore.ToString();
-            lobbyBestText.text = "你的最高纪录   " + data.BestScore;
+            lobbyBestText.text = "最高纪录 " + data.BestScore + " · 最高数字 " + data.BestTile;
             RefreshJumpBest();
             RefreshSheepRecord();
             RefreshIdiomRecord();
@@ -619,7 +627,14 @@ namespace XanaduYonder.Runtime
             var pageError = activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
                 activePage == Page.Lobby ? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
-            if (status != null) status.text = saveFailed ? saveWarning : pageError ?? message;
+            var target = activePage == Page.Lobby ? lobbyStatus : status;
+            if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
+        }
+
+        private void Update2048Records()
+        {
+            data.BestScore = Math.Max(data.BestScore, game.Score);
+            for (int cell = 0; cell < 16; cell++) data.BestTile = Math.Max(data.BestTile, game.GetCell(cell));
         }
 
         private void Save()
@@ -631,7 +646,7 @@ namespace XanaduYonder.Runtime
             sudokuPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
-            data.BestScore = Math.Max(data.BestScore, game.Score);
+            Update2048Records();
             string error;
             if (!store.TrySave(data, out error))
             {

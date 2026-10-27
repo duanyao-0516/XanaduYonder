@@ -13,6 +13,8 @@ internal static class Program
     private static int Main()
     {
         Check("Fresh profile and game creation never invent an active slot", FreshProfile);
+        Check("Completion totals are counted independently for each difficulty", CompletionCounts);
+        Check("Completion totals refresh after capture without counting replays twice", CompletionCountsAfterCapture);
         Check("All four slots, pages and global completion metadata round trip", FourSlots);
         Check("Replacing one difficulty preserves all other slots", ReplaceOne);
         Check("Terminal capture clears only its slot and merges global completion", TerminalCapture);
@@ -63,6 +65,47 @@ internal static class Program
         Assert(SudokuProfileCodec.TryDecode(json, out var decoded, out var error), error);
         EqualProfile(original, decoded);
         for (var difficulty = 0; difficulty < 4; difficulty++) EqualSave(original.GetSlot(difficulty), decoded.GetSlot(difficulty));
+    }
+
+    private static void CompletionCounts()
+    {
+        var profile = new SudokuProfile();
+        for (int difficulty = 0; difficulty < 4; difficulty++)
+            Assert(profile.CompletedCountForDifficulty(difficulty) == 0, "Fresh difficulty invented completions.");
+        profile.CompletedIds = new[] { "se-v1-d0-l001", "se-v1-d0-l500", "se-v1-d1-l001", "se-v1-d2-l001", "se-v1-d2-l009", "se-v1-d2-l010", "se-v1-d3-l500" };
+        Assert(profile.TryValidate(out var error), error);
+        var expected = new[] { 2, 1, 3, 1 };
+        for (int difficulty = 0; difficulty < 4; difficulty++)
+            Assert(profile.CompletedCountForDifficulty(difficulty) == expected[difficulty], "Completion belongs to the wrong difficulty.");
+        Assert(expected.Sum() == profile.CompletedCount, "Per-difficulty counts differ from global total.");
+        foreach (int invalid in new[] { -1, 4, int.MinValue, int.MaxValue })
+        {
+            try { profile.CompletedCountForDifficulty(invalid); }
+            catch (ArgumentOutOfRangeException exception)
+            {
+                Assert(exception.ParamName == "difficulty", "Invalid difficulty omitted parameter name.");
+                continue;
+            }
+            throw new InvalidOperationException("Invalid difficulty was accepted.");
+        }
+        Assert(SudokuProfileCodec.TryDecode(SudokuProfileCodec.Encode(profile), out var restored, out error), error);
+        for (int difficulty = 0; difficulty < 4; difficulty++)
+            Assert(restored.CompletedCountForDifficulty(difficulty) == expected[difficulty], "Restored counts changed.");
+    }
+
+    private static void CompletionCountsAfterCapture()
+    {
+        var profile = new SudokuProfile();
+        Assert(profile.CompletedCountForDifficulty(1) == 0, "Fixture must start empty.");
+        profile.Capture(Terminal(1, true));
+        Assert(profile.CompletedCountForDifficulty(1) == 1 && profile.CompletedCount == 1, "New completion not reflected.");
+        profile.Capture(Terminal(1, true));
+        Assert(profile.CompletedCountForDifficulty(1) == 1 && profile.CompletedCount == 1, "Replay counted twice.");
+        profile.Capture(Terminal(3, true));
+        profile.Capture(Terminal(2, false));
+        Assert(profile.CompletedCountForDifficulty(0) == 0 && profile.CompletedCountForDifficulty(1) == 1 &&
+            profile.CompletedCountForDifficulty(2) == 0 && profile.CompletedCountForDifficulty(3) == 1 && profile.CompletedCount == 2,
+            "Later capture changed an unrelated count or recorded a loss.");
     }
 
     private static void ReplaceOne()

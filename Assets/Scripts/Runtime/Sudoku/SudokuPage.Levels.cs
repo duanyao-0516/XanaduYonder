@@ -19,10 +19,10 @@ namespace XanaduYonder.Runtime.Sudoku
             var page = UiFactory.Rect(root, "Sudoku level selection", 0, 0, 720, 1320); UiFactory.Stretch(page); selectionRoot = page.gameObject;
             selectionInput = page.gameObject.AddComponent<CanvasGroup>();
             var nav = UiFactory.Band(page, "Selection navigation", 0, 92, 0);
-            UiFactory.Button(nav, "‹  大厅", 36, 30, 150, 58, () => { if (CanSelect) returnLobby(); });
-            UiFactory.Label(nav, "XANADU / YONDER", 202, 30, 270, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            SudokuIcon.Button(nav, "玩法", SudokuIconKind.Book, 484, 30, 58, ShowRules);
-            UiFactory.Button(nav, "设置", 560, 30, 124, 58, () => { if (CanSelect) { difficultyDropdown.Hide(); openSettings(); } });
+            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, () => { if (CanSelect) returnLobby(); });
+            UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
+            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => { if (CanSelect) { difficultyDropdown.Hide(); openSettings(); } });
             var title = UiFactory.Band(page, "Selection heading", 108, 96, .05f);
             UiFactory.Label(title, "数独", 36, 0, 260, 80, 52, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(title, "基础九宫 · 离线 2,000 关", 280, 20, 404, 50, 24, UiFactory.Muted, TextAnchor.MiddleRight);
@@ -50,15 +50,16 @@ namespace XanaduYonder.Runtime.Sudoku
             var dropdown = surface.gameObject.AddComponent<SudokuDifficultyDropdown>(); dropdown.targetGraphic = surface; dropdown.CanOpen = () => CanSelect;
             dropdown.captionText = UiFactory.Label(surface.transform, Difficulties[selectedDifficulty], 22, 0, 158, 76, 28, UiFactory.Ink);
             SudokuIcon.Add(surface.transform, SudokuIconKind.Down, 186, 25, 26);
-            var template = UiFactory.Panel(surface.transform, "Difficulty options", 0, 82, 230, 256, UiFactory.Paper).rectTransform;
-            var viewport = UiFactory.Rect(template, "Viewport", 4, 0, 222, 256);
+            var template = UiFactory.Panel(surface.transform, "Difficulty options", 0, 82, 230, 272, UiFactory.Hex("D6C9AE")).rectTransform;
+            var viewport = UiFactory.Rect(template, "Viewport", 8, 0, 214, 272);
             viewport.gameObject.AddComponent<RectMask2D>();
-            // Dropdown derives padding from this single template item before cloning four options.
-            var content = UiFactory.Rect(viewport, "Content", 0, 0, 222, 64);
-            var item = UiFactory.Panel(content, "Option", 0, 0, 222, 64, UiFactory.Hex("E7EDE4")); item.raycastTarget = true;
+            // Dropdown derives all row positions from this single-item template. Its 8-unit
+            // padding keeps square rows inside the rounded outer panel, including the ends.
+            var content = UiFactory.Rect(viewport, "Content", 0, 0, 214, 80);
+            var item = UiFactory.Panel(content, "Option", 0, 8, 214, 64, UiFactory.Hex("F7F0E2"), false); item.raycastTarget = true;
             var toggle = item.gameObject.AddComponent<Toggle>(); toggle.targetGraphic = item;
-            toggle.graphic = UiFactory.Panel(item.transform, "Selected marker", 8, 20, 4, 24, UiFactory.Accent, false);
-            dropdown.itemText = UiFactory.Label(item.transform, "", 22, 0, 178, 64, 26, UiFactory.Ink);
+            toggle.graphic = UiFactory.Panel(item.transform, "Selected band", 0, 0, 214, 64, UiFactory.Hex("DBC7A3"), false);
+            dropdown.itemText = UiFactory.Label(item.transform, "", 22, 0, 170, 64, 26, UiFactory.Ink);
             var scroll = template.gameObject.AddComponent<ScrollRect>(); scroll.viewport = viewport; scroll.content = content;
             scroll.horizontal = false; scroll.vertical = true; scroll.movementType = ScrollRect.MovementType.Clamped;
             dropdown.template = template;
@@ -80,8 +81,7 @@ namespace XanaduYonder.Runtime.Sudoku
         private void RefreshSelection()
         {
             var slot = profile.GetSlot(selectedDifficulty);
-            int completed = 0;
-            foreach (var id in profile.CompletedIds) if (id.StartsWith("se-v1-d" + selectedDifficulty + "-", StringComparison.Ordinal)) completed++;
+            int completed = profile.CompletedCountForDifficulty(selectedDifficulty);
             selectionSummary.text = "已完成 " + completed + " / 500" + (slot == null ? "  ·  暂无进行中的对局" : "  ·  第 " + slot.Game.Puzzle.Level + " 关进行中  " + FormatTime(slot.ElapsedSeconds));
             difficultyDropdown.SetValueWithoutNotify(selectedDifficulty);
             var action = SudokuLevelSelection.Resolve(selectedDifficulty, slot, profile.CompletedIds);

@@ -18,6 +18,10 @@ namespace XanaduYonder.Runtime.Sheep
         public const float TileWidth = 72, TileHeight = 81;
         private const float Pitch = 36, Padding = 8, MaximumExtraGap = 72;
         private const float FanX = 2.7f, FanY = .35f;
+        // Keep sparse tutorials at the same card scale as a full challenge field.
+        // Eight card columns plus both eleven-step fans; the lowest row starts at 14 half-tile units.
+        private const float FullBoardWidth = TileWidth * 8 + 22 * FanX;
+        private const float FullBoardHeight = Pitch * 14 + TileHeight;
         private readonly float left, sourceTop;
         private readonly List<Band> bands = new List<Band>();
         public float Scale { get; private set; }
@@ -68,7 +72,8 @@ namespace XanaduYonder.Runtime.Sheep
             var sourceWidth = maxX - minX;
             var availableWidth = Math.Max(1, width - Padding * 2);
             var availableHeight = Math.Max(1, height - Padding * 2);
-            Scale = Math.Min(availableWidth / sourceWidth, availableHeight / sourceHeight);
+            Scale = Math.Min(availableWidth / Math.Max(sourceWidth, FullBoardWidth),
+                availableHeight / Math.Max(sourceHeight, FullBoardHeight));
             AddedGap = bands.Count > 1 ? Math.Min(MaximumExtraGap,
                 Math.Max(0, availableHeight - sourceHeight * Scale) / (bands.Count - 1)) : 0;
             ContentHeight = sourceHeight * Scale + AddedGap * (bands.Count - 1);

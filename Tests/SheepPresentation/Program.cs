@@ -14,7 +14,10 @@ internal static class Program
             for (var level = 1; level <= 2; level++)
             for (var layout = 0; layout < (level == 1 ? 3 : 15); layout++)
                 ValidateLayout(level, layout, size[0], size[1]);
-            Console.WriteLine("PASS " + checks + " presentation checks: bounds, aspect, fan extents, overlap, gap limits and height use.");
+            foreach (var size in new[] { new[] { 656f, 738f }, new[] { 656f, 1000f }, new[] { 656f, 1300f },
+                new[] { 420f, 400f }, new[] { 960f, 738f }, new[] { 656f, 400f } })
+                ValidateTutorialCardSize(size[0], size[1]);
+            Console.WriteLine("PASS " + checks + " presentation checks: bounds, aspect, fan extents, overlap, gap limits, height use and consistent tutorial card size.");
             return 0;
         }
         catch (Exception error) { Console.WriteLine("FAIL " + error.Message); return 1; }
@@ -54,6 +57,25 @@ internal static class Program
         if (level == 2 && layout >= 3 && height >= 764)
             Check(geometry.ContentHeight > 630, "Challenge field failed to use reclaimed height " + context);
         Check(Math.Abs(geometry.TopPadding - (height - geometry.ContentHeight) / 2) < .001f, "Field not centered " + context);
+    }
+
+    private static void ValidateTutorialCardSize(float width, float height)
+    {
+        for (var tutorialLayout = 0; tutorialLayout < 3; tutorialLayout++)
+        {
+            var tutorialPositions = SheepBoardLayout.GetPositions(1, tutorialLayout);
+            var tutorial = new SheepBoardGeometry(tutorialPositions, width, height);
+            var tutorialCard = tutorial.TileBounds(tutorialPositions[0], 0);
+            for (var challengeLayout = 0; challengeLayout < SheepBoardLayout.ChallengeLayoutCount; challengeLayout++)
+            {
+                var challengePositions = SheepBoardLayout.GetPositions(2, challengeLayout);
+                var challenge = new SheepBoardGeometry(challengePositions, width, height);
+                var challengeCard = challenge.TileBounds(challengePositions[0], 0);
+                Check(tutorialCard.Width <= challengeCard.Width + .001f,
+                    "Tutorial card larger than challenge card " + tutorialLayout + "/" + challengeLayout +
+                    " @ " + width + "x" + height + ": " + tutorialCard.Width + " > " + challengeCard.Width);
+            }
+        }
     }
 
     private static bool Intersects(SheepTileBounds a, SheepTileBounds b)

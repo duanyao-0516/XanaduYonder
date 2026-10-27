@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；06 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -43,11 +43,14 @@ scripts/test-sudoku-persistence.sh
 scripts/test-sudoku-session.sh
 scripts/test-sudoku-profile.sh
 scripts/test-sudoku-selection.sh
+scripts/test-minigame-ui.sh
 scripts/test-watermelon.sh
 scripts/test-watermelon-persistence.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
+
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -55,7 +58,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-构建输出为 `artifacts/builds/XanaduYonder-0.4.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.4.0、Android versionCode 为 4；最新正式发行版仍为 [v0.3.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
+构建输出为 `artifacts/builds/XanaduYonder-0.4.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.4.0、Android versionCode 为 4；最新正式发行版为 [v0.4.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.4.0)。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
 
 如需单独创建/检查启动场景与构建设置：
 
@@ -71,7 +74,7 @@ mkdir -p artifacts/logs
 
 ## 合成大西瓜独立验证
 
-06 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。素材来自用户授权的固定版本仓库，完整路径、哈希及授权说明见[素材清单](watermelon-assets.md)。
+04 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。素材来自用户授权的固定版本仓库，完整路径、哈希及授权说明见[素材清单](watermelon-assets.md)。
 
 ```bash
 scripts/test-watermelon.sh
@@ -87,7 +90,7 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 
 `test-watermelon-physics.sh` 启动 Unity Play Mode，验证真实碰撞合并、堆叠、出生位置、独立场景、恢复运动及越线，结果位于 `artifacts/validation/watermelon-physics.txt`。执行前关闭此工作树的 Unity 编辑器。编译或运行故障会返回非零，超时会终止本次测试进程。
 
-验证脚本输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。请使用上面的显式 ADB 安装与启动命令；普通 `install-android.sh` 启动的是正式包名。最新正式发行版本仍为 v0.3.0，生成此包不会创建新版本或 GitHub Release。
+验证脚本输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。请使用上面的显式 ADB 安装与启动命令；普通 `install-android.sh` 启动的是正式包名。最新正式发行版本为 v0.4.0，生成此包不会创建新版本或 GitHub Release。
 
 `watermelon-v1.json` 独立保存棋盘状态、当前/下一颗、随机状态、主题、得分、最高分及目标提示状态，保存备份为 `watermelon-v1.json.bak`。暂停、退回大厅和应用切后台时应保留续局；主题切换应保持物体位置、大小与速度。需要在真机覆盖拖动松手、连续合并、触摸取消、暂停/恢复、进程重启续局、声音/触感设置及三个主题显示。
 

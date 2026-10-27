@@ -7,6 +7,7 @@ namespace XanaduYonder.Runtime.Sudoku
     internal enum SudokuIconKind { Book, Left, Right, Down }
 
     // UI geometry keeps the navigation symbols independent of font glyphs and font fallback.
+    [RequireComponent(typeof(CanvasRenderer))]
     internal sealed class SudokuIcon : MaskableGraphic
     {
         public SudokuIconKind Kind;

@@ -13,6 +13,15 @@ namespace XanaduYonder.Runtime.Sudoku
         public SudokuSaveData[] Slots = new SudokuSaveData[4];
         public int CompletedCount { get { return CompletedIds.Length; } }
 
+        public int CompletedCountForDifficulty(int difficulty)
+        {
+            if (difficulty < 0 || difficulty >= 4) throw new ArgumentOutOfRangeException(nameof(difficulty));
+            string prefix = "se-v1-d" + difficulty + "-";
+            int count = 0;
+            foreach (var id in CompletedIds) if (id.StartsWith(prefix, StringComparison.Ordinal)) count++;
+            return count;
+        }
+
         public SudokuSaveData GetSlot(int difficulty)
         {
             if (difficulty < 0 || difficulty >= 4) throw new ArgumentOutOfRangeException(nameof(difficulty));

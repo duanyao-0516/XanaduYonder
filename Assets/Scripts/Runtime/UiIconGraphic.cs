@@ -3,10 +3,11 @@ using UnityEngine.UI;
 
 namespace XanaduYonder.Runtime
 {
-    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart }
+    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart, Back, Undo, Eraser, Pencil, Bell }
 
     // Small UI symbols are meshes rather than font glyphs, so their shape and centering
     // do not depend on the bundled CJK font or platform font fallback.
+    [RequireComponent(typeof(CanvasRenderer))]
     internal sealed class UiIconGraphic : MaskableGraphic
     {
         [SerializeField] private UiIconKind kind;
@@ -75,6 +76,51 @@ namespace XanaduYonder.Runtime
                 case UiIconKind.Restart:
                     CircularArrow(mesh, center, size, 20, 155);
                     CircularArrow(mesh, center, size, 200, 335);
+                    break;
+                case UiIconKind.Back:
+                    Stroke(mesh, center, size, new Vector2(-.36f, 0), new Vector2(.36f, 0));
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.08f, .29f), new Vector2(-.37f, 0), new Vector2(-.08f, -.29f)
+                    });
+                    break;
+                case UiIconKind.Undo:
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.12f, .38f), new Vector2(-.37f, .14f), new Vector2(-.12f, -.10f)
+                    });
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.36f, .14f), new Vector2(.10f, .14f), new Vector2(.25f, .10f),
+                        new Vector2(.35f, -.01f), new Vector2(.37f, -.16f), new Vector2(.31f, -.29f),
+                        new Vector2(.18f, -.35f), new Vector2(-.03f, -.35f)
+                    });
+                    break;
+                case UiIconKind.Eraser:
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.38f, -.12f), new Vector2(.10f, .36f), new Vector2(.39f, .07f),
+                        new Vector2(-.02f, -.34f), new Vector2(-.16f, -.34f), new Vector2(-.38f, -.12f)
+                    });
+                    Stroke(mesh, center, size, new Vector2(-.20f, .06f), new Vector2(.09f, -.23f));
+                    Stroke(mesh, center, size, new Vector2(-.16f, -.34f), new Vector2(.40f, -.34f));
+                    break;
+                case UiIconKind.Pencil:
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.38f, -.38f), new Vector2(-.28f, -.09f), new Vector2(.20f, .39f),
+                        new Vector2(.39f, .20f), new Vector2(-.09f, -.28f), new Vector2(-.38f, -.38f)
+                    });
+                    Stroke(mesh, center, size, new Vector2(.08f, .27f), new Vector2(.27f, .08f));
+                    Stroke(mesh, center, size, new Vector2(-.28f, -.09f), new Vector2(-.09f, -.28f));
+                    break;
+                case UiIconKind.Bell:
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.37f, -.21f), new Vector2(-.27f, -.08f), new Vector2(-.25f, .14f),
+                        new Vector2(-.20f, .27f), new Vector2(-.10f, .34f), new Vector2(.10f, .34f),
+                        new Vector2(.20f, .27f), new Vector2(.25f, .14f), new Vector2(.27f, -.08f),
+                        new Vector2(.37f, -.21f), new Vector2(-.37f, -.21f)
+                    });
+                    Stroke(mesh, center, size, new Vector2(0, .34f), new Vector2(0, .43f));
+                    Path(mesh, center, size, new[] {
+                        new Vector2(-.10f, -.32f), new Vector2(-.06f, -.39f),
+                        new Vector2(.06f, -.39f), new Vector2(.10f, -.32f)
+                    });
                     break;
             }
         }

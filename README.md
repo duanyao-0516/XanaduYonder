@@ -6,18 +6,18 @@
 
 ## 当前状态
 
-当前源码的开发版本为 **v0.4.0**，接入六款可离线游玩的游戏，按大厅顺序排列：
+当前版本为 **v0.4.0**，接入六款可离线游玩的游戏，按大厅顺序排列：
 
-- **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
+- **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开，记录最高分和最高数字。
 - **02 · 跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 - **03 · 旸了个旸**：多层叠牌、7 格卡槽三消、四档第二关挑战与无尽模式、可选热身、12 种分堆布局；默认移出 / 撤回 / 洗牌为每局 2 / 3 / 1 次，新局配额可设为 0..99（0 为禁用）。各模式独立续局，记录累计通关和标准无尽最高消除数。
-- **04 · 成语接龙**：同字/同音双模式、人机与本地双人对战、左右对话、免费提示与三次提示小结、可点击释义、生词本与个人学习记录。
-- **05 · 数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示、按难度独立续局与书本玩法入口。
-- **06 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。
+- **04 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。
+- **05 · 成语接龙**：同字/同音双模式、人机与本地双人对战、左右对话、免费提示与三次提示小结、可点击释义、生词本与个人学习记录。
+- **06 · 数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示、按难度独立续局与书本玩法入口。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，当前开发版成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
-**最新正式版本为 v0.3.0**，包含 2048、跳一跳、旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。数独、合成大西瓜、成语接龙的双人和个性化学习功能，以及旸了个旸的模式与难度改进尚未随 v0.3.0 正式发布；v0.4.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+**最新正式版本为 v0.4.0**，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.4.0)。本版新增数独和合成大西瓜，并更新成语接龙、旸了个旸及大厅和游戏界面。沿用已有发布签名，支持覆盖升级；2048、跳一跳和公共设置保持兼容，旸了个旸与成语接龙改用独立新存档，旧版对应记录不迁移、原文件保留。详情与验证范围见[v0.4.0 发布记录](docs/releases/v0.4.0.md)。正式版与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 ## 开发与运行
 
@@ -42,6 +42,7 @@ scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
 scripts/test-idiom-ui.sh
+scripts/test-minigame-ui.sh
 scripts/test-sudoku.sh
 scripts/test-sudoku-content.sh --bank
 scripts/test-sudoku-persistence.sh
@@ -58,7 +59,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 
 正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.4.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
-[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [数独玩法与接入](docs/sudoku-game.md) · [数独初版验证](docs/verification-sudoku.md) · [数独修订验证](docs/verification-sudoku-refinement.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [四档难度校准](docs/verification-sheep-difficulty.md) · [模式、难度与紧凑界面验证](docs/verification-sheep-modes.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[v0.4.0 发布记录](docs/releases/v0.4.0.md) · [v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [数独玩法与接入](docs/sudoku-game.md) · [数独初版验证](docs/verification-sudoku.md) · [数独修订验证](docs/verification-sudoku-refinement.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [四档难度校准](docs/verification-sheep-difficulty.md) · [模式、难度与紧凑界面验证](docs/verification-sheep-modes.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 成语接龙与离线词库
 
@@ -76,7 +77,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 
 独立验证使用 `scripts/build-sheep-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-sheep-validation.apk`，包标识为 `com.duanyao.xanaduyonder.sheeptest`。难度改进只作用于新开局，已有对局保留原牌面。
 
-## 06 · 合成大西瓜
+## 04 · 合成大西瓜
 
 在容器上方左右拖动，松手投下当前物体；相同等级碰撞后合成更高一级。三种主题各有 11 级，切换主题保留当前对局与物理尺寸。新物体从前 5 级中随机生成，合并按原等级加分。达成第 11 级后可选择继续挑战；最高等级物体不再合并。警戒线使用持续 2 秒的越线宽限，并排除刚生成、仍在快速运动的物体，减少短暂弹跳导致的失败。
 
@@ -84,7 +85,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 
 素材经用户授权，从 [idootop/watermelon](https://github.com/idootop/watermelon) 的固定版本导入。只使用 33 张图片与 4 个音效，游戏逻辑为原创 C#，没有复制其 AGPL-3.0 Dart 源码。文件来源、主题顺序及 SHA-256 见[素材清单](docs/watermelon-assets.md)。
 
-独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。此前独立分支的核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。本次尚未发布新版。
+独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。此前独立分支的核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。已随 v0.4.0 正式发布。
 
 ## 当前范围
 

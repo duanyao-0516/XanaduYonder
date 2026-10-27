@@ -75,7 +75,7 @@ namespace XanaduYonder.Runtime.Watermelon
             UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, () => { Suspend(); Save(); settings(); });
             var heading = UiFactory.Band(root, "Watermelon title", 108, 76, 0);
             UiFactory.Label(heading, "合成大西瓜", 56, 0, 500, 76, 48, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(heading, "06", 582, 8, 82, 58, 30, UiFactory.Accent, TextAnchor.MiddleRight);
+            UiFactory.Label(heading, "04", 582, 8, 82, 58, 30, UiFactory.Accent, TextAnchor.MiddleRight);
             var themeBand = UiFactory.Band(root, "Watermelon themes", 204, 48, .08f);
             themes = new Button[3];
             for (int i = 0; i < 3; i++)

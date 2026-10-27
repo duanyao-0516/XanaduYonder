@@ -23,7 +23,8 @@ namespace XanaduYonder.Runtime.Sudoku
         private Func<bool> acceptsInput, soundEnabled, hapticsEnabled;
         private Action<string> setStatus;
         private GameFeedback feedback;
-        private Text remainingText, errorsText, difficultyText, timerText, tipText, quickLabel, pencilLabel, hintLabel;
+        private Text remainingText, errorsText, difficultyText, timerText, tipText, quickLabel, hintLabel;
+        private UiIconGraphic pencilIcon;
         private Button undoButton, eraseButton, pencilButton, hintButton, quickButton, pauseButton;
         private readonly Button[] digits = new Button[9];
         private readonly Text[] digitCounts = new Text[9];
@@ -38,6 +39,11 @@ namespace XanaduYonder.Runtime.Sudoku
         private static readonly string[] Difficulties = { "入门", "简单", "中等", "困难" };
         public event Action Changed;
         public int CompletedCount { get { return profile == null ? 0 : profile.CompletedCount; } }
+        public int CompletedCountForDifficulty(int difficulty)
+        {
+            if (difficulty < 0 || difficulty >= 4) throw new ArgumentOutOfRangeException(nameof(difficulty));
+            return profile == null ? 0 : profile.CompletedCountForDifficulty(difficulty);
+        }
         public string SaveError { get { return saveFailed ? warning : null; } }
         private bool Interactive { get { return visible && !choosing && dialog == null && acceptsInput() && session.CanPlay; } }
 
@@ -83,10 +89,11 @@ namespace XanaduYonder.Runtime.Sudoku
             var page = UiFactory.Rect(root, "Sudoku game", 0, 0, 720, 1320); UiFactory.Stretch(page); gameRoot = page.gameObject;
             gameInput = gameRoot.AddComponent<CanvasGroup>();
             var nav = UiFactory.Band(page, "Navigation", 0, 92, 0);
-            UiFactory.Button(nav, "‹  关卡", 36, 30, 150, 58, ReturnToSelection);
-            UiFactory.Label(nav, "XANADU / YONDER", 202, 30, 270, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            SudokuIcon.Button(nav, "玩法", SudokuIconKind.Book, 484, 30, 58, ShowRules);
-            UiFactory.Button(nav, "设置", 560, 30, 124, 58, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
+            UiFactory.IconButton(nav, UiIconKind.Back, 56, 34, 58, 58, ReturnToSelection);
+            UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
+            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
             var heading = UiFactory.Band(page, "Heading", 108, 70, .03f);
             UiFactory.Label(heading, "数独", 36, 0, 200, 70, 49, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "九宫之间，找到唯一。", 240, 10, 444, 58, 25, UiFactory.Muted, TextAnchor.MiddleRight);
@@ -104,11 +111,13 @@ namespace XanaduYonder.Runtime.Sudoku
             quickButton = UiFactory.Button(inputMode, "快速 OFF", 510, 0, 174, 52, ToggleQuick);
             quickLabel = quickButton.GetComponentInChildren<Text>(); quickLabel.fontSize = 21;
             var tools = UiFactory.Band(page, "Sudoku tools", 1018, 72, .75f);
-            undoButton = UiFactory.Button(tools, "撤回", 36, 0, 150, 72, () => { if (Interactive) { inspectionDigit = 0; Move(session.Undo()); } });
-            eraseButton = UiFactory.Button(tools, "橡皮", 202, 0, 150, 72, () => { if (Interactive) { inspectionDigit = 0; Move(session.Erase()); } });
-            pencilButton = UiFactory.Button(tools, "铅笔", 368, 0, 150, 72, TogglePencil);
-            hintButton = UiFactory.Button(tools, "提示 3", 534, 0, 150, 72, OpenHint);
-            pencilLabel = pencilButton.GetComponentInChildren<Text>(); hintLabel = hintButton.GetComponentInChildren<Text>();
+            undoButton = UiFactory.IconButton(tools, UiIconKind.Undo, 36, 0, 150, 72, () => { if (Interactive) { inspectionDigit = 0; Move(session.Undo()); } });
+            eraseButton = UiFactory.IconButton(tools, UiIconKind.Eraser, 202, 0, 150, 72, () => { if (Interactive) { inspectionDigit = 0; Move(session.Erase()); } });
+            pencilButton = UiFactory.IconButton(tools, UiIconKind.Pencil, 368, 0, 150, 72, TogglePencil);
+            hintButton = UiFactory.IconButton(tools, UiIconKind.Bell, 534, 0, 150, 72, OpenHint);
+            pencilIcon = pencilButton.GetComponentInChildren<UiIconGraphic>();
+            hintButton.GetComponentInChildren<UiIconGraphic>().rectTransform.anchoredPosition = new Vector2(-12, 0);
+            hintLabel = UiFactory.Label(hintButton.transform, "", 102, 0, 36, 72, 24, UiFactory.Ink, TextAnchor.MiddleCenter);
             var numbers = UiFactory.Band(page, "Number keypad", 1112, 108, .88f);
             for (int i = 0; i < 9; i++)
             {
@@ -117,10 +126,6 @@ namespace XanaduYonder.Runtime.Sudoku
                 digits[i].GetComponentInChildren<Text>().fontSize = 38;
                 digitCounts[i] = UiFactory.Label(numbers, "", 36 + i * 72, 75, 64, 30, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
             }
-            var footer = UiFactory.Band(page, "Sudoku footer", 1232, 40, 1);
-            UiFactory.Button(footer, "重新开始", 36, 0, 180, 40, ConfirmRestart);
-            UiFactory.Label(footer, "数字下方为待填个数", 230, 0, 300, 40, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(footer, "玩法", 550, 0, 134, 40, ShowRules);
         }
 
         public void Enter()
@@ -207,14 +212,21 @@ namespace XanaduYonder.Runtime.Sudoku
         private void Refresh()
         {
             var game = session.Game; var controls = session.Controls;
-            remainingText.text = "待填 " + game.RemainingCount + " 格";
+            int filled = 0, remaining = 0;
+            for (int cell = 0; cell < 81; cell++)
+            {
+                if (game.IsGiven(cell)) continue;
+                if (game.ValueAt(cell) != 0) filled++; else remaining++;
+            }
+            remainingText.text = filled + "/" + remaining;
             errorsText.text = "错误 " + game.Errors + "/3";
             errorsText.color = game.Errors > 0 ? UiFactory.Hex("B34842") : UiFactory.Muted;
             var puzzle = game.Puzzle; difficultyText.text = Difficulties[puzzle.Difficulty] + "\n第 " + puzzle.Level + " 关";
             timerText.text = FormatTime(session.ElapsedSeconds);
             quickLabel.text = "快速 " + (controls.Quick ? "ON" : "OFF");
-            pencilLabel.text = controls.Pencil ? "铅笔 ON" : "铅笔";
-            hintLabel.text = "提示 " + game.HintsRemaining;
+            pencilButton.GetComponent<Image>().color = controls.Pencil ? UiFactory.Accent : UiFactory.Hex("E7EDE4");
+            pencilIcon.color = controls.Pencil ? Color.white : UiFactory.Ink;
+            hintLabel.text = game.HintsRemaining.ToString();
             bool can = session.CanPlay;
             undoButton.interactable = can && game.CanUndo;
             eraseButton.interactable = can && controls.SelectedCell >= 0 && !game.IsGiven(controls.SelectedCell) &&
