@@ -1,115 +1,108 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280" height="1280" viewBox="0 0 1280 1280">
-<title>小恐龙竖屏游戏设计，准备、奔跑、结束三个状态</title>
-<desc>经典像素跑道搭配合集米白和墨绿界面，底部左侧下蹲、右侧跳跃。设计示意，非运行截图。像素素材 Copyright 2015 The Chromium Authors，详见同目录 LICENSE.chromium。</desc>
+<title>小恐龙开局选择、全宽竖屏与横屏布局</title>
+<desc>每次从大厅进入先选方向，记住上次选择。两种方向跑道铺满安全区，横屏展现更多路程，分别记录最高分。设计示意，非运行截图。Chromium 像素素材许可见 LICENSE.chromium。</desc>
 <defs><image id="atlas" width="1233" height="100" xlink:href="data:image/png;base64,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"/></defs>
-<rect x="0" y="0" width="1280" height="1280" rx="0" fill="#EEECE4"/>
-<text x="52" y="52" fill="#276653" font-size="16" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">XANADU / YONDER</text>
-<text x="52" y="103" fill="#173D35" font-size="36" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">小恐龙 · 经典像素版</text>
-<text x="52" y="136" fill="#69736D" font-size="17" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">竖屏无尽跑酷  /  触屏跳跃与下蹲  /  离线最高纪录</text>
-<text x="1228" y="52" fill="#69736D" font-size="15" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">设计评审 · 2026.10.27</text>
-<text x="52" y="180" fill="#173D35" font-size="18" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">01  准备开始</text>
-<rect x="52" y="200" width="360" height="660" rx="24" fill="#F6F4EC" stroke="#D6DACF"/>
-<g transform="translate(52,200)">
-<text x="28" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">首页</text>
-<text x="180" y="43" fill="#173D35" font-size="20" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">小恐龙</text>
-<text x="332" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">设置</text>
-<rect x="28" y="64" width="304" height="1" rx="0" fill="#DBDFD6"/>
-<text x="28" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局</text>
-<text x="332" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录</text>
-<text x="28" y="137" fill="#173D35" font-size="29" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00000</text>
-<text x="332" y="137" fill="#69736D" font-size="25" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00396</text>
-<rect x="28" y="177" width="304" height="216" rx="8" fill="#FEFEFA"/>
-<svg x="244" y="204" width="37" height="11" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="126" y="239" width="28" height="8.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<rect x="30" y="354" width="300" height="1" fill="#8A8A83"/>
-<svg x="30" y="354" width="300" height="6" viewBox="2 52 600 12" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="58" y="322" width="30" height="32" viewBox="848 2 44 47" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<text x="180" y="280" fill="#173D35" font-size="17" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">按下跳跃开始</text>
-<text x="180" y="424" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录自动保存</text>
-<rect x="28" y="453" width="96" height="100" rx="16" fill="#E3E8DC"/>
-<rect x="136" y="453" width="196" height="100" rx="16" fill="#173D35"/>
-<text x="76" y="496" fill="#173D35" font-size="21" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">下蹲</text>
-<text x="76" y="523" fill="#69736D" font-size="13" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">按住</text>
-<text x="234" y="496" fill="#F6F4EC" font-size="23" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">跳跃</text>
-<text x="234" y="523" fill="#DDE7DF" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">轻按短跳 · 按住长跳</text>
-<text x="76" y="593" fill="#173D35" font-size="14" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">玩法说明</text>
-<text x="274" y="593" fill="#173D35" font-size="14" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">暂停</text>
-<text x="180" y="630" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局退出后重新开始</text>
+<rect x="0" y="0" width="1280" height="1280" fill="#EEECE4" rx="0"/>
+<text x="52" y="50" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="16" fill="#276653" font-weight="600" text-anchor="start">XANADU / YONDER</text>
+<text x="1228" y="50" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="15" fill="#69736D" font-weight="400" text-anchor="end">设计修订 · 2026.10.27</text>
+<text x="52" y="101" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="36" fill="#173D35" font-weight="600" text-anchor="start">小恐龙 · 先选横屏或竖屏</text>
+<text x="52" y="137" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="18" fill="#69736D" font-weight="400" text-anchor="start">跑道铺满安全区，宽视野留给玩家；反应窗口约束加速。</text>
+<text x="52" y="190" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="19" fill="#173D35" font-weight="600" text-anchor="start">01  开局前选择</text>
+<text x="444" y="190" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="19" fill="#173D35" font-weight="600" text-anchor="start">02  竖屏 · 全宽跑道</text>
+<g transform="translate(52,210) scale(0.9)">
+<rect x="0" y="0" width="360" height="660" fill="#F6F4EC" rx="24" stroke="#D6DACF" stroke-width="1.5"/>
+<text x="28" y="43" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="start">返回</text>
+<text x="180" y="43" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="20" fill="#173D35" font-weight="600" text-anchor="middle">小恐龙</text>
+<text x="28" y="111" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="25" fill="#173D35" font-weight="600" text-anchor="start">选择游玩方向</text>
+<text x="28" y="142" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#69736D" font-weight="400" text-anchor="start">选好方向，再开始奔跑</text>
+<rect x="24" y="176" width="312" height="122" fill="#E7ECE0" rx="14" stroke="#276653" stroke-width="1.5"/>
+<rect x="43" y="200" width="34" height="57" fill="none" rx="5" stroke="#276653" stroke-width="1.5"/>
+<text x="98" y="211" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#173D35" font-weight="600" text-anchor="start">竖屏</text>
+<text x="98" y="239" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="start">竖握即玩，跑道铺满屏宽</text>
+<text x="98" y="270" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="start">最高纪录  428</text>
+<text x="314" y="203" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#276653" font-weight="600" text-anchor="end">已选</text>
+<rect x="24" y="316" width="312" height="122" fill="#F6F4EC" rx="14" stroke="#D6DACF" stroke-width="1.5"/>
+<rect x="40" y="347" width="50" height="29" fill="none" rx="4" stroke="#69736D" stroke-width="1.5"/>
+<text x="106" y="351" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#173D35" font-weight="600" text-anchor="start">横屏</text>
+<text x="106" y="379" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="start">视野更宽，适合双手操作</text>
+<text x="106" y="410" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="start">最高纪录  860</text>
+<rect x="24" y="482" width="312" height="66" fill="#173D35" rx="15"/>
+<text x="180" y="523" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#F6F4EC" font-weight="600" text-anchor="middle">竖屏开始</text>
+<text x="180" y="590" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="middle">记住上次选择，每次进入仍可更换</text>
+<text x="180" y="624" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="middle">两种方向分别记录最高分</text>
 </g>
-<text x="460" y="180" fill="#173D35" font-size="18" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">02  奔跑中</text>
-<rect x="460" y="200" width="360" height="660" rx="24" fill="#F6F4EC" stroke="#D6DACF"/>
-<g transform="translate(460,200)">
-<text x="28" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">首页</text>
-<text x="180" y="43" fill="#173D35" font-size="20" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">小恐龙</text>
-<text x="332" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">设置</text>
-<rect x="28" y="64" width="304" height="1" rx="0" fill="#DBDFD6"/>
-<text x="28" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局</text>
-<text x="332" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录</text>
-<text x="28" y="137" fill="#173D35" font-size="29" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00428</text>
-<text x="332" y="137" fill="#69736D" font-size="25" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00428</text>
-<rect x="28" y="177" width="304" height="216" rx="8" fill="#FEFEFA"/>
-<svg x="244" y="204" width="37" height="11" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="126" y="239" width="28" height="8.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<rect x="30" y="354" width="300" height="1" fill="#8A8A83"/>
-<svg x="30" y="354" width="300" height="6" viewBox="2 52 600 12" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="58" y="322" width="30" height="32" viewBox="936 2 44 47" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="232" y="320" width="17" height="34" viewBox="332 2 25 50" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="282" y="290" width="31" height="27" viewBox="134 2 46 40" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<text x="180" y="199" fill="#69736D" font-size="13" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif"></text>
-<text x="180" y="424" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录自动保存</text>
-<rect x="28" y="453" width="96" height="100" rx="16" fill="#E3E8DC"/>
-<rect x="136" y="453" width="196" height="100" rx="16" fill="#173D35"/>
-<text x="76" y="496" fill="#173D35" font-size="21" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">下蹲</text>
-<text x="76" y="523" fill="#69736D" font-size="13" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">按住</text>
-<text x="234" y="496" fill="#F6F4EC" font-size="23" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">跳跃</text>
-<text x="234" y="523" fill="#DDE7DF" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">轻按短跳 · 按住长跳</text>
-<text x="76" y="593" fill="#173D35" font-size="14" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">玩法说明</text>
-<text x="274" y="593" fill="#173D35" font-size="14" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">暂停</text>
-<text x="180" y="630" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局退出后重新开始</text>
+<g transform="translate(444,210) scale(0.9)">
+<rect x="0" y="0" width="360" height="660" fill="#F6F4EC" rx="24" stroke="#D6DACF" stroke-width="1.5"/>
+<text x="28" y="43" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="start">首页</text>
+<text x="180" y="43" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="20" fill="#173D35" font-weight="600" text-anchor="middle">小恐龙</text>
+<text x="332" y="43" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="end">设置</text>
+<text x="24" y="96" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="start">本局</text>
+<text x="336" y="96" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="end">竖屏最高</text>
+<text x="24" y="130" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="28" fill="#173D35" font-weight="600" text-anchor="start">00428</text>
+<text x="336" y="130" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="24" fill="#69736D" font-weight="400" text-anchor="end">00428</text>
+<rect x="0" y="162" width="360" height="246" fill="#FEFEFA" rx="0"/>
+<svg x="273" y="197" width="37" height="11" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="135" y="232" width="28" height="8.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<rect x="0" y="367" width="360" height="1" fill="#8A8A83" rx="0"/>
+<svg x="0" y="367" width="360" height="7.2" viewBox="2 52 600 12" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="37" y="329" width="35.6" height="38" viewBox="936 2 44 47" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="270" y="327" width="20" height="40" viewBox="332 2 25 50" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="320" y="295" width="37" height="32" viewBox="134 2 46 40" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<text x="180" y="444" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="middle">最高纪录自动保存</text>
+<rect x="24" y="470" width="98" height="94" fill="#E3E8DC" rx="15"/>
+<rect x="134" y="470" width="202" height="94" fill="#173D35" rx="15"/>
+<text x="73" y="510" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="22" fill="#173D35" font-weight="600" text-anchor="middle">下蹲</text>
+<text x="73" y="538" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="13" fill="#69736D" font-weight="400" text-anchor="middle">按住</text>
+<text x="235" y="510" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="23" fill="#F6F4EC" font-weight="600" text-anchor="middle">跳跃</text>
+<text x="235" y="538" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#DDE7DF" font-weight="400" text-anchor="middle">轻按短跳 · 按住长跳</text>
+<text x="70" y="607" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="middle">玩法说明</text>
+<text x="290" y="607" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#173D35" font-weight="400" text-anchor="middle">暂停</text>
 </g>
-<text x="868" y="180" fill="#173D35" font-size="18" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">03  一局结束</text>
-<rect x="868" y="200" width="360" height="660" rx="24" fill="#F6F4EC" stroke="#D6DACF"/>
-<g transform="translate(868,200)">
-<text x="28" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">首页</text>
-<text x="180" y="43" fill="#173D35" font-size="20" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">小恐龙</text>
-<text x="332" y="43" fill="#173D35" font-size="14" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">设置</text>
-<rect x="28" y="64" width="304" height="1" rx="0" fill="#DBDFD6"/>
-<text x="28" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局</text>
-<text x="332" y="103" fill="#69736D" font-size="12" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录</text>
-<text x="28" y="137" fill="#173D35" font-size="29" font-weight="600" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00428</text>
-<text x="332" y="137" fill="#69736D" font-size="25" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">00428</text>
-<rect x="28" y="177" width="304" height="216" rx="8" fill="#FEFEFA"/>
-<svg x="244" y="204" width="37" height="11" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="126" y="239" width="28" height="8.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<rect x="30" y="354" width="300" height="1" fill="#8A8A83"/>
-<svg x="30" y="354" width="300" height="6" viewBox="2 52 600 12" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="58" y="322" width="30" height="32" viewBox="1068 2 44 47" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<svg x="85" y="320" width="17" height="34" viewBox="332 2 25 50" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
-<rect x="59" y="214" width="242" height="106" rx="12" fill="#F6F4EC" stroke="#DBDFD6"/>
-<text x="180" y="249" fill="#173D35" font-size="21" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">跑得不错！</text>
-<text x="180" y="277" fill="#276653" font-size="19" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">新纪录  428</text>
-<text x="180" y="300" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">下一局，再远一点</text>
-<text x="180" y="424" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">最高纪录自动保存</text>
-<rect x="28" y="453" width="304" height="64" rx="16" fill="#173D35"/>
-<text x="180" y="492" fill="#F6F4EC" font-size="21" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">再来一局</text>
-<rect x="28" y="531" width="304" height="52" rx="14" fill="#E3E8DC"/>
-<text x="180" y="563" fill="#173D35" font-size="16" font-weight="600" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">返回大厅</text>
-<text x="180" y="630" fill="#69736D" font-size="12" font-weight="400" text-anchor="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">本局退出后重新开始</text>
+<text x="824" y="238" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="23" fill="#173D35" font-weight="600" text-anchor="start">先选方向，局中锁定</text>
+<text x="824" y="279" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">每次进入先选横屏或竖屏。</text>
+<text x="824" y="310" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">再来一局沿用当前方向。</text>
+<text x="824" y="341" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">准备或结算时可更换方向。</text>
+<text x="824" y="372" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">返回大厅恢复竖屏。</text>
+<rect x="824" y="407" width="404" height="1" fill="#D6DACF" rx="0"/>
+<text x="824" y="450" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="23" fill="#173D35" font-weight="600" text-anchor="start">反应时间有下限</text>
+<text x="824" y="491" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">看清障碍 → 最晚安全操作</text>
+<text x="824" y="528" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">初始目标至少 1.2 秒。</text>
+<text x="824" y="565" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">已扣除起跳提前量和延迟预算。</text>
+<text x="824" y="602" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">到上限后，以组合增加挑战。</text>
+<text x="824" y="682" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#276653" font-weight="600" text-anchor="start">横屏最高 / 竖屏最高</text>
+<text x="824" y="718" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">视野不同，纪录分别保存。</text>
+<text x="824" y="759" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#69736D" font-weight="400" text-anchor="start">示意图不是运行截图。</text>
+<text x="52" y="850" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="19" fill="#173D35" font-weight="600" text-anchor="start">03  横屏 · 展开更多前方视野</text>
+<g transform="translate(52,875) scale(1)">
+<rect x="0" y="0" width="660" height="360" fill="#F6F4EC" rx="22" stroke="#D6DACF" stroke-width="1.5"/>
+<text x="22" y="36" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="13" fill="#173D35" font-weight="400" text-anchor="start">首页</text>
+<text x="90" y="36" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="18" fill="#173D35" font-weight="600" text-anchor="start">小恐龙</text>
+<text x="295" y="36" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="16" fill="#173D35" font-weight="600" text-anchor="start">本局 00428</text>
+<text x="472" y="36" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#69736D" font-weight="400" text-anchor="start">横屏最高 00860</text>
+<text x="638" y="36" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="13" fill="#173D35" font-weight="400" text-anchor="end">设置</text>
+<rect x="0" y="62" width="660" height="173" fill="#FEFEFA" rx="0"/>
+<svg x="182" y="92" width="28" height="8.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="470" y="83" width="34" height="10.5" viewBox="86 2 46 14" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<rect x="0" y="203" width="660" height="1" fill="#8A8A83" rx="0"/>
+<svg x="0" y="203" width="660" height="7.2" viewBox="2 52 600 12" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="47" y="169" width="32" height="34" viewBox="936 2 44 47" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="311" y="167" width="18" height="36" viewBox="332 2 25 50" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<svg x="570" y="143" width="33" height="29" viewBox="134 2 46 40" overflow="hidden"><use xlink:href="#atlas" style="image-rendering:pixelated"/></svg>
+<rect x="22" y="250" width="124" height="88" fill="#E3E8DC" rx="14"/>
+<text x="84" y="288" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#173D35" font-weight="600" text-anchor="middle">下蹲</text>
+<text x="84" y="316" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="middle">按住</text>
+<rect x="488" y="250" width="150" height="88" fill="#173D35" rx="14"/>
+<text x="563" y="288" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="21" fill="#F6F4EC" font-weight="600" text-anchor="middle">跳跃</text>
+<text x="563" y="316" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#DDE7DF" font-weight="400" text-anchor="middle">轻按 / 按住</text>
+<text x="320" y="284" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="16" fill="#173D35" font-weight="400" text-anchor="middle">暂停</text>
+<text x="320" y="317" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="12" fill="#69736D" font-weight="400" text-anchor="middle">最高纪录自动保存</text>
 </g>
-<text x="52" y="901" fill="#69736D" font-size="14" font-weight="400" text-anchor="start" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">界面示意，非运行截图。像素素材来自 Chromium；界面与触屏布局为本项目设计。</text>
-<text x="1228" y="901" fill="#69736D" font-size="14" font-weight="400" text-anchor="end" font-family="PingFang SC, Noto Sans CJK SC, sans-serif">01 / 01</text>
-<g font-family="PingFang SC, Noto Sans CJK SC, sans-serif">
-<line x1="52" y1="944" x2="1228" y2="944" stroke="#D6DACF"/>
-<text x="52" y="991" font-size="18" font-weight="600" fill="#173D35">先把操作做简单</text>
-<text x="52" y="1028" font-size="16" fill="#69736D">按下就跳，松开控制短跳。</text>
-<text x="52" y="1059" font-size="16" fill="#69736D">下蹲独立按钮，不依赖隐蔽手势。</text>
-<text x="460" y="991" font-size="18" font-weight="600" fill="#173D35">难度逐步增加</text>
-<text x="460" y="1028" font-size="16" fill="#69736D">仙人掌 → 组合障碍 → 翼龙。</text>
-<text x="460" y="1059" font-size="16" fill="#69736D">昼夜只改变视觉，保持判定一致。</text>
-<text x="868" y="991" font-size="18" font-weight="600" fill="#173D35">随时停，再来一局</text>
-<text x="868" y="1028" font-size="16" fill="#69736D">返回前台先暂停，倒数后继续。</text>
-<text x="868" y="1059" font-size="16" fill="#69736D">结束后保留纪录，一键再挑战。</text>
-<text x="52" y="1170" font-size="16" fill="#276653">本轮只评审设计与素材，尚未实现游戏。</text>
-<text x="52" y="1203" font-size="14" fill="#69736D">素材与许可见配套 source-manifest.json / LICENSE.chromium</text>
-</g>
+<text x="770" y="925" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="23" fill="#173D35" font-weight="600" text-anchor="start">横屏不是拉伸竖屏</text>
+<text x="770" y="965" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">角色保持相近可见尺寸，</text>
+<text x="770" y="996" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">多出的宽度用来观察前方。</text>
+<text x="770" y="1042" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">双拇指按钮位于跑道下方，</text>
+<text x="770" y="1073" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">不遮住地面、障碍或刘海安全区。</text>
+<text x="770" y="1119" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="17" fill="#69736D" font-weight="400" text-anchor="start">设置、帮助和结算同步适配横屏。</text>
+<text x="770" y="1181" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#69736D" font-weight="400" text-anchor="start">像素素材：Chromium</text>
+<text x="770" y="1208" font-family="PingFang SC,Noto Sans CJK SC,sans-serif" font-size="14" fill="#69736D" font-weight="400" text-anchor="start">来源与许可见配套文档。</text>
 </svg>
