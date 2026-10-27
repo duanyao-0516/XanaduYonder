@@ -70,7 +70,11 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 
 多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-0.4.0-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；不要用普通安装脚本代替这项隔离配置。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
 
-旸了个旸的独立验证使用 `scripts/build-sheep-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-sheep-validation.apk`，包标识为 `com.duanyao.xanaduyonder.sheeptest`。难度改进只作用于新开局，已有对局保留原牌面；当前算法与模拟评估范围见[难度验证记录](docs/verification-sheep-difficulty.md)。
+## 旸了个旸算法与设计
+
+旸了个旸的生成流水线、可解性原理、四档难度、模拟玩家、无尽模式及模块设计，统一见[算法与设计总览](docs/sheep-algorithm-design.md)；玩法和字段契约见[玩法与接入](docs/sheep-game.md)，历史模拟数据见[难度验证记录](docs/verification-sheep-difficulty.md)。
+
+独立验证使用 `scripts/build-sheep-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-sheep-validation.apk`，包标识为 `com.duanyao.xanaduyonder.sheeptest`。难度改进只作用于新开局，已有对局保留原牌面。
 
 ## 06 · 合成大西瓜
 
