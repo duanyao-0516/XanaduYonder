@@ -12,9 +12,9 @@
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 - **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
 
-- **数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示与暂停续局。
+- **数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示、按难度独立续局与书本玩法入口。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，数独使用独立 `sudoku-v1.json`，不修改已有游戏的存档协议。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改已有游戏的存档协议。
 
 **当前公开发布的版本仍为 v0.2.0**，包含 2048 和跳一跳，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.2.0)。v0.4.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -38,6 +38,8 @@ scripts/test-sudoku.sh
 scripts/test-sudoku-content.sh --bank
 scripts/test-sudoku-persistence.sh
 scripts/test-sudoku-session.sh
+scripts/test-sudoku-profile.sh
+scripts/test-sudoku-selection.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -55,7 +57,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 - 暂不接入微信、抖音等小游戏平台，不为这些渠道预装 SDK 或增加构建目标。
 - 不引入登录、会员、广告、服务器或云存档。
 - 游戏通过独立模块接入合集，不预装 Python 或其他无实际需求的运行时。
-- 不提供旧版本游戏存档迁移。
+- 数独新版兼容本项目旧版单局存档；不导入第三方游戏存档。
 
 ## 与 DawnYew 的关系
 

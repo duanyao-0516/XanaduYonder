@@ -95,7 +95,7 @@ namespace XanaduYonder.Runtime.Sudoku
             return true;
         }
 
-        private static bool ValidIds(string[] ids, out HashSet<string> result)
+        internal static bool ValidIds(string[] ids, out HashSet<string> result)
         {
             result = new HashSet<string>(StringComparer.Ordinal);
             if (ids == null || ids.Length > 2000) return false;

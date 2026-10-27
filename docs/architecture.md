@@ -7,7 +7,7 @@
 | 2048 | `Game2048` / `BoardView` | `xanaduyonder-v1.json` | 对局、最高分及共用声音/触感设置 |
 | 跳一跳 | `Core/Jump` / `JumpPage`、`JumpSceneView` | `jump-v1.json` | 对局、最高分 |
 | 旸了个旸 | `Core/Sheep` / `SheepPage`、`SheepBoardView` | `sheep-v1.json` | 对局、累计通关、胜利已计数标记 |
-| 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuPage`、`SudokuBoardView` | `sudoku-v1.json` | 对局、撤回、计时、提示、模式、关卡完成记录 |
+| 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)和[数独模块](sudoku-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -70,10 +70,10 @@
 
 ## 数独的独立边界
 
-`SudokuGame` 拥有正式数字、候选、撤回、错误与提示配额；`SudokuControls` 将普通/快速和正式/铅笔四种输入模式映射成规则操作。`SudokuSession` 拥有暂停、计时、当前已消耗次数的帮助及完成记录。`SudokuPage` 负责 Unity 呈现、输入和异步请求生命周期。
+`SudokuGame` 拥有正式数字、候选、撤回、错误与提示配额；`SudokuControls` 将普通/快速和正式/铅笔四种输入模式映射成规则操作。`SudokuSession` 拥有暂停、计时和已消耗次数的帮助，导出时带上本局产生的完成记录；`SudokuProfile` 合并全局完成记录并管理每个难度的一场未完成对局。`SudokuPage` 负责 Unity 呈现、输入和异步请求生命周期。
 
 内置题库有四档各 500 道题，题面与唯一答案固定版本。答案计算、唯一性搜索、逻辑难度评级和完整提示证据重放在开发机完成。客户端启动只检查资源 SHA-256、题面与答案一致性、答案行列宫合法性；填写时直接比对内置答案。题库导入与校验见[内容管线](sudoku-content.md)。
 
 提示从当前正确盘面重新构建候选，在后台线程中进行一步逻辑推导，有取消检查和 200ms 预算。无支持技巧或超预算时明确提供直接揭晓。主线程只接受仍属于当前会话、请求、盘面 revision 且在前台未暂停的结果，并在展示时扣除一次配额；过期、取消和计算失败不扣次。帮助与扣次同次保存，重看同一帮助不重复扣次，任何盘面变化令其失效。
 
-数独存档单独校验所有 JSON token、候选、合法动作历史、累计错误/提示、关卡 ID 和终局一致性，以临时文件 flush 后原子替换主档。原三款游戏的协议未改动。新增四个测试入口分别检查规则、真实文件持久化、会话生命周期和完整题库证明，Android 验证范围记录在[数独验证报告](verification-sudoku.md)。
+数独存档单独校验所有 JSON token、候选、合法动作历史、累计错误/提示、关卡 ID 和终局一致性，以临时文件 flush 后原子替换主档。原三款游戏的协议未改动。测试入口分别检查规则、真实文件持久化、会话生命周期、四档存档迁移、关卡选择策略和完整题库证明，Android 验证范围记录在[初版数独验证](verification-sudoku.md)及[本次修订验证](verification-sudoku-refinement.md)。

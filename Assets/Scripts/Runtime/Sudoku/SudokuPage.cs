@@ -12,7 +12,9 @@ namespace XanaduYonder.Runtime.Sudoku
     {
         private SudokuCatalog catalog;
         private SudokuSession session;
-        private SudokuSaveStore store;
+        private SudokuProfileStore store;
+        private SudokuProfile profile;
+        private bool sessionStarted;
         private SudokuBoardView board;
         private RectTransform root;
         private GameObject gameRoot, selectionRoot, dialog;
@@ -35,7 +37,7 @@ namespace XanaduYonder.Runtime.Sudoku
         private CancellationTokenSource hintCancellation;
         private static readonly string[] Difficulties = { "入门", "简单", "中等", "困难" };
         public event Action Changed;
-        public int CompletedCount { get { return session == null ? 0 : session.CompletedCount; } }
+        public int CompletedCount { get { return profile == null ? 0 : profile.CompletedCount; } }
         public string SaveError { get { return saveFailed ? warning : null; } }
         private bool Interactive { get { return visible && !choosing && dialog == null && acceptsInput() && session.CanPlay; } }
 
@@ -48,19 +50,23 @@ namespace XanaduYonder.Runtime.Sudoku
             if (text == null) throw new InvalidOperationException("The offline Sudoku bank is missing.");
             catalog = SudokuCatalog.Parse(text.text);
             for (int d = 0; d < 4; d++) if (catalog.Count(d) != 500) throw new InvalidOperationException("The Sudoku bank requires 500 levels per difficulty.");
-            store = new SudokuSaveStore(Application.persistentDataPath);
-            var saved = store.Load(out warning);
-            if (saved != null)
+            store = new SudokuProfileStore(Application.persistentDataPath);
+            profile = store.Load(out warning) ?? new SudokuProfile();
+            for (int d = 0; d < 4; d++)
             {
-                var original = catalog.Get(saved.Game.Puzzle.Difficulty, saved.Game.Puzzle.Level);
-                if (!Matches(original, saved.Game.Puzzle))
+                var slot = profile.GetSlot(d);
+                if (slot != null && !Matches(catalog.Get(d, slot.Game.Puzzle.Level), slot.Game.Puzzle))
                 {
-                    warning = "数独对局与内置题库不一致，已重新准备第一关。";
-                    saved = new SudokuSaveData { Game = new SudokuGame(catalog.Get(0, 1)).GetSnapshot(),
-                        CompletedIds = saved.CompletedIds, UnassistedIds = saved.UnassistedIds };
+                    warning = "有一场数独与内置题库不一致，已移除该对局；其他对局和通关记录保留。";
+                    profile.Slots[d] = null;
                 }
             }
-            if (saved == null) saved = new SudokuSaveData { Game = new SudokuGame(catalog.Get(0, 1)).GetSnapshot() };
+            selectedDifficulty = profile.SelectedDifficulty;
+            levelPage = profile.Pages[selectedDifficulty];
+            var saved = profile.GetSlot(selectedDifficulty);
+            sessionStarted = saved != null;
+            // A board preview keeps rendering simple, but is never captured until explicitly started.
+            if (saved == null) saved = profile.CreateGame(catalog.Get(selectedDifficulty, 1));
             session = new SudokuSession(saved, true);
             BuildGame(); BuildSelection();
         }
@@ -78,7 +84,8 @@ namespace XanaduYonder.Runtime.Sudoku
             gameInput = gameRoot.AddComponent<CanvasGroup>();
             var nav = UiFactory.Band(page, "Navigation", 0, 92, 0);
             UiFactory.Button(nav, "‹  关卡", 36, 30, 150, 58, ReturnToSelection);
-            UiFactory.Label(nav, "XANADU / YONDER", 208, 30, 304, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(nav, "XANADU / YONDER", 202, 30, 270, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            SudokuIcon.Button(nav, "玩法", SudokuIconKind.Book, 484, 30, 58, ShowRules);
             UiFactory.Button(nav, "设置", 560, 30, 124, 58, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
             var heading = UiFactory.Band(page, "Heading", 108, 70, .03f);
             UiFactory.Label(heading, "数独", 36, 0, 200, 70, 49, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -124,26 +131,36 @@ namespace XanaduYonder.Runtime.Sudoku
         public void Leave()
         {
             if (session == null) return;
+            difficultyDropdown.Hide();
             CancelHint(); ClearFlash(); CloseDialog(); session.Pause(); Save(); visible = false; gameObject.SetActive(false);
         }
         public void SetForeground(bool foreground)
         {
             if (session == null) return;
             session.SetForeground(foreground);
-            if (!foreground) { CancelHint(); ClearFlash(); CloseDialog(); Save(); }
+            if (!foreground) { difficultyDropdown.Hide(); CancelHint(); ClearFlash(); CloseDialog(); Save(); }
             if (visible && !choosing) { if (session.Paused) ShowPause(); else Refresh(); }
         }
         public void Save()
         {
             if (session == null || store == null) return;
             string error;
-            if (!store.TrySave(session.Export(), out error))
+            if (sessionStarted) profile.Capture(session.Export());
+            profile.SelectedDifficulty = selectedDifficulty;
+            profile.Pages[selectedDifficulty] = levelPage;
+            if (!store.TrySave(profile, out error))
             { saveFailed = true; warning = "数独进度暂未保存，请检查设备空间。"; Debug.LogWarning("Sudoku save failed: " + error); setStatus(warning); }
             else if (saveFailed) { saveFailed = false; warning = null; setStatus("数独进度已保存。"); }
             Changed?.Invoke();
         }
         private void Update()
         {
+            if (visible)
+            {
+                bool input = dialog == null && acceptsInput();
+                gameInput.interactable = input;
+                selectionInput.interactable = input;
+            }
             if (!visible || choosing || session == null) return;
             session.Tick(Time.unscaledDeltaTime);
             timerText.text = FormatTime(session.ElapsedSeconds);
