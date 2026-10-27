@@ -103,7 +103,7 @@ namespace XanaduYonder.Runtime
             lobbyPage = root.gameObject;
             var navigation = UiFactory.Band(root, "Lobby navigation", 0, 106, 0);
             UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 42, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
+            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
             // Card dimensions and gaps stay fixed; additional games extend this content instead of shrinking it.
             var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 132, 720, 1092);
             UiFactory.Stretch(viewport);
@@ -181,7 +181,7 @@ namespace XanaduYonder.Runtime
 
         private RectTransform OpenIdiomModal(string title, float height, Action back)
         {
-            var panel = CreateModal(title, height);
+            var panel = CreateModal(title, height, back);
             dismissModal = back;
             return panel;
         }
@@ -292,9 +292,9 @@ namespace XanaduYonder.Runtime
             UiFactory.Stretch(root);
             gamePage = root.gameObject;
             var navigation = UiFactory.Band(root, "Game navigation", 0, 92, 0);
-            UiFactory.Button(navigation, "‹  大厅", 56, 34, 150, 58, ShowLobby);
+            UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, ShowLobby);
             UiFactory.Label(navigation, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
+            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
             var introduction = UiFactory.Band(root, "Game introduction", 116, 156, .16f);
             UiFactory.Label(introduction, "2048", 56, 0, 608, 111, 86, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(introduction, "每一次相遇，都让数字更进一步。", 60, 114, 604, 42, 24, UiFactory.Muted);
@@ -449,7 +449,7 @@ namespace XanaduYonder.Runtime
             };
         }
 
-        private RectTransform CreateModal(string title, float requestedHeight = 488)
+        private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
         {
             StopAnimation();
             CloseModal();
@@ -457,12 +457,26 @@ namespace XanaduYonder.Runtime
             UiFactory.Stretch(overlay.rectTransform);
             overlay.raycastTarget = true;
             modal = overlay.gameObject;
+            if (outsideDismiss != null)
+            {
+                // Keep the dismiss button behind, rather than above, the panel. A click
+                // on panel whitespace must not bubble to a parent dismiss handler.
+                var backdrop = UiFactory.Panel(overlay.transform, "Dismiss outside dialog", 0, 0, 720, 1320, Color.clear, false);
+                UiFactory.Stretch(backdrop.rectTransform);
+                backdrop.raycastTarget = true;
+                var dismiss = backdrop.gameObject.AddComponent<Button>();
+                dismiss.targetGraphic = backdrop;
+                dismiss.transition = Selectable.Transition.None;
+                dismiss.onClick.AddListener(() => outsideDismiss());
+            }
             var modalFrame = UiFactory.Rect(modal.transform, "Dialog safe area", 0, 0, 720, 1320);
             modalFrame.gameObject.AddComponent<SafeDesignFrame>().Initialize(modalFrame, canvasRoot);
             var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, modalFrame.rect.height - 64));
             var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, 596, height, UiFactory.Paper);
+            panel.raycastTarget = true;
             UiFactory.Center(panel.rectTransform);
-            UiFactory.Label(panel.transform, title, 32, 36, 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
+            UiFactory.Label(panel.transform, title, outsideDismiss != null ? 98 : 32, 36,
+                outsideDismiss != null ? 400 : 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
             return panel.rectTransform;
         }
 

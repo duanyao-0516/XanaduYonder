@@ -1,0 +1,608 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using XanaduYonder.Core.Idiom;
+using XanaduYonder.Runtime;
+using XanaduYonder.Runtime.Idiom;
+using Object = UnityEngine.Object;
+
+namespace XanaduYonder.EditorTools
+{
+    // Uses the production page, UGUI geometry, generated icon meshes and real
+    // GraphicRaycaster. Layout fixtures have no stores; learning fixtures use
+    // isolated temporary folders. None call the app's Awake or use player saves.
+    public static class IdiomUiChecks
+    {
+        private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+        private static int assertions;
+        private static readonly StringBuilder report = new StringBuilder();
+
+        public static void Run()
+        {
+            var oldFont = UiFactory.Font;
+            var exitCode = 0;
+            assertions = 0;
+            report.Clear();
+            try
+            {
+                UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
+                Require(UiFactory.Font != null, "Bundled CJK font must load");
+                foreach (var size in new[] { new Vector2Int(720, 1280), new Vector2Int(720, 1582), new Vector2Int(900, 1582) })
+                {
+                    using (var fixture = new Fixture(size.x, size.y))
+                    {
+                        CheckSharedIcons(fixture);
+                        foreach (IdiomMatchKind match in Enum.GetValues(typeof(IdiomMatchKind)))
+                        foreach (IdiomMode mode in Enum.GetValues(typeof(IdiomMode)))
+                        foreach (var first in new[] { IdiomActor.Left, IdiomActor.Right })
+                            CheckPage(fixture, match, mode, first);
+                        CheckModalRaycasts(fixture);
+                    }
+                    report.AppendLine("PASS " + size.x + "x" + size.y + ": 8 page states, mirrored turns, notebook, icon meshes and modal raycasts");
+                }
+                report.AppendLine("IDIOM_UI_CHECKS_PASS: " + assertions + " assertions");
+                Debug.Log(report.ToString());
+            }
+            catch (Exception exception)
+            {
+                exitCode = 1;
+                report.AppendLine("IDIOM_UI_CHECKS_FAIL after " + assertions + " assertions\n" + exception);
+                Debug.LogException(exception);
+            }
+            finally
+            {
+                UiFactory.Font = oldFont;
+                var directory = Path.GetFullPath(Path.Combine(Application.dataPath, "../artifacts/logs"));
+                Directory.CreateDirectory(directory);
+                File.WriteAllText(Path.Combine(directory, "idiom-ui-checks.txt"), report.ToString());
+            }
+            EditorApplication.Exit(exitCode);
+        }
+
+        private static void CheckSharedIcons(Fixture fixture)
+        {
+            var group = UiFactory.Rect(fixture.Root, "Icon checks", 0, 0, 500, 100);
+            try
+            {
+                var x = 0f;
+                foreach (UiIconKind kind in Enum.GetValues(typeof(UiIconKind)))
+                {
+                    var button = UiFactory.IconButton(group, kind, x, 0, 58, 58, () => { });
+                    var rect = (RectTransform)button.transform;
+                    var icon = button.GetComponentInChildren<UiIconGraphic>();
+                    Near(rect.rect.width, 58, kind + " hit width");
+                    Near(rect.rect.height, 58, kind + " hit height");
+                    Require(button.GetComponentsInChildren<Text>().Length == 0, kind + " must not use a font glyph");
+                    Near(Center(icon.rectTransform), Center(rect), kind + " centered icon rect");
+                    Require(icon.color == UiFactory.Ink, kind + " retains old foreground color");
+                    CheckMesh(icon, kind == UiIconKind.Close);
+                    x += 78;
+                }
+            }
+            finally { Object.DestroyImmediate(group.gameObject); }
+        }
+
+        private static void CheckPage(Fixture fixture, IdiomMatchKind match, IdiomMode mode, IdiomActor first)
+        {
+            var pageRoot = UiFactory.Rect(fixture.Root, "Page under test", 0, 0, fixture.Width, fixture.Height);
+            UiFactory.Stretch(pageRoot);
+            try
+            {
+                var page = pageRoot.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(pageRoot, () => { }, () => true, _ => { },
+                    (title, height, back) => { throw new InvalidOperationException("Unexpected modal in layout fixture: " + title); }, () => { });
+                var lexicon = TestLexicon();
+                Set(page, "lexicon", lexicon);
+                var save = (IdiomSaveData)Invoke(page, "NewSave");
+                save.ActiveMatchKind = match;
+                save.ActiveMode = mode;
+                Set(page, "data", save);
+                Set(page, "notebook", new IdiomNotebookData());
+                Invoke(page, "RestoreGames");
+                Set(page, "loaded", true);
+                Set(page, "visible", true);
+                Invoke(page, "Refresh", true);
+                fixture.Flush();
+
+                var label = match + "/" + mode + "/" + first;
+                var gameRoot = Get<RectTransform>(page, "gameRoot");
+                var title = (RectTransform)gameRoot.Find("Idiom centered title");
+                var count = Get<Text>(page, "countText");
+                Near(Center(title).x, Center(fixture.Root).x, label + " title centered in actual canvas");
+                Near(Center(count.rectTransform).x, Center(fixture.Root).x, label + " count centered in actual canvas");
+                Require(title.GetComponent<Text>().alignment == TextAnchor.MiddleCenter, label + " centered title alignment");
+                var ruleSwitch = Get<IdiomRuleSwitch>(page, "ruleSwitch");
+                Require(WorldRect(count.rectTransform).xMax < WorldRect((RectTransform)ruleSwitch.transform).xMin,
+                    label + " count does not overlap rule switch");
+                Require(count.preferredWidth <= count.rectTransform.rect.width + .5f, label + " rendered count fits");
+                var normalCount = count.text;
+                count.text = "本轮完成 42851 个";
+                Require(count.preferredWidth <= count.rectTransform.rect.width + .5f, label + " full dictionary count fits");
+                count.text = normalCount;
+                CheckRuleSwitch(ruleSwitch, label);
+                ruleSwitch.SetState(mode == IdiomMode.SameSound, true, false);
+
+                var left = Get<Button>(page, "leftStart");
+                var right = Get<Button>(page, "rightStart");
+                Require(left.GetComponentInChildren<Text>().text == (match == IdiomMatchKind.Local ? "左方先开始" : "机器开局"), label + " left starter caption");
+                Require(right.GetComponentInChildren<Text>().text == (match == IdiomMatchKind.Local ? "右方先开始" : "人先开始"), label + " right starter caption");
+                (first == IdiomActor.Left ? left : right).onClick.Invoke();
+                var game = (IdiomGame)typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page);
+                Require(game.IsStarted && game.FirstActor == first, label + " real starter callback");
+                CheckComposer(fixture, page, game, label);
+
+                var submissions = match == IdiomMatchKind.Local ? 2 : 1;
+                for (var turn = 0; turn < submissions; turn++)
+                {
+                    var previousActor = game.NextActor;
+                    var previousCount = game.History.Count;
+                    var candidate = NextWord(lexicon, game);
+                    Get<InputField>(page, "input").text = candidate.Word;
+                    Get<Button>(page, "send").onClick.Invoke();
+                    Require(game.History.Count > previousCount, label + " real send callback advances history");
+                    if (match == IdiomMatchKind.Local)
+                        Require(game.NextActor != previousActor, label + " local actor alternates");
+                    CheckComposer(fixture, page, game, label + " turn " + turn);
+                    CheckTranscript(page, game, label);
+                }
+                Invoke(page, "OpenNotebook", false);
+                fixture.Flush();
+                var book = Get<RectTransform>(page, "bookRoot");
+                Require(book.gameObject.activeInHierarchy && !gameRoot.gameObject.activeSelf, label + " notebook page opens");
+                var bookTitle = (RectTransform)book.Find("生词本");
+                Near(Center(bookTitle).x, Center(fixture.Root).x, label + " notebook title centered in actual canvas");
+                Invoke(page, "ReturnFromNotebook");
+                Require(gameRoot.gameObject.activeInHierarchy, label + " return preserves page");
+                Require(Get<IdiomSaveStore>(page, "store") == null,
+                    "Layout checks must never own persistent stores");
+            }
+            finally { Object.DestroyImmediate(pageRoot.gameObject); }
+        }
+
+        private static void CheckComposer(Fixture fixture, IdiomPage page, IdiomGame game, string label)
+        {
+            fixture.Flush();
+            var send = (RectTransform)Get<Button>(page, "send").transform;
+            var hint = (RectTransform)Get<Button>(page, "hint").transform;
+            var input = Get<InputField>(page, "input");
+            var field = (RectTransform)input.transform;
+            Require(send.gameObject.activeInHierarchy && hint.gameObject.activeInHierarchy && input.interactable,
+                label + " active composer remains usable");
+            var sendBounds = WorldRect(send);
+            var hintBounds = WorldRect(hint);
+            var fieldBounds = WorldRect(field);
+            Require(!sendBounds.Overlaps(fieldBounds) && !hintBounds.Overlaps(fieldBounds) && !sendBounds.Overlaps(hintBounds),
+                label + " real composer rectangles never overlap");
+            var leftTurn = game.MatchKind == IdiomMatchKind.Local && game.NextActor == IdiomActor.Left;
+            Require(leftTurn ? sendBounds.xMax < fieldBounds.xMin && hintBounds.xMin > fieldBounds.xMax :
+                hintBounds.xMax < fieldBounds.xMin && sendBounds.xMin > fieldBounds.xMax, label + " send and hint mirror current actor");
+            Near(Center(send).y, Center(field).y, label + " send aligned vertically");
+            Near(Center(hint).y, Center(field).y, label + " hint aligned vertically");
+            Require(WorldRect(Get<RectTransform>(page, "footer")).yMin >= WorldRect(fixture.Root).yMin,
+                label + " composer stays inside canvas");
+            var expectedCount = game.MatchKind == IdiomMatchKind.Local ? game.History.Count : game.PlayerCount;
+            Require(Get<Text>(page, "countText").text == "本轮完成 " + expectedCount + " 个", label + " count semantics");
+            if (game.MatchKind == IdiomMatchKind.Local)
+            {
+                var actor = game.NextActor == IdiomActor.Left ? "左方" : "右方";
+                Require(((Text)input.placeholder).text.StartsWith(actor, StringComparison.Ordinal), label + " active actor placeholder");
+            }
+        }
+
+        private static void CheckTranscript(IdiomPage page, IdiomGame game, string label)
+        {
+            var list = Get<IdiomVirtualList>(page, "chat");
+            var rows = Get<List<IdiomVirtualList.Row>>(list, "rows");
+            var found = 0;
+            foreach (var row in rows)
+            {
+                if (row.Index < 0 || !row.Root.gameObject.activeInHierarchy) continue;
+                var right = row.Index % 2 == 0 ? game.FirstActor == IdiomActor.Right : game.FirstActor != IdiomActor.Right;
+                var expected = game.MatchKind == IdiomMatchKind.Local ? right ? "右方" : "左方" : right ? "你" : "APP";
+                Require(row.Actor.text == expected, label + " transcript actor " + row.Index);
+                Require(right ? Center((RectTransform)row.Button.transform).x > Center(row.Root).x :
+                    Center((RectTransform)row.Button.transform).x < Center(row.Root).x, label + " transcript side " + row.Index);
+                found++;
+            }
+            Require(found > 0, label + " production virtual rows rendered");
+        }
+
+        private static void CheckRuleSwitch(IdiomRuleSwitch ruleSwitch, string label)
+        {
+            var thumb = Get<RectTransform>(ruleSwitch, "thumb");
+            var character = Get<Text>(ruleSwitch, "character");
+            var sound = Get<Text>(ruleSwitch, "sound");
+            var characterEnd = (RectTransform)ruleSwitch.transform.Find("Character end");
+            var soundEnd = (RectTransform)ruleSwitch.transform.Find("Sound end");
+            Near(thumb.rect.width, 52, label + " rule thumb width");
+            Near(thumb.rect.height, 52, label + " rule thumb height");
+            Near(Center(character.rectTransform), Center(characterEnd), label + " 字 centered in endpoint");
+            Near(Center(sound.rectTransform), Center(soundEnd), label + " 音 centered in endpoint");
+            Require(character.text == "字" && sound.text == "音", label + " rule labels");
+            ruleSwitch.SetState(false, true, false);
+            Near(Center(thumb), Center(characterEnd), label + " character selected disc center");
+            ruleSwitch.SetState(true, true, false);
+            Near(Center(thumb), Center(soundEnd), label + " sound selected disc center");
+        }
+
+        private static void CheckModalRaycasts(Fixture fixture)
+        {
+            var inert = new GameObject("Inactive shell under test");
+            inert.SetActive(false);
+            inert.transform.SetParent(fixture.Owner.transform, false);
+            var shell = inert.AddComponent<AppController>();
+            Set(shell, "canvasRoot", fixture.Root);
+            var backCount = 0;
+            var contentCount = 0;
+            var closeCount = 0;
+            var panel = (RectTransform)Invoke(shell, "OpenIdiomModal", "点击范围检查", 560f, (Action)(() => backCount++));
+            try
+            {
+                var content = UiFactory.Button(panel, "内容按钮", 32, 180, 532, 70, () => contentCount++);
+                var close = UiFactory.CircleButton(panel, UiIconKind.Close, panel.rect.width - 72, 43, 48, () => closeCount++);
+                var closeRect = (RectTransform)close.transform;
+                var icon = close.GetComponentInChildren<UiIconGraphic>();
+                Near(closeRect.rect.width, closeRect.rect.height, "Close button is circular, not an ellipse");
+                Near(Center(icon.rectTransform), Center(closeRect), "Close glyph rect center");
+                CheckMesh(icon, true);
+                fixture.Flush();
+                fixture.Click(fixture.Root.TransformPoint(new Vector2(fixture.Root.rect.xMin + 10, fixture.Root.rect.yMin + 10)));
+                Require(backCount == 1, "Actual outside click invokes supplied idiom back action exactly once");
+                fixture.Click(panel.TransformPoint(new Vector2(panel.rect.xMin + 16, panel.rect.yMax - 130)));
+                Require(backCount == 1, "Panel whitespace does not dismiss or bubble to backdrop");
+                fixture.Click(Center((RectTransform)content.transform));
+                Require(contentCount == 1 && backCount == 1, "Content button receives click without outside dismissal");
+                fixture.Click(closeRect.TransformPoint(new Vector2(closeRect.rect.xMin + 1, closeRect.rect.yMax - 1)));
+                Require(closeCount == 0 && backCount == 1, "Transparent corner of circular close is not clickable");
+                fixture.Click(Center(closeRect));
+                Require(closeCount == 1 && backCount == 1, "Circle center invokes close exactly once");
+                var image = close.GetComponent<Image>();
+                var centerScreen = RectTransformUtility.WorldToScreenPoint(fixture.Camera, Center(closeRect));
+                var cornerScreen = RectTransformUtility.WorldToScreenPoint(fixture.Camera,
+                    closeRect.TransformPoint(new Vector2(closeRect.rect.xMin + 1, closeRect.rect.yMax - 1)));
+                Require(image.IsRaycastLocationValid(centerScreen, fixture.Camera), "Circle image accepts center");
+                Require(!image.IsRaycastLocationValid(cornerScreen, fixture.Camera), "Circle image rejects corner");
+            }
+            finally { DestroyModal(shell); }
+            // Shared confirmations retain their original modal semantics.
+            Invoke(shell, "CreateModal", "普通确认", 488f, null);
+            try
+            {
+                fixture.Flush();
+                var modal = Get<GameObject>(shell, "modal");
+                Require(modal.transform.Find("Dismiss outside dialog") == null, "Generic dialog has no outside dismiss handler");
+                fixture.Click(fixture.Root.TransformPoint(new Vector2(fixture.Root.rect.xMin + 10, fixture.Root.rect.yMin + 10)));
+                Require(backCount == 1, "Generic outside click cannot trigger previous idiom back action");
+            }
+            finally { DestroyModal(shell); }
+
+            var actualPageRoot = UiFactory.Rect(fixture.Root, "Dialog owner page", 0, 0, fixture.Width, fixture.Height);
+            var learningDirectory = Path.Combine(Path.GetTempPath(), "xanadu-idiom-ui-" + Guid.NewGuid().ToString("N"));
+            UiFactory.Stretch(actualPageRoot);
+            try
+            {
+                var page = actualPageRoot.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(actualPageRoot, () => { }, () => true, _ => { },
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back),
+                    () => DestroyModal(shell));
+                Set(page, "visible", true);
+                var returned = 0;
+                var actualPanel = (RectTransform)Invoke(page, "Dialog", "真实成语弹窗", 560f, (Action)(() => returned++));
+                var actualClose = (RectTransform)actualPanel.Find("Close button");
+                Require(actualClose != null, "Production idiom Dialog creates shared circular close");
+                var title = actualPanel.GetComponentInChildren<Text>();
+                Near(Center(actualClose).y, Center(title.rectTransform).y, "Production dialog close aligns with title row");
+                CheckMesh(actualClose.GetComponentInChildren<UiIconGraphic>(), true);
+                fixture.Click(Center(actualClose));
+                Require(returned == 1 && Get<GameObject>(shell, "modal") == null,
+                    "Production X closes the dialog and returns through its back callback");
+                Invoke(page, "Dialog", "真实外侧点击", 560f, (Action)(() => returned++));
+                fixture.Click(fixture.Root.TransformPoint(new Vector2(fixture.Root.rect.xMin + 10, fixture.Root.rect.yMin + 10)));
+                Require(returned == 2 && Get<GameObject>(shell, "modal") == null,
+                    "Production outside click follows the same dialog close/back chain");
+
+                var lexicon = TestLexicon();
+                Set(page, "lexicon", lexicon);
+                var learningData = (IdiomSaveData)Invoke(page, "NewSave");
+                Set(page, "data", learningData);
+                Invoke(page, "RestoreGames");
+                Set(page, "loaded", true);
+                var saved = new IdiomNotebookItem { Id = "ui-0", SenseId = "sense-0", Word = "一心一意",
+                    Pinyin = "yī xīn yī yì", Meaning = "专心专意。", AddedAt = 1, DictionaryVersion = lexicon.Version };
+                var book = new IdiomNotebookData { Entries = new List<IdiomNotebookItem> { saved } };
+                Set(page, "notebook", book);
+                var profile = Get<IdiomLearningProfile>(page, "learning");
+                profile.AddNotebook(saved.Id, saved.AddedAt);
+                var disk = new IdiomSaveStore(learningDirectory, lexicon);
+                string warning;
+                disk.Load(out warning);
+                Set(page, "store", disk);
+                Invoke(page, "ShowDefinition", saved.Id, null, saved, false);
+                fixture.Flush();
+                Button remembered = null, remove = null;
+                foreach (var button in Get<GameObject>(shell, "modal").GetComponentsInChildren<Button>())
+                {
+                    var caption = button.GetComponentInChildren<Text>();
+                    if (caption == null) continue;
+                    if (caption.text == "我记住了") remembered = button;
+                    if (caption.text == "移出生词本") remove = button;
+                }
+                Require(remembered != null, "Notebook definition exposes explicit remembered action");
+                Require(remove != null, "Notebook keeps removal separate from remembered action");
+                var rememberedBounds = WorldRect((RectTransform)remembered.transform);
+                var removeBounds = WorldRect((RectTransform)remove.transform);
+                Require(!rememberedBounds.Overlaps(removeBounds), "Remembered and removal hit targets must not overlap");
+                Require(((RectTransform)remembered.transform).rect.height >= 48, "Remembered action retains accessible hit height");
+                fixture.Click(Center((RectTransform)remembered.transform));
+                Require(profile.IsFamiliar(saved.Id) && !profile.IsNotebook(saved.Id), "Remember click updates shared learner");
+                Require(Get<IdiomNotebookData>(page, "notebook").Entries.Count == 0, "Remember click removes saved notebook row");
+                var persisted = new IdiomSaveStore(learningDirectory, lexicon).Load(out warning);
+                Require(persisted != null && persisted.Notebook.Entries.Count == 0 &&
+                    new IdiomLearningProfile(lexicon, persisted.Profile).IsFamiliar(saved.Id),
+                    "Remember action persists notebook and familiar state in one save");
+
+                // A failed edit must not leave the shared profile half changed.
+                var failedWord = new IdiomNotebookItem { Id = "ui-2", SenseId = "sense-2", Word = "发扬光大",
+                    Pinyin = "fā yáng guāng dà", Meaning = "使优点得到发展。", AddedAt = 2, DictionaryVersion = lexicon.Version };
+                profile.AddNotebook(failedWord.Id, failedWord.AddedAt);
+                book = new IdiomNotebookData { Entries = new List<IdiomNotebookItem> { failedWord } };
+                Set(page, "notebook", book);
+                page.Save();
+                var savedBytes = File.ReadAllBytes(disk.SavePath);
+                Directory.CreateDirectory(disk.SavePath + ".tmp");
+                var changed = (bool)Invoke(page, "SaveNotebook", new IdiomNotebookData(),
+                    (Action)(() => profile.Remember(failedWord.Id)));
+                Require(!changed && profile.IsNotebook(failedWord.Id) && !profile.IsFamiliar(failedWord.Id) &&
+                    Get<IdiomNotebookData>(page, "notebook").Entries.Count == 1,
+                    "Failed notebook edit rolls back the same shared learner instance and notebook");
+                Require(Convert.ToBase64String(savedBytes) == Convert.ToBase64String(File.ReadAllBytes(disk.SavePath)),
+                    "Failed edit keeps complete old disk snapshot");
+                page.Save();
+                Require(Get<bool>(page, "saveFailed"), "Fixture observes an ordinary save failure before recovery");
+                var removed = new IdiomNotebookItem { Id = "ui-1", SenseId = "sense-1", Word = "意气风发",
+                    Pinyin = "yì qì fēng fā", Meaning = "精神振奋。", AddedAt = 2, DictionaryVersion = lexicon.Version };
+                book.Entries.Add(removed);
+                profile.AddNotebook(removed.Id, removed.AddedAt);
+                Invoke(page, "ShowDefinition", removed.Id, null, removed, false);
+                fixture.Flush();
+                Directory.Delete(disk.SavePath + ".tmp");
+                foreach (var button in Get<GameObject>(shell, "modal").GetComponentsInChildren<Button>())
+                {
+                    var caption = button.GetComponentInChildren<Text>();
+                    if (caption != null && caption.text == "移出生词本") { remove = button; break; }
+                }
+                fixture.Click(Center((RectTransform)remove.transform));
+                Require(!profile.IsNotebook(removed.Id) && !profile.IsFamiliar(removed.Id),
+                    "Plain removal does not grant familiar evidence");
+                Require(page.SaveError == null && !Get<bool>(page, "saveFailed"),
+                    "A successful combined notebook transaction clears all stale save errors");
+
+                File.WriteAllText(disk.SavePath, "broken during UI transaction test");
+                page.Save();
+                Require(disk.NeedsRecovery, "Protected file triggers recovery flow");
+                var recoveryReturns = 0;
+                Invoke(page, "ConfirmNotebookRecovery", (Action)(() => recoveryReturns++));
+                Invoke(page, "ReturnFromDialog");
+                Require(recoveryReturns == 1, "Cancel notebook recovery returns to its originating detail dialog");
+                Invoke(page, "ConfirmNotebookRecovery", (Action)(() => recoveryReturns++));
+                foreach (var button in Get<GameObject>(shell, "modal").GetComponentsInChildren<Button>())
+                {
+                    var caption = button.GetComponentInChildren<Text>();
+                    if (caption != null && caption.text == "保留并保存") { fixture.Click(Center((RectTransform)button.transform)); break; }
+                }
+                Require(recoveryReturns == 2 && !disk.NeedsRecovery && page.SaveError == null,
+                    "Successful notebook recovery returns to its detail dialog with saving restored");
+
+                var activeGame = Get<IdiomGame>(page, "characterGame");
+                activeGame.Start(IdiomActor.Player);
+                Invoke(page, "ShowDefinition", failedWord.Id, null, failedWord, false);
+                Invoke(page, "ReturnFromDialog");
+                Require(activeGame.GetSnapshot().AssistedEntryIds.Count == 1 &&
+                    activeGame.GetSnapshot().AssistedEntryIds[0] == failedWord.Id,
+                    "Viewing saved notebook definition records assistance in a live human turn");
+                Require(Get<IdiomGame>(page, "soundGame").GetSnapshot().AssistedEntryIds.Count == 0 &&
+                    Get<IdiomGame>(page, "localCharacterGame").GetSnapshot().AssistedEntryIds.Count == 0,
+                    "Viewing assistance is isolated to the active game slot");
+                persisted = new IdiomSaveStore(learningDirectory, lexicon).Load(out warning);
+                Set(page, "data", persisted); Set(page, "notebook", persisted.Notebook);
+                Invoke(page, "RestoreGames"); Invoke(page, "Refresh", true);
+                profile = Get<IdiomLearningProfile>(page, "learning");
+                Get<InputField>(page, "input").text = failedWord.Word;
+                Get<Button>(page, "send").onClick.Invoke();
+                IdiomUseCount observed = null;
+                foreach (var use in profile.GetSnapshot().Uses) if (use.EntryId == failedWord.Id) observed = use;
+                Require(observed != null && observed.AssistedUses == 1 && observed.IndependentUses == 0 &&
+                    !profile.IsFamiliar(failedWord.Id), "Restored detail-assisted submit never creates independent familiarity");
+            }
+            finally
+            {
+                DestroyModal(shell);
+                Object.DestroyImmediate(actualPageRoot.gameObject);
+                Object.DestroyImmediate(inert);
+                if (Directory.Exists(learningDirectory)) Directory.Delete(learningDirectory, true);
+            }
+        }
+
+        private static void DestroyModal(AppController shell)
+        {
+            var modal = Get<GameObject>(shell, "modal");
+            Set(shell, "modal", null);
+            Set(shell, "dismissModal", null);
+            if (modal != null) Object.DestroyImmediate(modal);
+        }
+
+        private static void CheckMesh(UiIconGraphic icon, bool centered)
+        {
+            using (var vertices = new VertexHelper())
+            {
+                typeof(UiIconGraphic).GetMethod("OnPopulateMesh", PrivateInstance, null, new[] { typeof(VertexHelper) }, null)
+                    .Invoke(icon, new object[] { vertices });
+                Require(vertices.currentVertCount > 0, icon.Kind + " actual mesh contains vertices");
+                var mesh = new Mesh();
+                try
+                {
+                    vertices.FillMesh(mesh);
+                    mesh.RecalculateBounds();
+                    Require(mesh.bounds.size.x > 0 && mesh.bounds.size.y > 0, icon.Kind + " actual mesh has area");
+                    Require(mesh.bounds.size.x <= icon.rectTransform.rect.width && mesh.bounds.size.y <= icon.rectTransform.rect.height,
+                        icon.Kind + " actual mesh fits icon rect");
+                    if (centered) Near((Vector2)mesh.bounds.center, icon.rectTransform.rect.center, "Actual X mesh is centered");
+                }
+                finally { Object.DestroyImmediate(mesh); }
+            }
+        }
+
+        private static IdiomLexicon TestLexicon()
+        {
+            // A closed five-word chain avoids random app-opening dead ends in either rule.
+            var words = new[] { "一心一意", "意气风发", "发扬光大", "大快人心", "心口如一" };
+            var keys = new[] { "yi", "yi", "fa", "da", "xin", "yi" };
+            var entries = new List<IdiomEntry>();
+            for (var i = 0; i < words.Length; i++)
+                entries.Add(new IdiomEntry("ui-" + i, words[i], "UI fixture", keys[i], keys[i + 1], "sense-" + i, "fixture", true));
+            return new IdiomLexicon(entries, "ui-check-fixture");
+        }
+
+        private static IdiomEntry NextWord(IdiomLexicon lexicon, IdiomGame game)
+        {
+            var used = new HashSet<string>(game.History);
+            foreach (var entry in lexicon.Entries)
+            {
+                if (used.Contains(entry.Id)) continue;
+                if (game.LastEntry == null || (game.Mode == IdiomMode.SameCharacter ?
+                    game.LastEntry.LastCharacter == entry.FirstCharacter : game.LastEntry.LastKey == entry.FirstKey)) return entry;
+            }
+            throw new InvalidOperationException("UI fixture chain unexpectedly has no continuation");
+        }
+
+        private static object Invoke(object target, string name, params object[] values)
+        {
+            var method = target.GetType().GetMethod(name, PrivateInstance);
+            if (method == null) throw new MissingMethodException(target.GetType().Name, name);
+            return method.Invoke(target, values);
+        }
+
+        private static T Get<T>(object target, string name)
+        {
+            return (T)target.GetType().GetField(name, PrivateInstance).GetValue(target);
+        }
+
+        private static void Set(object target, string name, object value)
+        {
+            target.GetType().GetField(name, PrivateInstance).SetValue(target, value);
+        }
+
+        private static Vector2 Center(RectTransform rect) { return rect.TransformPoint(rect.rect.center); }
+
+        private static Rect WorldRect(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
+        private static void Near(float actual, float expected, string message)
+        {
+            Require(Mathf.Abs(actual - expected) <= .1f, message + " (actual " + actual + ", expected " + expected + ")");
+        }
+
+        private static void Near(Vector2 actual, Vector2 expected, string message)
+        {
+            Require(Vector2.Distance(actual, expected) <= .1f, message + " (actual " + actual + ", expected " + expected + ")");
+        }
+
+        private static void Require(bool condition, string message)
+        {
+            assertions++;
+            if (!condition) throw new InvalidOperationException(message);
+        }
+
+        private sealed class Fixture : IDisposable
+        {
+            public readonly GameObject Owner;
+            public readonly RectTransform Root;
+            public readonly Camera Camera;
+            public readonly int Width, Height;
+            private readonly RenderTexture target;
+            private readonly GraphicRaycaster raycaster;
+            private readonly EventSystem events;
+
+            public Fixture(int width, int height)
+            {
+                Width = width; Height = height;
+                Owner = new GameObject("Idiom UI fixture") { hideFlags = HideFlags.HideAndDontSave };
+                var canvasObject = new GameObject("UI fixture canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+                canvasObject.transform.SetParent(Owner.transform, false);
+                Root = (RectTransform)canvasObject.transform;
+                Root.sizeDelta = new Vector2(width, height);
+                Root.pivot = new Vector2(.5f, .5f);
+                var cameraObject = new GameObject("UI fixture camera", typeof(Camera));
+                cameraObject.transform.SetParent(Owner.transform, false);
+                Camera = cameraObject.GetComponent<Camera>();
+                Camera.enabled = false;
+                Camera.transform.position = new Vector3(0, 0, -10);
+                Camera.orthographic = true;
+                Camera.orthographicSize = height * .5f;
+                Camera.aspect = width / (float)height;
+                Camera.nearClipPlane = .1f;
+                Camera.farClipPlane = 100;
+                target = new RenderTexture(width, height, 24);
+                target.Create();
+                Camera.targetTexture = target;
+                var canvas = canvasObject.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.WorldSpace;
+                canvas.worldCamera = Camera;
+                Root.sizeDelta = new Vector2(width, height);
+                Near(Root.rect.width, width, "Actual fixture canvas width");
+                Near(Root.rect.height, height, "Actual fixture canvas height");
+                raycaster = canvasObject.GetComponent<GraphicRaycaster>();
+                var eventObject = new GameObject("UI fixture events", typeof(EventSystem));
+                eventObject.transform.SetParent(Owner.transform, false);
+                events = eventObject.GetComponent<EventSystem>();
+            }
+
+            public void Flush()
+            {
+                Canvas.ForceUpdateCanvases();
+                // Actual rendering establishes Graphic.depth; testing only rectangle
+                // math would miss graphics rejected by the production raycaster.
+                Camera.Render();
+                Canvas.ForceUpdateCanvases();
+            }
+
+            public void Click(Vector2 worldPosition)
+            {
+                Flush();
+                var pointer = new PointerEventData(events)
+                {
+                    position = RectTransformUtility.WorldToScreenPoint(Camera, worldPosition),
+                    button = PointerEventData.InputButton.Left
+                };
+                var hits = new List<RaycastResult>();
+                raycaster.Raycast(pointer, hits);
+                Require(hits.Count > 0, "Production GraphicRaycaster finds a drawn target at " + pointer.position);
+                pointer.pointerCurrentRaycast = pointer.pointerPressRaycast = hits[0];
+                var pressed = ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, pointer, ExecuteEvents.pointerDownHandler);
+                var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject);
+                pointer.pointerPress = pressed != null ? pressed : clicked;
+                if (pointer.pointerPress != null) ExecuteEvents.Execute(pointer.pointerPress, pointer, ExecuteEvents.pointerUpHandler);
+                if (clicked != null && pointer.pointerPress == clicked)
+                    ExecuteEvents.Execute(clicked, pointer, ExecuteEvents.pointerClickHandler);
+            }
+
+            public void Dispose()
+            {
+                Camera.targetTexture = null;
+                Object.DestroyImmediate(Owner);
+                target.Release();
+                Object.DestroyImmediate(target);
+            }
+        }
+    }
+}

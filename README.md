@@ -13,7 +13,7 @@
 - **成语接龙**：同字/同音双模式、机器/用户双开局、左右对话、免费提示与三次提示小结、可点击释义和本地生词本。
 - **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，成语接龙使用 `idiom-v1.json` 与独立的 `idiom-notebook-v1.json`，不修改已有游戏的存档协议。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录，不修改已有游戏的存档协议。
 
 **最新正式版本为 v0.3.0**，新增旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -36,6 +36,7 @@ scripts/test-sheep-layouts.sh
 scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
+scripts/test-idiom-ui.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -48,7 +49,9 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 ## 成语接龙与离线词库
 
-成语接龙已接入，内置 42,851 个可玩成语；双模式、开局选择、三次提示小结和生词本的页面说明见[成语接龙玩法与 UI](docs/idiom-game.md)。使用 `scripts/test-idiom-data.sh` 验证清洗规则，运行 `python3 -B scripts/import-idioms.py` 离线整理两个固定版本的词库。缺少原始文件时可加 `--fetch` 下载；产物、冲突隔离和复现方式见[成语数据清洗说明](docs/idiom-data.md)。
+成语接龙已接入，内置 42,851 个可玩成语与 1,534 个公共常用词；支持人机与双人本地对战，字／音规则分别续玩。双人双方各 3 次提示，任一方第三次展示提示后回顾本轮。页面说明见[成语接龙玩法与 UI](docs/idiom-game.md)，选词、20% 生词复习与个人熟悉词规则见[算法设计](docs/idiom-selection.md)，常用表策划见[数据审计](docs/idiom-common-vocabulary.md)，本轮结果见[学习机制验证](docs/verification-idiom-personalization.md)。使用 `scripts/test-idiom-data.sh` 验证清洗规则，运行 `python3 -B scripts/import-idioms.py` 离线整理两个固定版本的词库。缺少原始文件时可加 `--fetch` 下载；产物、冲突隔离和复现方式见[成语数据清洗说明](docs/idiom-data.md)。
+
+调整成语页头、计数、开关、图标或弹窗时，运行 `scripts/test-idiom-ui.sh` 检查实际居中、控件边界和点击分发，并在长短屏截图中复核字形、留白、键盘展开与收起。该检查需要 Unity 图形渲染；不要与本工作树的 Unity 构建同时运行。编辑器检查不能代替 Android 输入和生命周期验收。
 
 运行资源位于 `Assets/Resources/Idioms`，普通构建不需要下载或运行清洗。重新导出用 `python3 scripts/pack-idioms.py`；只在进入游戏时加载索引，释义按分片读取。
 

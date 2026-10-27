@@ -7,7 +7,7 @@ v0.3.0 接入 2048、跳一跳、旸了个旸和成语接龙。大厅、设置�
 | 2048 | `Game2048` / `BoardView` | `xanaduyonder-v1.json` | 对局、最高分及共用声音/触感设置 |
 | 跳一跳 | `Core/Jump` / `JumpPage`、`JumpSceneView` | `jump-v1.json` | 对局、最高分 |
 | 旸了个旸 | `Core/Sheep` / `SheepPage`、`SheepBoardView` | `sheep-v1.json` | 对局、累计通关、胜利已计数标记 |
-| 成语接龙 | `Core/Idiom` / `IdiomPage`、虚拟列表 | `idiom-v1.json`、`idiom-notebook-v1.json` | 双模式对局、草稿、最佳数量、共用生词本 |
+| 成语接龙 | `Core/Idiom` / `IdiomPage`、虚拟列表 | `idiom-learning-v1.json` | 四组对局、草稿、最佳数量、生词本、个人学习与跨局近期回复 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)与[成语接龙模块](idiom-game.md)分别说明各自规则和存档。新增游戏不修改以下 2048 和公共设置的旧协议。
 

@@ -3,6 +3,8 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using XanaduYonder.Core.Idiom;
+using XanaduYonder.Runtime.Idiom;
 
 internal static class Program
 {
@@ -23,13 +25,23 @@ internal static class Program
         Check("Unknown notebook schema cannot fall back to an older backup", IncompatibleNotebook);
         Check("Other game files remain byte identical", OtherGamesUntouched);
         Check("Both modes, drafts, best counts and hint events round trip", GameRoundTrip);
+        Check("Learning state uses one new aggregate document and leaves legacy files untouched", LearningAggregateContract);
+        Check("Legacy identities are rejected by the learning aggregate", LegacyGameRejected);
+        Check("Learning profile notebook assisted input and random streams round trip together", LearningRoundTrip);
+        Check("Failed aggregate writes preserve all domains and retries commit once", AggregateAtomicFailure);
+        Check("Malformed learning state and notebook profile mismatches are rejected", InvalidLearningState);
+        Check("Recommendation terminals retain frozen selection context across profile changes", SelectionTerminalRoundTrip);
+        Check("Four match and rule slots preserve separate progress and hint quotas", FourSlotRoundTrip);
+        Check("Aggregate rejects mismatched match kinds, scores and local hint terminals", InvalidLocalStates);
+        Check("Unknown game schema protects primary instead of loading compatible backup", UnknownGameSchema);
         Check("Game JSON rejects unknown fields, duplicate fields and token coercion", StrictGameJson);
         Check("Core restore validates history, mode, hints and terminal state", InvalidGameStates);
         Check("Dictionary mismatch protects primary even when backup is compatible", DictionaryMismatch);
         Check("Unavailable catalog cannot load, save or reset original data", CatalogUnavailable);
         Check("Game corruption recovery preserves good backup and requires archive for bad files", GameRecovery);
-        Check("Game file has a four MiB limit", GameFileLimit);
+        Check("Game file respects its bounded byte limit", GameFileLimit);
         Check("Long complete histories in both modes are bounded by the lexicon", LongHistories);
+        Check("Four complete current-catalog-sized histories fit the save budget", FourLongHistories);
         Check("Ten thousand bookmarks retain complete records", LargeNotebook);
         Check("Notebook byte limit returns a clear error and retains old bytes", NotebookByteLimit);
         Check("Unavailable directory is not treated as a fresh empty notebook", DirectoryUnavailable);
@@ -228,14 +240,148 @@ internal static class Program
     }
     private static dynamic GameData(dynamic lexicon)
     {
-        dynamic character=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",0),(uint)17});
-        dynamic sound=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",1),(uint)29});
+        dynamic profile=FreshProfile(lexicon);
+        dynamic character=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",0),(uint)17,EnumValue("IdiomMatchKind",0),profile,(Func<long>)(()=>200000L)});
+        dynamic sound=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",1),(uint)29,EnumValue("IdiomMatchKind",0),profile,(Func<long>)(()=>200000L)});
         Assert(character.Start((dynamic)EnumValue("IdiomActor",2)).Success,"Fixture cannot start");
         character.RequestHint(); Assert(character.Submit("一心一意").Success,"Fixture cannot submit");
         dynamic data=New("IdiomSaveData"), c=New("IdiomModeSave"), s=New("IdiomModeSave");
         c.Game=character.GetSnapshot(); c.Draft="发扬"; c.Best=1; c.NewBestInRun=true;
         s.Game=sound.GetSnapshot(); s.Draft="人先开始"; s.Best=2; s.NewBestInRun=false;
-        data.ActiveMode=(dynamic)EnumValue("IdiomMode",1); data.Character=c; data.Sound=s; return data;
+        data.ActiveMode=(dynamic)EnumValue("IdiomMode",1); data.Character=c; data.Sound=s;
+        AddFreshLocalSlots(data,lexicon); data.Profile=profile.GetSnapshot();data.Notebook=New("IdiomNotebookData");return data;
+    }
+    private static void AddFreshLocalSlots(dynamic data,dynamic lexicon)
+    {
+        for(int mode=0;mode<2;mode++)
+        {
+            dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",mode),(uint)41,EnumValue("IdiomMatchKind",1)});
+            dynamic slot=New("IdiomModeSave"); slot.Game=game.GetSnapshot();
+            if(mode==0)data.LocalCharacter=slot;else data.LocalSound=slot;
+        }
+    }
+    private static dynamic FreshProfile(dynamic lexicon)
+    {
+        return Activator.CreateInstance(CoreType("IdiomLearningProfile"),new object[]{lexicon});
+    }
+    private static void AddFreshLearning(dynamic data,dynamic lexicon)
+    {
+        data.Profile=FreshProfile(lexicon).GetSnapshot(); data.Notebook=New("IdiomNotebookData");
+    }
+    private static Array CoreRows(string type, params object[][] rows)
+    {
+        var result=Array.CreateInstance(CoreType(type),rows.Length);
+        for(int i=0;i<rows.Length;i++)result.SetValue(Activator.CreateInstance(CoreType(type),rows[i]),i);
+        return result;
+    }
+    private static dynamic LearningData(dynamic lexicon)
+    {
+        dynamic data=GameData(lexicon);
+        data.Profile=(dynamic)Activator.CreateInstance(CoreType("IdiomLearningSnapshot"),new object[]{
+            new[]{"entry0"},new[]{"entry2"},new[]{"entry1"},
+            CoreRows("IdiomAppExposure",new object[]{"entry1",123000L},new object[]{"entry2",123456L}),
+            CoreRows("IdiomUseCount",new object[]{"entry0",1,0},new object[]{"entry3",0,1}),
+            CoreRows("IdiomNotebookAdded",new object[]{"entry2",321L})});
+        dynamic item=New("IdiomNotebookItem"); item.Id="entry2"; item.Word="发扬光大"; item.SenseId="sense2";
+        item.Pinyin="yī xīn yī yì";item.Meaning="保存的完整释义";item.DictionaryVersion="dictionary-v1";item.AddedAt=321L;
+        data.Notebook.Entries.Add(item);
+        dynamic profile=Activator.CreateInstance(CoreType("IdiomLearningProfile"),new object[]{lexicon,data.Profile});
+        dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,data.Character.Game,profile,(Func<long>)(()=>200000L)});
+        game.RecordDefinitionViewed("entry3"); data.Character.Game=game.GetSnapshot(); return data;
+    }
+    private static void LearningRoundTrip()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(), data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,data);
+            byte[] first=File.ReadAllBytes((string)store.SavePath); Save(store,data); Equal(first,File.ReadAllBytes((string)store.SavePath));
+            dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
+            Assert(restored.Profile.FamiliarIds.Count==1 && restored.Profile.NotebookIds.Count==1 && restored.Profile.RecentAppIds.Count==1,"Profile sets changed or duplicate save re-applied an event");
+            bool foundExposure=false;foreach(dynamic row in restored.Profile.AppExposures)if(row.EntryId=="entry2" && row.LastShownUtc==123456L)foundExposure=true;
+            Assert(restored.Profile.AppExposures.Count==2 && foundExposure,"APP exposure changed");
+            Assert(restored.Profile.Uses.Count==2 && restored.Profile.NotebookAdded[0].AddedAtUtc==321L,"Use evidence or notebook time lost");
+            Assert(restored.Notebook.Entries.Count==1 && restored.Notebook.Entries[0].Meaning=="保存的完整释义","Notebook lost from aggregate");
+            Assert(restored.Character.Game.AssistedEntryIds.Count==1 && restored.Character.Game.AssistedEntryIds[0]=="entry3","Definition assistance lost");
+            Assert(restored.Character.Game.RandomState==data.Character.Game.RandomState && restored.Character.Game.HintRandomState==data.Character.Game.HintRandomState,"Independent random streams changed");
+        });
+    }
+    private static void AggregateAtomicFailure()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,data);
+            string path=store.SavePath; byte[] before=File.ReadAllBytes(path);
+            dynamic profile=Activator.CreateInstance(CoreType("IdiomLearningProfile"),new object[]{lexicon,data.Profile});
+            profile.Remember("entry2"); data.Profile=profile.GetSnapshot();data.Notebook.Entries.Clear();data.Character.Draft="新的草稿";
+            Directory.CreateDirectory(path+".tmp"); RejectSave(store,data); Equal(before,File.ReadAllBytes(path));
+            dynamic unchanged=Load(New("IdiomSaveStore",dir,lexicon));
+            Assert(unchanged.Notebook.Entries.Count==1 && unchanged.Profile.NotebookIds.Count==1 && unchanged.Profile.FamiliarIds.Count==1 && unchanged.Character.Draft=="发扬","Failed transaction partially committed");
+            Directory.Delete(path+".tmp"); Save(store,data); byte[] committed=File.ReadAllBytes(path); Save(store,data); Equal(committed,File.ReadAllBytes(path));
+            dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
+            Assert(restored.Notebook.Entries.Count==0 && restored.Profile.NotebookIds.Count==0 && restored.Profile.FamiliarIds.Count==2 && restored.Character.Draft=="新的草稿","Retry failed to commit all domains exactly once");
+        });
+    }
+    private static void InvalidLearningState()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,LearningData(lexicon));
+            var root=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            foreach(var change in new Action<JObject>[] {
+                r=>r["profile"]["familiarIds"][0]="unknown",
+                r=>((JArray)r["profile"]["familiarIds"]).Add("entry0"),
+                r=>r["profile"]["notebookIds"]=new JArray(),
+                r=>r["profile"]["recentAppIds"]=new JArray("entry1","entry1","entry1","entry1","entry1","entry1","entry1","entry1","entry1","entry1","entry1"),
+                r=>r["profile"]["appExposures"][0]["lastShownUtc"]=-1,
+                r=>r["profile"]["appExposures"][0]["entryId"]="unknown",
+                r=>((JArray)r["profile"]["appExposures"]).Add(r["profile"]["appExposures"][0].DeepClone()),
+                r=>r["profile"]["uses"][0]["independentUses"]=0,
+                r=>r["profile"]["uses"][0]["assistedUses"]=-1,
+                r=>r["profile"]["uses"][0]["independentUses"]=(long)int.MaxValue+1,
+                r=>r["profile"]["notebookAdded"][0]["addedAtUtc"]=322,
+                r=>r["profile"]["notebookAdded"]=new JArray(),
+                r=>r["notebook"]["entries"][0]["senseId"]="wrong-sense",
+                r=>r["notebook"]["entries"][0]["word"]="一心一意",
+                r=>r["notebook"]["entries"][0]["dictionaryVersion"]="other-version",
+                r=>r["character"]["game"]["assistedEntryIds"]=new JArray("unknown"),
+                r=>r["character"]["game"]["hintRandomState"]=0,
+                r=>r["character"]["game"]["endSelectionContext"]=new JObject { ["ordinaryIds"]=new JArray(),["reviewIds"]=new JArray() } })
+            { var changed=(JObject)root.DeepClone();change(changed);RejectGameDocument(dir,lexicon,changed.ToString()); }
+            foreach(string section in new[]{"profile.appExposures[0]","profile.uses[0]","profile.notebookAdded[0]"})
+            {
+                foreach(var property in ((JObject)root.SelectToken(section)).Properties())
+                {
+                    var changed=(JObject)root.DeepClone();((JObject)changed.SelectToken(section)).Remove(property.Name);RejectGameDocument(dir,lexicon,changed.ToString());
+                    changed=(JObject)root.DeepClone();changed.SelectToken(section)[property.Name]=JValue.CreateNull();RejectGameDocument(dir,lexicon,changed.ToString());
+                }
+            }
+        });
+    }
+    private static void SelectionTerminalRoundTrip()
+    {
+        WithDirectory(dir => {
+            var lexicon=new IdiomLexicon(new[]{
+                new IdiomEntry("a","甲一一乙","jiǎ yī yī yǐ","jia","yi","sense-a","00",false),
+                new IdiomEntry("b","乙一一丙","yǐ yī yī bǐng","yi","bing","sense-b","00",false),
+                new IdiomEntry("c","丙一一丁","bǐng yī yī dīng","bing","ding","sense-c","00",false)},"terminal-v1");
+            dynamic profile=FreshProfile(lexicon);
+            dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",0),(uint)17,EnumValue("IdiomMatchKind",0),profile,(Func<long>)(()=>200000L)});
+            game.Start((dynamic)EnumValue("IdiomActor",2));Assert(game.Submit("甲一一乙").Success,"Terminal fixture failed");
+            Assert((int)game.EndReason==6 && game.GetSnapshot().EndSelectionContext!=null,"Policy exhaustion needs a frozen witness");
+            dynamic data=New("IdiomSaveData"),character=New("IdiomModeSave"),sound=New("IdiomModeSave");
+            character.Game=game.GetSnapshot();character.Best=1;data.Character=character;
+            sound.Game=new IdiomGame(lexicon,IdiomMode.SameSound,17).GetSnapshot();data.Sound=sound;
+            AddFreshLocalSlots(data,lexicon);data.Notebook=New("IdiomNotebookData");
+            profile.Remember("b");profile.Remember("c");data.Profile=profile.GetSnapshot();
+            dynamic store=New("IdiomSaveStore",dir,lexicon);Load(store);Save(store,data);
+            dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
+            Assert((int)restored.Character.Game.EndReason==6 && restored.Character.Game.History.Count==1,"Later profile changes rewrote old terminal");
+            var root=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            foreach(var change in new Action<JObject>[] {
+                r=>r["character"]["game"]["endSelectionContext"]=JValue.CreateNull(),
+                r=>r["character"]["game"]["endSelectionContext"]["ordinaryIds"]=new JArray("a","b","c"),
+                r=>r["character"]["game"]["endSelectionContext"]["ordinaryIds"]=new JArray("a","a"),
+                r=>r["character"]["game"]["endSelectionContext"]["reviewIds"]=new JArray("a"),
+                r=>r["character"]["game"]["endSelectionContext"]["reviewIds"]=new JArray("unknown") })
+            { var changed=(JObject)root.DeepClone();change(changed);RejectGameDocument(dir,lexicon,changed.ToString()); }
+        });
     }
     private static void GameRoundTrip()
     {
@@ -250,12 +396,101 @@ internal static class Program
             Assert(game.PlayerCount==1 && game.HintCount==1,"Restored core state changed");
         });
     }
+    private static void LearningAggregateContract()
+    {
+        WithDirectory(dir => {
+            string oldGame=Path.Combine(dir,"idiom-v1.json"), oldNotebook=Path.Combine(dir,"idiom-notebook-v1.json");
+            File.WriteAllText(oldGame,"legacy-game"); File.WriteAllText(oldNotebook,"legacy-notebook");
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon);
+            Assert(Path.GetFileName((string)store.SavePath)=="idiom-learning-v1.json","Learning aggregate needs its own file");
+            Assert(Load(store)==null && store.CanWrite,"Legacy documents must not become partial learning state");
+            Save(store,GameData(lexicon)); var root=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            Assert((int)root["schemaVersion"]==1 && (string)root["gameId"]=="idiom-learning" && root["profile"]!=null && root["notebook"]!=null,"Aggregate must contain games, profile and notebook together");
+            Assert(File.ReadAllText(oldGame)=="legacy-game" && File.ReadAllText(oldNotebook)=="legacy-notebook","Legacy files were modified");
+        });
+    }
+    private static dynamic LocalSlot(dynamic lexicon, int mode, int first, int words, bool allHints)
+    {
+        dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",mode),(uint)41,EnumValue("IdiomMatchKind",1)});
+        game.Start((dynamic)EnumValue("IdiomActor",first));
+        var chain=new[]{"一心一意","意气风发","发扬光大","大有可为"};
+        for(int i=0;i<words;i++) { if(allHints)game.RequestHint(); Assert(game.Submit(chain[i]).Success,"Local fixture submit failed"); }
+        game.RequestHint();
+        dynamic slot=New("IdiomModeSave"); slot.Game=game.GetSnapshot(); slot.Draft=mode==0?"左侧草稿":"右侧草稿";
+        slot.Best=mode==0?words:words+2; slot.NewBestInRun=mode==0 && words>0; return slot;
+    }
+    private static dynamic FourSlotData(dynamic lexicon)
+    {
+        dynamic data=GameData(lexicon);
+        data.ActiveMatchKind=(dynamic)EnumValue("IdiomMatchKind",1);
+        data.LocalCharacter=LocalSlot(lexicon,0,1,4,true);
+        data.LocalSound=LocalSlot(lexicon,1,2,1,false);
+        return data;
+    }
+    private static void LegacyGameRejected()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,GameData(lexicon));
+            string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path)); root["gameId"]="idiom";
+            File.WriteAllText(path,root.ToString()); var before=File.ReadAllBytes(path);
+            store=New("IdiomSaveStore",dir,lexicon);
+            Assert(Load(store)==null && !store.CanWrite && store.NeedsRecovery,"Legacy identity was interpreted as learning state");
+            Equal(before,File.ReadAllBytes(path));
+        });
+    }
+    private static void FourSlotRoundTrip()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,FourSlotData(lexicon));
+            var root=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            Assert((int)root["schemaVersion"]==1 && root["localCharacter"]!=null && root["localSound"]!=null,"Aggregate writes all four slots");
+            dynamic data=Load(New("IdiomSaveStore",dir,lexicon));
+            Assert((int)data.ActiveMatchKind==1 && (int)data.ActiveMode==1,"Both active selectors persist");
+            Assert(data.Character.Game.History.Count==2 && data.Sound.Game.History.Count==0 && data.LocalCharacter.Game.History.Count==4 && data.LocalSound.Game.History.Count==1,"All four histories remain independent");
+            Assert(data.LocalCharacter.Draft=="左侧草稿" && data.LocalSound.Draft=="右侧草稿" && data.LocalCharacter.Best==4 && data.LocalSound.Best==3,"Local drafts and total-word records persist");
+            Assert(data.LocalCharacter.NewBestInRun && !data.LocalSound.NewBestInRun,"Each local best flag persists");
+            dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,data.LocalCharacter.Game});
+            Assert((int)game.MatchKind==1 && (int)game.EndReason==1 && game.HintCount==5 && game.HintCountFor((dynamic)EnumValue("IdiomActor",1))==3 && game.HintCountFor((dynamic)EnumValue("IdiomActor",2))==2,"Local terminal preserves per-human quota");
+            game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,data.LocalSound.Game});
+            Assert((int)game.NextActor==1 && game.Submit("意气风发").Success && game.History.Count==2,"Restored local game continues one human word at a time");
+        });
+    }
+    private static void InvalidLocalStates()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,FourSlotData(lexicon));
+            var root=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            foreach(var change in new Action<JObject>[] {
+                r=>r["activeMatchKind"]=2,
+                r=>r["character"]["game"]["matchKind"]=1,
+                r=>r["localSound"]["game"]["matchKind"]=0,
+                r=>r["localCharacter"]["game"]["matchKind"]=2,
+                r=>r["localCharacter"]["best"]=2,
+                r=>r["localCharacter"]["best"]=5,
+                r=>r["localCharacter"]["game"]["endReason"]=0,
+                r=>((JArray)r["localCharacter"]["game"]["hints"]).RemoveAt(4),
+                r=>((JArray)r["localCharacter"]["game"]["history"]).Add("entry4"),
+                r=>r["localSound"]["game"]["history"][0]="unknown",
+                r=>r["localSound"]["game"]["hints"][0]["entryIds"][0]="entry0" })
+            { var changed=(JObject)root.DeepClone(); change(changed); RejectGameDocument(dir,lexicon,changed.ToString()); }
+        });
+    }
+    private static void UnknownGameSchema()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,GameData(lexicon)); Save(store,GameData(lexicon));
+            string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path)); root["schemaVersion"]=3;
+            File.WriteAllText(path,root.ToString()); var before=File.ReadAllBytes(path);
+            store=New("IdiomSaveStore",dir,lexicon); Assert(Load(store)==null && !store.CanWrite && store.NeedsRecovery,"Unknown schema fell back to compatible backup");
+            RejectSave(store,GameData(lexicon)); Equal(before,File.ReadAllBytes(path));
+        });
+    }
     private static void StrictGameJson()
     {
         Type("IdiomSaveStore"); WithDirectory(dir => {
             dynamic lexicon=Lexicon(), store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,GameData(lexicon)); string path=store.SavePath;
             string valid=File.ReadAllText(path); var root=JObject.Parse(valid);
-            foreach(string section in new[]{"","character","sound","character.game"})
+            foreach(string section in new[]{"","character","sound","character.game","localCharacter","localSound","localCharacter.game","localSound.game","profile","notebook"})
             {
                 var current=section.Length==0?root:(JObject)root.SelectToken(section);
                 foreach(var property in current.Properties())
@@ -263,12 +498,12 @@ internal static class Program
                     var changed=(JObject)root.DeepClone(); var target=section.Length==0?changed:(JObject)changed.SelectToken(section);
                     target.Remove(property.Name); RejectGameDocument(dir,lexicon,changed.ToString());
                     changed=(JObject)root.DeepClone(); target=section.Length==0?changed:(JObject)changed.SelectToken(section);
-                    target[property.Name]=JValue.CreateNull(); RejectGameDocument(dir,lexicon,changed.ToString());
+                    if(property.Value.Type!=JTokenType.Null) { target[property.Name]=JValue.CreateNull(); RejectGameDocument(dir,lexicon,changed.ToString()); }
                 }
                 var unknown=(JObject)root.DeepClone(); (section.Length==0?unknown:(JObject)unknown.SelectToken(section))["extra"]=1;
                 RejectGameDocument(dir,lexicon,unknown.ToString());
             }
-            foreach(string field in new[]{"activeMode","character.best","character.game.mode","character.game.firstActor","character.game.endReason","character.game.randomState"})
+            foreach(string field in new[]{"activeMode","activeMatchKind","character.best","character.game.mode","character.game.matchKind","localCharacter.game.matchKind","character.game.firstActor","character.game.endReason","character.game.randomState","character.game.hintRandomState"})
                 foreach(var token in new JToken[]{"1",1.0,true,new JArray(),-1}) {
                     var changed=(JObject)root.DeepClone(); changed.SelectToken(field).Replace(token); RejectGameDocument(dir,lexicon,changed.ToString());
                 }
@@ -278,7 +513,7 @@ internal static class Program
     }
     private static void RejectGameDocument(string dir,dynamic lexicon,string json)
     {
-        var path=Path.Combine(dir,"idiom-v1.json"); File.WriteAllText(path,json); if(File.Exists(path+".bak"))File.Delete(path+".bak");
+        var path=Path.Combine(dir,"idiom-learning-v1.json"); File.WriteAllText(path,json); if(File.Exists(path+".bak"))File.Delete(path+".bak");
         dynamic store=New("IdiomSaveStore",dir,lexicon); string warning;
         Assert(store.Load(out warning)==null && !store.CanWrite && store.NeedsRecovery,"Invalid game accepted");
         Assert(!string.IsNullOrEmpty(warning),"Invalid game lacks warning");
@@ -313,7 +548,7 @@ internal static class Program
     private static void CatalogUnavailable()
     {
         Type("IdiomSaveStore"); WithDirectory(dir => {
-            var path=Path.Combine(dir,"idiom-v1.json"); File.WriteAllText(path,"original"); dynamic store=New("IdiomSaveStore",dir,null); string error;
+            var path=Path.Combine(dir,"idiom-learning-v1.json"); File.WriteAllText(path,"original"); dynamic store=New("IdiomSaveStore",dir,null); string error;
             Assert(store.Load(out error)==null && !store.CanWrite && !store.NeedsRecovery && !string.IsNullOrEmpty(error),"Catalog absence treated as empty game");
             Assert(!store.TryResetProtected(out error),"Catalog absence allowed reset"); Assert(File.ReadAllText(path)=="original","Original overwritten");
         });
@@ -331,7 +566,7 @@ internal static class Program
     private static void GameFileLimit()
     {
         Type("IdiomSaveStore"); WithDirectory(dir => {
-            var path=Path.Combine(dir,"idiom-v1.json"); using(var stream=File.Create(path))stream.SetLength(4L*1024*1024+1);
+            var path=Path.Combine(dir,"idiom-learning-v1.json"); using(var stream=File.Create(path))stream.SetLength((long)IdiomSaveCodec.MaximumBytes+1);
             dynamic store=New("IdiomSaveStore",dir,Lexicon()); Assert(Load(store)==null && !store.CanWrite,"Oversized game accepted");
         });
     }
@@ -348,6 +583,7 @@ internal static class Program
             }
             dynamic lexicon=Activator.CreateInstance(CoreType("IdiomLexicon"),new object[]{entries,"large-v1"});
             dynamic data=New("IdiomSaveData"); data.ActiveMode=(dynamic)EnumValue("IdiomMode",0);
+            AddFreshLocalSlots(data,lexicon); AddFreshLearning(data,lexicon);
             for(int mode=0;mode<2;mode++)
             {
                 dynamic slot=New("IdiomModeSave");
@@ -358,6 +594,37 @@ internal static class Program
             dynamic store=New("IdiomSaveStore",dir,lexicon); Load(store); Save(store,data);
             dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
             Assert(restored.Character.Game.History.Count==count && restored.Sound.Game.History.Count==count,"Long mode history lost");
+        });
+    }
+    private static void FourLongHistories()
+    {
+        WithDirectory(dir => {
+            // The packed catalog currently has 42,851 entries with 30-character IDs.
+            const int count=42851;
+            var entries=new IdiomEntry[count]; var history=new string[count];
+            for(int i=0;i<count;i++)
+            {
+                history[i]="entry-"+i.ToString("D24");
+                string word="一"+(char)(0x4e00+i/200)+(char)(0x4e00+i%200)+"一";
+                entries[i]=new IdiomEntry(history[i],word,"yī yī yī yī","yi","yi","sense-"+i,"0000",false);
+            }
+            var lexicon=new IdiomLexicon(entries,"four-large-v1");
+            var slots=new IdiomModeSave[4];
+            for(int i=0;i<slots.Length;i++)
+            {
+                var kind=i<2?IdiomMatchKind.Computer:IdiomMatchKind.Local;
+                slots[i]=new IdiomModeSave { Game=new IdiomSnapshot((IdiomMode)(i%2),IdiomActor.Player,
+                    IdiomEndReason.DictionaryExhausted,17,history,new IdiomHint[0],kind),
+                    Best=kind==IdiomMatchKind.Local?count:(count+1)/2 };
+            }
+            var data=new IdiomSaveData { Character=slots[0],Sound=slots[1],LocalCharacter=slots[2],LocalSound=slots[3] };
+            AddFreshLearning(data,lexicon);
+            var store=new IdiomSaveStore(dir,lexicon); string error; store.Load(out error);
+            Assert(store.TrySave(data,out error),error);
+            Assert(new FileInfo(store.SavePath).Length>4L*1024*1024,"Fixture must exercise the previous four MiB ceiling");
+            var restored=new IdiomSaveStore(dir,lexicon).Load(out error);
+            Assert(restored!=null && restored.Character.Game.History.Count==count && restored.Sound.Game.History.Count==count &&
+                restored.LocalCharacter.Game.History.Count==count && restored.LocalSound.Game.History.Count==count,"Four complete histories truncated");
         });
     }
     private static void LargeNotebook()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using XanaduYonder.Core.Idiom;
@@ -45,25 +46,38 @@ namespace XanaduYonder.EditorTools
                     count++;
                 }
                 if (count != 42851) throw new InvalidOperationException("Unexpected packed count " + count);
+                for (var match = 0; match < 2; match++)
                 for (var mode = 0; mode < 2; mode++)
                 for (uint seed = 1; seed <= 20; seed++)
                 {
-                    var game = new IdiomGame(lexicon, (IdiomMode)mode, seed);
+                    var profile = new IdiomLearningProfile(lexicon);
+                    Func<long> clock = () => 1700000000L;
+                    var game = new IdiomGame(lexicon, (IdiomMode)mode, seed, (IdiomMatchKind)match, profile, clock);
                     if (!game.Start(seed % 2 == 0 ? IdiomActor.App : IdiomActor.Player).Success)
                         throw new InvalidOperationException("Start failed");
                     while (!game.IsEnded)
                     {
                         var hint = game.RequestHint();
                         if (game.IsEnded) break;
-                        if (hint == null || hint.EntryIds.Count == 0) throw new InvalidOperationException("No hint");
-                        IdiomEntry next;
-                        if (!lexicon.TryGetById(hint.EntryIds[0], out next) || !game.Submit(next.Word).Success)
+                        IdiomEntry next = null;
+                        if (hint != null && hint.EntryIds.Count > 0) lexicon.TryGetById(hint.EntryIds[0], out next);
+                        else
+                        {
+                            // Recommendation quality can omit hints even while a
+                            // full-dictionary human move remains perfectly legal.
+                            var used = new HashSet<string>(game.History);
+                            foreach (var entry in lexicon.Entries)
+                                if (!used.Contains(entry.Id) && (game.LastEntry == null || (mode == 0 ?
+                                    entry.FirstCharacter == game.LastEntry.LastCharacter : entry.FirstKey == game.LastEntry.LastKey)))
+                                { next = entry; break; }
+                        }
+                        if (next == null || !game.Submit(next.Word).Success)
                             throw new InvalidOperationException("Real dictionary continuation failed");
-                        game = new IdiomGame(lexicon, game.GetSnapshot());
+                        game = new IdiomGame(lexicon, game.GetSnapshot(), profile, clock);
                     }
-                    new IdiomGame(lexicon, game.GetSnapshot());
+                    new IdiomGame(lexicon, game.GetSnapshot(), profile, clock);
                 }
-                Debug.Log("IDIOM_RESOURCE_CHECKS_PASS: " + count + " exact definitions; 40 real dictionary games/restore; version=" + lexicon.Version);
+                Debug.Log("IDIOM_RESOURCE_CHECKS_PASS: " + count + " exact definitions; 80 real dictionary games/restore across both match kinds; version=" + lexicon.Version);
                 loader.ClearDetails();
                 EditorApplication.Exit(0);
             }

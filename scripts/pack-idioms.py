@@ -8,6 +8,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def parse_common(text):
+    """Validate the edited recommendation list before turning it into a set."""
+    words = set()
+    for number, raw in enumerate(text.splitlines(), 1):
+        word = raw.strip()
+        if not word or word.startswith('#'):
+            continue
+        if len(word) != 4 or any(not '\u3400' <= ch <= '\u9fff' for ch in word):
+            raise ValueError('Invalid common word at line %d: %s' % (number, word))
+        if word in words:
+            raise ValueError('Duplicate common word at line %d: %s' % (number, word))
+        words.add(word)
+    return words
+
 def encode(value):
     raw = json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     return gzip.compress(raw, compresslevel=9, mtime=0)
@@ -28,7 +42,7 @@ def project_detail(row):
             'Pinyin': sense['pinyin']['display'], 'Meaning': explanation['meaning'],
             'Stories': explanation['stories'], 'Origins': list(map(citation, explanation['origins'])),
             'Examples': list(map(citation, sense['examples'])),
-            'SourceLabel': ' · '.join(n for k,n in [('jingmo','静墨词库'),('xinhua','新华成语词库')] if k in sources)}
+            'SourceLabel': ' · '.join(n for k,n in [('jingmo','景墨词库'),('xinhua','新华成语词库')] if k in sources)}
 
 def build_rows(entries, common):
     missing = common - {e['word'] for e in entries}
@@ -44,8 +58,7 @@ def main():
     args = parser.parse_args()
     checksums = json.loads((args.input/'checksums.json').read_text())
     index = json.loads(verified_read(args.input, checksums, 'game-index.json'))
-    common = {line.strip() for line in (ROOT/'Data/Idioms/common-idioms.txt').read_text().splitlines()
-              if line.strip() and not line.startswith('#')}
+    common = parse_common((ROOT/'Data/Idioms/common-idioms.txt').read_text())
     rows = build_rows(index['entries'], common)
     resources = {}
     by_id = {e['id']: e for e in index['entries']}

@@ -1,0 +1,1604 @@
+{
+  "schemaVersion": 1,
+  "method": "Editorial candidate curation, exact playable-index membership, deduplication; not frequency measurement.",
+  "baselineCount": 431,
+  "baselineSha256": "8573c787fd7cf5e43e39ddf52869c0c60290648200c419dd16352243937726f1",
+  "candidateOccurrences": 1420,
+  "candidateUnique": 1401,
+  "candidateRepeatedOccurrences": 19,
+  "candidateAlreadyCommon": 46,
+  "newlyAcceptedCount": 1103,
+  "finalCount": 1534,
+  "editorialExclusions": [
+    "人道主义",
+    "亿万斯年",
+    "以眼还眼",
+    "安土重迁",
+    "寂寂无闻",
+    "曾参杀人",
+    "曾子杀彘",
+    "有目共赏",
+    "玉宇琼楼",
+    "璧合珠联",
+    "眉睫之内",
+    "破浪乘风",
+    "退避贤路",
+    "郁郁芊芊"
+  ],
+  "excludedByPlayableIndex": [
+    {
+      "word": "一塌糊涂",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一年一度",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一往无前",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一日千里",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一朝一日",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "一步之遥",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "一波三折",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一碗水端平",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "一箭双雕",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一落千丈",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一视同仁",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一言以蔽之",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "一败涂地",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "一路顺水",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "一针见血",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "七窍生烟",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "万物复苏",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "万里晴空",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "三头六臂",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "三足鼎立",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "不可或缺",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不吭不卑",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不堪重负",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不孚众望",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不容小觑",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不干不净",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "不战而胜",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不欢而散",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "不清不楚",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "不见不散",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "两情相悦",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "举案齐眉",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "九牛二虎",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "云开雾散",
+      "reasons": [
+        "excluded:京墨拼音存在重复音节且与另一来源不同；保留原文，待核对。",
+        "meaning_conflict",
+        "pinyin_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "云遮雾绕",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "五彩缤纷",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "人头攒动",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "以苦为乐",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "以诚相待",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "以身作则",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "以身作法",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "伤心欲绝",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "八仙过海",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "八面玲珑",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "兴高采烈",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "兵来将挡",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "冥思苦想",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "冰冻三尺",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "冰消雪融",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "凿壁偷光",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "分秒必争",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "初生牛犊",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "功不可没",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "勤学苦练",
+      "reasons": [
+        "invalid_pinyin"
+      ]
+    },
+    {
+      "word": "勾心斗角",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "十面埋伏",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "单刀赴会",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "历久弥新",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "口若悬河",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "后羿射日",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "和而不同",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "哪吒闹海",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "喜忧参半",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "嚣张跋扈",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "囊萤映雪",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "四处奔波",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "四平八稳",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "四海为家",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "因陋就简",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "围魏救赵",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "坚韧不拔",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "坦坦荡荡",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "处变不惊",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "大展身手",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "大惊失色",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "天作之合",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "如虎添翼",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "如鱼得水",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "娓娓道来",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "孟母三迁",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "安守本分",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "安然自若",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "完好无损",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "完璧归赵",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "宽容大度",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "寂静无声",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "寝食难安",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "山重水复",
+      "reasons": [
+        "pinyin_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "山高水长",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "崇山峻岭",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "座无虚席",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "张弛有度",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "心猿意马",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "怪石嶙峋",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "惊弓之鸟",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "惊心动魄",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "惊鸿一瞥",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "愁容满面",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "愁肠百结",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "意气风发",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "战战兢兢",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "打草惊蛇",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "技高一筹",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "拔地而起",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "招兵买马",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "拨云见天",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "振振有词",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "故技重施",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "文思泉涌",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "斤斤计较",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "旁敲侧击",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "无可挑剔",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "无所不用其极",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "无法无天",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "无私奉献",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "无足轻重",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "明察秋毫",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "明枪暗箭",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "明目张胆",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "春回大地",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "春雨绵绵",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "暗中摸索",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有天无日",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有头有尾",
+      "reasons": [
+        "invalid_pinyin",
+        "meaning_conflict",
+        "pinyin_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有持无恐",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "有朝一日",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有板有眼",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有案可稽",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有的放矢",
+      "reasons": [
+        "pinyin_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "有苦难言",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "有迹可循",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "望子成龙",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "望梅止渴",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "朝三暮四",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "杀鸡焉用牛刀",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "杯盘狼藉",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "桃李争妍",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "棋逢对手",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "楚河汉界",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "欣喜若狂",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "死心塌地",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "毛骨悚然",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "汗流浃背",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "泉水叮咚",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "泣不成泪",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "泰然自若",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "流连忘返",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "浑然一体",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "浑然不觉",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "浩浩荡荡",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "浩瀚无垠",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "温故而知新",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "温柔敦厚",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "温良恭俭让",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "漫不经心",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "潸然泪下",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "灯火通明",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "烈日炎炎",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "烟雨蒙蒙",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "烟雾缭绕",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "牛气冲天",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "狐假虎威",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "理清思路",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "生离死别",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "生米煮成熟饭",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "生财有道",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "生龙活虎",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "由始至终",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "画龙点睛",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "白日做梦",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "百花盛开",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "百读不厌",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "百闻不如一见",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "盘古开天",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "目瞪口呆",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "知恩图报",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "知难而进",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "知难而退",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "礼让三先",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "禁不住笑",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "秋风落叶",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "秋风送爽",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "空无一人",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "精卫填海",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "精挑细选",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "精疲力尽",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "精益求精",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "繁华似锦",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "约法三章",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "细雨蒙蒙",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "绵里藏针",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "绿草如茵",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "聚精会神",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "肝胆俱裂",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "胸有成竹",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "脱口而出",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "舍生取义",
+      "reasons": [
+        "meaning_conflict",
+        "pinyin_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "花前月下",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "花好月圆",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "花容失色",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "花花绿绿",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "若有所思",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "茅塞顿开",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "萎靡不振",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "蛇鼠一窝",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "蛛丝马迹",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "融会贯通",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "衣食无忧",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "袒腹东床",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "言简意赅",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "言行一致",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "读书破万卷",
+      "reasons": [
+        "invalid_pinyin",
+        "not_four_han"
+      ]
+    },
+    {
+      "word": "谈虎色变",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "负荆请罪",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "走马观花",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "转瞬即逝",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "迎难而上",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "进退自如",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "远见卓识",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "迫不及待",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "追求卓越",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "酷暑难当",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "钩心斗角",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "闻鸡起舞",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "阳光明媚",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "降龙伏虎",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "集思广益",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "雨后彩虹",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "雾里看花",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "顺势而为",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "风雨兼程",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "骄阳似火",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "鬼使神差",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "鸟语蝉鸣",
+      "reasons": [
+        "absent_from_cleaned_catalog"
+      ]
+    },
+    {
+      "word": "鸡犬升天",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "黯然失色",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "黯然销魂",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    },
+    {
+      "word": "鼠目寸光",
+      "reasons": [
+        "meaning_conflict",
+        "unresolved_senses"
+      ]
+    }
+  ]
+}

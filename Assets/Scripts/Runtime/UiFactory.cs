@@ -14,6 +14,7 @@ namespace XanaduYonder.Runtime
         public static readonly Color Accent = Hex("276653");
         public static Font Font;
         private static Sprite rounded;
+        private static Sprite disc;
 
         public static Color Hex(string value)
         {
@@ -91,6 +92,52 @@ namespace XanaduYonder.Runtime
         public static Button Button(Transform parent, string title, float x, float y, float w, float h, Action action, bool primary = false)
         {
             var image = Panel(parent, title, x, y, w, h, primary ? Accent : Hex("E7EDE4"));
+            var button = ConfigureButton(image, action);
+            Label(image.transform, title, 12, 0, w - 24, h, 25, primary ? Color.white : Ink, TextAnchor.MiddleCenter);
+            return button;
+        }
+
+        public static Button IconButton(Transform parent, UiIconKind kind, float x, float y, float w, float h,
+            Action action, bool primary = false)
+        {
+            var image = Panel(parent, kind + " button", x, y, w, h, primary ? Accent : Hex("E7EDE4"));
+            var button = ConfigureButton(image, action);
+            AddIcon(image.transform, kind, Mathf.Min(w, h) * .55f, primary ? Color.white : Ink);
+            return button;
+        }
+
+        public static Image CirclePanel(Transform parent, string name, float x, float y, float size, Color color)
+        {
+            var image = Panel(parent, name, x, y, size, size, color, false);
+            image.sprite = Disc;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
+            return image;
+        }
+
+        public static Button CircleButton(Transform parent, UiIconKind kind, float x, float y, float size,
+            Action action, bool primary = false)
+        {
+            var image = CirclePanel(parent, kind + " button", x, y, size, primary ? Accent : Hex("E7EDE4"));
+            // The readable procedural disc makes the hit area follow the visible circle.
+            image.alphaHitTestMinimumThreshold = .5f;
+            var button = ConfigureButton(image, action);
+            AddIcon(image.transform, kind, size * .55f, primary ? Color.white : Ink);
+            return button;
+        }
+
+        private static void AddIcon(Transform parent, UiIconKind kind, float size, Color color)
+        {
+            var iconRect = Rect(parent, kind + " icon", 0, 0, size, size);
+            Center(iconRect);
+            var icon = iconRect.gameObject.AddComponent<UiIconGraphic>();
+            icon.Kind = kind;
+            icon.color = color;
+            icon.raycastTarget = false;
+        }
+
+        private static Button ConfigureButton(Graphic image, Action action)
+        {
             image.raycastTarget = true;
             var button = image.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
@@ -99,9 +146,33 @@ namespace XanaduYonder.Runtime
             colors.pressedColor = new Color(.78f, .85f, .78f);
             colors.selectedColor = Color.white;
             button.colors = colors;
-            Label(image.transform, title, 12, 0, w - 24, h, 25, primary ? Color.white : Ink, TextAnchor.MiddleCenter);
             button.onClick.AddListener(() => action());
             return button;
+        }
+
+        private static Sprite Disc
+        {
+            get
+            {
+                if (disc != null) return disc;
+                const int size = 96;
+                const float radius = size * .5f;
+                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.name = "UI circle";
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                var pixels = new Color[size * size];
+                for (var y = 0; y < size; y++)
+                for (var x = 0; x < size; x++)
+                {
+                    var distance = new Vector2(x + .5f - radius, y + .5f - radius).magnitude;
+                    pixels[y * size + x] = new Color(1, 1, 1, Mathf.Clamp01(radius - distance));
+                }
+                texture.SetPixels(pixels);
+                texture.Apply();
+                disc = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), 100);
+                return disc;
+            }
         }
 
         private static Sprite Rounded

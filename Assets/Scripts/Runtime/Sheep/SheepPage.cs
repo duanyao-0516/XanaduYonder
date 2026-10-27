@@ -40,9 +40,9 @@ namespace XanaduYonder.Runtime.Sheep
             game = new SheepGame(data.Game);
 
             var nav = UiFactory.Band(root, "Sheep navigation", 0, 92, 0);
-            UiFactory.Button(nav, "‹  大厅", 56, 34, 150, 58, lobby);
+            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, lobby);
             UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(nav, "设置", 552, 34, 112, 58, settings);
+            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, settings);
             var heading = UiFactory.Band(root, "Sheep heading", 102, 92, .04f);
             UiFactory.Label(heading, "旸了个旸", 56, 0, 440, 84, 58, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "03 / 层层三消", 464, 24, 200, 42, 20, UiFactory.Muted, TextAnchor.MiddleRight);
