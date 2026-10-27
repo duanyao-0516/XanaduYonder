@@ -4,8 +4,10 @@ using System.Collections.Generic;
 namespace XanaduYonder.Core.Idiom
 {
     public enum IdiomMode { SameCharacter = 0, SameSound = 1 }
-    public enum IdiomActor { None = 0, App = 1, Player = 2 }
-    public enum IdiomEndReason { None = 0, HintLimit = 1, PlayerNoMoves = 2, AppNoMoves = 3, EndedByPlayer = 4, DictionaryExhausted = 5 }
+    public enum IdiomMatchKind { Computer = 0, Local = 1 }
+    // Values 1 and 2 remain compatible with the original computer-match saves.
+    public enum IdiomActor { None = 0, App = 1, Player = 2, Left = App, Right = Player }
+    public enum IdiomEndReason { None = 0, HintLimit = 1, PlayerNoMoves = 2, AppNoMoves = 3, EndedByPlayer = 4, DictionaryExhausted = 5, RecommendationExhausted = 6 }
     public enum IdiomError { None = 0, NotStarted = 1, AlreadyStarted = 2, AlreadyEnded = 3, InvalidWord = 4, UnknownWord = 5, RepeatedWord = 6, WrongStart = 7 }
 
     public sealed class IdiomActionResult
@@ -31,24 +33,43 @@ namespace XanaduYonder.Core.Idiom
     public sealed class IdiomSnapshot
     {
         public IdiomMode Mode { get; private set; }
+        public IdiomMatchKind MatchKind { get; private set; }
         public IdiomActor FirstActor { get; private set; }
         public IdiomEndReason EndReason { get; private set; }
         public uint RandomState { get; private set; }
+        public uint HintRandomState { get; private set; }
+        public IReadOnlyList<string> AssistedEntryIds { get; private set; }
+        public IdiomSelectionContext EndSelectionContext { get; private set; }
         public IReadOnlyList<string> History { get; private set; }
         public IReadOnlyList<IdiomHint> Hints { get; private set; }
 
         public IdiomSnapshot(IdiomMode mode, IdiomActor firstActor, IdiomEndReason endReason,
                              uint randomState, IEnumerable<string> history, IEnumerable<IdiomHint> hints)
+            : this(mode, firstActor, endReason, randomState, history, hints, IdiomMatchKind.Computer) { }
+
+        public IdiomSnapshot(IdiomMode mode, IdiomActor firstActor, IdiomEndReason endReason,
+                             uint randomState, IEnumerable<string> history, IEnumerable<IdiomHint> hints, IdiomMatchKind matchKind)
+            : this(mode, firstActor, endReason, randomState, history, hints, matchKind,
+                   HintSeed(randomState), new string[0], null) { }
+
+        public IdiomSnapshot(IdiomMode mode, IdiomActor firstActor, IdiomEndReason endReason,
+                             uint randomState, IEnumerable<string> history, IEnumerable<IdiomHint> hints, IdiomMatchKind matchKind,
+                             uint hintRandomState, IEnumerable<string> assistedEntryIds, IdiomSelectionContext endSelectionContext)
         {
             if (history == null) throw new ArgumentNullException("history");
             if (hints == null) throw new ArgumentNullException("hints");
-            Mode = mode; FirstActor = firstActor; EndReason = endReason; RandomState = randomState;
+            if (assistedEntryIds == null) throw new ArgumentNullException("assistedEntryIds");
+            Mode = mode; MatchKind = matchKind; FirstActor = firstActor; EndReason = endReason; RandomState = randomState;
             History = new List<string>(history).AsReadOnly();
+            HintRandomState = hintRandomState;
+            AssistedEntryIds = new List<string>(assistedEntryIds).AsReadOnly();
+            EndSelectionContext = endSelectionContext == null ? null : new IdiomSelectionContext(endSelectionContext.OrdinaryIds, endSelectionContext.ReviewIds);
             var copies = new List<IdiomHint>();
             foreach (var hint in hints)
                 copies.Add(hint == null ? null : new IdiomHint(hint.TurnIndex, hint.EntryIds));
             Hints = copies.AsReadOnly();
         }
+        internal static uint HintSeed(uint seed) { uint value = seed ^ 0xA511E9B3u; return value == 0 ? 1u : value; }
     }
 
     internal static class IdiomCharacters

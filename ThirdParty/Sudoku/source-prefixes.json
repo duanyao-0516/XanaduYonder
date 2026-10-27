@@ -1,0 +1,33 @@
+{
+  "commit": "d8c8ebaee0c08c412cfba96af1923dfa61c83317",
+  "sources": [
+    {
+      "file": "easy.txt",
+      "url": "https://raw.githubusercontent.com/grantm/sudoku-exchange-puzzle-bank/d8c8ebaee0c08c412cfba96af1923dfa61c83317/easy.txt",
+      "prefix_lines": 2000,
+      "prefix_bytes": 200000,
+      "prefix_sha256": "d6de7d24afc716091e7ca5db61106c95585cc6313a0121b37e3853a39e4848a1"
+    },
+    {
+      "file": "medium.txt",
+      "url": "https://raw.githubusercontent.com/grantm/sudoku-exchange-puzzle-bank/d8c8ebaee0c08c412cfba96af1923dfa61c83317/medium.txt",
+      "prefix_lines": 3000,
+      "prefix_bytes": 300000,
+      "prefix_sha256": "38b4e30e071b28530f1683290a7ef43719e52616ac4b30485d74fe5b377f17a8"
+    },
+    {
+      "file": "hard.txt",
+      "url": "https://raw.githubusercontent.com/grantm/sudoku-exchange-puzzle-bank/d8c8ebaee0c08c412cfba96af1923dfa61c83317/hard.txt",
+      "prefix_lines": 12000,
+      "prefix_bytes": 1200000,
+      "prefix_sha256": "60b2e45c3aea713dcbc904c9a481f9ad0a66a6ba956cc25e5336f4db0fcbc62c"
+    },
+    {
+      "file": "diabolical.txt",
+      "url": "https://raw.githubusercontent.com/grantm/sudoku-exchange-puzzle-bank/d8c8ebaee0c08c412cfba96af1923dfa61c83317/diabolical.txt",
+      "prefix_lines": 1000,
+      "prefix_bytes": 100000,
+      "prefix_sha256": "1a2fd3534d80d301928088272be6cf3ce44532a37bf3cf7401b5b98ef5fc2728"
+    }
+  ]
+}

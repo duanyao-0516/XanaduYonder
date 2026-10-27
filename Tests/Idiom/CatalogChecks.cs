@@ -27,15 +27,18 @@ internal static class CatalogChecks
         Console.WriteLine("CATALOG entries=" + lex.Count + " common=" + entries.Count(e => e.Common) + " load_ms=" + load.Elapsed.TotalMilliseconds.ToString("F2"));
         var starts = new List<double>(); var submissions = new List<double>(); var restores = new List<double>();
         int longest = 0, totalMessages = 0;
+        foreach (IdiomMatchKind kind in new[] { IdiomMatchKind.Computer, IdiomMatchKind.Local })
         foreach (IdiomMode mode in new[] { IdiomMode.SameCharacter, IdiomMode.SameSound })
         {
             var byFirst = lex.Entries.GroupBy(e => mode == IdiomMode.SameCharacter ? e.FirstCharacter : e.FirstKey)
                 .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
-            for (uint seed = 1; seed <= 8; seed++)
+            for (uint seed = 1; seed <= (kind == IdiomMatchKind.Computer ? 8 : 2); seed++)
             {
-                var game = new IdiomGame(lex, mode, seed); var clock = Stopwatch.StartNew(); game.Start(IdiomActor.App);
+                var profile = new IdiomLearningProfile(lex);
+                var game = new IdiomGame(lex, mode, seed, kind, profile, () => 1800000000L);
+                var clock = Stopwatch.StartNew(); game.Start(IdiomActor.App);
                 clock.Stop(); starts.Add(clock.Elapsed.TotalMilliseconds);
-                Require(game.LastEntry.Common, "Complete catalog openings must be curated common words.");
+                if (kind == IdiomMatchKind.Computer) Require(game.LastEntry.Common, "Complete catalog openings must be curated common words.");
                 var used = new HashSet<string>(StringComparer.Ordinal); var usedFirst = new Dictionary<string, int>(StringComparer.Ordinal);
                 int accounted = 0;
                 while (!game.IsEnded && game.History.Count < 1000)
@@ -44,11 +47,18 @@ internal static class CatalogChecks
                     {
                         IdiomEntry accepted; lex.TryGetById(game.History[accounted++], out accepted);
                         Require(used.Add(accepted.Id), "A source word appeared twice in the game.");
+                        if (kind == IdiomMatchKind.Computer && game.ActorAt(accounted - 1) == IdiomActor.App)
+                            Require((accepted.Common || profile.IsFamiliar(accepted.Id)) && !profile.IsNotebook(accepted.Id), "Normal APP reply must remain in the ordinary pool.");
                         string key = mode == IdiomMode.SameCharacter ? accepted.FirstCharacter : accepted.FirstKey;
                         int n; usedFirst.TryGetValue(key, out n); usedFirst[key] = n + 1;
                     }
-                    string target = mode == IdiomMode.SameCharacter ? game.LastEntry.LastCharacter : game.LastEntry.LastKey;
-                    List<IdiomEntry> candidates; Require(byFirst.TryGetValue(target, out candidates), "Live turn must have indexed moves.");
+                    List<IdiomEntry> candidates;
+                    if (game.LastEntry == null) candidates = entries;
+                    else
+                    {
+                        string target = mode == IdiomMode.SameCharacter ? game.LastEntry.LastCharacter : game.LastEntry.LastKey;
+                        Require(byFirst.TryGetValue(target, out candidates), "Live turn must have indexed moves.");
+                    }
                     IdiomEntry selected = null; int score = -1;
                     foreach (var entry in candidates)
                     {
@@ -61,9 +71,9 @@ internal static class CatalogChecks
                     Require(selected != null, "A live player turn must have a legal move.");
                     clock.Restart(); Require(game.Submit(selected.Word).Success, "Selected legal player word was rejected.");
                     clock.Stop(); submissions.Add(clock.Elapsed.TotalMilliseconds);
-                    if (game.History.Count % 100 == 1 || game.IsEnded)
+                    if (game.History.Count % 100 <= 1 || game.IsEnded)
                     {
-                        var snapshot = game.GetSnapshot(); clock.Restart(); var restored = new IdiomGame(lex, snapshot); clock.Stop();
+                        var snapshot = game.GetSnapshot(); clock.Restart(); var restored = new IdiomGame(lex, snapshot, profile, () => 1800000000L); clock.Stop();
                         restores.Add(clock.Elapsed.TotalMilliseconds);
                         Require(restored.History.SequenceEqual(game.History) && restored.GetSnapshot().RandomState == snapshot.RandomState &&
                                 restored.EndReason == game.EndReason && restored.PlayerCount == game.PlayerCount, "Long snapshot restores exactly.");
@@ -71,12 +81,42 @@ internal static class CatalogChecks
                     }
                 }
                 Require(game.History.Distinct().Count() == game.History.Count, "No repeated ids including last APP reply.");
-                new IdiomGame(lex, game.GetSnapshot());
+                if (game.EndReason == IdiomEndReason.RecommendationExhausted) profile.Remember(lex.Entries[0].Id);
+                new IdiomGame(lex, game.GetSnapshot(), profile, () => 1800000000L);
                 longest = Math.Max(longest, game.History.Count); totalMessages += game.History.Count;
-                Console.WriteLine("CATALOG run mode=" + mode + " seed=" + seed + " messages=" + game.History.Count + " end=" + game.EndReason);
+                Console.WriteLine("CATALOG run kind=" + kind + " mode=" + mode + " seed=" + seed + " messages=" + game.History.Count + " end=" + game.EndReason);
             }
         }
-        Require(longest >= 1000, "At least one real-dictionary game must exercise a 1,000-message history.");
+        Require(longest >= 1000, "A local full-dictionary game must still exercise a 1,000-message history.");
+        foreach (IdiomMode mode in new[] { IdiomMode.SameCharacter, IdiomMode.SameSound })
+        {
+            var outputs = new HashSet<string>();
+            if (mode == IdiomMode.SameCharacter)
+            {
+                var emptyProfile = new IdiomLearningProfile(lex);
+                var probe = new IdiomGame(lex, mode, 17, IdiomMatchKind.Computer, emptyProfile, () => 1800000000L);
+                probe.Start(IdiomActor.Player); probe.Submit("一望无际");
+                Require(probe.EndReason == IdiomEndReason.RecommendationExhausted, "Rare 际 words must not be an automatic fallback for a new learner.");
+                new IdiomGame(lex, probe.GetSnapshot(), emptyProfile, () => 1800000000L);
+            }
+            for (uint seed = 1; seed <= 40; seed++)
+            {
+                var profile = new IdiomLearningProfile(lex);
+                // Personal familiarity makes these rare words eligible without relabeling the public vocabulary.
+                if (mode == IdiomMode.SameCharacter)
+                    foreach (string word in new[] { "际会风云", "际地蟠天", "际遇风云" })
+                    { IdiomEntry entry; Require(lex.TryGetWord(word, out entry), "Expected catalog example."); profile.Remember(entry.Id); }
+                var game = new IdiomGame(lex, mode, seed, IdiomMatchKind.Computer, profile, () => 1800000000L);
+                game.Start(IdiomActor.Player); Require(game.Submit("一望无际").Success, "Real-catalog example is accepted.");
+                if (game.History.Count > 1)
+                {
+                    Require(game.LastEntry.Common || profile.IsFamiliar(game.LastEntry.Id), "Example reply stays in the ordinary pool."); outputs.Add(game.LastEntry.Word);
+                }
+                new IdiomGame(lex, game.GetSnapshot(), profile, () => 1800000000L);
+            }
+            Require(outputs.Count > 1, "A single high score must not monopolize the real-catalog example.");
+            Console.WriteLine("CATALOG 一望无际 mode=" + mode + " distinct_replies=" + outputs.Count + " [" + string.Join(",", outputs) + "]");
+        }
         Print("start", starts); Print("submit", submissions); Print("restore", restores);
         Console.WriteLine("CATALOG total_messages=" + totalMessages + " longest=" + longest + " (desktop .NET timings, not device timings)");
     }

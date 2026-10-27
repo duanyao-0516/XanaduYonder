@@ -9,8 +9,9 @@ namespace XanaduYonder.Runtime.Idiom
     {
         private RectTransform gameRoot, bookRoot, footer, inputRow, endedRow, starter, messagePanel;
         private Text target, countText, inlineError, messageTitle, messageBody, bookCount, bookEmpty;
-        private Text pageNotice, notebookNotice;
-        private Button characterMode, soundMode, send, hint, bookButton, newReplies, messageAction;
+        private Text pageNotice, notebookNotice, composerRule, starterRule, starterDescription;
+        private Button computerMatch, localMatch, leftStart, rightStart, send, hint, bookButton, newReplies, messageAction;
+        private IdiomRuleSwitch ruleSwitch;
         private Button notebookRecovery;
         private InputField input;
         private IdiomVirtualList chat, bookList;
@@ -20,14 +21,18 @@ namespace XanaduYonder.Runtime.Idiom
         {
             gameRoot = UiFactory.Rect(root, "Idiom game", 0, 0, 720, 1320); UiFactory.Stretch(gameRoot);
             bookRoot = UiFactory.Rect(root, "Idiom notebook", 0, 0, 720, 1320); UiFactory.Stretch(bookRoot);
-            IdiomUi.Button(gameRoot, "‹ 大厅", 32, 26, 130, 58, () => { if (CanNavigate) goLobby(); });
-            IdiomUi.Label(gameRoot, "成语接龙", 184, 22, 260, 66, 35, UiFactory.Ink, TextAnchor.MiddleLeft, true);
-            bookButton = IdiomUi.Button(gameRoot, "生词本", 472, 26, 138, 58, () => { if (CanNavigate) OpenNotebook(false); }, false, 23);
-            IdiomUi.Button(gameRoot, "⋯", 626, 26, 62, 58, () => { if (CanNavigate) ShowMenu(); }, false, 32);
-            characterMode = IdiomUi.Button(gameRoot, "同字接龙", 32, 108, 320, 58, () => ChangeMode(IdiomMode.SameCharacter));
-            soundMode = IdiomUi.Button(gameRoot, "同音接龙", 368, 108, 320, 58, () => ChangeMode(IdiomMode.SameSound));
-            target = IdiomUi.Label(gameRoot, "", 32, 184, 440, 44, 24, UiFactory.Accent, bold: true);
-            countText = IdiomUi.Label(gameRoot, "", 472, 184, 216, 44, 21, UiFactory.Muted, TextAnchor.MiddleRight);
+            UiFactory.IconButton(gameRoot, UiIconKind.Home, 32, 26, 58, 58, () => { if (CanNavigate) goLobby(); });
+            var title = IdiomUi.Label(gameRoot, "成语接龙", 200, 22, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            title.name = "Idiom centered title";
+            bookButton = UiFactory.IconButton(gameRoot, UiIconKind.Notebook, 552, 26, 58, 58, () => { if (CanNavigate) OpenNotebook(false); });
+            UiFactory.IconButton(gameRoot, UiIconKind.Settings, 630, 26, 58, 58, () => { if (CanNavigate) ShowMenu(); });
+            computerMatch = IdiomUi.Button(gameRoot, "人机对战", 32, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Computer));
+            localMatch = IdiomUi.Button(gameRoot, "双人本地对战", 368, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Local));
+            countText = IdiomUi.Label(gameRoot, "", 210, 184, 300, 52, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            countText.name = "Idiom centered count";
+            ruleSwitch = IdiomRuleSwitch.Create(gameRoot, 552, 184, () =>
+                ChangeMode(data.ActiveMode == IdiomMode.SameCharacter ? IdiomMode.SameSound : IdiomMode.SameCharacter));
+            target = IdiomUi.Label(gameRoot, "", 32, 244, 656, 40, 23, UiFactory.Accent, TextAnchor.MiddleCenter, true);
             countText.horizontalOverflow = HorizontalWrapMode.Overflow;
             countText.verticalOverflow = VerticalWrapMode.Truncate;
             chat = new IdiomVirtualList(gameRoot, "Idiom conversation", 164, BindChatRow, index =>
@@ -45,14 +50,14 @@ namespace XanaduYonder.Runtime.Idiom
             inlineError = IdiomUi.Label(footer, "", 0, 0, 656, 40, 21, UiFactory.Hex("9B5143"));
             inputRow = UiFactory.Rect(footer, "Active composer", 0, 46, 656, 70);
             hint = IdiomUi.Button(inputRow, "提示 0/3", 0, 0, 132, 70, RequestHint, false, 21);
-            var field = UiFactory.Panel(inputRow, "Idiom input", 144, 0, 380, 70, Color.white);
+            var field = UiFactory.Panel(inputRow, "Idiom input", 144, 0, 368, 70, Color.white);
             field.raycastTarget = true;
             input = field.gameObject.AddComponent<InputField>();
             input.targetGraphic = field;
-            var text = IdiomUi.Label(field.transform, "", 18, 0, 344, 70, 27);
+            var text = IdiomUi.Label(field.transform, "", 18, 0, 332, 70, 27);
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Truncate;
-            var placeholder = IdiomUi.Label(field.transform, "输入四字成语…", 18, 0, 344, 70, 24, UiFactory.Muted);
+            var placeholder = IdiomUi.Label(field.transform, "输入四字成语…", 18, 0, 332, 70, 24, UiFactory.Muted);
             input.textComponent = text; input.placeholder = placeholder;
             input.contentType = InputField.ContentType.Standard;
             input.lineType = InputField.LineType.SingleLine;
@@ -65,18 +70,18 @@ namespace XanaduYonder.Runtime.Idiom
             input.selectionColor = new Color(.36f, .64f, .48f, .28f);
             input.onValueChanged.AddListener(DraftChanged);
             // Selection confirmation, endEdit and losing focus never submit a turn.
-            send = IdiomUi.Button(inputRow, "发送", 536, 0, 120, 70, Submit, true, 25);
-            IdiomUi.Label(footer, "本局双方不重复 · 第 3 次新提示后回顾本轮", 0, 122, 656, 30, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            send = IdiomUi.Button(inputRow, "发送", 524, 0, 132, 70, Submit, true, 25);
+            composerRule = IdiomUi.Label(footer, "", 0, 122, 656, 30, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             endedRow = UiFactory.Rect(footer, "Finished composer", 0, 38, 656, 76);
             IdiomUi.Button(endedRow, "本轮小结", 0, 0, 320, 72, () => { if (AcceptsInput) ShowSummary(); });
             IdiomUi.Button(endedRow, "再来一局", 336, 0, 320, 72, () => { if (AcceptsInput) Restart(); }, true);
 
             starter = UiFactory.Rect(gameRoot, "Choose who starts", 32, 330, 656, 300);
             IdiomUi.Label(starter, "谁来开个头？", 0, 0, 656, 70, 40, UiFactory.Ink, TextAnchor.MiddleCenter, true);
-            IdiomUi.Label(starter, "你一言，我一语，边接边学。", 0, 88, 656, 50, 26, UiFactory.Muted, TextAnchor.MiddleCenter);
-            IdiomUi.Button(starter, "机器开局", 0, 172, 320, 80, () => StartGame(IdiomActor.App), true, 28);
-            IdiomUi.Button(starter, "人先开始", 336, 172, 320, 80, () => StartGame(IdiomActor.Player), false, 28);
-            IdiomUi.Label(starter, "本局不重复，第 3 次提示后回顾本轮", 0, 270, 656, 38, 21, UiFactory.Muted, TextAnchor.MiddleCenter);
+            starterDescription = IdiomUi.Label(starter, "", 0, 88, 656, 50, 26, UiFactory.Muted, TextAnchor.MiddleCenter);
+            leftStart = IdiomUi.Button(starter, "机器开局", 0, 172, 320, 80, () => StartGame(IdiomActor.Left), true, 28);
+            rightStart = IdiomUi.Button(starter, "人先开始", 336, 172, 320, 80, () => StartGame(IdiomActor.Right), false, 28);
+            starterRule = IdiomUi.Label(starter, "", 0, 270, 656, 38, 21, UiFactory.Muted, TextAnchor.MiddleCenter);
 
             messagePanel = UiFactory.Rect(gameRoot, "Idiom loading or recovery", 32, 340, 656, 330);
             messageTitle = IdiomUi.Label(messagePanel, "", 0, 0, 656, 70, 34, UiFactory.Ink, TextAnchor.MiddleCenter, true);
@@ -89,9 +94,9 @@ namespace XanaduYonder.Runtime.Idiom
             }, true);
 
             IdiomUi.Button(bookRoot, "‹ 返回", 32, 26, 130, 58, () => { if (CanNavigate) ReturnFromNotebook(); });
-            IdiomUi.Label(bookRoot, "生词本", 192, 22, 300, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            IdiomUi.Label(bookRoot, "生词本", 210, 22, 300, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             bookCount = IdiomUi.Label(bookRoot, "", 500, 32, 188, 50, 22, UiFactory.Accent, TextAnchor.MiddleRight);
-            IdiomUi.Label(bookRoot, "把新认识的词，留给下次相遇。", 32, 108, 656, 50, 25, UiFactory.Muted);
+            IdiomUi.Label(bookRoot, "适时复习 · 点开后可标记“我记住了”", 32, 108, 656, 50, 23, UiFactory.Muted);
             bookList = new IdiomVirtualList(bookRoot, "Saved idiom list", 158, BindNotebookRow, index =>
             {
                 if (CanNavigate && notebookVisible && index < notebookItems.Count)
@@ -139,11 +144,11 @@ namespace XanaduYonder.Runtime.Idiom
             var bottom = Mathf.Max(64, inset + 14);
             var composerTop = Mathf.Max(0, height - bottom - 156);
             IdiomUi.Place(footer, 32, composerTop, 656, 156);
-            IdiomUi.Place(chat.Viewport, 24, 246, 672, Mathf.Max(1, composerTop - 260));
+            IdiomUi.Place(chat.Viewport, 24, 296, 672, Mathf.Max(1, composerTop - 310));
             IdiomUi.Place(newReplies.GetComponent<RectTransform>(), 260, composerTop - 58, 200, 48);
             IdiomUi.Place(starter, 32, Mathf.Min(360, Mathf.Max(270, height * .27f)), 656, 320);
             IdiomUi.Place(messagePanel, 32, Mathf.Min(360, height * .28f), 656, 330);
-            var recoveringBook = notebook != null && notebookStore != null && notebookStore.NeedsRecovery;
+            var recoveringBook = notebook != null && store != null && store.NeedsRecovery;
             IdiomUi.Place(bookList.Viewport, 32, 180, 656, height - (recoveringBook ? 328 : 248));
             IdiomUi.Place(notebookRecovery.GetComponent<RectTransform>(), 160, recoveringBook ? height - 140 : 510, 400, 70);
             IdiomUi.Place(pageNotice.rectTransform, 32, height - 48, 656, 40);
@@ -156,9 +161,14 @@ namespace XanaduYonder.Runtime.Idiom
             gameRoot.gameObject.SetActive(!notebookVisible);
             bookRoot.gameObject.SetActive(notebookVisible);
             bookButton.interactable = loaded;
-            characterMode.interactable = soundMode.interactable = ready;
-            PaintMode(characterMode, data == null || data.ActiveMode == IdiomMode.SameCharacter);
-            PaintMode(soundMode, data != null && data.ActiveMode == IdiomMode.SameSound);
+            computerMatch.interactable = localMatch.interactable = ready;
+            PaintMode(computerMatch, !IsLocal);
+            PaintMode(localMatch, IsLocal);
+            ruleSwitch.SetState(data != null && data.ActiveMode == IdiomMode.SameSound, ready);
+            starterDescription.text = IsLocal ? "两个人，一部手机，轮流接下去。" : "你一言，我一语，边接边学。";
+            IdiomUi.Caption(leftStart, IsLocal ? "左方先开始" : "机器开局");
+            IdiomUi.Caption(rightStart, IsLocal ? "右方先开始" : "人先开始");
+            composerRule.text = starterRule.text = HintRule;
             starter.gameObject.SetActive(ready && !Game.IsStarted);
             chat.Viewport.gameObject.SetActive(ready && Game.IsStarted);
             footer.gameObject.SetActive(ready && Game.IsStarted);
@@ -166,15 +176,20 @@ namespace XanaduYonder.Runtime.Idiom
             endedRow.gameObject.SetActive(ready && Game.IsEnded);
             messagePanel.gameObject.SetActive(!ready);
             target.text = ready ? TargetLabel() : "离线接龙 · 随手学成语";
-            countText.text = ready ? "本轮完成 " + Game.PlayerCount + " 个" : "";
-            countText.fontSize = 21;
+            countText.text = ready ? "本轮完成 " + CompletedCount + " 个" : "";
+            countText.fontSize = 23;
             if (countText.preferredWidth > countText.rectTransform.rect.width)
-                countText.fontSize = Mathf.Max(16, Mathf.FloorToInt(21 * countText.rectTransform.rect.width / countText.preferredWidth));
+                countText.fontSize = Mathf.Max(16, Mathf.FloorToInt(23 * countText.rectTransform.rect.width / countText.preferredWidth));
             if (ready)
             {
                 writingDraft = true; input.SetTextWithoutNotify(ActiveSave.Draft ?? ""); writingDraft = false;
                 input.interactable = Game.IsStarted && !Game.IsEnded;
-                IdiomUi.Caption(hint, Game.CurrentHint == null ? "提示 " + Game.HintCount + "/3" : "查看提示");
+                var hintCount = IsLocal ? Game.HintCountFor(Game.NextActor) : Game.HintCount;
+                IdiomUi.Caption(hint, Game.CurrentHint == null ? "提示 " + hintCount + "/3" : "查看提示");
+                var leftTurn = IsLocal && Game.NextActor == IdiomActor.Left;
+                IdiomUi.Place(send.GetComponent<RectTransform>(), leftTurn ? 0 : 524, 0, 132, 70);
+                IdiomUi.Place(hint.GetComponent<RectTransform>(), leftTurn ? 524 : 0, 0, 132, 70);
+                ((Text)input.placeholder).text = IsLocal ? TurnName + "输入成语…" : "输入四字成语…";
                 chat.SetCount(Game.History.Count, bottom);
                 if (Game.IsEnded) inlineError.text = "本轮已完成，点开成语继续学习。";
             }
@@ -184,7 +199,7 @@ namespace XanaduYonder.Runtime.Idiom
                 var recovery = loaded && store != null && store.NeedsRecovery;
                 messageTitle.text = loading ? "正在打开本地词库" : recovery ? "你的存档已保留" : "词库暂时未打开";
                 messageBody.text = loading ? "首次载入需要片刻，之后无需联网。" : recovery ?
-                    "原存档暂时无法继续。\n你可以保留原文件，再开启新的接龙对局。\n生词本独立保存，不会随新局清空。" : loadError ?? "点下方按钮，重新载入本地词库。";
+                    "原存档暂时无法继续。\n可以先保留原文件，再重新创建\n成语对局、生词本与个人学习记录。" : loadError ?? "点下方按钮，重新载入本地词库。";
                 messageAction.gameObject.SetActive(!loading);
                 IdiomUi.Caption(messageAction, recovery ? "保留旧档，重新开始" : "重新载入");
             }
@@ -202,9 +217,10 @@ namespace XanaduYonder.Runtime.Idiom
         {
             if (Game == null || !Game.IsStarted) return "选择谁来开个头";
             if (Game.IsEnded) return "这一轮接到这里";
-            if (Game.LastEntry == null) return "先说一个你想到的四字成语";
-            return Game.Mode == IdiomMode.SameCharacter ? "请接“" + Game.LastEntry.LastCharacter + "”字开头" :
-                "请接读音“" + Game.LastEntry.LastKey.Replace("v", "ü") + "”，声调不限";
+            var turn = IsLocal ? "轮到" + TurnName + " · " : "";
+            if (Game.LastEntry == null) return turn + "先说一个四字成语";
+            return turn + (Game.Mode == IdiomMode.SameCharacter ? "请接“" + Game.LastEntry.LastCharacter + "”字开头" :
+                "请接读音“" + Game.LastEntry.LastKey.Replace("v", "ü") + "”，声调不限");
         }
 
         private void BindChatRow(IdiomVirtualList.Row row, int index)
@@ -216,7 +232,7 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomUi.Place(row.Button.GetComponent<RectTransform>(), x, 27, 474, 122);
             IdiomUi.Place(row.Actor.rectTransform, player ? 514 : 12, 0, 146, 25);
             row.Actor.alignment = player ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-            row.Actor.text = player ? "你" : "APP";
+            row.Actor.text = IsLocal ? (player ? "右方" : "左方") : (player ? "你" : "APP");
             row.Button.GetComponent<Image>().color = player ? UiFactory.Accent : UiFactory.Hex("E5EDDA");
             row.Word.text = entry.Word; row.Word.color = player ? Color.white : UiFactory.Ink;
             row.Pinyin.text = entry.Pinyin; row.Pinyin.color = player ? UiFactory.Hex("E1EDDB") : UiFactory.Accent;

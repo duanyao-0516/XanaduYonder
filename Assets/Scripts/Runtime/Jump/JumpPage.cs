@@ -53,9 +53,9 @@ namespace XanaduYonder.Runtime.Jump
             game = new JumpGame(data.Game);
 
             var nav = UiFactory.Band(root, "Jump navigation", 0, 92, 0);
-            UiFactory.Button(nav, "‹  大厅", 56, 34, 150, 58, lobby);
+            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, lobby);
             UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(nav, "设置", 552, 34, 112, 58, settings);
+            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, settings);
             var heading = UiFactory.Band(root, "Jump heading", 112, 104, .08f);
             UiFactory.Label(heading, "跳一跳", 56, 0, 400, 88, 63, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "02 / 轻巧向前", 440, 30, 224, 42, 22, UiFactory.Muted, TextAnchor.MiddleRight);

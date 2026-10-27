@@ -7,6 +7,8 @@ using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
+using XanaduYonder.Runtime.Watermelon;
+using XanaduYonder.Runtime.Sudoku;
 
 namespace XanaduYonder.Runtime
 {
@@ -35,12 +37,16 @@ namespace XanaduYonder.Runtime
         private Text lobbyBestText;
         private Text lobbyJumpBestText;
         private Text lobbySheepRecordText;
+        private Text lobbySudokuRecordText;
         private JumpPage jumpPage;
         private SheepPage sheepPage;
         private IdiomPage idiomPage;
         private Text lobbyIdiomRecordText;
+        private WatermelonPage watermelonPage;
+        private Text lobbyWatermelonRecordText;
+        private SudokuPage sudokuPage;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -65,6 +71,7 @@ namespace XanaduYonder.Runtime
             BuildGame();
             BuildJump();
             BuildSheep();
+            BuildSudoku();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -103,7 +110,7 @@ namespace XanaduYonder.Runtime
             lobbyPage = root.gameObject;
             var navigation = UiFactory.Band(root, "Lobby navigation", 0, 106, 0);
             UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 42, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
+            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
             // Card dimensions and gaps stay fixed; additional games extend this content instead of shrinking it.
             var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 132, 720, 1092);
             UiFactory.Stretch(viewport);
@@ -113,7 +120,7 @@ namespace XanaduYonder.Runtime
             scrollSurface.color = Color.clear;
             scrollSurface.raycastTarget = true;
             viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1416);
+            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1790);
             content.anchorMin = content.anchorMax = new Vector2(.5f, 1);
             content.pivot = new Vector2(.5f, 1);
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
@@ -156,6 +163,26 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
             UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
+            var sudokuCard = AddLobbyCard(content, "Sudoku", cardCount++, UiFactory.Hex("DFE8DE"));
+            UiFactory.Label(sudokuCard.transform, cardCount.ToString("00") + "   /   九宫推理", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sudokuCard.transform, "数独", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sudokuCard.transform, "九宫之间，找到唯一。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbySudokuRecordText = UiFactory.Label(sudokuCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            for (int i = 0; i < 9; i++)
+            {
+                var square = UiFactory.Panel(sudokuCard.transform, "Sudoku preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, UiFactory.Paper, false);
+                UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
+            }
+            UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
+            var watermelonCard = AddLobbyCard(content, "Watermelon", cardCount++, UiFactory.Hex("F1E4C4"));
+            UiFactory.Label(watermelonCard.transform, cardCount.ToString("00") + "   /   碰碰合成", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(watermelonCard.transform, "合成大西瓜", 28, 74, 460, 90, 54, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var fruitPreview = UiFactory.Rect(watermelonCard.transform, "Watermelon preview", 482, 72, 90, 90).gameObject.AddComponent<RawImage>();
+            fruitPreview.texture = Resources.Load<Texture2D>("Watermelon/Fruit/11");
+            fruitPreview.raycastTarget = false;
+            UiFactory.Label(watermelonCard.transform, "小小一颗，合成满满的快乐。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyWatermelonRecordText = UiFactory.Label(watermelonCard.transform, "水果 / 表情 / 校徽  ·  三种主题", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(watermelonCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterWatermelon, true);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
             content.sizeDelta = new Vector2(720, footerTop + 74);
@@ -181,7 +208,7 @@ namespace XanaduYonder.Runtime
 
         private RectTransform OpenIdiomModal(string title, float height, Action back)
         {
-            var panel = CreateModal(title, height);
+            var panel = CreateModal(title, height, back);
             dismissModal = back;
             return panel;
         }
@@ -193,10 +220,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterIdiom()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
             activePage = Page.Idiom;
             lobbyPage.SetActive(false);
@@ -204,6 +233,44 @@ namespace XanaduYonder.Runtime
             BuildIdiom();
             if (status != null) status.gameObject.SetActive(false);
             idiomPage.Enter();
+        }
+
+        private void EnterWatermelon()
+        {
+            sudokuPage.Leave();
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            sheepPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            activePage = Page.Watermelon;
+            lobbyPage.SetActive(false);
+            gamePage.SetActive(false);
+            if (watermelonPage == null)
+            {
+                var root = UiFactory.Rect(frame, "Watermelon page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                watermelonPage = root.gameObject.AddComponent<WatermelonPage>();
+                watermelonPage.Initialize(root, ShowLobby, OpenSettings,
+                    () => activePage == Page.Watermelon && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog, OpenGameModal, CloseModal);
+                watermelonPage.Changed += RefreshWatermelonRecord;
+            }
+            if (status != null) status.gameObject.SetActive(true);
+            watermelonPage.Enter();
+        }
+
+        private RectTransform OpenGameModal(string title, float height, Action back)
+        {
+            var panel = CreateModal(title, height);
+            dismissModal = back;
+            return panel;
+        }
+
+        private void RefreshWatermelonRecord()
+        {
+            if (watermelonPage != null) lobbyWatermelonRecordText.text = "你的最高纪录   " + watermelonPage.BestScore + "  ·  三种主题";
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -265,12 +332,37 @@ namespace XanaduYonder.Runtime
 
         private void RefreshSheepRecord() { lobbySheepRecordText.text = "通关 " + sheepPage.CompletedRuns + " 次  ·  无尽最高 " + sheepPage.EndlessBest; }
 
+        private void BuildSudoku()
+        {
+            var root = UiFactory.Rect(frame, "Sudoku page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            sudokuPage = root.gameObject.AddComponent<SudokuPage>();
+            sudokuPage.Initialize(root, ShowLobby, OpenSettings,
+                () => activePage == Page.Sudoku && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus);
+            sudokuPage.Changed += RefreshSudokuRecord;
+            sudokuPage.Leave();
+        }
+
+        private void RefreshSudokuRecord() { lobbySudokuRecordText.text = "四档难度 · 已完成 " + sudokuPage.CompletedCount + " / 2,000 关"; }
+
+        private void EnterSudoku()
+        {
+            StopAnimation(); CloseModal(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            if (status != null) status.gameObject.SetActive(true);
+            activePage = Page.Sudoku; lobbyPage.SetActive(false); gamePage.SetActive(false); sudokuPage.Enter();
+        }
+
         private void EnterSheep()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Sheep;
@@ -281,10 +373,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterJump()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Jump;
@@ -299,9 +393,9 @@ namespace XanaduYonder.Runtime
             UiFactory.Stretch(root);
             gamePage = root.gameObject;
             var navigation = UiFactory.Band(root, "Game navigation", 0, 92, 0);
-            UiFactory.Button(navigation, "‹  大厅", 56, 34, 150, 58, ShowLobby);
+            UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, ShowLobby);
             UiFactory.Label(navigation, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(navigation, "设置", 552, 34, 112, 58, OpenSettings);
+            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
             var introduction = UiFactory.Band(root, "Game introduction", 116, 156, .16f);
             UiFactory.Label(introduction, "2048", 56, 0, 608, 111, 86, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(introduction, "每一次相遇，都让数字更进一步。", 60, 114, 604, 42, 24, UiFactory.Muted);
@@ -329,10 +423,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterGame()
         {
+            sudokuPage.Leave();
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Game2048;
@@ -346,11 +442,13 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            sudokuPage.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Lobby;
@@ -385,9 +483,11 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Watermelon) { watermelonPage?.CheckEndState(); return; }
             if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
+            if (activePage == Page.Sudoku) { sudokuPage.CheckEndState(); return; }
             if (!inGame || modal != null || paused || !focused) return;
             if (game.HasWon && !game.HasAcknowledgedWin)
                 ShowDialog("你好，2048！", "你已经完成这次挑战。\n还可以继续，看看数字能走多远。", "继续挑战", () =>
@@ -459,7 +559,7 @@ namespace XanaduYonder.Runtime
             };
         }
 
-        private RectTransform CreateModal(string title, float requestedHeight = 488)
+        private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
         {
             StopAnimation();
             CloseModal();
@@ -467,12 +567,26 @@ namespace XanaduYonder.Runtime
             UiFactory.Stretch(overlay.rectTransform);
             overlay.raycastTarget = true;
             modal = overlay.gameObject;
+            if (outsideDismiss != null)
+            {
+                // Keep the dismiss button behind, rather than above, the panel. A click
+                // on panel whitespace must not bubble to a parent dismiss handler.
+                var backdrop = UiFactory.Panel(overlay.transform, "Dismiss outside dialog", 0, 0, 720, 1320, Color.clear, false);
+                UiFactory.Stretch(backdrop.rectTransform);
+                backdrop.raycastTarget = true;
+                var dismiss = backdrop.gameObject.AddComponent<Button>();
+                dismiss.targetGraphic = backdrop;
+                dismiss.transition = Selectable.Transition.None;
+                dismiss.onClick.AddListener(() => outsideDismiss());
+            }
             var modalFrame = UiFactory.Rect(modal.transform, "Dialog safe area", 0, 0, 720, 1320);
             modalFrame.gameObject.AddComponent<SafeDesignFrame>().Initialize(modalFrame, canvasRoot);
             var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, modalFrame.rect.height - 64));
             var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, 596, height, UiFactory.Paper);
+            panel.raycastTarget = true;
             UiFactory.Center(panel.rectTransform);
-            UiFactory.Label(panel.transform, title, 32, 36, 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
+            UiFactory.Label(panel.transform, title, outsideDismiss != null ? 98 : 32, 36,
+                outsideDismiss != null ? 400 : 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
             return panel.rectTransform;
         }
 
@@ -496,13 +610,15 @@ namespace XanaduYonder.Runtime
             RefreshJumpBest();
             RefreshSheepRecord();
             RefreshIdiomRecord();
+            RefreshWatermelonRecord();
+            RefreshSudokuRecord();
         }
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             if (status != null) status.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -511,6 +627,8 @@ namespace XanaduYonder.Runtime
             jumpPage?.Save();
             sheepPage?.Save();
             idiomPage?.Save();
+            watermelonPage?.Save();
+            sudokuPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -536,6 +654,7 @@ namespace XanaduYonder.Runtime
             jumpPage?.Suspend();
             sheepPage?.Suspend();
             idiomPage?.Suspend();
+            watermelonPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -552,6 +671,7 @@ namespace XanaduYonder.Runtime
             {
                 if (modal != null) dismissModal?.Invoke();
                 else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
+                else if (activePage == Page.Sudoku) sudokuPage.Back();
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
@@ -565,6 +685,7 @@ namespace XanaduYonder.Runtime
         private void OnApplicationPause(bool value)
         {
             paused = value;
+            sudokuPage?.SetForeground(!paused && focused);
             if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
         }
@@ -572,6 +693,7 @@ namespace XanaduYonder.Runtime
         private void OnApplicationFocus(bool value)
         {
             focused = value;
+            sudokuPage?.SetForeground(!paused && focused);
             if (!value)
             {
                 // Android's soft input dialog sends focus(false) while the Activity

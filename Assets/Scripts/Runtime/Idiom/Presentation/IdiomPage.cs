@@ -19,12 +19,12 @@ namespace XanaduYonder.Runtime.Idiom
         private IdiomLexicon lexicon;
         private IdiomSaveStore store;
         private IdiomSaveData data;
-        private IdiomGame characterGame, soundGame;
-        private IdiomNotebookStore notebookStore;
+        private IdiomGame characterGame, soundGame, localCharacterGame, localSoundGame;
+        private IdiomLearningProfile learning;
         private IdiomNotebookData notebook;
         private readonly List<IdiomNotebookItem> notebookItems = new List<IdiomNotebookItem>();
         private readonly HashSet<IdiomGame> announcedResults = new HashSet<IdiomGame>();
-        private readonly float[] chatOffsets = new float[2];
+        private readonly float[] chatOffsets = new float[4];
         private Coroutine loadingRoutine;
         private int loadRequest;
         private bool visible, loading, loaded, writingDraft, notebookVisible, notebookFromSummary;
@@ -38,9 +38,18 @@ namespace XanaduYonder.Runtime.Idiom
         public bool KeyboardForeground => keyboard == null || keyboard.IsForeground;
         public string SaveError => saveError ?? notebookError;
         public string BestLabel => data == null ? "你的接龙纪录   等你开启" :
-            (data.ActiveMode == IdiomMode.SameCharacter ? "同字最佳   " : "同音最佳   ") + ActiveSave.Best + " 个";
-        private IdiomGame Game => data == null ? null : data.ActiveMode == IdiomMode.SameCharacter ? characterGame : soundGame;
-        private IdiomModeSave ActiveSave => data.ActiveMode == IdiomMode.SameCharacter ? data.Character : data.Sound;
+            (IsLocal ? "双人 · " : "人机 · ") + (data.ActiveMode == IdiomMode.SameCharacter ? "同字最佳   " : "同音最佳   ") + ActiveSave.Best + " 个";
+        private bool IsLocal => data != null && data.ActiveMatchKind == IdiomMatchKind.Local;
+        private int ActiveSlot => (IsLocal ? 2 : 0) + (int)data.ActiveMode;
+        private int CompletedCount => Game == null ? 0 : IsLocal ? Game.History.Count : Game.PlayerCount;
+        private string TurnName => Game != null && Game.NextActor == IdiomActor.Left ? "左方" : "右方";
+        private string HintRule => IsLocal ? "双方各 3 次提示 · 任一方用满即回顾本轮" : "本局双方不重复 · 第 3 次新提示后回顾本轮";
+        private IdiomGame Game => data == null ? null : IsLocal ?
+            (data.ActiveMode == IdiomMode.SameCharacter ? localCharacterGame : localSoundGame) :
+            (data.ActiveMode == IdiomMode.SameCharacter ? characterGame : soundGame);
+        private IdiomModeSave ActiveSave => IsLocal ?
+            (data.ActiveMode == IdiomMode.SameCharacter ? data.LocalCharacter : data.LocalSound) :
+            (data.ActiveMode == IdiomMode.SameCharacter ? data.Character : data.Sound);
         private bool AcceptsInput => visible && !notebookVisible && !modalOpen && loaded && Game != null && canInteract();
         private bool CanNavigate => visible && !modalOpen && canInteract();
 
@@ -67,7 +76,7 @@ namespace XanaduYonder.Runtime.Idiom
         public void Leave()
         {
             Save(); Suspend(); CloseDialog(); HideKeyboard();
-            if (Game != null) chatOffsets[(int)data.ActiveMode] = chat.Offset;
+            if (Game != null) chatOffsets[ActiveSlot] = chat.Offset;
             if (loadingRoutine != null) StopCoroutine(loadingRoutine);
             loadingRoutine = null; loading = false; loadRequest++;
             loader.ClearDetails();
@@ -124,18 +133,13 @@ namespace XanaduYonder.Runtime.Idiom
                     store = new IdiomSaveStore(Application.persistentDataPath, lexicon);
                     data = store.Load(out initialWarning);
                     if (data == null && store.CanWrite) data = NewSave();
-                    if (data != null) RestoreGames();
+                    if (data != null) { RestoreGames(); notebook = data.Notebook; }
                     else saveError = "成语接龙存档需要处理，原文件已保留。";
-                    notebookStore = new IdiomNotebookStore(Application.persistentDataPath);
-                    string notebookWarning;
-                    notebook = notebookStore.Load(out notebookWarning);
-                    if (notebook == null && notebookStore.CanWrite) notebook = new IdiomNotebookData();
                     if (notebook == null) notebookError = "生词本暂不可读取，原文件已保留。";
-                    if (initialWarning == null) initialWarning = notebookWarning;
                     loaded = true; loading = false; loadingRoutine = null;
                     RebuildNotebookItems(); Refresh(true);
                     if (store.CanWrite && data != null) Save();
-                    setStatus(SaveError ?? initialWarning ?? "本局双方不重复，第 3 次提示后回顾本轮。");
+                    setStatus(SaveError ?? initialWarning ?? HintRule);
                     Changed?.Invoke(); CheckEndState();
                 }
                 catch (Exception exception) when (exception is ArgumentException || exception is InvalidOperationException)
@@ -159,14 +163,17 @@ namespace XanaduYonder.Runtime.Idiom
         {
             return new IdiomSaveData
             {
-                ActiveMode = IdiomMode.SameCharacter,
-                Character = NewMode(IdiomMode.SameCharacter), Sound = NewMode(IdiomMode.SameSound)
+                ActiveMode = IdiomMode.SameCharacter, ActiveMatchKind = IdiomMatchKind.Computer,
+                Character = NewMode(IdiomMode.SameCharacter), Sound = NewMode(IdiomMode.SameSound),
+                LocalCharacter = NewMode(IdiomMode.SameCharacter, IdiomMatchKind.Local),
+                LocalSound = NewMode(IdiomMode.SameSound, IdiomMatchKind.Local),
+                Profile = new IdiomLearningProfile(lexicon).GetSnapshot(), Notebook = new IdiomNotebookData()
             };
         }
 
-        private IdiomModeSave NewMode(IdiomMode mode)
+        private IdiomModeSave NewMode(IdiomMode mode, IdiomMatchKind matchKind = IdiomMatchKind.Computer)
         {
-            return new IdiomModeSave { Game = new IdiomGame(lexicon, mode, NewSeed()).GetSnapshot(), Draft = "", Best = 0 };
+            return new IdiomModeSave { Game = new IdiomGame(lexicon, mode, NewSeed(), matchKind).GetSnapshot(), Draft = "", Best = 0 };
         }
 
         private static uint NewSeed()
@@ -177,8 +184,29 @@ namespace XanaduYonder.Runtime.Idiom
 
         private void RestoreGames()
         {
-            characterGame = new IdiomGame(lexicon, data.Character.Game);
-            soundGame = new IdiomGame(lexicon, data.Sound.Game);
+            learning = new IdiomLearningProfile(lexicon, data.Profile);
+            characterGame = RestoreGame(data.Character.Game);
+            soundGame = RestoreGame(data.Sound.Game);
+            localCharacterGame = RestoreGame(data.LocalCharacter.Game);
+            localSoundGame = RestoreGame(data.LocalSound.Game);
+        }
+
+        private static long UtcNow() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        private IdiomGame RestoreGame(IdiomSnapshot snapshot) => new IdiomGame(lexicon, snapshot, learning, UtcNow);
+
+        private void CaptureSave()
+        {
+            data.Character.Game = characterGame.GetSnapshot();
+            data.Sound.Game = soundGame.GetSnapshot();
+            data.LocalCharacter.Game = localCharacterGame.GetSnapshot();
+            data.LocalSound.Game = localSoundGame.GetSnapshot();
+            data.Profile = learning.GetSnapshot();
+            data.Notebook = notebook;
+            UpdateBest(data.Character, characterGame.PlayerCount);
+            UpdateBest(data.Sound, soundGame.PlayerCount);
+            UpdateBest(data.LocalCharacter, localCharacterGame.History.Count);
+            UpdateBest(data.LocalSound, localSoundGame.History.Count);
         }
 
         public void Save()
@@ -187,10 +215,7 @@ namespace XanaduYonder.Runtime.Idiom
             // Leave saved this page, do not re-encode a long unchanged transcript.
             if (!visible && !saveFailed) return;
             if (!loaded || store == null || data == null || characterGame == null || soundGame == null) return;
-            data.Character.Game = characterGame.GetSnapshot();
-            data.Sound.Game = soundGame.GetSnapshot();
-            UpdateBest(data.Character, characterGame.PlayerCount);
-            UpdateBest(data.Sound, soundGame.PlayerCount);
+            CaptureSave();
             string error;
             if (!store.TrySave(data, out error))
             {
@@ -203,7 +228,7 @@ namespace XanaduYonder.Runtime.Idiom
             else
             {
                 var wasFailed = saveFailed;
-                saveFailed = false; saveError = null;
+                saveFailed = false; saveError = null; notebookError = null;
                 if (wasFailed && visible) setStatus(notebookError ?? "成语接龙进度已保存。");
             }
             draftDirty = false;
@@ -221,7 +246,7 @@ namespace XanaduYonder.Runtime.Idiom
             var result = Game.Start(actor);
             if (!result.Success) { ShowInputError(result.Error); return; }
             Save(); Refresh(true); Changed?.Invoke(); CheckEndState();
-            if (actor == IdiomActor.Player && !Game.IsEnded) input.ActivateInputField();
+            if ((IsLocal || actor == IdiomActor.Player) && !Game.IsEnded) input.ActivateInputField();
         }
 
         private void Submit()
@@ -231,6 +256,9 @@ namespace XanaduYonder.Runtime.Idiom
             var follow = chat.NearBottom;
             var result = Game.Submit(input.text);
             if (!result.Success) { ShowInputError(result.Error); return; }
+            // Hand the phone to the next participant with the committed word clear
+            // and the keyboard dismissed; preserve the native draft safeguards.
+            if (IsLocal) HideKeyboard();
             SetDraft("");
             inlineError.text = "";
             Save(); Refresh(follow); Changed?.Invoke();
@@ -242,10 +270,21 @@ namespace XanaduYonder.Runtime.Idiom
         private void ChangeMode(IdiomMode mode)
         {
             if (!CanNavigate || !loaded || data == null || mode == data.ActiveMode) return;
-            chatOffsets[(int)data.ActiveMode] = chat.Offset;
+            chatOffsets[ActiveSlot] = chat.Offset;
             Save(); HideKeyboard(); Suspend();
             data.ActiveMode = mode; inlineError.text = "";
-            Save(); Refresh(); chat.SetOffset(chatOffsets[(int)mode]);
+            Save(); Refresh(); chat.SetOffset(chatOffsets[ActiveSlot]);
+            newReplies.gameObject.SetActive(false);
+            Changed?.Invoke(); CheckEndState();
+        }
+
+        private void ChangeMatchKind(IdiomMatchKind matchKind)
+        {
+            if (!CanNavigate || !loaded || data == null || matchKind == data.ActiveMatchKind) return;
+            chatOffsets[ActiveSlot] = chat.Offset;
+            Save(); HideKeyboard(); Suspend();
+            data.ActiveMatchKind = matchKind; inlineError.text = "";
+            Save(); Refresh(); chat.SetOffset(chatOffsets[ActiveSlot]);
             newReplies.gameObject.SetActive(false);
             Changed?.Invoke(); CheckEndState();
         }

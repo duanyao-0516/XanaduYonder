@@ -3,8 +3,11 @@
   "rootNamespace": "XanaduYonder.EditorTools",
   "references": [
     "XanaduYonder.Core",
-    "XanaduYonder.Runtime"
+    "XanaduYonder.Runtime",
+    "UnityEngine.UI"
   ],
-  "includePlatforms": ["Editor"],
+  "includePlatforms": [
+    "Editor"
+  ],
   "autoReferenced": true
 }

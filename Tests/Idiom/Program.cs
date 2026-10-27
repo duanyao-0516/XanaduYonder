@@ -19,7 +19,7 @@ internal static class Program
         Run("APP avoids dead ends even when the dead choice is common", AvoidDeadEnds);
         Run("APP prefers common choices at equal continuation quality", CommonChoices);
         Run("machine opening uses a common live word before uncommon larger branches", CommonOpening);
-        Run("APP prefers three continuations over fewer", MoreContinuations);
+        Run("APP can choose both one and three continuation candidates", MoreContinuations);
         Run("selection is deterministic across input order and snapshot restore", Determinism);
         Run("hints are legal at most three and cached once per player turn", HintCaching);
         Run("hints never consume APP random state or occupy candidates", HintRandomness);
@@ -35,6 +35,26 @@ internal static class Program
         Run("historical hints are validated against their own history prefix", HistoricalHints);
         Run("restore rejects forged hints and progress after third hint", BadHints);
         Run("generated mixed action sequences remain exactly restorable", Replay);
+        Run("local both starters and modes alternate one human word without random draws", LocalTurns);
+        Run("local submissions share mode rules and reject repeats across both sides", LocalModesAndRepeats);
+        Run("local hints are independent and either third hint ends immediately", LocalHints);
+        Run("local restore rejects invalid hint totals and play after either third hint", LocalBadHints);
+        Run("local natural and manual endings restore with either side next", LocalEndings);
+        Run("local mixed action sequences remain exactly restorable", LocalReplay);
+        Run("personalization accepts all human words but only recommends ordinary or notebook words", LearningTests.Pools);
+        Run("independent and assisted human uses are distinct and local play does not learn", LearningTests.Learning);
+        Run("notebook removal suspends familiar words and remembering explicitly restores them", LearningTests.Notebook);
+        Run("automatic notebook review respects the exact 24-hour boundary", LearningTests.ReviewCooldown);
+        Run("all qualified candidates retain positive probability with mild continuation weighting", LearningTests.Diversity);
+        Run("ordinary and review branches use an 80/20 split when both exist", LearningTests.ReviewBranch);
+        Run("last ten APP replies receive a reversible quarter-weight penalty", LearningTests.Recency);
+        Run("hint randomness and cached assistance cannot change APP random selection", LearningTests.Hints);
+        Run("policy exhaustion restores after shared profile changes without rewriting history", LearningTests.PolicyEnd);
+        Run("hint groups reserve two ordinary words and one notebook word with fallback filling", LearningTests.HintQuotas);
+        Run("ordinary APP exposure also delays later notebook review while manual hints remain available", LearningTests.OrdinaryThenNotebook);
+        Run("profile updates reach existing slots and transaction rollback keeps shared references", LearningTests.SharedUpdates);
+        Run("no suitable hint leaves local full-lexicon input available", LearningTests.NoHintDoesNotEnd);
+        Run("personal use and review age have mild positive selection weights", LearningTests.PersonalWeights);
         if (args.Length == 2 && args[0] == "--catalog")
             Run("full current dictionary supports bounded actions and long restored games", delegate { CatalogChecks.Run(args[1]); });
         else if (args.Length != 0)
@@ -170,7 +190,7 @@ internal static class Program
     private static void AvoidDeadEnds()
     {
         var lex = L(E("first", "甲一一乙", "jia", "yi"), E("dead", "乙一一丁", "yi", "ding", true),
-                    E("live", "乙一一丙", "yi", "bing"), E("after", "丙一一戊", "bing", "wu"),
+                    E("live", "乙一一丙", "yi", "bing", true), E("after", "丙一一戊", "bing", "wu", true),
                     E("spare", "己一一庚", "ji", "geng"));
         var game = Waiting(lex); game.Submit("甲一一乙");
         Assert(game.LastEntry.Id == "live" && !game.IsEnded, "live reply beats common dead reply");
@@ -179,7 +199,7 @@ internal static class Program
     private static void CommonChoices()
     {
         var lex = L(E("first", "甲一一乙"), E("uncommon", "乙一一丙"), E("common", "乙二二丙", common: true),
-                    E("after", "丙一一丁"));
+                    E("after", "丙一一丁", common: true));
         var game = Waiting(lex); game.Submit("甲一一乙");
         Assert(game.LastEntry.Id == "common", "common preference within continuation tier");
         var opening = new IdiomGame(lex, IdiomMode.SameCharacter, 8); opening.Start(IdiomActor.App);
@@ -188,15 +208,17 @@ internal static class Program
 
     private static void MoreContinuations()
     {
-        var lex = L(E("first", "甲一一乙"), E("few", "乙一一丙"), E("many", "乙一一丁"),
-                    E("a", "丙一一戊"), E("b", "丁一一己"), E("c", "丁二二己"), E("d", "丁三三己"));
-        var game = Waiting(lex); game.Submit("甲一一乙");
-        Assert(game.LastEntry.Id == "many", "at least three future options preferred");
+        var lex = L(E("first", "甲一一乙"), E("few", "乙一一丙", common: true), E("many", "乙一一丁", common: true),
+                    E("a", "丙一一戊", common: true), E("b", "丁一一己", common: true), E("c", "丁二二己", common: true), E("d", "丁三三己", common: true));
+        var replies = new HashSet<string>();
+        for (uint seed = 1; seed <= 50; seed++)
+        { var game = new IdiomGame(lex, IdiomMode.SameCharacter, seed); game.Start(IdiomActor.Player); game.Submit("甲一一乙"); replies.Add(game.LastEntry.Id); }
+        Assert(replies.SetEquals(new[] { "few", "many" }), "both viable continuation tiers retain positive probability");
     }
 
     private static void CommonOpening()
     {
-        var lex = L(E("common", "甲一一乙", common: true), E("after", "乙一一戊"),
+        var lex = L(E("common", "甲一一乙", common: true), E("after", "乙一一戊", common: true),
                     E("uncommon", "丙一一丁"), E("a", "丁一一己"), E("b", "丁二二己"), E("c", "丁三三己"));
         var game = new IdiomGame(lex, IdiomMode.SameCharacter, 8); game.Start(IdiomActor.App);
         Assert(game.LastEntry.Id == "common", "opening must use curated common set when it has a continuation");
@@ -280,7 +302,7 @@ internal static class Program
         {
             var game = new IdiomGame(lex, IdiomMode.SameCharacter, 3); game.Start(first);
             if (first == IdiomActor.Player) Assert(game.Submit("一心一意").Success, "last available player word accepted");
-            Assert(game.EndReason == IdiomEndReason.DictionaryExhausted, "exhaustion outranks next actor having no words");
+            Assert(game.EndReason == (first == IdiomActor.Player ? IdiomEndReason.DictionaryExhausted : IdiomEndReason.RecommendationExhausted), "human may use final word; APP refuses an opening without an ordinary continuation");
             Assert(game.PlayerCount == (first == IdiomActor.Player ? 1 : 0), "correct last actor count");
             new IdiomGame(lex, game.GetSnapshot());
         }
@@ -293,7 +315,7 @@ internal static class Program
         new IdiomGame(lex, game.GetSnapshot());
         lex = L(E("first", "甲一一乙"), E("reply", "乙一一丁"), E("spare", "戊一一己"));
         game = Waiting(lex); game.Submit("甲一一乙");
-        Assert(game.EndReason == IdiomEndReason.PlayerNoMoves && game.History.Count == 2, "APP actual reply leaves player without moves");
+        Assert(game.EndReason == IdiomEndReason.RecommendationExhausted && game.History.Count == 1, "APP does not manufacture a player dead end with an unsuitable reply");
         new IdiomGame(lex, game.GetSnapshot());
     }
 
@@ -388,6 +410,134 @@ internal static class Program
                 if (!game.IsEnded) game.Submit(UnusedWord(game, lex));
             }
             Assert(game.IsEnded, "bounded finite lexicon or third hint terminates");
+            new IdiomGame(lex, game.GetSnapshot());
+        }
+    }
+
+    private static IdiomGame LocalGame(IdiomLexicon lex, IdiomMode mode = IdiomMode.SameCharacter)
+    {
+        return new IdiomGame(lex, mode, 17, IdiomMatchKind.Local);
+    }
+    private static IdiomSnapshot LocalSnapshot(IdiomActor first, IdiomEndReason end,
+                                               IEnumerable<string> history, IEnumerable<IdiomHint> hints, int kind = 1)
+    {
+        return new IdiomSnapshot(IdiomMode.SameCharacter, first, end, 17, history, hints, (IdiomMatchKind)kind);
+    }
+    private static IdiomActor Next(IdiomGame game) { return game.NextActor; }
+    private static int HintsFor(IdiomGame game, IdiomActor actor) { return game.HintCountFor(actor); }
+    private static void LocalTurns()
+    {
+        foreach (IdiomMode mode in new[] { IdiomMode.SameCharacter, IdiomMode.SameSound })
+        foreach (IdiomActor first in new[] { IdiomActor.App, IdiomActor.Player })
+        {
+            var lex = Loops(); var game = LocalGame(lex, mode); uint random = game.GetSnapshot().RandomState;
+            Assert(Next(game) == IdiomActor.None, "unstarted has no current human");
+            Assert(game.Start(first).Success && game.History.Count == 0 && Next(game) == first, "either human starts without APP reply");
+            Assert(game.MatchKind == IdiomMatchKind.Local && game.GetSnapshot().MatchKind == IdiomMatchKind.Local, "snapshot retains match kind");
+            for (int i = 0; i < 5; i++)
+            {
+                Assert(game.Submit(UnusedWord(game, lex)).Success && game.History.Count == i + 1, "one human word per submit");
+                Assert(Next(game) == (i % 2 == 0 ? (first == IdiomActor.App ? IdiomActor.Player : IdiomActor.App) : first), "next human alternates");
+                Assert(game.ActorAt(i) == (i % 2 == 0 ? first : (first == IdiomActor.App ? IdiomActor.Player : IdiomActor.App)), "history actor is stable");
+                Assert(game.GetSnapshot().RandomState == random, "local input never draws computer randomness");
+                game = new IdiomGame(lex, game.GetSnapshot());
+            }
+            Assert(game.LeftCount == (first == IdiomActor.App ? 3 : 2), "left count follows starter");
+            Assert(game.RightCount == (first == IdiomActor.Player ? 3 : 2) && game.PlayerCount == game.RightCount, "legacy player count means right");
+        }
+        Assert(new IdiomGame(Loops(), IdiomMode.SameCharacter, 17).MatchKind == IdiomMatchKind.Computer, "legacy constructor stays computer");
+        Reject(Loops(), LocalSnapshot(IdiomActor.None, IdiomEndReason.None, new string[0], new IdiomHint[0], 2));
+    }
+    private static void LocalModesAndRepeats()
+    {
+        var lex = ModeLexicon(); var chars = LocalGame(lex); chars.Start(IdiomActor.App);
+        Assert(chars.Submit("一心一意").Success, "left opening"); string before = Stamp(chars.GetSnapshot());
+        Assert(chars.Submit("一帆风顺").Error == IdiomError.WrongStart && Stamp(chars.GetSnapshot()) == before, "character mismatch leaves turn unchanged");
+        Assert(chars.Submit("意气风发").Success && chars.History.Count == 2, "right exact-character word");
+        var sound = LocalGame(lex, IdiomMode.SameSound); sound.Start(IdiomActor.Player);
+        Assert(sound.Submit("一心一意").Success && sound.Submit("一帆风顺").Success && sound.History.Count == 2, "either human can use same sound");
+        lex = Loops(); var game = LocalGame(lex); game.Start(IdiomActor.App);
+        game.Submit(lex.Entries[0].Word); game.Submit(lex.Entries[1].Word); before = Stamp(game.GetSnapshot());
+        foreach (var entry in lex.Entries.Take(2))
+            Assert(game.Submit(entry.Word).Error == IdiomError.RepeatedWord && Stamp(game.GetSnapshot()) == before, "both human words occupy shared used set");
+        Assert(game.Submit("四海为家").Error == IdiomError.UnknownWord && game.Submit("一").Error == IdiomError.InvalidWord && Stamp(game.GetSnapshot()) == before, "invalid human input is atomic");
+    }
+    private static void LocalHints()
+    {
+        foreach (IdiomActor first in new[] { IdiomActor.App, IdiomActor.Player })
+        foreach (bool firstEnds in new[] { true, false })
+        {
+            var lex = Loops(); var game = LocalGame(lex); game.Start(first);
+            if (!firstEnds) game.Submit(UnusedWord(game, lex));
+            IdiomActor ending = Next(game), other = ending == IdiomActor.App ? IdiomActor.Player : IdiomActor.App;
+            for (int turn = 0; turn < 4; turn++)
+            {
+                var hint = game.RequestHint(); int count = game.HintCount;
+                Assert(game.RequestHint() == hint && game.HintCount == count && !game.IsEnded, "cached hint does not charge and total three or four does not end");
+                game = new IdiomGame(lex, game.GetSnapshot());
+                Assert(game.RequestHint().EntryIds.SequenceEqual(hint.EntryIds) && game.HintCount == count, "restored current hint remains cached");
+                Assert(game.Submit(UnusedWord(game, lex)).Success, "either human continues after first or second hint");
+            }
+            Assert(HintsFor(game, ending) == 2 && HintsFor(game, other) == 2, "independent quotas before third");
+            int length = game.History.Count; var third = game.RequestHint();
+            Assert(game.EndReason == IdiomEndReason.HintLimit && game.History.Count == length && game.HintCount == 5, "either human third hint immediately ends with at most five total");
+            Assert(HintsFor(game, ending) == 3 && HintsFor(game, other) == 2 && Next(game) == ending, "terminal retains last actor for review");
+            Assert(game.Submit(UnusedWord(game, lex)).Error == IdiomError.AlreadyEnded && game.RequestHint() == third, "terminal can only reread hint");
+            var restored = new IdiomGame(lex, game.GetSnapshot());
+            Assert(Stamp(restored.GetSnapshot()) == Stamp(game.GetSnapshot()) && HintsFor(restored, ending) == 3, "terminal restores exactly");
+        }
+    }
+    private static void LocalBadHints()
+    {
+        var lex = Loops(); var ids = lex.Entries.Select(e => e.Id).ToArray();
+        var firstThird = new[] { new IdiomHint(0, new[] { ids[0] }), new IdiomHint(2, new[] { ids[2] }), new IdiomHint(4, new[] { ids[4] }) };
+        foreach (IdiomActor first in new[] { IdiomActor.App, IdiomActor.Player })
+        {
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.None, ids.Take(4), firstThird));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.EndedByPlayer, ids.Take(4), firstThird));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.HintLimit, ids.Take(5), firstThird));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.HintLimit, ids.Take(4), firstThird.Take(2)));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.HintLimit, ids.Take(6), firstThird.Concat(new[] { new IdiomHint(6, new[] { ids[6] }) })));
+            var bothThird = Enumerable.Range(0, 6).Select(i => new IdiomHint(i, new[] { ids[i] })).ToArray();
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.HintLimit, ids.Take(5), bothThird));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.None, ids.Take(1), new[] { new IdiomHint(1, new[] { ids[0] }) }));
+            Reject(lex, LocalSnapshot(first, IdiomEndReason.None, ids.Take(1), new[] { new IdiomHint(1, new[] { ids[1] }), new IdiomHint(1, new[] { ids[2] }) }));
+        }
+    }
+    private static void LocalEndings()
+    {
+        foreach (IdiomActor first in new[] { IdiomActor.App, IdiomActor.Player })
+        {
+            var lex = L(E("first", "甲一一乙"), E("spare", "丙一一丁"));
+            var game = LocalGame(lex); game.Start(first); game.Submit("甲一一乙");
+            Assert(game.EndReason == (first == IdiomActor.App ? IdiomEndReason.PlayerNoMoves : IdiomEndReason.AppNoMoves), "no-moves reason identifies next human");
+            new IdiomGame(lex, game.GetSnapshot());
+            lex = Loops(1); game = LocalGame(lex); game.Start(first); game.Submit(lex.Entries[0].Word);
+            Assert(game.EndReason == IdiomEndReason.DictionaryExhausted && game.History.Count == 1, "local exhaustion after one human word");
+            new IdiomGame(lex, game.GetSnapshot());
+            for (int length = 0; length < 3; length++)
+            {
+                lex = Loops(); game = LocalGame(lex); game.Start(first);
+                for (int i = 0; i < length; i++) game.Submit(UnusedWord(game, lex));
+                game.Finish(); Assert(game.EndReason == IdiomEndReason.EndedByPlayer, "either next human can finish");
+                new IdiomGame(lex, game.GetSnapshot());
+            }
+        }
+    }
+    private static void LocalReplay()
+    {
+        var lex = Loops(24);
+        foreach (IdiomMode mode in new[] { IdiomMode.SameCharacter, IdiomMode.SameSound })
+        for (int seed = 1; seed <= 30; seed++)
+        {
+            var game = LocalGame(lex, mode); game.Start(seed % 2 == 0 ? IdiomActor.App : IdiomActor.Player);
+            for (int turn = 0; turn < 25 && !game.IsEnded; turn++)
+            {
+                if ((seed + turn) % 3 == 0) { game.RequestHint(); game.RequestHint(); }
+                Assert(Stamp(game.GetSnapshot()) == Stamp(new IdiomGame(lex, game.GetSnapshot()).GetSnapshot()), "every local action restores");
+                if (!game.IsEnded) game.Submit(UnusedWord(game, lex));
+            }
+            Assert(game.IsEnded, "finite local game terminates");
             new IdiomGame(lex, game.GetSnapshot());
         }
     }
