@@ -6,24 +6,24 @@
 
 ## 当前状态
 
-最新正式发行版为 **v0.3.0**，包含四款可离线游玩的游戏：
+当前源码的开发版本为 **v0.4.0**，接入六款可离线游玩的游戏，按大厅顺序排列：
 
-- **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
-- **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
-- **成语接龙**：同字/同音双模式、机器/用户双开局、左右对话、免费提示与三次提示小结、可点击释义和本地生词本。
-- **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
+- **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
+- **02 · 跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
+- **03 · 旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
+- **04 · 成语接龙**：同字/同音双模式、人机与本地双人对战、左右对话、免费提示与三次提示小结、可点击释义、生词本与个人学习记录。
+- **05 · 数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示、按难度独立续局与书本玩法入口。
+- **06 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。
 
-当前开发代码还包含 **06 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。**05 保留给另一个工作树开发的数独**。06 与成语接龙的双人、个性化学习功能尚未随 v0.3.0 正式发布。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，当前开发版成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，当前开发版成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录，不修改其他游戏的存档协议。
-
-**最新正式版本为 v0.3.0**，新增旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+**最新正式版本为 v0.3.0**，包含 2048、跳一跳、旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。数独、合成大西瓜与成语接龙的双人、个性化学习功能尚未随 v0.3.0 正式发布；v0.4.0 尚未发布 GitHub Release，可按下方命令构建本地开发 APK。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 ## 开发与运行
 
 固定 **Unity 6000.3.27f1（Apple Silicon）**，安装 Android Build Support 及配套 SDK/NDK/OpenJDK。C# 使用 VS Code + Unity 扩展，独立测试使用 .NET 10.0.403。完整环境、IDE 和构建步骤见 [开发说明](docs/development.md)。
 
-在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击；成语接龙输入后点击发送，点击气泡查看释义。
+在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击；成语接龙输入后点击发送，点击气泡查看释义；数独点击格子和数字，支持铅笔候选与快速输入；合成大西瓜拖动瞄准后松手投球。
 
 ```bash
 scripts/check-environment.sh
@@ -39,17 +39,23 @@ scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
 scripts/test-idiom-ui.sh
+scripts/test-sudoku.sh
+scripts/test-sudoku-content.sh --bank
+scripts/test-sudoku-persistence.sh
+scripts/test-sudoku-session.sh
+scripts/test-sudoku-profile.sh
+scripts/test-sudoku-selection.sh
 scripts/test-watermelon.sh
 scripts/test-watermelon-persistence.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
+APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 
-正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
+正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.4.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
-[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [数独玩法与接入](docs/sudoku-game.md) · [数独初版验证](docs/verification-sudoku.md) · [数独修订验证](docs/verification-sudoku-refinement.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 成语接龙与离线词库
 
@@ -59,7 +65,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 运行资源位于 `Assets/Resources/Idioms`，普通构建不需要下载或运行清洗。重新导出用 `python3 scripts/pack-idioms.py`；只在进入游戏时加载索引，释义按分片读取。
 
-多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-0.3.0-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；不要用普通安装脚本代替这项隔离配置。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
+多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-0.4.0-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；不要用普通安装脚本代替这项隔离配置。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
 
 ## 06 · 合成大西瓜
 
@@ -69,7 +75,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 素材经用户授权，从 [idootop/watermelon](https://github.com/idootop/watermelon) 的固定版本导入。只使用 33 张图片与 4 个音效，游戏逻辑为原创 C#，没有复制其 AGPL-3.0 Dart 源码。文件来源、主题顺序及 SHA-256 见[素材清单](docs/watermelon-assets.md)。
 
-独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.3.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。本次尚未发布新版。
+独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。此前独立分支的核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。本次尚未发布新版。
 
 ## 当前范围
 
@@ -78,7 +84,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 - 暂不接入微信、抖音等小游戏平台，不为这些渠道预装 SDK 或增加构建目标。
 - 不引入登录、会员、广告、服务器或云存档。
 - 游戏通过独立模块接入合集，不预装 Python 或其他无实际需求的运行时。
-- 不提供旧版本游戏存档迁移。
+- 数独新版兼容本项目旧版单局存档；不导入第三方游戏存档。
 
 ## 与 DawnYew 的关系
 

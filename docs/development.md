@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；本分支的 06 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。05 编号保留给另一个工作树开发的数独。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；06 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -37,6 +37,12 @@ scripts/test-sheep-layouts.sh
 scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
+scripts/test-sudoku.sh
+scripts/test-sudoku-content.sh --bank
+scripts/test-sudoku-persistence.sh
+scripts/test-sudoku-session.sh
+scripts/test-sudoku-profile.sh
+scripts/test-sudoku-selection.sh
 scripts/test-watermelon.sh
 scripts/test-watermelon-persistence.sh
 scripts/build-android.sh
@@ -49,7 +55,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-构建输出为 `artifacts/builds/XanaduYonder-0.3.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.3.0、Android versionCode 为 3；正式产物见 [v0.3.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
+构建输出为 `artifacts/builds/XanaduYonder-0.4.0.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.4.0、Android versionCode 为 4；最新正式发行版仍为 [v0.3.0](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
 
 如需单独创建/检查启动场景与构建设置：
 
@@ -65,7 +71,7 @@ mkdir -p artifacts/logs
 
 ## 合成大西瓜独立验证
 
-06 合成大西瓜在本工作树开发，使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。素材来自用户授权的固定版本仓库，完整路径、哈希及授权说明见[素材清单](watermelon-assets.md)。
+06 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。素材来自用户授权的固定版本仓库，完整路径、哈希及授权说明见[素材清单](watermelon-assets.md)。
 
 ```bash
 scripts/test-watermelon.sh
@@ -73,7 +79,7 @@ scripts/test-watermelon-persistence.sh
 scripts/test-watermelon-physics.sh
 scripts/build-watermelon-validation.sh
 ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
-"$ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.3.0-watermelon-validation.apk
+"$ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk
 "$ADB" -s DEVICE_SERIAL shell am start -n com.duanyao.xanaduyonder.watermelontest/com.unity3d.player.UnityPlayerActivity
 ```
 
@@ -81,7 +87,7 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 
 `test-watermelon-physics.sh` 启动 Unity Play Mode，验证真实碰撞合并、堆叠、出生位置、独立场景、恢复运动及越线，结果位于 `artifacts/validation/watermelon-physics.txt`。执行前关闭此工作树的 Unity 编辑器。编译或运行故障会返回非零，超时会终止本次测试进程。
 
-验证脚本输出 `artifacts/builds/XanaduYonder-0.3.0-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。请使用上面的显式 ADB 安装与启动命令；普通 `install-android.sh` 启动的是正式包名。最新正式发行版本仍为 v0.3.0，生成此包不会创建新版本或 GitHub Release。
+验证脚本输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。请使用上面的显式 ADB 安装与启动命令；普通 `install-android.sh` 启动的是正式包名。最新正式发行版本仍为 v0.3.0，生成此包不会创建新版本或 GitHub Release。
 
 `watermelon-v1.json` 独立保存棋盘状态、当前/下一颗、随机状态、主题、得分、最高分及目标提示状态，保存备份为 `watermelon-v1.json.bak`。暂停、退回大厅和应用切后台时应保留续局；主题切换应保持物体位置、大小与速度。需要在真机覆盖拖动松手、连续合并、触摸取消、暂停/恢复、进程重启续局、声音/触感设置及三个主题显示。
 
@@ -104,7 +110,7 @@ scripts/build-release.sh
 
 脚本缺少签名配置时立即失败。Unity 子进程不会收到上述变量，只生成关闭 Development Build、脚本调试与 profiler 连接的中间 APK；签名配置不进入 Unity 的 `ProjectSettings`。构建入口在结束或抛出异常时恢复原来的 Development 和自定义签名开关。
 
-脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入；拒绝 debuggable APK，并在签名验证成功后原子替换 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`。中间文件不会作为发布产物保留。脚本返回非零代表本次失败，即使目录中存在较早的正式 APK，也不能将其当作本次构建成功。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
+脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入；拒绝 debuggable APK，并在签名验证成功后原子替换 `artifacts/builds/XanaduYonder-0.4.0-android-arm64.apk`。中间文件不会作为发布产物保留。脚本返回非零代表本次失败，即使目录中存在较早的正式 APK，也不能将其当作本次构建成功。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
 
 Unity 日志为 `artifacts/logs/build-android-release.log`，本地签名验证日志为 `artifacts/logs/sign-android-release.log`。只上传最终 APK、校验和及公开发布说明；不要上传 keystore、口令、私有签名日志或整个构建目录。后续版本必须使用同一发布密钥才能覆盖升级。正式签名与现有开发签名不同，Android 会拒绝直接覆盖开发包；测试迁移前应先保护设备存档，不能直接卸载并丢失进度。
 

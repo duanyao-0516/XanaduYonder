@@ -25,7 +25,7 @@ if [[ ! -x "$ADB" ]]; then
     printf 'adb not found. Set ADB to its executable path.\n' >&2
     exit 1
 fi
-APK_FILE="${2:-$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.3.0.apk}"
+APK_FILE="${2:-$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.4.0.apk}"
 if [[ ! -s "$APK_FILE" ]]; then
     printf 'APK missing or empty: %s\nRun scripts/build-android.sh first.\n' "$APK_FILE" >&2
     exit 1

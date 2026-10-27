@@ -1,0 +1,4 @@
+version=sudoku-exchange-d8c8eba-v1
+scanned=10462
+selected=500,500,500,500
+classifications=1591,2585,3084,500,2702
