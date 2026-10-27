@@ -7,6 +7,7 @@ using XanaduYonder.Core;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
+using XanaduYonder.Runtime.Watermelon;
 
 namespace XanaduYonder.Runtime
 {
@@ -39,8 +40,10 @@ namespace XanaduYonder.Runtime
         private SheepPage sheepPage;
         private IdiomPage idiomPage;
         private Text lobbyIdiomRecordText;
+        private WatermelonPage watermelonPage;
+        private Text lobbyWatermelonRecordText;
         private Text status;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Watermelon }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -156,6 +159,16 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
             lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
             UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
+            var watermelonCard = AddLobbyCard(content, "Watermelon", cardCount++, UiFactory.Hex("F1E4C4"));
+            // 05 is reserved for Sudoku developed in a separate worktree.
+            UiFactory.Label(watermelonCard.transform, "06   /   碰碰合成", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(watermelonCard.transform, "合成大西瓜", 28, 74, 460, 90, 54, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var fruitPreview = UiFactory.Rect(watermelonCard.transform, "Watermelon preview", 482, 72, 90, 90).gameObject.AddComponent<RawImage>();
+            fruitPreview.texture = Resources.Load<Texture2D>("Watermelon/Fruit/11");
+            fruitPreview.raycastTarget = false;
+            UiFactory.Label(watermelonCard.transform, "小小一颗，合成满满的快乐。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyWatermelonRecordText = UiFactory.Label(watermelonCard.transform, "水果 / 表情 / 校徽  ·  三种主题", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(watermelonCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterWatermelon, true);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
             content.sizeDelta = new Vector2(720, footerTop + 74);
@@ -197,6 +210,7 @@ namespace XanaduYonder.Runtime
             CloseModal();
             jumpPage.Leave();
             sheepPage.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
             activePage = Page.Idiom;
             lobbyPage.SetActive(false);
@@ -204,6 +218,43 @@ namespace XanaduYonder.Runtime
             BuildIdiom();
             if (status != null) status.gameObject.SetActive(false);
             idiomPage.Enter();
+        }
+
+        private void EnterWatermelon()
+        {
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            sheepPage.Leave();
+            idiomPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            activePage = Page.Watermelon;
+            lobbyPage.SetActive(false);
+            gamePage.SetActive(false);
+            if (watermelonPage == null)
+            {
+                var root = UiFactory.Rect(frame, "Watermelon page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                watermelonPage = root.gameObject.AddComponent<WatermelonPage>();
+                watermelonPage.Initialize(root, ShowLobby, OpenSettings,
+                    () => activePage == Page.Watermelon && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog, OpenGameModal, CloseModal);
+                watermelonPage.Changed += RefreshWatermelonRecord;
+            }
+            if (status != null) status.gameObject.SetActive(true);
+            watermelonPage.Enter();
+        }
+
+        private RectTransform OpenGameModal(string title, float height, Action back)
+        {
+            var panel = CreateModal(title, height);
+            dismissModal = back;
+            return panel;
+        }
+
+        private void RefreshWatermelonRecord()
+        {
+            if (watermelonPage != null) lobbyWatermelonRecordText.text = "你的最高纪录   " + watermelonPage.BestScore + "  ·  三种主题";
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -264,6 +315,7 @@ namespace XanaduYonder.Runtime
             CloseModal();
             jumpPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Sheep;
@@ -278,6 +330,7 @@ namespace XanaduYonder.Runtime
             CloseModal();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Jump;
@@ -326,6 +379,7 @@ namespace XanaduYonder.Runtime
             jumpPage.Leave();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Game2048;
@@ -344,6 +398,7 @@ namespace XanaduYonder.Runtime
             jumpPage.Leave();
             sheepPage.Leave();
             idiomPage?.Leave();
+            watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
             if (status != null) status.gameObject.SetActive(true);
             activePage = Page.Lobby;
@@ -378,6 +433,7 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Watermelon) { watermelonPage?.CheckEndState(); return; }
             if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
@@ -486,13 +542,14 @@ namespace XanaduYonder.Runtime
             RefreshJumpBest();
             RefreshSheepRecord();
             RefreshIdiomRecord();
+            RefreshWatermelonRecord();
         }
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             if (status != null) status.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -501,6 +558,7 @@ namespace XanaduYonder.Runtime
             jumpPage?.Save();
             sheepPage?.Save();
             idiomPage?.Save();
+            watermelonPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             data.BestScore = Math.Max(data.BestScore, game.Score);
@@ -526,6 +584,7 @@ namespace XanaduYonder.Runtime
             jumpPage?.Suspend();
             sheepPage?.Suspend();
             idiomPage?.Suspend();
+            watermelonPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)

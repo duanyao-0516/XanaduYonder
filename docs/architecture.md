@@ -70,6 +70,16 @@ v0.3.0 接入 2048、跳一跳、旸了个旸和成语接龙。大厅、设置�
 
 `IdiomSaveStore` 与 `IdiomNotebookStore` 各自只访问对应主档、备份、临时文件。严格检查版本、字段类型与完整状态；对局上限 4 MiB，生词本最多 50,000 项/32 MiB。坏档或不兼容档案不会直接覆盖；明确确认后先归档原文件，再保存已读取的当前记录，无法读取时才创建新记录。其他小游戏的数据协议保持独立。
 
+## 06 合成大西瓜的独立边界
+
+`WatermelonGame` 拥有球身份、等级、队列/RNG、得分、冷却与越线计时。`WatermelonPhysicsWorld` 为此对局创建独立 `LocalPhysicsMode.Physics2D` 场景，每步先由原生求解器模拟、再完整回传运动、按球 ID 顺序原子合并、最后推进失败判定。碰撞回调只收集接触；被消耗球在延迟销毁前立即停止模拟和碰撞。创建刚体前同步 Transform，启用后恢复保存的位置/旋转/速度。
+
+`WatermelonPage` 负责单指瞄准、主题、图鉴、反馈和生命周期。主题只替换球体图片，不触碰物理尺寸与规则。暂停/弹窗/失焦不推进模拟；投放立即保存，运动中的快照每 0.8 秒保存，进入设置、离开、后台与结果弹窗前同步保存。所有视图、音频和局部物理场景由页面或其对象独占；销毁成对释放。
+
+`WatermelonSaveCodec` 只接受 schemaVersion 1、gameId `watermelon`、固定字段、精确类型和合法完整快照，限制 128 KiB、深度 8。保存球的位置、速度、旋转、角速度、接触历史和年龄，以及当前/下一颗、RNG、下一个 ID、冷却、危险计时、终局、主题、最高分和目标确认状态。`WatermelonSaveStore` 仅操作 `watermelon-v1.json/.bak/.tmp`，原子替换时只备份有效主档。恢复不默认填补缺失字段；新对局保留主题与最高分。编号 05 的数独由其他工作树接入。
+
+核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
+
 ## 验证层次
 
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
