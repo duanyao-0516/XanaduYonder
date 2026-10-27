@@ -63,6 +63,8 @@ namespace XanaduYonder.EditorTools
                 Check("Ready duck uses duck UV and release returns to idle", ReadyDuckSprite);
                 Check("new run rejects wrong orientation and insufficient headroom before saving preference", BlockedNewRun);
                 Check("near-square landscape separates jump duck and pause targets", NearSquareControls);
+                Check("inset rounded track supplies its actual visible width to Core", InsetTrackGeometry);
+                Check("portrait typography and score cards reuse the existing game tokens", SharedUiTokens);
                 Report.AppendLine("LIMITS: real Unity objects, page methods, UGUI and render UV; viewport readiness is controlled by reflection.");
                 Report.AppendLine("LIMITS: no Android rotation, physical pointer, native Back, audio output or device visual evidence.");
                 Report.AppendLine((failed == 0 ? "DINO_PAGE_CHECKS_PASS: " : "DINO_PAGE_CHECKS_FAIL: ") + cases + " cases, " + assertions + " assertions, " + failed + " failures");
@@ -151,7 +153,9 @@ namespace XanaduYonder.EditorTools
             Require(f.Page.CurrentPhase == "Paused" && f.HasText("等待恢复游戏窗口") && original.Tick == tick, "Continue cannot bypass unsafe viewport");
             // Return to a legible, sufficiently tall window. This validates the real recheck and Continue
             // methods separately from platform-specific Screen/rotation delivery.
-            f.FakeViewport((float)(original.Rules.ViewportWidth * 1.2), Math.Max(900, physicalHeight), landscape);
+            float restoredWidth = (float)(original.Rules.ViewportWidth * 1.2 + 112);
+            float restoredHeight = landscape ? Math.Max(720, physicalHeight) : Math.Max(physicalHeight, restoredWidth + 200);
+            f.FakeViewport(restoredWidth, restoredHeight, landscape);
             Invoke(f.Page, "ShowWindowChanged"); Invoke(f.Page, "Continue");
             Require(!Get<bool>(f.Page, "windowBlocked") && f.Page.CurrentPhase == "Countdown" && ReferenceEquals(original, f.Game), "Restored window can resume the existing run");
         }
@@ -243,13 +247,105 @@ namespace XanaduYonder.EditorTools
             f.FakeViewport(730, 720, true); f.CacheViewport();
             Invoke(f.Page, "StartNewGame"); f.PressJump();
             var content = Get<RectTransform>(f.Page, "content");
-            var jump = (RectTransform)content.Find("跳跃\n轻按短跳 · 按住长跳");
-            var duck = (RectTransform)content.Find("下蹲\n按住");
+            var jump = (RectTransform)content.Find("Dino jump input");
+            var duck = (RectTransform)content.Find("Dino duck input");
             var pause = (RectTransform)content.Find("暂停");
             Require(jump != null && duck != null && pause != null && pause.gameObject.activeSelf, "Actual running touch targets exist");
-            Require(jump.anchoredPosition.x >= pause.anchoredPosition.x + pause.rect.width + 23.9f, "Jump retains a visible gap after centered pause");
-            Require(pause.anchoredPosition.x >= duck.anchoredPosition.x + duck.rect.width, "Duck cannot overlap centered pause");
-            Require(jump.rect.width >= 96 && duck.rect.width >= 96 && pause.rect.width >= 96, "Narrow landscape retains accessible targets");
+            Rect jumpArea = RelativeRect(content, jump), duckArea = RelativeRect(content, duck), pauseArea = RelativeRect(content, pause);
+            Require(!jumpArea.Overlaps(duckArea) && !jumpArea.Overlaps(pauseArea) && !duckArea.Overlaps(pauseArea),
+                "Actual world rectangles do not overlap, whether arranged in one row or separate rows");
+            Require(jump.rect.width >= 96 && duck.rect.width >= 96 && pause.rect.width >= 96,
+                "Narrow landscape retains useful target widths");
+            Require(content.rect.Contains(jumpArea.min) && content.rect.Contains(jumpArea.max) &&
+                content.rect.Contains(duckArea.min) && content.rect.Contains(duckArea.max) &&
+                content.rect.Contains(pauseArea.min) && content.rect.Contains(pauseArea.max), "All three controls fit the page");
+        }
+
+        private static void InsetTrackGeometry(Fixture f)
+        {
+            foreach (var size in new[] { new Vector2(720, 1320), new Vector2(720, 1582),
+                new Vector2(1515, 720), new Vector2(730, 720) })
+            {
+                f.ReadyAt(size.x, size.y);
+                var content = Get<RectTransform>(f.Page, "content");
+                var track = Get<DinoTrackView>(f.Page, "track").GetComponent<RectTransform>();
+                Rect area = RelativeRect(content, track);
+                Require(Math.Abs(area.xMin - 56) < .01 && Math.Abs(size.x - area.xMax - 56) < .01,
+                    "Track has equal 56-unit inset at " + size);
+                Require(track.rect.height > 0 && track.rect.height <= 320.1f,
+                    "Track uses a compact bounded height at " + size);
+                Require(Math.Abs(f.Game.Rules.ViewportWidth - track.rect.width / 1.2) < .01,
+                    "Rules derive from the real inset track width at " + size);
+                Require(Math.Abs(Get<double>(Get<DinoTrackView>(f.Page, "track"), "worldWidth") - f.Game.Rules.ViewportWidth) < .01,
+                    "Renderer and Core agree on the same world width");
+                var mask = track.GetComponent<Mask>() ?? track.GetComponentInParent<Mask>();
+                Require(mask != null && mask.isActiveAndEnabled && mask.graphic != null,
+                    "A stencil mask clips the actual track children");
+                var image = mask.graphic as Image;
+                Require(image != null && image.sprite != null && image.type == Image.Type.Sliced,
+                    "Track mask uses the existing rounded sliced sprite");
+                Require(track.rect.height / (track.rect.width / f.Game.Rules.ViewportWidth) >= 212,
+                    "Compact track retains the full maximum-jump headroom");
+            }
+        }
+
+        private static void SharedUiTokens(Fixture f)
+        {
+            f.ReadyAt(720, 1320);
+            var content = Get<RectTransform>(f.Page, "content");
+            var title = FindText(content, "Dino");
+            Require(title != null && title.fontSize == 63 && title.fontStyle == FontStyle.Bold && title.color == UiFactory.Ink,
+                "Portrait title uses Jump's 63-point bold Ink style");
+            Require(Math.Abs(title.rectTransform.anchoredPosition.x - 56) < .01 &&
+                Math.Abs(title.rectTransform.anchoredPosition.y + 112) < .01, "Portrait title follows Jump heading coordinates");
+            var brand = FindText(content, "XANADU / YONDER");
+            Require(brand != null && brand.fontSize == 19 && brand.color == UiFactory.Muted,
+                "Navigation uses the shared 19-point muted brand");
+            foreach (var kind in new[] { UiIconKind.Home, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings })
+            {
+                UiIconGraphic found = null;
+                foreach (var icon in content.GetComponentsInChildren<UiIconGraphic>()) if (icon.Kind == kind) found = icon;
+                Require(found != null, "Existing navigation icon is present: " + kind);
+                var button = found.GetComponentInParent<Button>().GetComponent<RectTransform>();
+                Require(button.rect.size == new Vector2(58, 58), "Navigation retains the shared 58-unit button size");
+            }
+            foreach (var field in new[] { "scoreLabel", "bestLabel" })
+            {
+                var value = Get<Text>(f.Page, field);
+                var card = value.transform.parent.GetComponent<Image>();
+                Require(value.fontSize == 37 && value.fontStyle == FontStyle.Bold && value.color == UiFactory.Ink &&
+                    value.resizeTextForBestFit && value.resizeTextMinSize == 14 && value.resizeTextMaxSize == 37,
+                    "Score value reuses shared typography and overflow adaptation");
+                Require(card != null && card.color == UiFactory.Hex("E7EDE4") && card.rectTransform.rect.size == new Vector2(296, 96),
+                    "Portrait score card reuses 296x96 dimensions and shared fill");
+                Text label = null;
+                foreach (var child in card.GetComponentsInChildren<Text>()) if (child != value) label = child;
+                Require(label != null && label.fontSize == 19 && label.color == UiFactory.Muted,
+                    "Score title remains a separate muted label");
+            }
+            Require(Get<Text>(f.Page, "scoreLabel").text == "0", "Score presentation has no invented leading-zero format");
+            var warning = Get<Text>(f.Page, "warningLabel");
+            Require(warning.fontSize == 18 && warning.color == UiFactory.Muted, "Saving status reuses the shared muted status style");
+            foreach (var text in content.GetComponentsInChildren<Text>())
+            {
+                Require(text.font == UiFactory.Font, "Every visible UI label uses the shared bundled font");
+                Require(!text.text.Contains("小恐龙"), "Visible product name is Dino");
+            }
+        }
+
+        private static Rect RelativeRect(RectTransform ancestor, RectTransform child)
+        {
+            Canvas.ForceUpdateCanvases();
+            var corners = new Vector3[4]; child.GetWorldCorners(corners);
+            var min = ancestor.InverseTransformPoint(corners[0]);
+            var max = ancestor.InverseTransformPoint(corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private static Text FindText(Transform parent, string value)
+        {
+            foreach (var text in parent.GetComponentsInChildren<Text>()) if (text.text == value) return text;
+            return null;
         }
 
         private static void Check(string name, Action<Fixture> body)
@@ -306,6 +402,13 @@ namespace XanaduYonder.EditorTools
                 Set(Page, "landscape", Get<bool>(Viewport, "Landscape"));
                 Invoke(Page, "StartNewGame"); Set(Page, "unlockAt", -1f);
                 Require(Page.CurrentPhase == "Ready" && Game != null, "Prepared real page");
+            }
+            internal void ReadyAt(float width, float height)
+            {
+                Page.Enter(); Set(Page, "landscape", width > height);
+                FakeViewport(width, height, width > height); CacheViewport();
+                Invoke(Page, "StartNewGame"); Set(Page, "unlockAt", -1f);
+                Require(Page.CurrentPhase == "Ready" && Game != null, "Prepared real page at " + width + "x" + height);
             }
             internal void PressJump() { Set(Page, "unlockAt", -1f); Invoke(Page, "JumpDown", 12); Require(Game.IsStarted && Page.CurrentPhase == "Running", "Real jump callback starts run"); }
             internal void FakeViewport(float width, float height, bool landscape) { Set(Viewport, "Width", width); Set(Viewport, "Height", height); Set(Viewport, "Landscape", landscape); }

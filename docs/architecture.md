@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码在 v0.4.0 基线上接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和小恐龙，共七款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；小恐龙只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，最新正式发行版仍为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
+当前源码在 v0.4.0 基线上接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和Dino，共七款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，最新正式发行版仍为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -10,9 +10,9 @@
 | 成语接龙 | `Core/Idiom` / `IdiomPage`、虚拟列表 | `idiom-learning-v1.json` | 四组对局、草稿、最佳数量、生词本、个人学习与跨局近期回复 |
 | 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 | 合成大西瓜 | `Core/Watermelon` / `WatermelonPage`、`WatermelonPhysicsWorld` | `watermelon-v1.json` | 对局、物体运动状态、最高分、主题 |
-| 小恐龙 | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
+| Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
 
-[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[小恐龙模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文。新增游戏不修改以下 2048 和公共设置的旧协议。
+[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文。新增游戏不修改以下 2048 和公共设置的旧协议。
 
 ## 职责
 
@@ -22,7 +22,7 @@
 - `SwipeGesture` 保存一次触摸的所有权。只有从棋盘开始、超过阈值、由原手指正常结束的操作可以提交。UGUI 会把取消触摸派发为 pointerUp，适配层因此还会核对 `TouchPhase.Canceled`。
 - `GameFeedback` 合成短音效，并通过 Android 系统触感接口反馈合并；开关由公共存档保存，不申请网络服务。
 - `JsonSaveCodec` 使用 Unity 官方 Newtonsoft JSON 包的实际解析器，逐项校验 token 类型；`LocalSaveStore` 负责临时文件、原子替换和备份恢复。
-- 小恐龙由独立安全区根节点承载横／竖屏布局，公共竖屏框架不承载其横屏场景。`AppController` 负责方向请求、路由和公共设置数据；`DinoPage` 自己展示设置、暂停和结算，使用注入的委托读写共用开关，不向公共 UI 基类添加小恐龙业务分支。
+- Dino由独立安全区根节点承载横／竖屏布局，公共竖屏框架不承载其横屏场景。`AppController` 负责方向请求、路由和公共设置数据；`DinoPage` 自己展示设置、暂停和结算，使用注入的委托读写共用开关，不向公共 UI 基类添加Dino业务分支。
 
 ## 2048 规则
 
@@ -86,13 +86,13 @@
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
 
-## 小恐龙的独立边界
+## Dino的独立边界
 
 `DinoGame` 是跑酷状态的唯一来源，拥有角色运动、障碍、确定性随机状态、距离分和碰撞终局。`DinoRules`、`DinoTraversal` 与 `DinoCollision` 不引用 Unity，横屏和竖屏使用同一规则：按实际逻辑视野推导开局速度上限，以完整可见到最晚安全动作的时间作为反应窗口，扣除 100 ms 输入／显示预算后目标至少 1.2 秒。生成时检查真实宽度、起跳轨迹和碰撞，拒绝无解的候选组合，并为前一动作完成保留至少 0.25 秒恢复间隔。名义速度从 180 增至 360 单位／秒，实际速度受本局视野上限约束，规则不按方向附加独立加速。算法与初始参数见[玩法说明](dino-game.md#共享规则与视野约束)。
 
 `DinoPage` 负责方向选择、页面状态和固定步时钟。`DinoViewport` 将实际安全区映射到独立 UI 根节点，保持横竖屏角色尺寸基准并把横屏额外宽度用于前方视野。`DinoActionOwners` 仲裁 Jump／Duck 的独立 owner，`DinoTouchControl` 处理原手指松开、滑出与取消。生命周期暂停冻结模型动作意图后清理真实输入；继续前倒数三秒，暂停及倒数不推进分数或障碍。`DinoTrackView` 只显示模型并管理像素、背景和昼夜，`DinoAudio` 独占短音效音源并读取共用开关。
 
-每次从大厅进入先选择方向，成功进入准备页才提交方向偏好；重开沿用本局方向，返回大厅前恢复竖屏。小恐龙的同进程后台局面仅保存在内存，离开或进程重启后重新开局。`DinoSaveCodec` 严格校验 `dino-v1.json` 的 schema 1、`gameId: "dino"`、两项非负 64 位十进制字符串纪录和限定方向，限制 4 KiB／深度 4；缺字段、null、错误类型、溢出、重复键和未知版本均拒绝。`DinoSaveStore` 仅访问该文件及 `.bak/.tmp`，flush 临时文件后原子替换，只以合法主档更新备份。新纪录按一秒节流写盘，暂停、碰撞、离开和退出立即补写；写失败保留可玩状态并显示未保存提示。
+每次从大厅进入先选择方向，成功进入准备页才提交方向偏好；重开沿用本局方向，返回大厅前恢复竖屏。Dino的同进程后台局面仅保存在内存，离开或进程重启后重新开局。`DinoSaveCodec` 严格校验 `dino-v1.json` 的 schema 1、`gameId: "dino"`、两项非负 64 位十进制字符串纪录和限定方向，限制 4 KiB／深度 4；缺字段、null、错误类型、溢出、重复键和未知版本均拒绝。`DinoSaveStore` 仅访问该文件及 `.bak/.tmp`，flush 临时文件后原子替换，只以合法主档更新备份。新纪录按一秒节流写盘，暂停、碰撞、离开和退出立即补写；写失败保留可玩状态并显示未保存提示。
 
 图集、音效与完整上游许可位于 `Assets/Resources/Dino/`，来源见[素材记录](dino-assets.md)。独立构建使用 `scripts/build-dino.sh` 和 `com.duanyao.xanaduyonder.dinotest`，不覆盖正式应用或其他小游戏测试包。
 
@@ -102,7 +102,7 @@
 
 当前旸了个旸采用 schema 2；移出/撤回/洗牌默认上限为 2/3/1，设置支持 0..99，已有对局保持开局上限及剩余次数，复活每局一次。无尽按消除张数累计计分，换波不补道具或复活。几何仍支持旧布局 0..2，新挑战与无尽只生成 3..14 并排除上一布局。布局、会话和难度分别通过 `scripts/test-sheep-layouts.sh`、`scripts/test-sheep-session.sh`、`scripts/test-sheep-difficulty.sh` 验证；难度评估不读取生成解法，模拟完成率不代表真人胜率。
 
-小恐龙的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test-dino-session.sh` 检查输入 owner 和时钟，`scripts/test-dino-persistence.sh` 检查真实 JSON 解析与临时目录读写。这些入口分别验证规则、输入辅助模型和文件协议；实际 UGUI 事件分发、方向切换、音频、布局及 Android 生命周期仍需 Unity／设备集成检查，测试脚本或 APK 的存在不代表对应检查已经通过。
+Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test-dino-session.sh` 检查输入 owner 和时钟，`scripts/test-dino-persistence.sh` 检查真实 JSON 解析与临时目录读写。这些入口分别验证规则、输入辅助模型和文件协议；实际 UGUI 事件分发、方向切换、音频、布局及 Android 生命周期仍需 Unity／设备集成检查，测试脚本或 APK 的存在不代表对应检查已经通过。
 
 ## 数独的独立边界
 

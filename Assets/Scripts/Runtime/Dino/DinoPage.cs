@@ -33,6 +33,7 @@ namespace XanaduYonder.Runtime.Dino
         private long shownScore = -1, shownBest = -1, milestone, startingBest;
         private bool windowBlocked, pendingLayoutChange, waitingForNewGame;
         private Text scoreLabel, bestLabel, stateLabel, warningLabel;
+        private Button directionButton, pauseButton;
         public event Action Changed;
         public string SaveError { get; private set; }
         public long PortraitBest => profile == null ? 0 : profile.BestPortraitScore;
@@ -147,7 +148,7 @@ namespace XanaduYonder.Runtime.Dino
                 if (Time.unscaledDeltaTime > .1f) Suspend();
                 else if (clock.AdvanceCountdown(Time.unscaledDeltaTime))
                 {
-                    phase = Phase.Running; stateLabel.text = "";
+                    phase = Phase.Running; stateLabel.fontSize = 25; stateLabel.fontStyle = FontStyle.Normal; stateLabel.text = "";
                 }
                 else stateLabel.text = clock.CountdownNumber.ToString();
             }
@@ -155,7 +156,7 @@ namespace XanaduYonder.Runtime.Dino
             if (track != null)
             {
                 track.Render(game, phase == Phase.Running || phase == Phase.Ready ? Time.unscaledDeltaTime : 0);
-                if (stateLabel != null) stateLabel.color = track.ForegroundColor;
+                if (stateLabel != null) stateLabel.color = track.BackgroundColor.grayscale < .4f ? UiFactory.Paper : UiFactory.Ink;
             }
             if (dirty && Time.unscaledTime-lastSave >= 1) Save();
         }
@@ -181,24 +182,74 @@ namespace XanaduYonder.Runtime.Dino
         private void BuildSelection()
         {
             ClearContent();
-            float w=viewport.Width, h=viewport.Height;
-            Button("返回",24,20,110,96,()=>BeginTurn(false,Destination.Lobby));
-            Label("小恐龙",150,20,w-300,64,36,TextAnchor.MiddleCenter);
-            Label("选择游玩方向",40,142,w-80,72,46);
-            Label("经典像素跑酷 · 选好方向再出发",40,222,w-80,48,25);
-            float cardTop=Mathf.Max(300,h*.27f), cardHeight=Mathf.Min(190,(h-560)/2);
-            Button((selectedLandscape?"":"✓  ")+"竖屏\n竖握即玩，跑道铺满屏宽\n最高纪录  "+PortraitBest,40,cardTop,w-80,cardHeight,
-                ()=>{selectedLandscape=false;BuildSelection();},!selectedLandscape);
-            Button((selectedLandscape?"✓  ":"")+"横屏\n视野更宽，适合双手操作\n最高纪录  "+LandscapeBest,40,cardTop+cardHeight+24,w-80,cardHeight,
-                ()=>{selectedLandscape=true;BuildSelection();},selectedLandscape);
-            Button(selectedLandscape?"横屏开始":"竖屏开始",40,h-238,w-80,96,()=>BeginTurn(selectedLandscape,Destination.Game),true);
-            Label("记住上次选择 · 两种方向分别记录最高分",24,h-115,w-48,40,21,TextAnchor.MiddleCenter);
-            warningLabel=Label(SaveError??"本局退出后重新开始",24,h-68,w-48,40,20,TextAnchor.MiddleCenter);
+            float w = viewport.Width, h = viewport.Height;
+            float extra = Mathf.Max(0, h - UiFactory.DesignHeight);
+            BuildNavigation(false);
+            BuildHeading(112 + extra * .08f, false);
+            UiFactory.Label(content, "选择游玩方向，再向前跑远一点。", 56, 208 + extra * .08f,
+                w - 112, 42, 24, UiFactory.Muted);
+            float top = 300 + extra * .2f;
+            AddOrientationCard(false, top, "竖屏", "单手轻触，随时出发", PortraitBest);
+            AddOrientationCard(true, top + 168, "横屏", "双手操作，看得更远", LandscapeBest);
+            Button(selectedLandscape ? "横屏开始" : "竖屏开始", 56, top + 364, w - 112, 76,
+                () => BeginTurn(selectedLandscape, Destination.Game), true);
+            UiFactory.Label(content, "横竖屏分别记录最高分 · 记住上次选择", 56, top + 466,
+                w - 112, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            warningLabel = UiFactory.Label(content, SaveError ?? "本局退出后重新开始，最高纪录保留。",
+                56, h - 42, w - 112, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+        }
+
+        private void AddOrientationCard(bool isLandscape, float y, string title, string description, long best)
+        {
+            float width = viewport.Width - 112;
+            bool selected = selectedLandscape == isLandscape;
+            var button = UiFactory.Button(content, "", 56, y, width, 148,
+                () => { selectedLandscape = isLandscape; BuildSelection(); });
+            button.name = isLandscape ? "Landscape choice" : "Portrait choice";
+            button.targetGraphic.color = selected ? UiFactory.Accent : UiFactory.Hex("DDE5DA");
+            UiFactory.Panel(button.transform, "Choice surface", 2, 2, width - 4, 144, UiFactory.Paper);
+            UiFactory.Label(button.transform, title, 28, 16, width - 160, 48, 30,
+                UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(button.transform, description, 28, 65, width - 56, 34, 22, UiFactory.Muted);
+            UiFactory.Label(button.transform, "最高纪录  " + best, 28, 105, width - 56, 30, 21, UiFactory.Muted);
+            UiFactory.Label(button.transform, selected ? "已选择" : "选择", width - 128, 20, 100, 42,
+                21, selected ? UiFactory.Accent : UiFactory.Muted, TextAnchor.MiddleRight);
+        }
+
+        private void BuildNavigation(bool gameControls)
+        {
+            float w = viewport.Width;
+            var nav = UiFactory.Rect(content, "Dino navigation", 0, 0, w, 92);
+            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, Back);
+            if (gameControls) UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.Label(nav, "XANADU / YONDER", w * .5f - 150, 34, 300, 58, 19,
+                UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.IconButton(nav, UiIconKind.Book, w - 184, 34, 58, 58, ShowHelp);
+            UiFactory.IconButton(nav, UiIconKind.Settings, w - 114, 34, 58, 58, ShowSettings);
+        }
+
+        private void BuildHeading(float y, bool wide)
+        {
+            UiFactory.Label(content, "Dino", 56, y, wide ? 170 : 400, wide ? 82 : 88,
+                wide ? 48 : 63, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            if (!wide) UiFactory.Label(content, "07 / 像素跑酷", viewport.Width - 280, y + 30,
+                224, 42, 22, UiFactory.Muted, TextAnchor.MiddleRight);
+        }
+
+        private Text ScorePanel(string title, float x, float y, float width)
+        {
+            var panel = UiFactory.Panel(content, title, x, y, width, 96, UiFactory.Hex("E7EDE4"));
+            UiFactory.Label(panel.transform, title, 20, 8, width - 40, 30, 19, UiFactory.Muted);
+            var value = UiFactory.Label(panel.transform, "0", 20, 36, width - 40, 54, 37,
+                UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            value.resizeTextForBestFit = true;
+            value.resizeTextMinSize = 14; value.resizeTextMaxSize = 37;
+            return value;
         }
 
         private void StartNewGame()
         {
-            double worldWidth = Math.Min(4096, viewport.Width / 1.2);
+            double worldWidth = Math.Min(4096, new DinoPageLayout(viewport.Width, viewport.Height).WorldWidth);
             if (!WindowFits(worldWidth))
             {
                 waitingForNewGame = true; windowBlocked = true; phase = Phase.Unavailable;
@@ -223,46 +274,55 @@ namespace XanaduYonder.Runtime.Dino
         {
             var presentation = track == null ? default(DinoTrackView.PresentationState) : track.Capture(game);
             ClearContent();
-            float w=viewport.Width,h=viewport.Height;
-            bool wide=viewport.Landscape;
-            Button("首页",24,18,108,96,Back);
-            Label("小恐龙",wide?152:150,18,wide?180:w-300,66,wide?30:36,wide?TextAnchor.MiddleLeft:TextAnchor.MiddleCenter);
-            Button("设置",w-132,18,108,96,ShowSettings);
-            if (wide)
+            float w = viewport.Width, h = viewport.Height;
+            var layout = new DinoPageLayout(w, h);
+            BuildNavigation(true);
+            BuildHeading(layout.HeadingY, layout.Landscape);
+            float cardWidth = layout.Landscape ? Mathf.Min(232, (w - 302) * .5f) : (w - 128) * .5f;
+            float scoreX = layout.Landscape ? w - 72 - cardWidth * 2 : 56;
+            scoreLabel = ScorePanel("本局分数", scoreX, layout.ScoresY, cardWidth);
+            bestLabel = ScorePanel(landscape ? "横屏最高纪录" : "竖屏最高纪录",
+                scoreX + cardWidth + 16, layout.ScoresY, cardWidth);
+
+            Rect area = layout.Track;
+            var card = UiFactory.Panel(content, "Dino track card", area.x, area.y, area.width, area.height, UiFactory.Hex("E7EDE4"));
+            // Stencil masking clips the sky and every sprite to the same rounded panel.
+            card.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            track = card.gameObject.AddComponent<DinoTrackView>();
+            track.Initialize(card.rectTransform); track.SetLayout(area.width, area.height, game.Rules.ViewportWidth);
+            track.Restore(game, presentation); track.Render(game, 0);
+            var touch = UiFactory.Panel(card.transform, "Track jump input", 0, 0, area.width, area.height, Color.clear, false);
+            touch.raycastTarget = true;
+            AddTouch(touch.gameObject, JumpDown, JumpUp);
+            stateLabel = UiFactory.Label(card.transform, phase == Phase.Ready ? "按下跳跃，开始奔跑" : "",
+                20, 22, area.width - 40, 76, 25, UiFactory.Ink, TextAnchor.MiddleCenter);
+            AddActionButton("Dino duck input", "下蹲", layout.Duck, DuckDown, DuckUp);
+            AddActionButton("Dino jump input", "跳跃", layout.Jump, JumpDown, JumpUp);
+            UiFactory.Label(content, "轻按短跳 · 按住长跳 · 按住下蹲", 56, layout.HintY,
+                w - 112, 38, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            Rect pause = layout.Pause, direction = layout.Direction;
+            pauseButton = Button("暂停", pause.x, pause.y, pause.width, pause.height, ShowPause);
+            directionButton = Button("更换方向", direction.x, direction.y, direction.width, direction.height,
+                () => { Suspend(); ConfirmChange(); });
+            if (layout.Landscape)
             {
-                scoreLabel=Label("",w*.36f,22,w*.21f,60,30);
-                bestLabel=Label("",w*.59f,22,w*.26f,60,23);
+                directionButton.gameObject.SetActive(phase == Phase.Ready);
+                pauseButton.gameObject.SetActive(phase != Phase.Ready);
             }
-            else
-            {
-                scoreLabel=Label("",24,122,w*.45f,94,43);
-                bestLabel=Label("",w*.52f,122,w*.45f-24,94,29,TextAnchor.MiddleRight);
-            }
-            float top=wide?130:250;
-            float trackHeight=Mathf.Max(240,h-top-(wide?220:320));
-            var trackRoot=UiFactory.Rect(content,"Dino full width track",0,top,w,trackHeight);
-            track=trackRoot.gameObject.AddComponent<DinoTrackView>();
-            track.Initialize(trackRoot); track.SetLayout(w,trackHeight,game.Rules.ViewportWidth);
-            track.Restore(game, presentation); track.Render(game,0);
-            var touch=UiFactory.Panel(trackRoot,"Track jump input",0,0,w,trackHeight,Color.clear,false);
-            touch.raycastTarget=true;
-            AddTouch(touch.gameObject,JumpDown,JumpUp);
-            stateLabel=UiFactory.Label(trackRoot,"",20,trackHeight*.25f,w-40,120,42,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
-            if (phase==Phase.Ready) stateLabel.text="按下跳跃开始";
-            float controlY=wide?h-194:h-258;
-            float duckW=wide?196:Mathf.Min(218,w*.31f),jumpW=wide?Mathf.Min(260,w*.5f-142):w-duckW-72;
-            AddActionButton("下蹲\n按住",24,controlY,duckW,wide?134:154,false,DuckDown,DuckUp);
-            AddActionButton("跳跃\n轻按短跳 · 按住长跳",w-24-jumpW,controlY,jumpW,wide?134:154,true,JumpDown,JumpUp);
-            if (wide) Button("暂停",w*.5f-94,controlY+14,188,110,ShowPause).gameObject.SetActive(phase!=Phase.Ready);
-            else
-            {
-                Button("玩法说明",24,h-100,180,96,ShowHelp);
-                Button("暂停",w-164,h-100,140,96,ShowPause);
-            }
-            warningLabel=Label(SaveError??"最高纪录自动保存",wide?230:24,wide?h-72:controlY-56,wide?w-520:w-48,42,18,TextAnchor.MiddleCenter);
-            if (phase==Phase.Ready) Button("更换方向",wide?w*.5f-94:w*.5f-92,wide?controlY+14:h-100,184,wide?110:96,
-                ()=>BeginTurn(false,Destination.Selection));
-            shownScore=shownBest=-1; RefreshScore();
+            warningLabel = UiFactory.Label(content, SaveError ?? "最高纪录自动保存", 56, h - 42,
+                w - 112, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            shownScore = shownBest = -1; RefreshScore();
+        }
+
+        private void ConfirmRestart()
+        {
+            if (game == null) return;
+            if (!game.IsStarted || game.IsGameOver) { StartNewGame(); return; }
+            Suspend();
+            var panel = OpenPanel("重新开始这一局？", 420);
+            PanelLabel(panel, "当前进度将清空，最高纪录和设置会保留。", 105, 100, 24);
+            PanelButton(panel, "重新开始", 230, StartNewGame, true);
+            PanelButton(panel, "继续当前游戏", 318, Continue); overlayBack = ShowPauseMenu;
         }
 
         private void JumpDown(int id)
@@ -287,12 +347,8 @@ namespace XanaduYonder.Runtime.Dino
             (phase==Phase.Ready || phase==Phase.Running);
         private void HideReadyControls()
         {
-            // The ready-only direction control must not remain an unconfirmed exit during a run.
-            foreach(Transform child in content)
-            {
-                if(child.name=="更换方向") child.gameObject.SetActive(false);
-                if(child.name=="暂停") child.gameObject.SetActive(true);
-            }
+            if (viewport.Landscape && directionButton != null) directionButton.gameObject.SetActive(false);
+            if (pauseButton != null) pauseButton.gameObject.SetActive(true);
         }
         private void HandleKeyboard()
         {
@@ -335,14 +391,14 @@ namespace XanaduYonder.Runtime.Dino
             CloseOverlay(); ClearPhysicalInputs(); unlockAt=Time.unscaledTime+.15f;
             if(game==null) return;
             if(game.IsGameOver) { phase=Phase.Finished; ShowResult(); return; }
-            if(!game.IsStarted) {phase=Phase.Ready;stateLabel.text="按下跳跃开始";return;}
-            phase=Phase.Countdown;clock.BeginCountdown();stateLabel.text="3";
+            if(!game.IsStarted) {phase=Phase.Ready;stateLabel.text="按下跳跃，开始奔跑";return;}
+            phase=Phase.Countdown;clock.BeginCountdown();stateLabel.fontSize=37;stateLabel.fontStyle=FontStyle.Bold;stateLabel.text="3";
         }
         private void ShowSettings()
         {
             Suspend();
-            var panel=OpenPanel("共用设置",480);
-            PanelLabel(panel,"声音和触感在所有游戏中共用",100,62,22);
+            var panel=OpenPanel("简单一点，刚刚好",488);
+            PanelLabel(panel,"设置在所有游戏中共用",104,42,23);
             PanelButton(panel,"声音 · "+(soundEnabled()?"开启":"关闭"),185,()=>{toggleSound();sound.Stop();ShowSettings();});
             PanelButton(panel,"触感 · "+(hapticsEnabled()?"开启":"关闭"),273,()=>{toggleHaptics();ShowSettings();});
             PanelButton(panel,"完成",370,ReturnFromInfo,true);
@@ -356,7 +412,7 @@ namespace XanaduYonder.Runtime.Dino
         }
         private void ShowHelp()
         {
-            Suspend();var panel=OpenPanel("小恐龙怎么玩",560);
+            Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",560);
             PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，蹲过中空翼龙。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,270,24);
             PanelButton(panel,"素材与许可",398,ShowLicense);
             PanelButton(panel,"知道了",480,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
@@ -411,11 +467,10 @@ namespace XanaduYonder.Runtime.Dino
         }
         private bool WindowFits(double worldWidth)
         {
-            double scale = viewport.Width / worldWidth;
-            double top = viewport.Landscape ? 130 : 250;
-            double trackHeight = Math.Max(240, viewport.Height - top - (viewport.Landscape ? 220 : 320));
-            return viewport.Landscape == landscape && scale >= .96 &&
-                trackHeight / scale >= 212; // 30 ground + 113 maximum jump + 64 sprite + margin.
+            var layout = new DinoPageLayout(viewport.Width, viewport.Height);
+            double scale = layout.Track.width / worldWidth;
+            return worldWidth >= 320 && viewport.Landscape == landscape && scale >= .96 &&
+                layout.Bottom <= viewport.Height - 8 && layout.Track.height / scale >= 212; // 30 ground + 113 maximum jump + 64 sprite + margin.
         }
         private void ShowWindowChanged()
         {
@@ -458,9 +513,9 @@ namespace XanaduYonder.Runtime.Dino
         private void RefreshScore()
         {
             if(game==null || scoreLabel==null)return;
-            if(shownScore!=game.Score){shownScore=game.Score;scoreLabel.text="本局  "+game.Score.ToString("D5");}
+            if(shownScore!=game.Score){shownScore=game.Score;scoreLabel.text=game.Score.ToString();}
             var best=profile.GetBest(landscape);
-            if(shownBest!=best){shownBest=best;bestLabel.text=(landscape?"横屏最高  ":"竖屏最高  ")+best.ToString("D5");}
+            if(shownBest!=best){shownBest=best;bestLabel.text=best.ToString();}
         }
         private void FinishHome(){Save();goHome();}
         private void ClearContent()
@@ -469,17 +524,17 @@ namespace XanaduYonder.Runtime.Dino
             if(content!=null){content.gameObject.SetActive(false);Destroy(content.gameObject);}
             content=UiFactory.Rect(root,"Dino content",0,0,viewport.Width,viewport.Height);
             UiFactory.Panel(content,"Page background",0,0,viewport.Width,viewport.Height,UiFactory.Paper,false);
-            track=null;scoreLabel=bestLabel=stateLabel=warningLabel=null;
+            track=null;scoreLabel=bestLabel=stateLabel=warningLabel=null;directionButton=pauseButton=null;
         }
         private Text Label(string text,float x,float y,float w,float h,int size,TextAnchor anchor=TextAnchor.MiddleLeft)
         {return UiFactory.Label(content,text,x,y,w,h,size,UiFactory.Ink,anchor);}
         private Button Button(string text,float x,float y,float w,float h,Action action,bool primary=false)
         {return UiFactory.Button(content,text,x,y,w,h,action,primary);}
-        private void AddActionButton(string title,float x,float y,float w,float h,bool primary,Action<int> down,Action<int> up)
+        private void AddActionButton(string name, string title, Rect area, Action<int> down, Action<int> up)
         {
-            var panel=UiFactory.Panel(content,title,x,y,w,h,primary?UiFactory.Accent:UiFactory.Hex("E7EDE4"));panel.raycastTarget=true;
-            UiFactory.Label(panel.transform,title,10,0,w-20,h,27,primary?Color.white:UiFactory.Ink,TextAnchor.MiddleCenter);
-            AddTouch(panel.gameObject,down,up);
+            var button = UiFactory.Button(content, title, area.x, area.y, area.width, area.height, () => { });
+            button.name = name;
+            AddTouch(button.gameObject, down, up);
         }
         private void AddTouch(GameObject target,Action<int> down,Action<int> up)
         {var input=target.AddComponent<DinoTouchControl>();input.Initialize(down,up);touches.Add(input);}
@@ -487,17 +542,17 @@ namespace XanaduYonder.Runtime.Dino
         {
             CloseOverlay();ClearPhysicalInputs();
             overlay=UiFactory.Rect(root,"Dino modal overlay",0,0,viewport.Width,viewport.Height);
-            var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.06f,.14f,.1f,.58f);dim.raycastTarget=true;
-            float w=Mathf.Min(620,viewport.Width-40),h=Mathf.Min(requestedHeight,viewport.Height-32);
+            var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.06f,.14f,.1f,.48f);dim.raycastTarget=true;
+            float w=Mathf.Min(596,viewport.Width-64),h=Mathf.Min(requestedHeight,viewport.Height-32);
             var panel=UiFactory.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h,UiFactory.Paper);
             panel.raycastTarget=true;
-            UiFactory.Label(panel.transform,title,24,24,w-48,66,32,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
+            UiFactory.Label(panel.transform,title,32,36,w-64,62,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;
         }
         private void PanelLabel(RectTransform panel,string message,float y,float h,int size)
-        {UiFactory.Label(panel,message,24,y,panel.rect.width-48,h,size,UiFactory.Ink,TextAnchor.MiddleCenter).supportRichText=false;}
+        {UiFactory.Label(panel,message,32,y,panel.rect.width-64,h,size,UiFactory.Muted,TextAnchor.MiddleCenter).supportRichText=false;}
         private void PanelButton(RectTransform panel,string title,float y,Action action,bool primary=false)
-        {UiFactory.Button(panel,title,24,y,panel.rect.width-48,76,action,primary);}
+        {UiFactory.Button(panel,title,32,y,panel.rect.width-64,74,action,primary);}
         private void CloseOverlay(){if(overlay!=null){overlay.gameObject.SetActive(false);Destroy(overlay.gameObject);overlay=null;}overlayBack=null;}
         private void OnDisable(){if(sound!=null)sound.Stop();ClearPhysicalInputs();clock.Reset();}
         private void OnDestroy(){Save();if(active)requestOrientation?.Invoke(false);}

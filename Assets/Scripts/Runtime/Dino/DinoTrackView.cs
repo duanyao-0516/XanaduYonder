@@ -26,8 +26,8 @@ namespace XanaduYonder.Runtime.Dino
         private const float GroundInset = 30;
         private const float GroundTileWidth = 600;
         private const float DayNightSeconds = .8f;
-        private static readonly Color DayBackground = new Color32(250, 250, 247, 255);
-        private static readonly Color NightBackground = new Color32(32, 33, 36, 255);
+        private static readonly Color DayBackground = UiFactory.Hex("E7EDE4");
+        private static readonly Color NightBackground = UiFactory.Ink;
         private static readonly Color DayForeground = new Color32(83, 83, 83, 255);
         private static readonly Color NightForeground = new Color32(218, 218, 218, 255);
         private static readonly int TintProperty = Shader.PropertyToID("_Color");
@@ -36,7 +36,7 @@ namespace XanaduYonder.Runtime.Dino
         private RectTransform groundRoot;
         private Image background;
         private Texture2D atlas;
-        private Material spriteMaterial;
+        private Material daySpriteMaterial, nightSpriteMaterial;
         private RawImage player;
         private RawImage moon;
         private readonly RawImage[] clouds = new RawImage[5];
@@ -89,7 +89,10 @@ namespace XanaduYonder.Runtime.Dino
                 throw new InvalidOperationException("Dino/Sprites must be the verified 2446 x 194 Chromium atlas.");
             var shader = Shader.Find("UI/Default");
             if (shader == null) throw new InvalidOperationException("Dino requires Unity's UI/Default shader.");
-            spriteMaterial = new Material(shader) { name = "Dino sprite contrast" };
+            daySpriteMaterial = new Material(shader) { name = "Dino day sprites" };
+            nightSpriteMaterial = new Material(shader) { name = "Dino night sprites" };
+            float nightGain = 218f / 83f;
+            nightSpriteMaterial.SetColor(TintProperty, new Color(nightGain, nightGain, nightGain, 1));
 
             root = CreateRect(parent, "Dino Track");
             root.gameObject.AddComponent<RectMask2D>();
@@ -172,9 +175,17 @@ namespace XanaduYonder.Runtime.Dino
             // The source pixels are #535353 with a white outline. Interpolating both foreground
             // and sky would make their luminance cross. Switch foreground at the sky midpoint,
             // while the sky, moon and stars complete their continuous .8 second transition.
-            brightSprites = nightAmount >= .5f;
-            var gain = brightSprites ? 218f / 83f : 1f;
-            spriteMaterial.SetColor(TintProperty, new Color(gain, gain, gain, 1));
+            bool nextBright = nightAmount >= .5f;
+            if (brightSprites == nextBright) return;
+            brightSprites = nextBright;
+            // Rounded UGUI masks cache stencil copies of a base material. Switch immutable
+            // materials so the cached copy receives the correct palette in both directions.
+            var material = brightSprites ? nightSpriteMaterial : daySpriteMaterial;
+            player.material = moon.material = material;
+            foreach (var sprite in clouds) sprite.material = material;
+            foreach (var sprite in stars) sprite.material = material;
+            foreach (var sprite in obstacles) sprite.material = material;
+            foreach (var sprite in ground) sprite.material = material;
         }
 
         private void RenderSky(double distance)
@@ -278,7 +289,7 @@ namespace XanaduYonder.Runtime.Dino
         {
             var image = CreateRect(parent, name).gameObject.AddComponent<RawImage>();
             image.texture = atlas;
-            image.material = spriteMaterial;
+            image.material = brightSprites ? nightSpriteMaterial : daySpriteMaterial;
             image.raycastTarget = false;
             return image;
         }
@@ -298,9 +309,10 @@ namespace XanaduYonder.Runtime.Dino
         private void OnDestroy()
         {
             if (root != null) Destroy(root.gameObject);
-            if (spriteMaterial != null) Destroy(spriteMaterial);
+            if (daySpriteMaterial != null) Destroy(daySpriteMaterial);
+            if (nightSpriteMaterial != null) Destroy(nightSpriteMaterial);
             root = null;
-            spriteMaterial = null;
+            daySpriteMaterial = nightSpriteMaterial = null;
             atlas = null;
         }
     }

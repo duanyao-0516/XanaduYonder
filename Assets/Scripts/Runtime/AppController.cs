@@ -191,7 +191,7 @@ namespace XanaduYonder.Runtime
             UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
             var dinoCard = AddLobbyCard(content, "Dino", cardCount++, UiFactory.Hex("E7E8DB"));
             UiFactory.Label(dinoCard.transform, cardCount.ToString("00") + "   /   像素跑酷", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(dinoCard.transform, "小恐龙", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(dinoCard.transform, "Dino", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(dinoCard.transform, "横屏或竖屏，跑得更远一点。", 32, 166, 548, 38, 25, UiFactory.Ink);
             string dinoWarning;
             dinoPreview = new DinoSaveStore(Application.persistentDataPath).Load(out dinoWarning);

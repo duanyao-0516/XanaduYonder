@@ -87,7 +87,7 @@ namespace XanaduYonder.EditorTools
                 {
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".dinotest");
-                    PlayerSettings.productName = "Xanadu 小恐龙测试";
+                    PlayerSettings.productName = "Xanadu Dino测试";
                     BuildApk("-dino-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
                 }
                 finally

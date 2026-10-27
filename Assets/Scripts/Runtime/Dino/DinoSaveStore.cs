@@ -22,10 +22,10 @@ namespace XanaduYonder.Runtime.Dino
             if (TryRead(SavePath, out var data, out var primaryError)) return data;
             if (TryRead(SavePath + ".bak", out data, out var backupError))
             {
-                warning = "小恐龙纪录文件异常，已读取最近一次备份。";
+                warning = "Dino 纪录文件异常，已读取最近一次备份。";
                 return data;
             }
-            if (primaryError != null || backupError != null) warning = "小恐龙纪录无法读取，已使用默认纪录与方向。";
+            if (primaryError != null || backupError != null) warning = "Dino 纪录无法读取，已使用默认纪录与方向。";
             return new DinoSaveData();
         }
 

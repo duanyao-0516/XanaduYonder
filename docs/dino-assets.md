@@ -1,4 +1,4 @@
-# 小恐龙素材来源与导入记录
+# Dino 素材来源与导入记录
 
 素材来源为 Chromium 固定修订 `64574fa0f2daa1b48f2703a072687272000178ce`，本地原始文件及来源清单位于 `docs/superpowers/specs/assets/chrome-dino/`。该目录仍保留设计参考原件；运行时副本位于独立的 `Assets/Resources/Dino/`。此次仅复制下列图像、音频及许可，没有复制 Chromium 游戏 JavaScript。
 
