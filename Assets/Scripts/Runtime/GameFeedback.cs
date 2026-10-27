@@ -73,6 +73,8 @@ namespace XanaduYonder.Runtime
             if (hapticsEnabled) Haptic();
         }
 
+        public void Pulse(bool enabled) { if (enabled) Haptic(); }
+
         private static void Haptic()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR

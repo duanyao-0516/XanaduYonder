@@ -99,6 +99,28 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidMinesweeperValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".minesweepertest");
+                    PlayerSettings.productName = "Xanadu 扫雷测试";
+                    BuildApk("-minesweeper-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()
