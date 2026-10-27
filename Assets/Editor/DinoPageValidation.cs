@@ -65,6 +65,9 @@ namespace XanaduYonder.EditorTools
                 Check("near-square landscape separates jump duck and pause targets", NearSquareControls);
                 Check("inset rounded track supplies its actual visible width to Core", InsetTrackGeometry);
                 Check("portrait typography and score cards reuse the existing game tokens", SharedUiTokens);
+                Check("birthday entry uses the local lunar date without blocking selection", BirthdayEntry);
+                Check("celebration hat follows jump duck and collision without changing the model", CelebrationHatPoses);
+                Check("celebration snapshot survives layout replacement and refreshes on re-entry", CelebrationLifecycle);
                 Report.AppendLine("LIMITS: real Unity objects, page methods, UGUI and render UV; viewport readiness is controlled by reflection.");
                 Report.AppendLine("LIMITS: no Android rotation, physical pointer, native Back, audio output or device visual evidence.");
                 Report.AppendLine((failed == 0 ? "DINO_PAGE_CHECKS_PASS: " : "DINO_PAGE_CHECKS_FAIL: ") + cases + " cases, " + assertions + " assertions, " + failed + " failures");
@@ -342,6 +345,104 @@ namespace XanaduYonder.EditorTools
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
+        private static void BirthdayEntry(Fixture f)
+        {
+            foreach (var date in new[] { new DateTime(2026, 5, 31), new DateTime(2026, 6, 30) })
+            {
+                Set(f.Page, "localDate", (Func<DateTime>)(() => date));
+                f.Page.Enter(); f.FakeViewport(720, 1320, false); f.CacheViewport();
+                Invoke(f.Page, "Update"); Invoke(f.Page, "Update");
+                Require(f.Page.CurrentPhase == "Selecting", "Birthday reaches normal direction selection");
+                var content = Get<RectTransform>(f.Page, "content");
+                var greeting = FindText(content, "生日快乐");
+                Require(Get<DinoCelebration>(f.Page, "celebration") == DinoCelebration.Birthday && greeting != null,
+                    "Both requested lunar birthdays show the greeting through the real calendar");
+                Require(Get<RectTransform>(f.Page, "overlay") == null && !greeting.raycastTarget,
+                    "Greeting does not open a blocking dialog or consume touch input");
+                Require(greeting.font == UiFactory.Font && greeting.color == UiFactory.Ink,
+                    "Birthday banner keeps the page's shared font and text color");
+            }
+            Set(f.Page, "localDate", (Func<DateTime>)(() => new DateTime(2026, 10, 27)));
+            f.Page.Enter(); f.FakeViewport(720, 1320, false); f.CacheViewport();
+            Invoke(f.Page, "Update"); Invoke(f.Page, "Update");
+            Require(Get<DinoCelebration>(f.Page, "celebration") == DinoCelebration.None &&
+                FindText(Get<RectTransform>(f.Page, "content"), "生日快乐") == null,
+                "Ordinary-day re-entry removes the old birthday banner");
+        }
+
+        private static void CelebrationHatPoses(Fixture f)
+        {
+            Set(f.Page, "localDate", (Func<DateTime>)(() => new DateTime(2026, 5, 31)));
+            f.ReadyAt(730, 720);
+            var game = f.Game;
+            var track = Get<DinoTrackView>(f.Page, "track");
+            var player = Get<RawImage>(track, "player");
+            var hat = Get<MaskableGraphic>(track, "celebrationHat");
+            Require(hat != null && hat.isActiveAndEnabled && hat.transform.parent == player.transform && !hat.raycastTarget,
+                "Birthday hat is a non-interactive child of the real player");
+            var standing = hat.rectTransform.anchoredPosition;
+            double modelWidth = game.Rules.PlayerWidth, modelHeight = game.Rules.PlayerHeight;
+            long tick = game.Tick; double distance = game.Distance;
+            track.Render(game, 0);
+            Require(game.Tick == tick && game.Distance == distance && game.Rules.PlayerWidth == modelWidth && game.Rules.PlayerHeight == modelHeight,
+                "Rendering a hat does not enlarge collision geometry or advance simulation");
+            game.SetDuck(true); track.Render(game, 0);
+            var duck = hat.rectTransform.anchoredPosition;
+            Require(duck.x > standing.x + 10 && duck.y < standing.y - 10,
+                "Ducking moves the hat to the lowered forward head instead of leaving it floating");
+            game.SetDuck(false); track.Render(game, 0);
+            Require(Vector2.Distance(hat.rectTransform.anchoredPosition, standing) < .01f,
+                "Releasing duck restores the standing head anchor");
+            f.PressJump(); double highest = 0;
+            for (int i = 0; i < 90; i++)
+            {
+                game.Step(); track.Render(game, (float)DinoRules.StepSeconds);
+                highest = Math.Max(highest, game.PlayerY);
+                AssertHatInsideTrack(track, hat);
+            }
+            Require(highest > 100 && !game.Jumping && !game.IsGameOver,
+                "A complete held jump keeps the real hat inside the compact landscape track");
+            Require(Vector2.Distance(hat.rectTransform.anchoredPosition, standing) < .01f,
+                "Running and jumping retain the head-relative hat anchor");
+            for (int i = 0; i < 2400 && !game.IsGameOver; i++) game.Step();
+            Require(game.IsGameOver, "Uncontrolled run reaches an actual collision");
+            track.Render(game, 0);
+            Require(hat.isActiveAndEnabled && Vector2.Distance(hat.rectTransform.anchoredPosition, standing) < .01f,
+                "Collision uses the standing head anchor and retains its cosmetic hat");
+        }
+
+        private static void CelebrationLifecycle(Fixture f)
+        {
+            var localDate = new DateTime(2026, 12, 25);
+            Set(f.Page, "localDate", (Func<DateTime>)(() => localDate));
+            f.ReadyAt(720, 1320); f.PressJump();
+            for (int i = 0; i < 12; i++) f.Game.Step();
+            var game = f.Game; long tick = game.Tick;
+            f.Page.Suspend(); localDate = new DateTime(2026, 10, 27);
+            var oldTrack = Get<DinoTrackView>(f.Page, "track");
+            f.FakeViewport(720, 1582, false); f.CacheViewport(); Invoke(f.Page, "BuildGame");
+            var rebuilt = Get<DinoTrackView>(f.Page, "track");
+            Require(!ReferenceEquals(oldTrack, rebuilt) && ReferenceEquals(game, f.Game) && game.Tick == tick,
+                "Paused layout replacement retains the same dated game");
+            Require(Get<DinoCelebration>(f.Page, "celebration") == DinoCelebration.Christmas &&
+                Get<MaskableGraphic>(rebuilt, "celebrationHat").isActiveAndEnabled,
+                "The current entry keeps its sampled hat when the clock or layout changes");
+            f.ReadyAt(720, 1320);
+            var ordinaryHat = Get<MaskableGraphic>(Get<DinoTrackView>(f.Page, "track"), "celebrationHat");
+            Require(Get<DinoCelebration>(f.Page, "celebration") == DinoCelebration.None &&
+                (ordinaryHat == null || !ordinaryHat.isActiveAndEnabled), "Re-entry rechecks local date and removes the stale hat");
+        }
+
+        private static void AssertHatInsideTrack(DinoTrackView track, MaskableGraphic hat)
+        {
+            var trackRect = track.GetComponent<RectTransform>();
+            var trackBounds = trackRect.rect;
+            var bounds = RelativeRect(trackRect, hat.rectTransform);
+            Require(bounds.xMin >= trackBounds.xMin - .1f && bounds.xMax <= trackBounds.xMax + .1f &&
+                bounds.yMin >= trackBounds.yMin - .1f && bounds.yMax <= trackBounds.yMax + .1f,
+                "Full hat geometry stays within the clipped track through the jump");
+        }
+
         private static Text FindText(Transform parent, string value)
         {
             foreach (var text in parent.GetComponentsInChildren<Text>()) if (text.text == value) return text;
@@ -395,6 +496,7 @@ namespace XanaduYonder.EditorTools
                 directory = Path.Combine(Path.GetTempPath(), "dino-page-validation-" + Guid.NewGuid().ToString("N"));
                 Store = new DinoSaveStore(directory);
                 Set(Page, "store", Store); Set(Page, "profile", new DinoSaveData());
+                Set(Page, "localDate", (Func<DateTime>)(() => new DateTime(2026, 10, 27)));
             }
             internal void Ready()
             {

@@ -26,8 +26,8 @@ namespace XanaduYonder.Runtime.Dino
         private const float GroundInset = 30;
         private const float GroundTileWidth = 600;
         private const float DayNightSeconds = .8f;
-        private static readonly Color DayBackground = UiFactory.Hex("E7EDE4");
-        private static readonly Color NightBackground = UiFactory.Ink;
+        private static readonly Color DayBackground = Color.white;
+        private static readonly Color NightBackground = Color.black;
         private static readonly Color DayForeground = new Color32(83, 83, 83, 255);
         private static readonly Color NightForeground = new Color32(218, 218, 218, 255);
         private static readonly int TintProperty = Shader.PropertyToID("_Color");
@@ -38,6 +38,7 @@ namespace XanaduYonder.Runtime.Dino
         private Texture2D atlas;
         private Material daySpriteMaterial, nightSpriteMaterial;
         private RawImage player;
+        private DinoCelebrationHat celebrationHat;
         private RawImage moon;
         private readonly RawImage[] clouds = new RawImage[5];
         private readonly RawImage[] stars = new RawImage[5];
@@ -118,8 +119,18 @@ namespace XanaduYonder.Runtime.Dino
                 obstacles[i].enabled = false;
             }
             player = CreateSprite(root, "Dinosaur");
+            celebrationHat = CreateRect(player.transform, "Holiday hat").gameObject.AddComponent<DinoCelebrationHat>();
+            celebrationHat.raycastTarget = false;
+            celebrationHat.gameObject.SetActive(false);
             SetLayout(pixelWidth, pixelHeight, worldWidth);
             ApplyPalette();
+        }
+
+        public void SetCelebration(DinoCelebration celebration)
+        {
+            if (celebrationHat == null) return;
+            celebrationHat.Kind = celebration;
+            celebrationHat.gameObject.SetActive(celebration != DinoCelebration.None);
         }
 
         // Sizes are in the parent's actual canvas units; only one scale maps both world axes.
@@ -160,7 +171,9 @@ namespace XanaduYonder.Runtime.Dino
             // Zero is a deliberate frozen presentation frame, including during countdowns.
             var delta = dt > 0 && !float.IsInfinity(dt) && !game.IsGameOver ? dt : 0;
             animationClock += delta;
-            var targetNight = ((game.Score / 700) & 1) != 0 ? 1f : 0f;
+            // The run clock is fixed-step gameplay time: pauses and resume countdowns do not
+            // move this boundary, and narrow viewports see the same cycle as wide ones.
+            var targetNight = ((game.Tick / 1800) & 1) != 0 ? 1f : 0f;
             nightAmount = Mathf.MoveTowards(nightAmount, targetNight, delta / DayNightSeconds);
             ApplyPalette();
             RenderSky(game.Distance);
@@ -236,6 +249,23 @@ namespace XanaduYonder.Runtime.Dino
             var width = ducking ? game.Rules.DuckWidth : game.Rules.PlayerWidth;
             var height = ducking ? game.Rules.DuckHeight * 47 / 25 : game.Rules.PlayerHeight;
             Place(player, game.Rules.PlayerX, GroundInset + game.PlayerY, width, height);
+            RenderHat(game, ducking);
+        }
+
+        private void RenderHat(DinoGame game, bool ducking)
+        {
+            if (celebrationHat == null || !celebrationHat.gameObject.activeSelf) return;
+            float sourceScale = (float)DinoRules.SpriteScale * scale;
+            float hatWidth = DinoCelebrationHat.PixelWidth * sourceScale;
+            // Size for the maximum held jump, so the decoration does not shrink mid-flight.
+            // On unusually short windows only the hat gets shorter; physics and body stay fixed.
+            double maxJump = game.Rules.MaximumJumpHeight;
+            float available = pixelHeight - (float)(GroundInset + game.Rules.PlayerHeight + maxJump) * scale - 2;
+            float hatHeight = Mathf.Min(DinoCelebrationHat.PixelHeight * sourceScale, Mathf.Max(1, available));
+            var rect = celebrationHat.rectTransform;
+            rect.sizeDelta = new Vector2(hatWidth, hatHeight);
+            rect.anchoredPosition = new Vector2((ducking ? 47 : 32) * sourceScale - hatWidth * .5f,
+                (ducking ? 28 : 46) * sourceScale);
         }
 
         private void RenderObstacles(DinoGame game)

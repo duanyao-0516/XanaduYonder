@@ -93,3 +93,27 @@
 - 实机检查大厅的 Dino 名称、方向选择页、竖屏准备页、跳跃后暂停、结束本局确认、切换到横屏准备页。确认两种方向的圆角和安全区留边，竖屏跑道不再占据大块空白高度。
 - 实机截图在 `artifacts/screenshots/dino-ui/`，主要为 `oppo-portrait.png` 与 `oppo-landscape.png`；从本次启动起抓取的 `Unity:E` / `AndroidRuntime:E` 日志为空（`artifacts/logs/dino-ui-oppo-errors.log`）。检查后停留在横屏准备页。
 - 本次实机回归针对 UI 与基本流程；未重做长时间高分游玩、音效、双指操作和性能测试。昼夜材质切换由上述真实 Unity 渲染检查验证。
+
+## 黑白昼夜、庆祝彩蛋与加速修订
+
+此轮按用户反馈恢复白色／黑色跑道，改为每 30 秒有效奔跑时间交替昼夜，加速度从 2 提高至 6，并加入指定节日及农历四月十五／五月十六的生日彩蛋。规格见 `docs/superpowers/specs/2026-10-27-dino-atmosphere-design.md`。外层 App UI、跑道圆角留边、碰撞与存档协议未改。
+
+### 自动化与独立审查
+
+- 加速先对旧实现跑出三项预期失败，再修改 `SpeedAt` 与 `Travel`：最终 `scripts/test-dino.sh` **33 项通过，0 失败**。共回放六种宽度的 2,858 个生成障碍，包含真实竖屏逻辑宽 506.667（551 个）和横屏 1169.167（386 个）。二者安全上限为 241／360，最小有效反应窗口为 1.200／2.250 秒；横屏达到上限从 90 秒缩至 30 秒，竖屏从 30.5 秒缩至约 10.17 秒。
+- 位移预测与逐 tick 求和在加速段、跨封顶点、封顶后及 `long.MaxValue` 邻近区间一致。模型零逐帧分配检查通过；新公开的只读最大跳高边界由真实长跳验证，用于给帽顶留空间，不改变运动常量。
+- `scripts/test-dino-presentation.sh` **8 组、90 条断言，0 失败**：公历边界、春节初一至初七、端午／中秋、2026／2027 两个生日、闰月不重复、跨农历年与超支持范围。先用空实现验证预期失败；Unity 自带 Mono 的日历类也已独立执行。
+- `scripts/test-dino-session.sh` **2,125 条断言通过**。
+- `scripts/test-dino-page.sh` **14 个场景、253 条断言，0 失败**：包含生日横幅不拦截方向选择、实际长跳逐帧帽子边界、下蹲／死亡锚点、日期快照随重排保持及重新进入刷新。
+- `scripts/test-dino-visual.sh` **364 条断言通过**：旧绿色天空先在白色断言失败。新实现用真正的 `Game.Step` 和生产障碍的推荐输入驱动连续对局，29.9 秒白色、30.4 秒灰色过渡、31 秒黑色、60.4 秒过渡、61 秒白色、91 秒再次黑色；不直接设置分数或夜色字段来冒充切换。
+- 昼夜复用同一角色及其遮罩材质，像素与实际渲染材质同时检查；暂停冻结中间渐变，真实夜景重排保留动画与颜色，重开恢复白天。注入固定日期检查四类帽子、两个生日入口与横屏生日帽；彩色帽像素在白天和黑夜均可见。
+- 独立交叉审查分别覆盖运动预测、日期策略、显示生命周期与测试边界，未留待修问题。初次集成编译发现新帽子 meta 的 GUID 长度错误，以及 Runtime 引用了 Core 内部常量；均已修复并重新通过 Unity 编译、页面与渲染检查。
+
+画面位于 `artifacts/validation/dino-ui/`，主要包括 `night-1515x720.png`、`day-restored-1515x720.png`、`birthday-selection-0531-720x1320.png`、`birthday-landscape-1515x720.png`、`hat-festival-0101-720x1320.png`、`hat-halloween-1031-720x1320.png`、`christmas-night-720x1320.png`。这些是生产 Unity UI 的受控日期／视口截图，非当天 OPPO 上自然触发的节日画面。没有修改手机系统日期。
+
+### 本轮 APK 与安装
+
+- `scripts/build-dino.sh` 成功退出 0，Android IL2CPP 构建完成；构建后正式 `ProjectSettings` 无差异。
+- `aapt` 确认 `com.duanyao.xanaduyonder.dinotest`，`0.4.0` / code `4`，应用名 `Xanadu Dino测试`。APK 仍在 `artifacts/builds/XanaduYonder-0.4.0-dino-validation.apk`，SHA-256 为 `a6901521fe78b32c0d349a2b9665191ce90b0e95d69056122d6f1fad7b4892fb`。
+- 2026-10-27 18:26 在既有 OPPO PKM110 上执行 `adb install -r` 返回 `Success`；安装前后 `dino-v1.json` 字节一致，竖屏最高 149、横屏最高 414、竖屏偏好保留。没有卸载、清数据或安装到其他设备。
+- 启动 Activity 返回 `Status: ok`，但手机当时已锁屏，未据此宣称画面或触控实机验收通过。已请求用户解锁，当前实际昼夜、生日及节日验证证据为上面的 Unity 测试；未修改或绕过设备锁屏。

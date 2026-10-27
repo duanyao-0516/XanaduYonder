@@ -24,6 +24,8 @@ namespace XanaduYonder.Runtime.Dino
         private Action<bool> requestOrientation;
         private Action toggleSound, toggleHaptics;
         private Func<bool> soundEnabled, hapticsEnabled, foreground;
+        private Func<DateTime> localDate = () => DateTime.Now;
+        private DinoCelebration celebration;
         private Action overlayBack;
         private Phase phase;
         private Destination destination;
@@ -60,6 +62,7 @@ namespace XanaduYonder.Runtime.Dino
 
         public void Enter()
         {
+            celebration = DinoCelebrationCalendar.Resolve(localDate());
             active = true; gameObject.SetActive(true);
             selectedLandscape = profile.PreferredOrientation == "landscape";
             BeginTurn(false, Destination.Selection);
@@ -188,7 +191,16 @@ namespace XanaduYonder.Runtime.Dino
             BuildHeading(112 + extra * .08f, false);
             UiFactory.Label(content, "选择游玩方向，再向前跑远一点。", 56, 208 + extra * .08f,
                 w - 112, 42, 24, UiFactory.Muted);
+            bool birthday = celebration == DinoCelebration.Birthday;
             float top = 300 + extra * .2f;
+            if (birthday)
+            {
+                var banner = UiFactory.Panel(content, "Birthday banner", 56, top - 28, w - 112, 64, UiFactory.Hex("F0E3C3"));
+                banner.raycastTarget = false;
+                UiFactory.Label(banner.transform, "生日快乐", 20, 0, w - 152, 64, 26,
+                    UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+                top += 60;
+            }
             AddOrientationCard(false, top, "竖屏", "单手轻触，随时出发", PortraitBest);
             AddOrientationCard(true, top + 168, "横屏", "双手操作，看得更远", LandscapeBest);
             Button(selectedLandscape ? "横屏开始" : "竖屏开始", 56, top + 364, w - 112, 76,
@@ -285,11 +297,12 @@ namespace XanaduYonder.Runtime.Dino
                 scoreX + cardWidth + 16, layout.ScoresY, cardWidth);
 
             Rect area = layout.Track;
-            var card = UiFactory.Panel(content, "Dino track card", area.x, area.y, area.width, area.height, UiFactory.Hex("E7EDE4"));
+            var card = UiFactory.Panel(content, "Dino track card", area.x, area.y, area.width, area.height, Color.white);
             // Stencil masking clips the sky and every sprite to the same rounded panel.
             card.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             track = card.gameObject.AddComponent<DinoTrackView>();
-            track.Initialize(card.rectTransform); track.SetLayout(area.width, area.height, game.Rules.ViewportWidth);
+            track.Initialize(card.rectTransform); track.SetCelebration(celebration);
+            track.SetLayout(area.width, area.height, game.Rules.ViewportWidth);
             track.Restore(game, presentation); track.Render(game, 0);
             var touch = UiFactory.Panel(card.transform, "Track jump input", 0, 0, area.width, area.height, Color.clear, false);
             touch.raycastTarget = true;

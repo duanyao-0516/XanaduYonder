@@ -55,6 +55,7 @@ scripts/test-watermelon-persistence.sh
 scripts/test-dino.sh
 scripts/test-dino-session.sh
 scripts/test-dino-persistence.sh
+scripts/test-dino-presentation.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -96,6 +97,8 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 每次从大厅进入都先显示竖屏方向选择页，预选上次成功进入的方向；确认后才切换并进入准备页。两种方向采用安全区内留边的紧凑圆角跑道，共用固定 60 Hz 的 C# 规则与距离计分。实际视野决定速度上限和障碍生成约束，横屏增加前方视野；最高纪录按方向分别保存。再来一局沿用本局方向，返回大厅恢复竖屏。
 
 最高纪录自动保存，本局退出后重新开始。后台、失焦、帮助与设置会暂停；继续前倒数三秒。玩法、动作所有权、视野算法和存档字段见[Dino 玩法与接入](docs/dino-game.md)。图集和三个短音效来自固定版本的 Chromium，运行时保留完整许可，并在游戏的「玩法说明 → 素材与许可」中提供入口；来源、原始文件与导入映射见[素材记录](docs/dino-assets.md)。
+
+奔跑每 30 秒交替白天白色／夜晚黑色，暂停不计时；名义速度在 30 秒内由 180 增至 360，窄视野提前达到对应安全上限。指定中国节日、万圣节和圣诞节戴节日帽，农历四月十五、五月十六戴生日帽并在进入时显示「生日快乐」横幅；日期离线按设备本地日历判断。
 
 从当前工作树根目录运行 `scripts/build-dino.sh`，生成 `artifacts/builds/XanaduYonder-0.4.0-dino-validation.apk`，日志位于 `artifacts/logs/build-dino.log`。独立包标识为 `com.duanyao.xanaduyonder.dinotest`，与正式应用及其他小游戏测试包隔离；脚本使用当前工作树，不切换或构建其他工作树。构建产物、规则测试和实际设备验收分别记录，不以生成 APK 代替真机交互验收。
 

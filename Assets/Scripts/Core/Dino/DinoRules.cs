@@ -17,6 +17,9 @@ namespace XanaduYonder.Core.Dino
         internal const double MinimumJumpHeight = 60;
         internal const double ReleasedVelocity = 180;
         internal const int MaximumPlanTicks = 2048;
+        private const double InitialSpeed = 180;
+        private const double Acceleration = 6;
+        private const double SpeedPerTick = Acceleration * StepSeconds;
         private static readonly Dictionary<double, double> SpeedCaps = new Dictionary<double, double>();
 
         public double ViewportWidth { get; private set; }
@@ -25,6 +28,8 @@ namespace XanaduYonder.Core.Dino
         public double PlayerHeight { get { return 47 * SpriteScale; } }
         public double DuckWidth { get { return 59 * SpriteScale; } }
         public double DuckHeight { get { return 25 * SpriteScale; } }
+        // A conservative display bound for a held jump, independent of integration rounding.
+        public double MaximumJumpHeight { get { return JumpVelocity * JumpVelocity / (2 * Gravity); } }
         public double MaxSpeed { get; private set; }
 
         public DinoRules(double viewportWidth)
@@ -76,17 +81,17 @@ namespace XanaduYonder.Core.Dino
             return singlePossible;
         }
 
-        internal double SpeedAt(long tick) { return Math.Min(MaxSpeed, 180 + Math.Min(tick, 5400) * StepSeconds * 2); }
+        internal double SpeedAt(long tick) { return Math.Min(MaxSpeed, InitialSpeed + tick * SpeedPerTick); }
 
         internal double Travel(long fromTick, long toTick)
         {
             if (toTick <= fromTick) return 0;
             // Exact sum of the same per-tick speeds used by Step, avoiding a horizon-sized allocation.
-            long acceleratingLast = MaxSpeed <= 180 ? 0 : (long)Math.Floor((MaxSpeed - 180) * 30);
+            long acceleratingLast = MaxSpeed <= InitialSpeed ? 0 : (long)Math.Floor((MaxSpeed - InitialSpeed) / SpeedPerTick);
             long end = Math.Min(toTick, acceleratingLast);
             long start = Math.Min(fromTick, acceleratingLast);
             double count = end - start;
-            double accelerated = count * 180 + (start + 1.0 + end) * count / 60;
+            double accelerated = count * InitialSpeed + (start + 1.0 + end) * count * SpeedPerTick * .5;
             double capped = (toTick - fromTick - count) * MaxSpeed;
             return (accelerated + capped) * StepSeconds;
         }
