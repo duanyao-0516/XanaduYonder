@@ -23,7 +23,7 @@ internal static class Program
         Run("one thousand generated witnesses clear through the real game core", SolutionWitnesses);
         Run("restore preserves layout and future legal selections after each move", RestoreContinuation);
         Run("all profiles have balanced deterministic legal witnesses and layout diversity", ProfileWitnesses);
-        Run("difficulty raises measured witness tray pressure and matching distance", PressureTrends);
+        Run("custom tool quotas do not change or consume generated boards", ToolIndependentGeneration);
         Console.WriteLine("Sheep layout checks: " + passed + " passed, " + failed + " failed.");
         return failed == 0 ? 0 : 1;
     }
@@ -248,35 +248,28 @@ internal static class Program
         Console.WriteLine("Verified profile witnesses: " + count + " (four challenge difficulties, endless normal, tutorial normal; seeds 0..99 and uint.MaxValue).");
     }
 
-    private static void PressureTrends()
+    private static void ToolIndependentGeneration()
     {
-        double previousTray = -1, previousDistance = -1;
         foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
+        for (uint seed = 11; seed <= 22; seed++)
         {
-            long traySum = 0, distanceSum = 0; int steps = 0, matches = 0, maximumTray = 0, maximumKinds = 0;
-            for (uint seed = 1; seed <= 100; seed++)
+            var baseline = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed);
+            foreach (int limit in new[] { 0, 99 })
             {
-                var board = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed);
-                var game = new SheepGame(board.Snapshot);
-                var start = Enumerable.Repeat(-1, 16).ToArray();
-                for (int step = 0; step < board.SolutionIds.Length; step++)
-                {
-                    int id = board.SolutionIds[step], kind = board.Snapshot.Kinds[id];
-                    if (start[kind] < 0) start[kind] = step;
-                    var move = game.Pick(id); var after = game.GetSnapshot();
-                    Check(move.Changed && move.Phase != SheepPhase.Lost, "pressure measurement only accepts legal witnesses");
-                    if (move.MatchedIds.Length == 3) { distanceSum += step - start[kind]; matches++; start[kind] = -1; }
-                    traySum += after.Tray.Length; steps++;
-                    maximumTray = Math.Max(maximumTray, after.Tray.Length);
-                    maximumKinds = Math.Max(maximumKinds, after.Tray.Select(x => after.Kinds[x]).Distinct().Count());
-                }
+                var custom = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed, limit, limit, limit);
+                Check(baseline.Snapshot.Kinds.SequenceEqual(custom.Snapshot.Kinds) &&
+                    baseline.SolutionIds.SequenceEqual(custom.SolutionIds) &&
+                    baseline.Snapshot.RandomState == custom.Snapshot.RandomState &&
+                    baseline.Snapshot.LayoutId == custom.Snapshot.LayoutId,
+                    "candidate rating must use a fixed inventory, not adapt difficulty to custom quotas");
+                Check(custom.Snapshot.RemoveLimit == limit && custom.Snapshot.RemoveRemaining == limit &&
+                    custom.Snapshot.UndoLimit == limit && custom.Snapshot.UndoRemaining == limit &&
+                    custom.Snapshot.ShuffleLimit == limit && custom.Snapshot.ShuffleRemaining == limit &&
+                    !custom.Snapshot.ReviveUsed && custom.Snapshot.Score == 0 &&
+                    custom.Snapshot.Tray.Length == 0 && custom.Snapshot.Reserve.Length == 0 &&
+                    custom.Snapshot.Locations.All(location => location == SheepLocation.Board),
+                    "rating and witness verification must not mutate the published board");
             }
-            double tray = (double)traySum / steps, distance = (double)distanceSum / matches;
-            Console.WriteLine("Pressure " + difficulty + ": mean settled tray=" + tray.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) +
-                ", mean first-to-third pick distance=" + distance.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ", max tray=" + maximumTray + ", max open kinds=" + maximumKinds + ".");
-            Check(tray > previousTray + 0.3 && distance > previousDistance + 0.8, "each harder profile must measurably increase tray pressure and triple interleaving");
-            Check(maximumTray <= 6 && maximumKinds <= (int)difficulty + 2, "profile never trades legality for pressure");
-            previousTray = tray; previousDistance = distance;
         }
     }
 

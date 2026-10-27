@@ -47,8 +47,8 @@ namespace XanaduYonder.Runtime.Sheep
             if (data.Preferences.SkipDifficultyPrompt) { Begin(SheepMode.Challenge, data.Preferences.DefaultDifficulty); return; }
             var selected = data.Preferences.DefaultDifficulty;
             var panel = openModal("选择第二关难度", 526, ShowModes);
-            DifficultyChoices(panel, 122, selected, value => selected = value);
-            UiFactory.Label(panel, "简单更易凑齐，超难需要预留卡槽。", 32, 200, 532, 52, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var description = UiFactory.Label(panel, DifficultyDescription(selected), 32, 200, 532, 52, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            DifficultyChoices(panel, 122, selected, value => { selected = value; description.text = DifficultyDescription(value); });
             var remember = Checkbox(panel, "下次直接使用此难度，不再询问", 274, false);
             UiFactory.Button(panel, "开始挑战", 32, 350, 532, 64, () => {
                 closeModal(); Suspend(); session.StartChallenge(selected, remember.isOn, NewSeed()); Save(); Refresh();
@@ -96,6 +96,17 @@ namespace XanaduYonder.Runtime.Sheep
                     () => { select(difficulty); PaintDifficulties(buttons, difficulty); });
             }
             PaintDifficulties(buttons, selected); return buttons;
+        }
+
+        private static string DifficultyDescription(SheepDifficulty difficulty)
+        {
+            switch (difficulty)
+            {
+                case SheepDifficulty.Easy: return "连续消除更顺手，适合轻松游玩。";
+                case SheepDifficulty.Hard: return "对子跨层交错，需要规划取牌顺序。";
+                case SheepDifficulty.Extreme: return "容错很低，需反复尝试并善用道具。";
+                default: return "留意叠层，给后续匹配预留卡槽。";
+            }
         }
 
         private static void PaintDifficulties(Button[] buttons, SheepDifficulty selected)

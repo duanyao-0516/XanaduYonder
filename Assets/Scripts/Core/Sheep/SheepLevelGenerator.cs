@@ -6,6 +6,7 @@ namespace XanaduYonder.Core.Sheep
     public static class SheepLevelGenerator
     {
         private const int MaxGenerationAttempts = 8;
+        private const int ExtremeCandidateCount = 16;
 
         public static GeneratedSheepBoard Generate(int level, uint seed, int previousLayoutId = -1)
         {
@@ -39,24 +40,53 @@ namespace XanaduYonder.Core.Sheep
                 if (excludePrevious && layoutId >= previousLayoutId) layoutId++;
             }
             SheepPosition[] positions = SheepBoardLayout.GetPositions(level, layoutId);
-            for (int attempt = 0; attempt < MaxGenerationAttempts; attempt++)
+            bool dependent = mode == SheepMode.Challenge && difficulty >= SheepDifficulty.Hard;
+            int attempts = dependent && difficulty == SheepDifficulty.Extreme ? ExtremeCandidateCount : MaxGenerationAttempts;
+            GeneratedSheepBoard best = null;
+            long bestCost = long.MaxValue;
+            for (int attempt = 0; attempt < attempts; attempt++)
             {
-                int[] solution = RemovalOrder(positions, ref random);
+                int[] solution;
                 int kindCount = GetKindCount(mode, difficulty);
-                int profile = mode == SheepMode.Tutorial ? 0 : (int)difficulty;
-                int[] kinds = AssignKinds(solution, kindCount, profile, ref random);
+                int profile = mode == SheepMode.Tutorial ? 0 : difficulty == SheepDifficulty.Easy ? -1 : (int)difficulty;
+                // Each candidate owns its shuffle seed; choosing a later candidate
+                // must not change the board already evaluated by the rater.
+                if (dependent) SheepRandom.Index(ref random, int.MaxValue);
+                uint candidateRandom = random;
+                int[] kinds;
+                if (dependent) kinds = SheepChallengeBuilder.Build(positions, ref candidateRandom, out solution);
+                else
+                {
+                    int[] removedAt, exposedAt;
+                    solution = profile < 0
+                        ? SheepChallengeBuilder.RemovalOrder(positions, ref candidateRandom, out removedAt, out exposedAt)
+                        : RemovalOrder(positions, ref candidateRandom);
+                    kinds = AssignKinds(solution, kindCount, profile, ref candidateRandom);
+                }
                 var snapshot = new SheepSnapshot {
                     Level = level, LayoutId = layoutId, Mode = mode, Difficulty = difficulty,
                     Kinds = kinds, Locations = new SheepLocation[positions.Length],
-                    Tray = new int[0], Reserve = new int[0], RandomState = random,
+                    Tray = new int[0], Reserve = new int[0], RandomState = candidateRandom,
                     RemoveLimit = removeLimit, RemoveRemaining = removeLimit,
                     UndoLimit = undoLimit, UndoRemaining = undoLimit,
                     ShuffleLimit = shuffleLimit, ShuffleRemaining = shuffleLimit
                 };
                 // The acceptance boundary is the game itself: geometry, grouping and
                 // the seven-slot loss check must all agree with this witness.
-                if (VerifyWitness(snapshot, solution)) return new GeneratedSheepBoard(snapshot, solution);
+                if (!VerifyWitness(snapshot, solution)) { random = candidateRandom; continue; }
+                var board = new GeneratedSheepBoard(snapshot, solution);
+                if (!dependent || difficulty != SheepDifficulty.Extreme) return board;
+                int greedy = SheepDifficultyRater.ClearedWithTools(snapshot, positions);
+                int planning = SheepDifficultyRater.ClearedWithTools(snapshot, positions, 8);
+                int exposed = SheepDifficultyRater.ClearedWithTools(snapshot, positions, exposedOnly: true);
+                // Resist both short-term matching and three-pick planning, plus
+                // a player with no knowledge of covered icons. Structural opening
+                // matches break ties; they never outweigh easier full-game play.
+                long cost = Math.Max(greedy, Math.Max(planning, exposed)) * 1000000L +
+                    (greedy + planning + exposed) * 1000L + OpeningCost(snapshot, positions);
+                if (cost < bestCost) { bestCost = cost; best = board; }
             }
+            if (best != null) return best;
             throw new InvalidOperationException("Unable to generate a verified Sheep board within the candidate limit.");
         }
 
@@ -74,7 +104,10 @@ namespace XanaduYonder.Core.Sheep
             var progress = new int[kindCount];
             for (int i = 0; i < kindCount; i++) unopenedGroups[i] = solution.Length / kindCount / 3;
             int activeGroups = 0, trayCount = 0;
-            int activeLimit = profile + 2, targetTrayCount = profile + 3;
+            // Easy keeps only one unfinished triple. Normal retains three-way
+            // interleaving; Hard/Extreme use the dependency-aware builder above.
+            int activeLimit = profile < 0 ? 1 : profile + 2;
+            int targetTrayCount = profile < 0 ? 2 : profile + 3;
             var candidates = new List<int>(kindCount);
             foreach (int id in solution)
             {
@@ -109,6 +142,20 @@ namespace XanaduYonder.Core.Sheep
             foreach (int id in solution)
                 if (!game.Pick(id).Changed || game.Phase == SheepPhase.Lost) return false;
             return game.Phase == SheepPhase.Won;
+        }
+
+        private static long OpeningCost(SheepSnapshot snapshot, SheepPosition[] positions)
+        {
+            var exposedKinds = new int[16];
+            for (int id = 0; id < positions.Length; id++)
+                if (SheepBoardLayout.IsExposed(positions, snapshot.Locations, id)) exposedKinds[snapshot.Kinds[id]]++;
+            long cost = 0;
+            foreach (int count in exposedKinds)
+            {
+                if (count >= 3) cost += 100;
+                if (count >= 2) cost++;
+            }
+            return cost;
         }
 
         private static int[] RemovalOrder(SheepPosition[] positions, ref uint random)

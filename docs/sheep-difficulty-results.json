@@ -1,0 +1,356 @@
+{
+  "calibration-final": {
+    "seed_start": 1001,
+    "seed_end": 1050,
+    "groups": [
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 50,
+        "samples": 50,
+        "mean_cleared": 144.0
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 43,
+        "samples": 50,
+        "mean_cleared": 140.46
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 18,
+        "samples": 50,
+        "mean_cleared": 113.04
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 1,
+        "samples": 50,
+        "mean_cleared": 91.68
+      }
+    ]
+  },
+  "final-generous-unseen": {
+    "seed_start": 2001,
+    "seed_end": 2100,
+    "groups": [
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "none",
+        "difficulty": "Easy",
+        "completed": 98,
+        "samples": 100,
+        "mean_cleared": 143.37
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "none",
+        "difficulty": "Normal",
+        "completed": 43,
+        "samples": 100,
+        "mean_cleared": 116.43
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "none",
+        "difficulty": "Hard",
+        "completed": 8,
+        "samples": 100,
+        "mean_cleared": 63.0
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "none",
+        "difficulty": "Extreme",
+        "completed": 0,
+        "samples": 100,
+        "mean_cleared": 53.94
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 100,
+        "samples": 100,
+        "mean_cleared": 144.0
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 91,
+        "samples": 100,
+        "mean_cleared": 141.51
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 37,
+        "samples": 100,
+        "mean_cleared": 109.11
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 2,
+        "samples": 100,
+        "mean_cleared": 86.46
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "none",
+        "difficulty": "Easy",
+        "completed": 100,
+        "samples": 100,
+        "mean_cleared": 144.0
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "none",
+        "difficulty": "Normal",
+        "completed": 51,
+        "samples": 100,
+        "mean_cleared": 126.84
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "none",
+        "difficulty": "Hard",
+        "completed": 13,
+        "samples": 100,
+        "mean_cleared": 83.46
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "none",
+        "difficulty": "Extreme",
+        "completed": 1,
+        "samples": 100,
+        "mean_cleared": 63.45
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 100,
+        "samples": 100,
+        "mean_cleared": 144.0
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 88,
+        "samples": 100,
+        "mean_cleared": 140.97
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 59,
+        "samples": 100,
+        "mean_cleared": 128.76
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 6,
+        "samples": 100,
+        "mean_cleared": 97.92
+      }
+    ]
+  },
+  "final-exposed-unseen": {
+    "seed_start": 2001,
+    "seed_end": 2100,
+    "groups": [
+      {
+        "observation": "exposed",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 94,
+        "samples": 100,
+        "mean_cleared": 142.38
+      },
+      {
+        "observation": "exposed",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 42,
+        "samples": 100,
+        "mean_cleared": 117.06
+      },
+      {
+        "observation": "exposed",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 8,
+        "samples": 100,
+        "mean_cleared": 69.84
+      },
+      {
+        "observation": "exposed",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 1,
+        "samples": 100,
+        "mean_cleared": 65.55
+      }
+    ]
+  },
+  "final-wide-unseen": {
+    "seed_start": 2001,
+    "seed_end": 2100,
+    "groups": [
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 100,
+        "samples": 100,
+        "mean_cleared": 144.0
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 86,
+        "samples": 100,
+        "mean_cleared": 140.7
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 61,
+        "samples": 100,
+        "mean_cleared": 129.6
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 18,
+        "samples": 100,
+        "mean_cleared": 108.57
+      }
+    ]
+  },
+  "paired-baseline-greedy": {
+    "baseline_commit": "8ced40d",
+    "seed_start": 2001,
+    "seed_end": 2100,
+    "groups": [
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 95,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 91,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 71,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "greedy",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 61,
+        "samples": 100
+      }
+    ]
+  },
+  "paired-baseline-wide": {
+    "baseline_commit": "8ced40d",
+    "seed_start": 2001,
+    "seed_end": 2100,
+    "groups": [
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Easy",
+        "completed": 97,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Normal",
+        "completed": 86,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Hard",
+        "completed": 73,
+        "samples": 100
+      },
+      {
+        "observation": "generous",
+        "policy": "visible3wide",
+        "tools": "default",
+        "difficulty": "Extreme",
+        "completed": 73,
+        "samples": 100
+      }
+    ]
+  }
+}

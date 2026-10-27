@@ -47,8 +47,15 @@ namespace XanaduYonder.Runtime.Sheep
             Capture();
             var previous = mode == SheepMode.Challenge ? Data.Challenge : mode == SheepMode.Endless ? Data.Endless : Data.Tutorial;
             var p = Data.Preferences;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var generationTimer = System.Diagnostics.Stopwatch.StartNew();
+#endif
             var next = SheepLevelGenerator.Generate(mode, difficulty, seed, p.RemoveLimit, p.UndoLimit, p.ShuffleLimit,
                 previous == null ? -1 : previous.LayoutId).Snapshot;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            UnityEngine.Debug.Log("Sheep generation: " + mode + "/" + difficulty + " layout=" + next.LayoutId +
+                " elapsed_ms=" + generationTimer.Elapsed.TotalMilliseconds.ToString("F1", System.Globalization.CultureInfo.InvariantCulture));
+#endif
             Data.ActiveMode = mode;
             Game = new SheepGame(next);
             if (mode == SheepMode.Challenge) Data.WinRecorded = false;
