@@ -58,7 +58,7 @@ Unity 6000.3.27f1，Android 编译目标，真实 UGUI + Camera.Render。扫雷�
 
 首次构建完成了 C#/IL2CPP，但 Gradle 明确返回 `Gradle build daemon has been stopped: stop command received`，未生成 APK。没有查询其他工作树定位发起者。新增 `scripts/minesweeper-unity-environment.sh`，让扫雷 Unity 检查及构建使用本树 `Library/MinesweeperGradle` 和本次进程独立的 ADB socket/port，避免退出时停止共享工具服务；重跑成功。首次日志保存在 `artifacts/logs/build-minesweeper-validation-gradle-stopped.log`，最终日志为 `artifacts/logs/build-minesweeper-validation.log`。
 
-已读到连接物理设备为 PKM110、Android 16、1080×2373；逻辑密度为覆盖后的 480 dpi。安装只针对独立包，安装前确认此包不存在。当前设备锁屏（系统报告 `showing=true`），系统安装解析页位于锁屏后，`adb install` 尚未返回成功；已请用户解锁并完成测试包安装确认。不能据此宣称已安装或完成设备运行。
+已读到连接物理设备为 PKM110、Android 16、1080×2373；逻辑密度为覆盖后的 480 dpi。安装只针对独立包，安装前确认此包不存在。等待期间设备锁屏（系统报告 `showing=true`），系统安装解析页位于锁屏后；`adb install` 最终退出 1，仅返回 `failed to install` 而没有更具体错误。已请用户解锁并完成测试包安装确认后重试。不能据此宣称已安装或完成设备运行。
 
 已在忽略目录 `artifacts/validation/minesweeper-device/` 编译并验证独立输入辅助 APK，源码及说明同目录。它以 self-target instrumentation 运行，不重启 Unity；只在扫雷测试包获焦时注入系统 MotionEvent，保留既有辅助功能服务，截图限制为目标窗口。该工具尚未在设备执行，工具编译通过不代表手势已通过验收。
 
