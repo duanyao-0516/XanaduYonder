@@ -6,7 +6,7 @@ namespace XanaduYonder.Core.Sheep
     public sealed class SheepGame
     {
         private SheepSnapshot state;
-        private readonly SheepPosition[] positions;
+        private SheepPosition[] positions;
 
         public SheepGame(int level, uint seed) : this(SheepLevelGenerator.Generate(level, seed).Snapshot) { }
 
@@ -64,6 +64,7 @@ namespace XanaduYonder.Core.Sheep
             if (matched.Count == 3)
             {
                 foreach (int matchedId in matched) { next.Locations[matchedId] = SheepLocation.Removed; tray.Remove(matchedId); }
+                next.Score += matched.Count;
                 ClearLastPick(next);
             }
             else matched.Clear();
@@ -72,10 +73,38 @@ namespace XanaduYonder.Core.Sheep
             return new SheepMove(true, id, matched.ToArray(), Phase);
         }
 
+        public int GetToolRemaining(SheepTool tool)
+        {
+            switch (tool)
+            {
+                case SheepTool.RemoveThree: return state.RemoveRemaining;
+                case SheepTool.Undo: return state.UndoRemaining;
+                case SheepTool.Shuffle: return state.ShuffleRemaining;
+                case SheepTool.Revive: return state.ReviveUsed ? 0 : 1;
+                default: return 0;
+            }
+        }
+
+        public bool AdvanceWave()
+        {
+            if (state.Mode != SheepMode.Endless || Phase != SheepPhase.Won || state.Wave == int.MaxValue) return false;
+            var next = SheepLevelGenerator.Generate(state.Mode, state.Difficulty, state.RandomState,
+                state.RemoveLimit, state.UndoLimit, state.ShuffleLimit, state.LayoutId).Snapshot;
+            next.Wave = state.Wave + 1;
+            next.Score = state.Score;
+            next.RemoveRemaining = state.RemoveRemaining;
+            next.UndoRemaining = state.UndoRemaining;
+            next.ShuffleRemaining = state.ShuffleRemaining;
+            next.ReviveUsed = state.ReviveUsed;
+            state = next;
+            positions = SheepBoardLayout.GetPositions(state.Level, state.LayoutId);
+            return true;
+        }
+
         public bool CanUseTool(SheepTool tool)
         {
             SheepPhase phase = Phase;
-            if (phase == SheepPhase.Won) return false;
+            if (phase == SheepPhase.Won || GetToolRemaining(tool) == 0) return false;
             switch (tool)
             {
                 case SheepTool.RemoveThree:
@@ -100,7 +129,7 @@ namespace XanaduYonder.Core.Sheep
             switch (tool)
             {
                 case SheepTool.RemoveThree:
-                    MoveToReserve(next); next.RemoveUsed = true; break;
+                    MoveToReserve(next); next.RemoveRemaining--; break;
                 case SheepTool.Revive:
                     MoveToReserve(next); next.ReviveUsed = true; break;
                 case SheepTool.Undo:
@@ -114,7 +143,7 @@ namespace XanaduYonder.Core.Sheep
                         reserve.Insert(next.LastReserveIndex, next.LastPickedId);
                         next.Reserve = reserve.ToArray();
                     }
-                    next.UndoUsed = true; break;
+                    next.UndoRemaining--; break;
                 case SheepTool.Shuffle:
                     var board = new List<int>();
                     for (int id = 0; id < next.Kinds.Length; id++) if (next.Locations[id] == SheepLocation.Board) board.Add(id);
@@ -125,7 +154,7 @@ namespace XanaduYonder.Core.Sheep
                         next.Kinds[board[i]] = next.Kinds[board[other]];
                         next.Kinds[board[other]] = swap;
                     }
-                    next.ShuffleUsed = true; break;
+                    next.ShuffleRemaining--; break;
             }
             ClearLastPick(next);
             state = next;

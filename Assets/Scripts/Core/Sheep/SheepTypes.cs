@@ -2,6 +2,8 @@ using System;
 
 namespace XanaduYonder.Core.Sheep
 {
+    public enum SheepMode { Challenge = 0, Endless = 1, Tutorial = 2 }
+    public enum SheepDifficulty { Easy = 0, Normal = 1, Hard = 2, Extreme = 3 }
     public enum SheepLocation { Board = 0, Tray = 1, Reserve = 2, Removed = 3 }
     public enum SheepPhase { Playing, Lost, Won }
     public enum SheepTool { RemoveThree, Undo, Shuffle, Revive }

@@ -249,14 +249,21 @@ namespace XanaduYonder.Runtime
             var root = UiFactory.Rect(frame, "Sheep page", 0, 0, 720, 1320);
             UiFactory.Stretch(root);
             sheepPage = root.gameObject.AddComponent<SheepPage>();
-            sheepPage.Initialize(root, ShowLobby, OpenSettings,
+            sheepPage.Initialize(root, ShowLobby, after => OpenSettings(after),
                 () => activePage == Page.Sheep && modal == null && !paused && focused,
-                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog);
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog, OpenSheepModal, CloseModal);
             sheepPage.Changed += RefreshSheepRecord;
             sheepPage.Leave();
         }
 
-        private void RefreshSheepRecord() { lobbySheepRecordText.text = "累计通关   " + sheepPage.CompletedRuns + " 次"; }
+        private RectTransform OpenSheepModal(string title, float height, Action back)
+        {
+            var panel = CreateModal(title, height);
+            dismissModal = back;
+            return panel;
+        }
+
+        private void RefreshSheepRecord() { lobbySheepRecordText.text = "通关 " + sheepPage.CompletedRuns + " 次  ·  无尽最高 " + sheepPage.EndlessBest; }
 
         private void EnterSheep()
         {
@@ -411,8 +418,11 @@ namespace XanaduYonder.Runtime
             ShowDialog("让相同的数字相遇", "向一个方向滑动整个棋盘。\n相同的方块相遇，就合成两倍数字。\n每次有效移动后，会出现一个新方块。\n合成 2048 即可获胜，也能继续挑战。", "知道了", CheckEndState);
         }
 
-        private void OpenSettings()
+        private void OpenSettings() { OpenSettings(null); }
+
+        private void OpenSettings(Action after)
         {
+            Action finish = () => { CloseModal(); if (after != null) after(); else CheckEndState(); };
             var panel = CreateModal("简单一点，刚刚好");
             UiFactory.Label(panel, "设置在所有游戏中共用", 32, 104, 532, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
             UiFactory.Button(panel, "声音  ·  " + (data.SoundEnabled ? "开启" : "关闭"), 32, 178, 532, 70, () =>
@@ -421,17 +431,17 @@ namespace XanaduYonder.Runtime
                 if (!data.SoundEnabled) feedback.Stop();
                 Save();
                 CloseModal();
-                OpenSettings();
+                OpenSettings(after);
             });
             UiFactory.Button(panel, "触感  ·  " + (data.HapticsEnabled ? "开启" : "关闭"), 32, 264, 532, 70, () =>
             {
                 data.HapticsEnabled = !data.HapticsEnabled;
                 Save();
                 CloseModal();
-                OpenSettings();
+                OpenSettings(after);
             });
-            UiFactory.Button(panel, "完成", 32, 376, 532, 74, () => { CloseModal(); CheckEndState(); }, true);
-            dismissModal = () => { CloseModal(); CheckEndState(); };
+            UiFactory.Button(panel, "完成", 32, 376, 532, 74, finish, true);
+            dismissModal = finish;
         }
 
         private void ShowDialog(string title, string message, string primary, Action primaryAction, string secondary = null, Action secondaryAction = null)

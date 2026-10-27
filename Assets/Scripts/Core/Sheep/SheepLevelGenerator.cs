@@ -5,9 +5,25 @@ namespace XanaduYonder.Core.Sheep
 {
     public static class SheepLevelGenerator
     {
+        private const int MaxGenerationAttempts = 8;
+
         public static GeneratedSheepBoard Generate(int level, uint seed, int previousLayoutId = -1)
         {
             if (level < 1 || level > 2) throw new ArgumentOutOfRangeException("level");
+            return Generate(level == 1 ? SheepMode.Tutorial : SheepMode.Challenge,
+                SheepDifficulty.Normal, seed, previousLayoutId: previousLayoutId);
+        }
+
+        public static GeneratedSheepBoard Generate(SheepMode mode, SheepDifficulty difficulty, uint seed,
+            int removeLimit = 2, int undoLimit = 3, int shuffleLimit = 1, int previousLayoutId = -1)
+        {
+            if (mode < SheepMode.Challenge || mode > SheepMode.Tutorial) throw new ArgumentOutOfRangeException("mode");
+            if (difficulty < SheepDifficulty.Easy || difficulty > SheepDifficulty.Extreme) throw new ArgumentOutOfRangeException("difficulty");
+            if (removeLimit < 0 || removeLimit > 99) throw new ArgumentOutOfRangeException("removeLimit");
+            if (undoLimit < 0 || undoLimit > 99) throw new ArgumentOutOfRangeException("undoLimit");
+            if (shuffleLimit < 0 || shuffleLimit > 99) throw new ArgumentOutOfRangeException("shuffleLimit");
+            if (mode != SheepMode.Challenge) difficulty = SheepDifficulty.Normal;
+            int level = mode == SheepMode.Tutorial ? 1 : 2;
             uint random = seed == 0 ? 0x6D2B79F5u : seed;
             // Mix small consecutive seeds before selecting a layout.
             SheepRandom.Index(ref random, int.MaxValue);
@@ -23,35 +39,76 @@ namespace XanaduYonder.Core.Sheep
                 if (excludePrevious && layoutId >= previousLayoutId) layoutId++;
             }
             SheepPosition[] positions = SheepBoardLayout.GetPositions(level, layoutId);
-            int[] solution = RemovalOrder(positions, ref random);
-            var kinds = new int[positions.Length];
-            int kindCount = level == 1 ? 3 : 16;
+            for (int attempt = 0; attempt < MaxGenerationAttempts; attempt++)
+            {
+                int[] solution = RemovalOrder(positions, ref random);
+                int kindCount = GetKindCount(mode, difficulty);
+                int profile = mode == SheepMode.Tutorial ? 0 : (int)difficulty;
+                int[] kinds = AssignKinds(solution, kindCount, profile, ref random);
+                var snapshot = new SheepSnapshot {
+                    Level = level, LayoutId = layoutId, Mode = mode, Difficulty = difficulty,
+                    Kinds = kinds, Locations = new SheepLocation[positions.Length],
+                    Tray = new int[0], Reserve = new int[0], RandomState = random,
+                    RemoveLimit = removeLimit, RemoveRemaining = removeLimit,
+                    UndoLimit = undoLimit, UndoRemaining = undoLimit,
+                    ShuffleLimit = shuffleLimit, ShuffleRemaining = shuffleLimit
+                };
+                // The acceptance boundary is the game itself: geometry, grouping and
+                // the seven-slot loss check must all agree with this witness.
+                if (VerifyWitness(snapshot, solution)) return new GeneratedSheepBoard(snapshot, solution);
+            }
+            throw new InvalidOperationException("Unable to generate a verified Sheep board within the candidate limit.");
+        }
+
+        public static int GetKindCount(SheepMode mode, SheepDifficulty difficulty)
+        {
+            if (mode == SheepMode.Tutorial) return 3;
+            if (mode == SheepMode.Endless) return 12;
+            return difficulty == SheepDifficulty.Easy ? 8 : difficulty == SheepDifficulty.Normal ? 12 : 16;
+        }
+
+        private static int[] AssignKinds(int[] solution, int kindCount, int profile, ref uint random)
+        {
+            var kinds = new int[solution.Length];
             var unopenedGroups = new int[kindCount];
             var progress = new int[kindCount];
-            for (int i = 0; i < kindCount; i++) unopenedGroups[i] = level == 1 ? 2 : 3;
-            int activeGroups = 0;
+            for (int i = 0; i < kindCount; i++) unopenedGroups[i] = solution.Length / kindCount / 3;
+            int activeGroups = 0, trayCount = 0;
+            int activeLimit = profile + 2, targetTrayCount = profile + 3;
             var candidates = new List<int>(kindCount);
             foreach (int id in solution)
             {
                 candidates.Clear();
-                for (int kind = 0; kind < kindCount; kind++)
-                    if (progress[kind] > 0 || (activeGroups < 3 && unopenedGroups[kind] > 0)) candidates.Add(kind);
+                // Higher profiles keep more kinds open and delay completing a triple.
+                // Never put a seventh unmatched card in the tray. At six cards and
+                // at most five open groups, at least one pair must be available.
+                if (trayCount >= targetTrayCount)
+                    for (int kind = 0; kind < kindCount; kind++) if (progress[kind] == 2) candidates.Add(kind);
+                if (candidates.Count == 0 && trayCount < 6)
+                {
+                    if (activeGroups < activeLimit)
+                        for (int kind = 0; kind < kindCount; kind++)
+                            if (progress[kind] == 0 && unopenedGroups[kind] > 0) candidates.Add(kind);
+                    if (candidates.Count == 0)
+                        for (int kind = 0; kind < kindCount; kind++) if (progress[kind] == 1) candidates.Add(kind);
+                }
+                if (candidates.Count == 0)
+                    for (int kind = 0; kind < kindCount; kind++) if (progress[kind] == 2) candidates.Add(kind);
                 int selected = candidates[SheepRandom.Index(ref random, candidates.Count)];
                 if (progress[selected] == 0) { unopenedGroups[selected]--; activeGroups++; }
                 kinds[id] = selected;
-                progress[selected]++;
-                if (progress[selected] == 3) { progress[selected] = 0; activeGroups--; }
+                progress[selected]++; trayCount++;
+                if (progress[selected] == 3) { progress[selected] = 0; activeGroups--; trayCount -= 3; }
             }
+            return kinds;
+        }
 
-            // At most three distinct unfinished triples can exist along this witness.
-            // Each contributes at most two settled tray cards. A seventh card completes
-            // a triple, and matching happens before the capacity check in SheepGame.
-            var snapshot = new SheepSnapshot {
-                Level = level, LayoutId = layoutId, Kinds = kinds,
-                Locations = new SheepLocation[positions.Length], Tray = new int[0], Reserve = new int[0],
-                RandomState = random
-            };
-            return new GeneratedSheepBoard(snapshot, solution);
+        private static bool VerifyWitness(SheepSnapshot snapshot, int[] solution)
+        {
+            var game = new SheepGame(snapshot);
+            foreach (int id in solution)
+                if (!game.Pick(id).Changed || game.Phase == SheepPhase.Lost) return false;
+            return game.Phase == SheepPhase.Won;
         }
 
         private static int[] RemovalOrder(SheepPosition[] positions, ref uint random)

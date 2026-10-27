@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using XanaduYonder.Core.Sheep;
@@ -15,20 +14,23 @@ internal static class Program
     private static int Main()
     {
         Check("Absent input returns a reason without partial state", () => Reject(null, "absent input"));
-        Check("Both levels round trip with exact 64-bit completion counts", RoundTrip);
-        Check("Literal schema fixture decodes without serializer defaults", KnownPayload);
-        Check("Legacy challenge layouts and historical used flags still restore", LegacyChallengeState);
-        Check("Slot order, reserve and tool state survive a real played game", PlayedRoundTrip);
-        Check("Historical used flags preserve unlimited tool eligibility after JSON and disk restore", ReusableToolsRoundTrip);
-        Check("Six reserve cards from repeated removes survive schema 1 storage", RepeatedRemoveRoundTrip);
-        Check("Won tutorial and recorded challenge remain distinguishable", WinningRoundTrip);
-        Check("Lost and revived games retain exact tray and tool state", LostAndRevivedRoundTrip);
-        Check("Every required field rejects missing and explicit null", RequiredFields);
+        Check("Schema 2 accepts independent empty mode slots", EmptyModeSlots);
+        Check("Each mode and difficulty round trips with exact records", RoundTrip);
+        Check("Large endless scores and custom quota boundaries remain exact", LargeScoreAndQuotaBoundaries);
+        Check("Active mode only selects its own resumable slot", ModeIndependence);
+        Check("Preferences are copied and validated independently of run quotas", PreferenceContract);
+        Check("Played tool quotas and ordered reserve survive storage", PlayedRoundTrip);
+        Check("Endless wave and whole-run quotas survive storage", EndlessWaveRoundTrip);
+        Check("Challenge and tutorial terminal states remain distinguishable", WinningRoundTrip);
+        Check("Lost and revived games retain exact tray and revival state", LostAndRevivedRoundTrip);
+        Check("Every required field rejects missing and unexpected null", RequiredFields);
         Check("Strict token types reject coercion and number loss", InvalidTokens);
         Check("Malformed, duplicate, deep and trailing JSON is rejected", InvalidDocuments);
         Check("Both character and UTF-8 byte limits are enforced", OversizedPayloads);
         Check("Impossible snapshots fail encode and decode", InvalidStates);
-        Check("Completion accounting cannot be forged or omitted", WinAccounting);
+        Check("Challenge accounting is tied to its slot, not active mode", WinAccounting);
+        Check("Only standard endless quotas require a ranked score", EndlessAccounting);
+        Check("Schema 1 is rejected and never loaded as schema 2", LegacyRejected);
         Check("Missing save starts quietly with independent filename", MissingSave);
         Check("Fresh store restores primary and valid backup", BackupRecovery);
         Check("A corrupt primary cannot overwrite the valid backup", PreserveValidBackup);
@@ -37,171 +39,170 @@ internal static class Program
         Check("Oversized files fall back to a valid backup", OversizedFile);
         Check("Temporary and atomic replacement failures preserve primary", WriteFailures);
         Check("Validation failure leaves primary and backup byte-identical", InvalidWritePreservesPrimary);
-        Check("2048 and Jump save files stay byte-identical", ExistingFilesUntouched);
+        Check("Other games and legacy sheep files stay byte-identical", ExistingFilesUntouched);
         Check("Decoded and loaded arrays have independent ownership", LoadedSnapshotsIndependent);
         Check("Orphan temporary file is ignored", OrphanTemporary);
         Console.WriteLine("Sheep persistence checks: " + passed + " passed, " + failed + " failed.");
         return failed == 0 ? 0 : 1;
     }
 
+    private static void EmptyModeSlots()
+    {
+        const string json = "{\"schemaVersion\":2,\"gameId\":\"sheep\",\"challenge\":null,\"endless\":null,\"tutorial\":null,\"activeMode\":0,\"preferences\":{\"defaultDifficulty\":1,\"skipDifficultyPrompt\":false,\"removeLimit\":2,\"undoLimit\":3,\"shuffleLimit\":1},\"completedRuns\":\"0\",\"endlessBest\":\"0\",\"winRecorded\":false}";
+        Assert(SheepSaveCodec.TryDecode(json, out var decoded, out var error), error);
+        Assert(decoded.Game == null && decoded.Challenge == null && decoded.Endless == null && decoded.Tutorial == null,
+            "Unstarted mode slots must remain null.");
+        Assert(JToken.DeepEquals(JObject.Parse(json), JObject.Parse(SheepSaveCodec.Encode(decoded))), "Empty schema did not round trip.");
+        EqualState(new SheepSaveData(), decoded);
+        WithDirectory(directory =>
+        {
+            var store = new SheepSaveStore(directory);
+            Assert(store.TrySave(decoded, out error), error);
+            EqualState(decoded, store.Load(out var warning));
+            Assert(warning == null, warning);
+        });
+    }
+
     private static void RoundTrip()
     {
-        foreach (var level in new[] { 1, 2 })
+        foreach (SheepMode mode in Enum.GetValues(typeof(SheepMode)))
+        foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
         {
-            var original = Example(level);
-            original.CompletedRuns = long.MaxValue;
+            if (mode != SheepMode.Challenge && difficulty != SheepDifficulty.Normal) continue;
+            var original = new SheepSaveData { ActiveMode = mode, CompletedRuns = long.MaxValue, EndlessBest = long.MaxValue };
+            original.Game = SheepLevelGenerator.Generate(mode, difficulty, 23).Snapshot;
             original.Game.RandomState = uint.MaxValue;
             var json = SheepSaveCodec.Encode(original);
             var root = JObject.Parse(json);
-            Assert((int)root["schemaVersion"] == 1 && (string)root["gameId"] == "sheep", "Wrong schema identity.");
-            Assert(root["completedRuns"].Type == JTokenType.String, "64-bit count must be written as a decimal string.");
-            Assert(root["game"]["kinds"] is JArray && root["game"]["locations"] is JArray, "Snapshot arrays were omitted.");
+            Assert((int)root["schemaVersion"] == 2 && (string)root["gameId"] == "sheep", "Wrong schema identity.");
+            Assert(root["completedRuns"].Type == JTokenType.String && root["endlessBest"].Type == JTokenType.String,
+                "64-bit records must use decimal strings.");
+            var game = (JObject)root[mode.ToString().ToLowerInvariant()];
+            Assert(game["score"].Type == JTokenType.String, "Score must use a decimal string.");
+            Assert(game.Property("removeUsed") == null && game.Property("undoUsed") == null && game.Property("shuffleUsed") == null,
+                "Historical boolean tools leaked into schema 2.");
             Assert(SheepSaveCodec.TryDecode(json, out var decoded, out var reason), reason);
             EqualState(original, decoded);
             Assert(!ReferenceEquals(original.Game.Kinds, decoded.Game.Kinds), "Decoded kinds alias input.");
         }
     }
 
+    private static void LargeScoreAndQuotaBoundaries()
+    {
+        foreach (var limit in new[] { 0, 99 })
+        {
+            var snapshot = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 17, limit, limit, limit).Snapshot;
+            snapshot.Wave = int.MaxValue;
+            snapshot.Score = ((long)int.MaxValue - 1) * 144;
+            var original = new SheepSaveData { ActiveMode = SheepMode.Endless, Endless = snapshot, EndlessBest = 9007199254740993L };
+            Assert(snapshot.Score > int.MaxValue, "Fixture does not exercise 64-bit score.");
+            Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var decoded, out var reason), reason);
+            EqualState(original, decoded);
+            Assert(decoded.Game.Score == 309237645024L && decoded.EndlessBest == 9007199254740993L,
+                "Large record or score lost precision.");
+        }
+    }
+
+    private static void ModeIndependence()
+    {
+        var original = AllModes();
+        foreach (var mode in new[] { SheepMode.Challenge, SheepMode.Endless, SheepMode.Tutorial })
+        {
+            original.ActiveMode = mode;
+            var selected = original.Game;
+            var replacement = new SheepGame(selected).GetSnapshot();
+            replacement.RandomState = 91;
+            original.Game = replacement;
+            Assert(ReferenceEquals(original.Game, replacement), "Game setter did not update selected mode.");
+            Assert(original.Challenge.Mode == SheepMode.Challenge && original.Endless.Mode == SheepMode.Endless &&
+                   original.Tutorial.Mode == SheepMode.Tutorial, "Switching slots overwrote another mode.");
+            Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var decoded, out var reason), reason);
+            EqualState(original, decoded);
+        }
+        original.ActiveMode = SheepMode.Challenge;
+        original.Game = null;
+        Assert(original.Challenge == null && original.Endless != null && original.Tutorial != null, "Clearing one slot cleared other modes.");
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var emptyActive, out var error), error);
+        Assert(emptyActive.Game == null, "A nullable active slot must remain unstarted.");
+    }
+
+    private static void PreferenceContract()
+    {
+        var preferences = new SheepPreferences();
+        Assert(preferences.DefaultDifficulty == SheepDifficulty.Normal && !preferences.SkipDifficultyPrompt &&
+               preferences.RemoveLimit == 2 && preferences.UndoLimit == 3 && preferences.ShuffleLimit == 1 && preferences.IsStandardTools,
+            "Wrong preference defaults.");
+        var copy = preferences.Copy();
+        copy.DefaultDifficulty = SheepDifficulty.Extreme;
+        copy.SkipDifficultyPrompt = true;
+        copy.RemoveLimit = 0;
+        copy.UndoLimit = 99;
+        copy.ShuffleLimit = 8;
+        Assert(copy.TryValidate(out var reason) && !copy.IsStandardTools, reason);
+        Assert(preferences.IsStandardTools && preferences.DefaultDifficulty == SheepDifficulty.Normal && !preferences.SkipDifficultyPrompt,
+            "Preference copy aliases the original.");
+        var data = AllModes();
+        data.Preferences = copy;
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(data), out var decoded, out reason), reason);
+        EqualState(data, decoded);
+        Assert(decoded.Challenge.RemoveLimit == 2 && decoded.Endless.UndoLimit == 3 && decoded.Tutorial.ShuffleLimit == 1,
+            "Preferences overwrote frozen run quotas.");
+        foreach (var mutate in new Action<SheepPreferences>[] {
+            value => value.DefaultDifficulty = (SheepDifficulty)(-1), value => value.DefaultDifficulty = (SheepDifficulty)4,
+            value => value.RemoveLimit = -1, value => value.RemoveLimit = 100,
+            value => value.UndoLimit = -1, value => value.UndoLimit = 100,
+            value => value.ShuffleLimit = -1, value => value.ShuffleLimit = 100 })
+        {
+            var invalid = new SheepPreferences(); mutate(invalid);
+            Assert(!invalid.TryValidate(out reason) && !string.IsNullOrWhiteSpace(reason), "Invalid preferences accepted.");
+            ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData { Preferences = invalid }));
+        }
+        ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData { Preferences = null }));
+    }
+
     private static void PlayedRoundTrip()
     {
-        var generated = SheepLevelGenerator.Generate(2, 23);
+        var generated = SheepLevelGenerator.Generate(SheepMode.Challenge, SheepDifficulty.Hard, 23);
         var game = new SheepGame(generated.Snapshot);
-        Assert(game.Pick(generated.SolutionIds[0]).Changed, "Cannot pick fixture card.");
-        Assert(game.UseTool(SheepTool.Undo), "Cannot undo fixture card.");
-        Assert(game.Pick(generated.SolutionIds[0]).Changed, "Cannot replay fixture card.");
-        Assert(game.Pick(generated.SolutionIds[1]).Changed, "Cannot pick second fixture card.");
-        Assert(game.UseTool(SheepTool.RemoveThree), "Cannot move fixture cards into reserve.");
-        Assert(game.UseTool(SheepTool.Shuffle), "Cannot shuffle fixture board.");
+        Assert(game.Pick(generated.SolutionIds[0]).Changed && game.UseTool(SheepTool.Undo), "Cannot undo fixture card.");
+        Assert(game.Pick(generated.SolutionIds[0]).Changed && game.Pick(generated.SolutionIds[1]).Changed, "Cannot replay fixture cards.");
+        Assert(game.UseTool(SheepTool.RemoveThree) && game.UseTool(SheepTool.Shuffle), "Cannot use fixture tools.");
         var reserve = game.GetSnapshot().Reserve;
-        Assert(reserve.Length == 2, "Fixture needs a nonempty reserve.");
-        Assert(game.Pick(reserve[0]).Changed, "Cannot pick fixture reserve.");
+        Assert(reserve.Length == 2 && game.Pick(reserve[0]).Changed, "Cannot pick fixture reserve.");
         var original = new SheepSaveData { Game = game.GetSnapshot(), CompletedRuns = 9007199254740993L };
-        Assert(original.Game.RemoveUsed && original.Game.UndoUsed && original.Game.ShuffleUsed, "Fixture tool flags missing.");
+        Assert(original.Game.RemoveRemaining == 1 && original.Game.UndoRemaining == 2 && original.Game.ShuffleRemaining == 0,
+            "Real actions did not consume quotas.");
+        WithDirectory(directory =>
+        {
+            var store = new SheepSaveStore(directory);
+            Assert(store.TrySave(original, out var error), error);
+            var decoded = store.Load(out var warning);
+            EqualState(original, decoded);
+            var resumed = new SheepGame(decoded.Game);
+            Assert(resumed.CanUseTool(SheepTool.Undo) && resumed.UseTool(SheepTool.Undo), "Reserve undo lost across storage.");
+            Assert(!resumed.CanUseTool(SheepTool.Shuffle), "Exhausted shuffle reset after restore.");
+            Assert(warning == null, warning);
+        });
+    }
+
+    private static void EndlessWaveRoundTrip()
+    {
+        var generated = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 23);
+        var game = new SheepGame(generated.Snapshot);
+        var first = generated.SolutionIds[0];
+        Assert(game.Pick(first).Changed && game.UseTool(SheepTool.Undo), "Cannot consume undo.");
+        Assert(game.Pick(first).Changed && game.UseTool(SheepTool.RemoveThree), "Cannot consume remove.");
+        foreach (var id in generated.SolutionIds) Assert(game.Pick(id).Changed, "Endless witness was rejected.");
+        Assert(game.AdvanceWave(), "A completed endless wave must advance.");
+        Assert(game.UseTool(SheepTool.Shuffle), "Cannot consume wave-two shuffle.");
+        var snapshot = game.GetSnapshot();
+        Assert(snapshot.Wave == 2 && snapshot.Score == 144 && snapshot.RemoveRemaining == 1 && snapshot.UndoRemaining == 2 &&
+               snapshot.ShuffleRemaining == 0, "Whole-run quota or score reset at next wave.");
+        var original = new SheepSaveData { ActiveMode = SheepMode.Endless, Endless = snapshot, EndlessBest = 144 };
         Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var decoded, out var error), error);
         EqualState(original, decoded);
-        var resumed = new SheepGame(decoded.Game);
-        Assert(resumed.CanPick(resumed.GetSnapshot().Reserve[0]), "Restored reserve lost its selectable state.");
-    }
-
-    private static void KnownPayload()
-    {
-        const string json = "{\"schemaVersion\":1,\"gameId\":\"sheep\",\"game\":{\"level\":1,\"layoutId\":0,\"kinds\":[0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2],\"locations\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"tray\":[],\"reserve\":[],\"randomState\":17,\"removeUsed\":false,\"undoUsed\":false,\"shuffleUsed\":false,\"reviveUsed\":false,\"lastPickedId\":-1,\"lastSource\":-1,\"lastReserveIndex\":-1},\"completedRuns\":\"9007199254740993\",\"winRecorded\":false}";
-        Assert(SheepSaveCodec.TryDecode(json, out var decoded, out var error), error);
-        Assert(decoded.Game.Level == 1 && decoded.Game.LayoutId == 0 && decoded.Game.RandomState == 17, "Fixture identity changed.");
-        Assert(decoded.Game.Kinds.Length == 18 && decoded.Game.Kinds.Count(kind => kind == 2) == 6, "Fixture card counts changed.");
-        Assert(decoded.Game.Tray.Length == 0 && decoded.Game.Reserve.Length == 0 && decoded.Game.LastPickedId == -1, "Missing fields got defaults.");
-        Assert(decoded.CompletedRuns == 9007199254740993L && !decoded.WinRecorded, "Literal completion count lost precision.");
-    }
-
-    private static void ReusableToolsRoundTrip()
-    {
-        var generated = SheepLevelGenerator.Generate(2, 23);
-        var game = new SheepGame(generated.Snapshot);
-        var id = generated.SolutionIds[0];
-        Assert(game.Pick(id).Changed && game.UseTool(SheepTool.Undo), "First undo fixture failed.");
-        Assert(game.Pick(id).Changed && game.UseTool(SheepTool.RemoveThree), "First remove fixture failed.");
-        Assert(game.UseTool(SheepTool.Shuffle), "First shuffle fixture failed.");
-        Assert(game.Pick(id).Changed, "Reserve pick fixture failed.");
-        var source = new SheepSaveData { Game = game.GetSnapshot(), CompletedRuns = 12 };
-        Assert(source.Game.RemoveUsed && source.Game.UndoUsed && source.Game.ShuffleUsed, "Expected historical flags from real actions.");
-        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
-        EqualState(source, decoded);
-        WithDirectory(directory =>
-        {
-            var store = new SheepSaveStore(directory);
-            Assert(store.TrySave(decoded, out error), error);
-            var disk = new SheepSaveStore(directory).Load(out var warning);
-            EqualState(decoded, disk);
-            Assert(warning == null, warning);
-            var resumed = new SheepGame(disk.Game);
-            Assert(resumed.CanUseTool(SheepTool.RemoveThree) && resumed.CanUseTool(SheepTool.Undo) && resumed.CanUseTool(SheepTool.Shuffle),
-                "Historical flags cannot impose quotas after restoring old schema 1 data.");
-            Assert(resumed.UseTool(SheepTool.Undo) && resumed.GetSnapshot().Reserve.SequenceEqual(new[] { id }), "Reused undo did not restore reserve.");
-            Assert(resumed.Pick(id).Changed && resumed.UseTool(SheepTool.RemoveThree), "Reused remove failed after restore.");
-            Assert(resumed.UseTool(SheepTool.Shuffle) && resumed.UseTool(SheepTool.Shuffle), "Repeated shuffles failed after restore.");
-            var next = new SheepSaveData { Game = resumed.GetSnapshot(), CompletedRuns = 12 };
-            Assert(store.TrySave(next, out error), error);
-            EqualState(next, new SheepSaveStore(directory).Load(out warning));
-        });
-    }
-
-    private static void LegacyChallengeState()
-    {
-        // v0.3.0 used these three layout ids. Card 143 is the highest right blind-stack card in each.
-        foreach (var layoutId in new[] { 0, 1, 2 })
-        {
-            var state = new SheepSnapshot
-            {
-                Level = 2, LayoutId = layoutId, RandomState = 17,
-                Kinds = Enumerable.Range(0, 144).Select(id => id / 9).ToArray(),
-                Locations = new SheepLocation[144], Tray = new[] { 143 }, Reserve = new[] { 131 },
-                RemoveUsed = true, UndoUsed = true, ShuffleUsed = true,
-                LastPickedId = 143, LastSource = (int)SheepLocation.Board, LastReserveIndex = -1
-            };
-            state.Locations[143] = SheepLocation.Tray;
-            state.Locations[131] = SheepLocation.Reserve;
-            var source = new SheepSaveData { Game = state, CompletedRuns = 7 };
-            Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
-            EqualState(source, decoded);
-            foreach (var tool in new[] { SheepTool.RemoveThree, SheepTool.Undo, SheepTool.Shuffle })
-            {
-                var game = new SheepGame(decoded.Game);
-                Assert(game.CanUseTool(tool) && game.UseTool(tool), "Legacy used flag still blocks " + tool);
-                Assert(game.GetSnapshot().TryValidate(out error), error);
-            }
-        }
-    }
-
-    private static void RepeatedRemoveRoundTrip()
-    {
-        var game = new SheepGame(2, 29);
-        while (game.GetSnapshot().Tray.Length < 6)
-        {
-            var state = game.GetSnapshot();
-            var id = Enumerable.Range(0, state.Kinds.Length).Where(game.CanPick)
-                .OrderBy(card => state.Tray.Count(slot => state.Kinds[slot] == state.Kinds[card])).First();
-            Assert(game.Pick(id).Changed && game.Phase != SheepPhase.Lost, "Could not create six-card fixture.");
-        }
-        Assert(game.UseTool(SheepTool.RemoveThree) && game.UseTool(SheepTool.RemoveThree), "Two move actions must be allowed.");
-        var source = new SheepSaveData { Game = game.GetSnapshot() };
-        Assert(source.Game.Reserve.Length == 6 && source.Game.RemoveUsed && !source.Game.ReviveUsed, "Repeated move does not need a revival flag.");
-        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(source), out var decoded, out var error), error);
-        EqualState(source, decoded);
-        WithDirectory(directory =>
-        {
-            var store = new SheepSaveStore(directory);
-            Assert(store.TrySave(source, out error), error);
-            EqualState(source, new SheepSaveStore(directory).Load(out var warning));
-            Assert(warning == null, warning);
-        });
-    }
-
-    private static void LostAndRevivedRoundTrip()
-    {
-        SheepGame lost = null;
-        for (uint seed = 1; seed <= 32 && lost == null; seed++)
-        {
-            var candidate = new SheepGame(2, seed);
-            while (candidate.Phase == SheepPhase.Playing)
-            {
-                var snapshot = candidate.GetSnapshot();
-                var id = Enumerable.Range(0, snapshot.Kinds.Length).Where(candidate.CanPick)
-                    .OrderBy(card => snapshot.Tray.Count(slot => snapshot.Kinds[slot] == snapshot.Kinds[card])).First();
-                Assert(candidate.Pick(id).Changed, "Greedy fixture pick failed.");
-            }
-            if (candidate.Phase == SheepPhase.Lost) lost = candidate;
-        }
-        Assert(lost != null, "Could not find a legal losing fixture.");
-        var original = new SheepSaveData { Game = lost.GetSnapshot() };
-        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var restored, out var error), error);
-        EqualState(original, restored);
-        Assert(new SheepGame(restored.Game).Phase == SheepPhase.Lost, "Lost board became playable on restore.");
-        Assert(lost.UseTool(SheepTool.Revive), "A first loss must allow revive.");
-        original.Game = lost.GetSnapshot();
-        Assert(original.Game.ReviveUsed && original.Game.Reserve.Length == 3, "Revive fixture state missing.");
-        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out restored, out error), error);
-        EqualState(original, restored);
-        Assert(new SheepGame(restored.Game).Phase == SheepPhase.Playing, "Revived board did not stay playable.");
+        var resumed = new SheepGame(decoded.Endless);
+        Assert(resumed.GetSnapshot().Wave == 2 && !resumed.CanUseTool(SheepTool.Shuffle), "Endless run reset on resume.");
     }
 
     private static void WinningRoundTrip()
@@ -215,10 +216,39 @@ internal static class Program
         }
     }
 
+    private static void LostAndRevivedRoundTrip()
+    {
+        SheepGame lost = null;
+        for (uint seed = 1; seed <= 32 && lost == null; seed++)
+        {
+            var candidate = new SheepGame(SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, seed).Snapshot);
+            while (candidate.Phase == SheepPhase.Playing)
+            {
+                var snapshot = candidate.GetSnapshot();
+                var id = Enumerable.Range(0, snapshot.Kinds.Length).Where(candidate.CanPick)
+                    .OrderBy(card => snapshot.Tray.Count(slot => snapshot.Kinds[slot] == snapshot.Kinds[card])).First();
+                Assert(candidate.Pick(id).Changed, "Greedy fixture pick failed.");
+            }
+            if (candidate.Phase == SheepPhase.Lost) lost = candidate;
+        }
+        Assert(lost != null, "Could not find a legal losing fixture.");
+        var original = new SheepSaveData { ActiveMode = SheepMode.Endless, Endless = lost.GetSnapshot(), EndlessBest = lost.GetSnapshot().Score };
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var restored, out var error), error);
+        EqualState(original, restored);
+        Assert(new SheepGame(restored.Game).Phase == SheepPhase.Lost, "Lost board became playable on restore.");
+        Assert(lost.UseTool(SheepTool.Revive), "A first loss must allow revive.");
+        original.Game = lost.GetSnapshot();
+        Assert(original.Game.ReviveUsed && original.Game.Reserve.Length == 3, "Revive fixture state missing.");
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out restored, out error), error);
+        EqualState(original, restored);
+        Assert(new SheepGame(restored.Game).Phase == SheepPhase.Playing && !new SheepGame(restored.Game).CanUseTool(SheepTool.Revive),
+            "Revived run did not retain revival state.");
+    }
+
     private static void RequiredFields()
     {
-        var original = JObject.Parse(SheepSaveCodec.Encode(Example()));
-        foreach (var section in new[] { "", "game" })
+        var original = JObject.Parse(SheepSaveCodec.Encode(AllModes()));
+        foreach (var section in new[] { "", "challenge", "endless", "tutorial", "preferences" })
         {
             var target = section.Length == 0 ? original : (JObject)original[section];
             foreach (var property in target.Properties())
@@ -226,6 +256,7 @@ internal static class Program
                 var removed = (JObject)original.DeepClone();
                 (section.Length == 0 ? removed : (JObject)removed[section]).Remove(property.Name);
                 Reject(removed.ToString(), "missing " + section + "." + property.Name);
+                if (section.Length == 0 && new[] { "challenge", "endless", "tutorial" }.Contains(property.Name)) continue;
                 var nulled = (JObject)original.DeepClone();
                 (section.Length == 0 ? nulled : (JObject)nulled[section])[property.Name] = JValue.CreateNull();
                 Reject(nulled.ToString(), "null " + section + "." + property.Name);
@@ -235,38 +266,51 @@ internal static class Program
 
     private static void InvalidTokens()
     {
-        foreach (var value in new JToken[] { 0, 2, "1", 1.0, true, new JArray() }) InvalidRoot("schemaVersion", value);
+        foreach (var value in new JToken[] { 0, 1, 3, "2", 2.0, true, new JArray() }) InvalidRoot("schemaVersion", value);
         foreach (var value in new JToken[] { "jump", "SHEEP", "", 1, new JObject() }) InvalidRoot("gameId", value);
-        foreach (var value in new JToken[] { new JArray(), "state", 1 }) InvalidRoot("game", value);
-        foreach (var value in new JToken[] { 5, -1, "-1", "9223372036854775808", "1.5", "+5", " 5", "5 ", true })
-            InvalidRoot("completedRuns", value);
-        foreach (var name in new[] { "level", "layoutId", "lastPickedId", "lastSource", "lastReserveIndex" })
+        foreach (var name in new[] { "challenge", "endless", "tutorial", "preferences" })
+            foreach (var value in new JToken[] { new JArray(), "state", 1, false }) InvalidRoot(name, value);
+        foreach (var name in new[] { "completedRuns", "endlessBest" })
+            foreach (var value in InvalidLongTokens()) InvalidRoot(name, value);
+        foreach (var value in new JToken[] { -1, 3, "0", 0.0, false, long.MaxValue }) InvalidRoot("activeMode", value);
+        foreach (var name in new[] { "mode", "difficulty", "wave", "level", "layoutId", "lastPickedId", "lastSource", "lastReserveIndex",
+                                     "removeLimit", "undoLimit", "shuffleLimit", "removeRemaining", "undoRemaining", "shuffleRemaining" })
             foreach (var value in new JToken[] { "2", 2.0, true, long.MaxValue, long.MinValue, new JObject() }) InvalidGame(name, value);
         foreach (var value in new JToken[] { "2", 2.0, true, -1, 4294967296L, new JObject() }) InvalidGame("randomState", value);
-        foreach (var name in new[] { "removeUsed", "undoUsed", "shuffleUsed", "reviveUsed" })
-            foreach (var value in new JToken[] { "false", 0, 1, new JObject() }) InvalidGame(name, value);
-        foreach (var value in new JToken[] { "false", 0, 1, new JObject() }) InvalidRoot("winRecorded", value);
+        foreach (var value in InvalidLongTokens()) InvalidGame("score", value);
+        foreach (var value in new JToken[] { "false", 0, 1, new JObject() })
+        {
+            InvalidGame("reviveUsed", value); InvalidRoot("winRecorded", value); InvalidPreference("skipDifficultyPrompt", value);
+        }
+        foreach (var name in new[] { "defaultDifficulty", "removeLimit", "undoLimit", "shuffleLimit" })
+            foreach (var value in new JToken[] { "2", 2.0, true, -1, 100, long.MaxValue, new JObject() }) InvalidPreference(name, value);
         foreach (var name in new[] { "kinds", "locations", "tray", "reserve" })
         {
             foreach (var value in new JToken[] { 0, "[]", new JObject() }) InvalidGame(name, value);
             foreach (var value in new JToken[] { JValue.CreateNull(), "0", 0.0, true, long.MaxValue, new JObject(), new JArray() })
                 InvalidGame(name, new JArray(value));
+            InvalidGame(name, new JArray(Enumerable.Repeat(0, 145)));
         }
-        InvalidRoot("unexpectedField", 1);
-        InvalidGame("unexpectedField", 1);
+        InvalidRoot("unexpectedField", 1); InvalidGame("unexpectedField", 1); InvalidPreference("unexpectedField", 1);
         var badLocation = JObject.Parse(SheepSaveCodec.Encode(Example()));
-        badLocation["game"]["locations"][0] = 256;
+        badLocation["tutorial"]["locations"][0] = 256;
         Reject(badLocation.ToString(), "undefined location enum");
+    }
+
+    private static JToken[] InvalidLongTokens()
+    {
+        return new JToken[] { 5, -1, "-1", "9223372036854775808", "1.5", "+5", " 5", "5 ", true, new JObject() };
     }
 
     private static void InvalidDocuments()
     {
         var valid = SheepSaveCodec.Encode(Example());
         foreach (var invalid in new[] { (string)null, "", " ", "{", "null", "[]", "17", "{}", valid + "{}", valid + "17", valid + " trailing",
-            valid.Replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"schemaVersion\":1"),
+            valid.Replace("\"schemaVersion\":2", "\"schemaVersion\":2,\"schemaVersion\":2"),
             valid.Replace("\"level\":1", "\"level\":1,\"level\":1"),
+            valid.Replace("\"removeLimit\":2", "\"removeLimit\":2,\"removeLimit\":2"),
             valid.Replace("\"randomState\":", "\"randomState\":1e999,\"bad\":"),
-            "{\"game\":[[[[[[[[[]]]]]]]]]}" }) Reject(invalid, "invalid document");
+            "{\"tutorial\":[[[[[[[[[]]]]]]]]]}" }) Reject(invalid, "invalid document");
         Assert(SheepSaveCodec.TryDecode(valid + " \n\t", out var data, out var error), error);
         Assert(data != null, "Trailing whitespace is valid JSON.");
     }
@@ -274,7 +318,7 @@ internal static class Program
     private static void OversizedPayloads()
     {
         Assert(SheepSaveCodec.MaximumLength == 128 * 1024, "Limit must be 128 KiB.");
-        var valid = SheepSaveCodec.Encode(Example());
+        var valid = SheepSaveCodec.Encode(AllModes());
         Reject(valid + new string(' ', SheepSaveCodec.MaximumLength), "oversized text");
         Reject("{\"unknown\":\"" + new string('界', SheepSaveCodec.MaximumLength / 2) + "\"}", "oversized UTF-8 text");
     }
@@ -283,67 +327,97 @@ internal static class Program
     {
         var mutations = new Action<SheepSnapshot>[]
         {
-            game => game.Level = 0,
-            game => game.Level = 3,
-            game => game.LayoutId = -1,
-            game => game.Kinds = null,
-            game => game.Kinds = new int[0],
-            game => game.Kinds[0] = 16,
-            game => game.Locations = null,
-            game => game.Locations = new SheepLocation[0],
-            game => game.Locations[0] = (SheepLocation)4,
-            game => game.Tray = null,
-            game => game.Reserve = null,
-            game => game.Tray = new[] { 0 },
-            game => game.Reserve = new[] { 0 },
-            game => game.RandomState = 0,
-            game => game.LastPickedId = 999,
-            game => game.LastSource = 1,
-            game => game.LastReserveIndex = 99
+            game => game.Mode = (SheepMode)3, game => game.Difficulty = (SheepDifficulty)4,
+            game => game.Level = 0, game => game.Level = 3, game => game.LayoutId = -1,
+            game => game.Wave = 0, game => game.Wave = 2, game => game.Score = -1, game => game.Score = 3,
+            game => game.RemoveLimit = 100, game => game.UndoLimit = -1, game => game.ShuffleLimit = 0,
+            game => game.RemoveRemaining = 3, game => game.UndoRemaining = -1, game => game.ShuffleRemaining = 2,
+            game => game.Kinds = null, game => game.Kinds = new int[0], game => game.Kinds[0] = 16,
+            game => game.Locations = null, game => game.Locations = new SheepLocation[0], game => game.Locations[0] = (SheepLocation)4,
+            game => game.Tray = null, game => game.Reserve = null, game => game.Tray = new[] { 0 }, game => game.Reserve = new[] { 0 },
+            game => game.RandomState = 0, game => game.LastPickedId = 999, game => game.LastSource = 1, game => game.LastReserveIndex = 99
         };
         foreach (var mutate in mutations)
         {
-            var invalid = Example();
-            mutate(invalid.Game);
+            var invalid = Example(); mutate(invalid.Game);
             ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
         }
         ExpectArgumentException(() => SheepSaveCodec.Encode(null));
-        ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData()));
-        InvalidGame("level", 3);
-        InvalidGame("layoutId", -1);
-        InvalidGame("randomState", 0);
-        InvalidGame("tray", new JArray(0));
-        InvalidGame("reserve", new JArray(0));
-        InvalidGame("lastPickedId", 999);
-        InvalidGame("lastSource", 1);
+        ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData { ActiveMode = (SheepMode)3 }));
+        var wrongSlot = new SheepSaveData { Challenge = Example().Tutorial };
+        ExpectArgumentException(() => SheepSaveCodec.Encode(wrongSlot));
+        foreach (var name in new[] { "mode", "difficulty", "level" }) InvalidGame(name, 3);
+        InvalidGame("layoutId", -1); InvalidGame("randomState", 0); InvalidGame("tray", new JArray(0));
+        InvalidGame("reserve", new JArray(0)); InvalidGame("lastPickedId", 999); InvalidGame("lastSource", 1);
+        InvalidGame("score", "3"); InvalidGame("wave", 2); InvalidGame("removeRemaining", 3);
+        var inactiveBad = JObject.Parse(SheepSaveCodec.Encode(AllModes()));
+        inactiveBad["endless"]["score"] = "1";
+        Reject(inactiveBad.ToString(), "invalid inactive slot must invalidate whole save");
     }
 
     private static void WinAccounting()
     {
-        var invalid = Example();
-        invalid.CompletedRuns = -1;
-        ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
-        invalid = Example(2);
-        invalid.CompletedRuns = 1;
-        invalid.WinRecorded = true;
-        ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
-        invalid = Won(1);
-        invalid.CompletedRuns = 1;
-        invalid.WinRecorded = true;
-        ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
-        invalid = Won(2);
-        invalid.WinRecorded = false;
-        ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
-        invalid = Won(2);
-        invalid.CompletedRuns = 0;
-        ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
-        var won = JObject.Parse(SheepSaveCodec.Encode(Won(2)));
-        won["winRecorded"] = false;
-        Reject(won.ToString(), "unrecorded completed challenge");
-        won["winRecorded"] = true;
-        won["completedRuns"] = "0";
-        Reject(won.ToString(), "recorded win with no completion");
+        ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData { CompletedRuns = -1 }));
+        foreach (var invalid in new[] {
+            new SheepSaveData { WinRecorded = true, CompletedRuns = 1 },
+            new SheepSaveData { Challenge = Example(2).Challenge, WinRecorded = true, CompletedRuns = 1 },
+            new SheepSaveData { Tutorial = Won(1).Tutorial, WinRecorded = true, CompletedRuns = 1 },
+            new SheepSaveData { Challenge = Won(2).Challenge, CompletedRuns = 1 },
+            new SheepSaveData { Challenge = Won(2).Challenge, WinRecorded = true } })
+            ExpectArgumentException(() => SheepSaveCodec.Encode(invalid));
+        var original = Won(2);
+        original.Endless = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 17).Snapshot;
+        original.ActiveMode = SheepMode.Endless;
+        for (var index = 0; index < 3; index++)
+        {
+            Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(original), out var decoded, out var reason), reason);
+            EqualState(original, decoded);
+            Assert(decoded.CompletedRuns == 1 && decoded.WinRecorded, "A challenge win must not count again during mode switching.");
+            original = decoded;
+        }
+        var won = JObject.Parse(SheepSaveCodec.Encode(original));
+        won["winRecorded"] = false; Reject(won.ToString(), "unrecorded completed challenge");
+        won["winRecorded"] = true; won["completedRuns"] = "0"; Reject(won.ToString(), "recorded win with no completion");
         InvalidRoot("winRecorded", true);
+    }
+
+    private static void EndlessAccounting()
+    {
+        ExpectArgumentException(() => SheepSaveCodec.Encode(new SheepSaveData { EndlessBest = -1 }));
+        var generated = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 17);
+        var game = new SheepGame(generated.Snapshot);
+        foreach (var id in generated.SolutionIds)
+        {
+            Assert(game.Pick(id).Changed, "Could not create scored endless run.");
+            if (game.ClearedCount >= 3) break;
+        }
+        var data = new SheepSaveData { Endless = game.GetSnapshot() };
+        ExpectArgumentException(() => SheepSaveCodec.Encode(data));
+        data.EndlessBest = data.Endless.Score;
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(data), out var decoded, out var reason), reason);
+        EqualState(data, decoded);
+        var root = JObject.Parse(SheepSaveCodec.Encode(data)); root["endlessBest"] = "0";
+        Reject(root.ToString(), "best below ranked score");
+        data.Endless.RemoveLimit = 99; data.Endless.RemoveRemaining = 99; data.EndlessBest = 0;
+        Assert(SheepSaveCodec.TryDecode(SheepSaveCodec.Encode(data), out decoded, out reason), reason);
+        Assert(decoded.EndlessBest == 0 && decoded.Endless.Score > 0, "A custom run must not force a standard high score.");
+        data.Preferences.RemoveLimit = 99;
+        data.Endless = game.GetSnapshot();
+        ExpectArgumentException(() => SheepSaveCodec.Encode(data));
+    }
+
+    private static void LegacyRejected()
+    {
+        const string legacy = "{\"schemaVersion\":1,\"gameId\":\"sheep\",\"game\":{\"level\":1,\"layoutId\":0,\"kinds\":[0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2],\"locations\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"tray\":[],\"reserve\":[],\"randomState\":17,\"removeUsed\":false,\"undoUsed\":false,\"shuffleUsed\":false,\"reviveUsed\":false,\"lastPickedId\":-1,\"lastSource\":-1,\"lastReserveIndex\":-1},\"completedRuns\":\"0\",\"winRecorded\":false}";
+        Reject(legacy, "legacy schema");
+        WithDirectory(directory =>
+        {
+            var path = Path.Combine(directory, "sheep-v1.json"); File.WriteAllText(path, legacy);
+            var store = new SheepSaveStore(directory);
+            Assert(store.Load(out var warning) == null && warning == null, "Legacy save was migrated or treated as corrupt v2.");
+            Assert(store.TrySave(new SheepSaveData(), out var error), error);
+            Assert(File.ReadAllText(path) == legacy, "Legacy bytes changed.");
+        });
     }
 
     private static void MissingSave()
@@ -351,7 +425,7 @@ internal static class Program
         WithDirectory(directory =>
         {
             var store = new SheepSaveStore(directory);
-            Assert(store.SavePath == Path.Combine(directory, "sheep-v1.json"), "Wrong independent filename.");
+            Assert(store.SavePath == Path.Combine(directory, "sheep-v2.json"), "Wrong independent filename.");
             Assert(store.Load(out var warning) == null && warning == null, "First launch should be quiet.");
         });
         ExpectArgumentException(() => new SheepSaveStore(null));
@@ -480,13 +554,13 @@ internal static class Program
         WithDirectory(directory =>
         {
             var sentinel = new byte[] { 0, 255, 1, 2, 8, 13, 10, 31 };
-            foreach (var name in new[] { "xanaduyonder-v1.json", "jump-v1.json" })
+            foreach (var name in new[] { "xanaduyonder-v1.json", "jump-v1.json", "idiom-v1.json", "idiom-notebook-v1.json", "sheep-v1.json" })
                 foreach (var suffix in new[] { "", ".bak", ".tmp" }) File.WriteAllBytes(Path.Combine(directory, name + suffix), sentinel);
             var store = new SheepSaveStore(directory);
             Assert(store.TrySave(Example(), out var error), error);
             Assert(store.TrySave(Example(2), out error), error);
             EqualState(Example(2), store.Load(out var warning));
-            foreach (var name in new[] { "xanaduyonder-v1.json", "jump-v1.json" })
+            foreach (var name in new[] { "xanaduyonder-v1.json", "jump-v1.json", "idiom-v1.json", "idiom-notebook-v1.json", "sheep-v1.json" })
                 foreach (var suffix in new[] { "", ".bak", ".tmp" }) EqualBytes(sentinel, File.ReadAllBytes(Path.Combine(directory, name + suffix)));
         });
     }
@@ -496,19 +570,26 @@ internal static class Program
         WithDirectory(directory =>
         {
             var store = new SheepSaveStore(directory);
-            var original = Example();
+            var original = AllModes();
             Assert(store.TrySave(original, out var error), error);
             var first = store.Load(out var warning);
             var second = store.Load(out warning);
-            Assert(!ReferenceEquals(first.Game, second.Game) && !ReferenceEquals(first.Game.Kinds, second.Game.Kinds) &&
-                   !ReferenceEquals(first.Game.Locations, second.Game.Locations) && !ReferenceEquals(first.Game.Tray, second.Game.Tray) &&
-                   !ReferenceEquals(first.Game.Reserve, second.Game.Reserve), "Loaded objects alias each other.");
-            first.Game.Kinds[0] = 999;
-            first.Game.Locations[0] = SheepLocation.Removed;
+            foreach (var mode in new[] { SheepMode.Challenge, SheepMode.Endless, SheepMode.Tutorial })
+            {
+                first.ActiveMode = mode; second.ActiveMode = mode;
+                Assert(!ReferenceEquals(first.Game, second.Game) && !ReferenceEquals(first.Game.Kinds, second.Game.Kinds) &&
+                       !ReferenceEquals(first.Game.Locations, second.Game.Locations) && !ReferenceEquals(first.Game.Tray, second.Game.Tray) &&
+                       !ReferenceEquals(first.Game.Reserve, second.Game.Reserve), "Loaded mode objects alias each other.");
+                first.Game.Kinds[0] = 999;
+                first.Game.Locations[0] = SheepLocation.Removed;
+            }
+            Assert(!ReferenceEquals(first.Preferences, second.Preferences), "Loaded preferences alias each other.");
+            first.Preferences.RemoveLimit = 99;
             first.CompletedRuns = 99;
-            original.Game.Kinds[0] = 888;
-            EqualState(Example(), second);
-            EqualState(Example(), store.Load(out warning));
+            original.Challenge.Kinds[0] = 888;
+            second.ActiveMode = SheepMode.Challenge;
+            EqualState(AllModes(), second);
+            EqualState(AllModes(), store.Load(out warning));
         });
     }
 
@@ -524,43 +605,78 @@ internal static class Program
 
     private static SheepSaveData Example(int level = 1, uint seed = 17)
     {
-        return new SheepSaveData { Game = new SheepGame(level, seed).GetSnapshot() };
+        var mode = level == 1 ? SheepMode.Tutorial : SheepMode.Challenge;
+        var data = new SheepSaveData { ActiveMode = mode };
+        data.Game = SheepLevelGenerator.Generate(mode, SheepDifficulty.Normal, seed).Snapshot;
+        return data;
+    }
+
+    private static SheepSaveData AllModes()
+    {
+        return new SheepSaveData {
+            Challenge = SheepLevelGenerator.Generate(SheepMode.Challenge, SheepDifficulty.Extreme, 17).Snapshot,
+            Endless = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 23).Snapshot,
+            Tutorial = SheepLevelGenerator.Generate(SheepMode.Tutorial, SheepDifficulty.Normal, 29).Snapshot
+        };
     }
 
     private static SheepSaveData Won(int level)
     {
-        var generated = SheepLevelGenerator.Generate(level, 41);
+        var mode = level == 1 ? SheepMode.Tutorial : SheepMode.Challenge;
+        var generated = SheepLevelGenerator.Generate(mode, SheepDifficulty.Normal, 41);
         var game = new SheepGame(generated.Snapshot);
         foreach (var id in generated.SolutionIds) Assert(game.Pick(id).Changed, "Winning fixture rejected solution card " + id);
         Assert(game.Phase == SheepPhase.Won, "Solution must win the fixture.");
-        return new SheepSaveData { Game = game.GetSnapshot(), CompletedRuns = level == 2 ? 1 : 0, WinRecorded = level == 2 };
+        var data = new SheepSaveData { ActiveMode = mode, CompletedRuns = level == 2 ? 1 : 0, WinRecorded = level == 2 };
+        data.Game = game.GetSnapshot();
+        return data;
     }
 
     private static void EqualState(SheepSaveData expected, SheepSaveData actual)
     {
-        Assert(actual != null && actual.Game != null, "Loaded save or game is null.");
-        var a = expected.Game;
-        var b = actual.Game;
-        Assert(a.Level == b.Level && a.LayoutId == b.LayoutId && a.RandomState == b.RandomState, "Identity or RNG changed.");
-        Assert(a.Kinds.SequenceEqual(b.Kinds) && a.Locations.SequenceEqual(b.Locations), "Card types or positions changed.");
-        Assert(a.Tray.SequenceEqual(b.Tray) && a.Reserve.SequenceEqual(b.Reserve), "Ordered slots changed.");
-        Assert(a.RemoveUsed == b.RemoveUsed && a.UndoUsed == b.UndoUsed && a.ShuffleUsed == b.ShuffleUsed && a.ReviveUsed == b.ReviveUsed, "Tool state changed.");
-        Assert(a.LastPickedId == b.LastPickedId && a.LastSource == b.LastSource && a.LastReserveIndex == b.LastReserveIndex, "Undo state changed.");
-        Assert(expected.CompletedRuns == actual.CompletedRuns && expected.WinRecorded == actual.WinRecorded, "Completion accounting changed.");
+        Assert(actual != null, "Loaded save is null.");
+        Assert(expected.ActiveMode == actual.ActiveMode && expected.CompletedRuns == actual.CompletedRuns &&
+               expected.EndlessBest == actual.EndlessBest && expected.WinRecorded == actual.WinRecorded, "Mode or records changed.");
+        var p = expected.Preferences; var q = actual.Preferences;
+        Assert(q != null && p.DefaultDifficulty == q.DefaultDifficulty && p.SkipDifficultyPrompt == q.SkipDifficultyPrompt &&
+               p.RemoveLimit == q.RemoveLimit && p.UndoLimit == q.UndoLimit && p.ShuffleLimit == q.ShuffleLimit, "Preferences changed.");
+        EqualSnapshot(expected.Challenge, actual.Challenge);
+        EqualSnapshot(expected.Endless, actual.Endless);
+        EqualSnapshot(expected.Tutorial, actual.Tutorial);
+    }
+
+    private static void EqualSnapshot(SheepSnapshot expected, SheepSnapshot actual)
+    {
+        if (expected == null) { Assert(actual == null, "An unstarted slot became a game."); return; }
+        Assert(actual != null, "Saved slot disappeared.");
+        Assert(expected.Mode == actual.Mode && expected.Difficulty == actual.Difficulty && expected.Level == actual.Level &&
+               expected.LayoutId == actual.LayoutId && expected.Wave == actual.Wave && expected.Score == actual.Score &&
+               expected.RandomState == actual.RandomState, "Run identity, progress or RNG changed.");
+        Assert(expected.Kinds.SequenceEqual(actual.Kinds) && expected.Locations.SequenceEqual(actual.Locations) &&
+               expected.Tray.SequenceEqual(actual.Tray) && expected.Reserve.SequenceEqual(actual.Reserve), "Card state or ordered slots changed.");
+        Assert(expected.RemoveLimit == actual.RemoveLimit && expected.UndoLimit == actual.UndoLimit && expected.ShuffleLimit == actual.ShuffleLimit &&
+               expected.RemoveRemaining == actual.RemoveRemaining && expected.UndoRemaining == actual.UndoRemaining &&
+               expected.ShuffleRemaining == actual.ShuffleRemaining && expected.ReviveUsed == actual.ReviveUsed, "Frozen run quotas or tool state changed.");
+        Assert(expected.LastPickedId == actual.LastPickedId && expected.LastSource == actual.LastSource &&
+               expected.LastReserveIndex == actual.LastReserveIndex, "Undo state changed.");
     }
 
     private static void InvalidRoot(string name, JToken value)
     {
-        var root = JObject.Parse(SheepSaveCodec.Encode(Example()));
-        root[name] = value.DeepClone();
+        var root = JObject.Parse(SheepSaveCodec.Encode(Example())); root[name] = value.DeepClone();
         Reject(root.ToString(Formatting.None), "root " + name + "=" + value);
     }
 
     private static void InvalidGame(string name, JToken value)
     {
-        var root = JObject.Parse(SheepSaveCodec.Encode(Example()));
-        root["game"][name] = value.DeepClone();
-        Reject(root.ToString(Formatting.None), "game " + name + "=" + value);
+        var root = JObject.Parse(SheepSaveCodec.Encode(Example())); root["tutorial"][name] = value.DeepClone();
+        Reject(root.ToString(Formatting.None), "tutorial " + name + "=" + value);
+    }
+
+    private static void InvalidPreference(string name, JToken value)
+    {
+        var root = JObject.Parse(SheepSaveCodec.Encode(Example())); root["preferences"][name] = value.DeepClone();
+        Reject(root.ToString(Formatting.None), "preferences " + name + "=" + value);
     }
 
     private static void Reject(string json, string label)

@@ -13,7 +13,7 @@ namespace XanaduYonder.Runtime.Sheep
         {
             if (string.IsNullOrWhiteSpace(directory)) throw new ArgumentException("Save directory is missing.", nameof(directory));
             this.directory = directory;
-            SavePath = Path.Combine(directory, "sheep-v1.json");
+            SavePath = Path.Combine(directory, "sheep-v2.json");
         }
 
         public SheepSaveData Load(out string warning)
@@ -25,7 +25,7 @@ namespace XanaduYonder.Runtime.Sheep
                 warning = "旸了个旸存档异常，已恢复最近一次备份。";
                 return data;
             }
-            if (mainError != null || backupError != null) warning = "旸了个旸存档无法读取，已为你开启新的一局。";
+            if (mainError != null || backupError != null) warning = "旸了个旸存档无法读取，请选择模式重新开始。";
             return null;
         }
 

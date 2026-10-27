@@ -11,9 +11,9 @@
 - **2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开。
 - **跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
 - **成语接龙**：同字/同音双模式、机器/用户双开局、左右对话、免费提示与三次提示小结、可点击释义和本地生词本。
-- **旸了个旸**：多层叠牌、7 格卡槽三消、教学关与挑战关、12种分堆布局、不限次移出/撤回/洗牌、一次免费复活和累计通关。
+- **旸了个旸**：多层叠牌、7 格卡槽三消、四档第二关挑战与无尽模式、可选热身、12 种分堆布局；默认移出 / 撤回 / 洗牌为每局 2 / 3 / 1 次，新局配额可设为 0..99（0 为禁用）。各模式独立续局，记录累计通关和标准无尽最高消除数。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关。声音与触感设置共用，旸了个旸使用 `sheep-v1.json`，成语接龙使用 `idiom-v1.json` 与独立的 `idiom-notebook-v1.json`，不修改已有游戏的存档协议。
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。四款游戏各自保存对局；2048 与跳一跳记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-v1.json` 与独立的 `idiom-notebook-v1.json`，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
 **最新正式版本为 v0.3.0**，新增旸了个旸和成语接龙，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.3.0)。正式版可覆盖升级 v0.1.0/v0.2.0 并保留兼容的旧存档；详情见[发布记录](docs/releases/v0.3.0.md)。正式版使用独立发布签名，与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -33,6 +33,8 @@ scripts/test-jump-persistence.sh
 scripts/test-sheep.sh
 scripts/test-sheep-persistence.sh
 scripts/test-sheep-layouts.sh
+scripts/test-sheep-session.sh
+scripts/test-sheep-presentation.sh
 scripts/test-idiom.sh
 scripts/test-idiom-persistence.sh
 scripts/test-idiom-resources.sh
@@ -44,7 +46,7 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.3.0-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
-[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
+[v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [模式、难度与紧凑界面验证](docs/verification-sheep-modes.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
 ## 成语接龙与离线词库
 

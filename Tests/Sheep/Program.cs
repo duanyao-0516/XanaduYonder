@@ -21,6 +21,9 @@ internal static class Program
             Console.WriteLine(FixtureJson(level, seed));
             return 0;
         }
+        Run("default undo quota stops after three successful uses", DefaultUndoQuota);
+        Run("normal challenge uses twelve balanced kinds", NormalKinds);
+        Run("endless advancement is exposed by the core", EndlessApi);
         Run("legacy layouts retain bounded nonoverlapping geometry", Layouts);
         Run("generator is deterministic and balanced for all variants", Generation);
         Run("real game replays 600 generated solution witnesses", Witnesses);
@@ -39,8 +42,8 @@ internal static class Program
         Run("tray insertion groups equal kinds and removes exact triple", TrayOrder);
         Run("remove can repeat and preserves first-three ordering", Remove);
         Run("remove handles a tray with fewer than three cards", RemoveSmall);
-        Run("remove is bounded by reserve space instead of usage count", RemoveCapacity);
-        Run("undo is reusable after every new eligible pick", Undo);
+        Run("remove respects reserve space as well as remaining quota", RemoveCapacity);
+        Run("undo permits three separate eligible picks", Undo);
         Run("undo preserves reserve order and restores source ownership", UndoReserve);
         Run("matching selection cannot be undone", UndoMatch);
         Run("remove and undo can rescue full tray", Rescue);
@@ -52,13 +55,157 @@ internal static class Program
         Run("win requires clearing board tray and reserve", Win);
         Run("won game rejects all actions", WonActions);
         Run("reserve undo metadata respects reusable tool capacity", ReserveUndoCapacity);
-        Run("board undo cannot erase the history required by tool flags", UndoHistoryFlags);
+        Run("board undo cannot erase the history required by tool usage", UndoHistoryFlags);
         Run("tutorial snapshots cannot claim a revival", TutorialRevival);
         Run("overlap blocks across nonadjacent layers but touching edges do not", ExactOverlap);
         Run("random action sequences preserve restorable state", RandomActions);
         Run("fixture export contains complete snapshot solution and geometry", FixtureExport);
+        Run("configured quotas are frozen and exhausted tools are atomic", ConfiguredQuotas);
+        Run("score counts only eliminated cards across tools and restored play", Scores);
+        Run("endless next wave preserves run entitlements and score", EndlessWaves);
+        Run("wave advance rejects nonwinning and nonendless states atomically", AdvanceGuards);
+        Run("mode difficulty wave score and quota snapshot contracts are strict", SnapshotContracts);
+        Run("undo metadata identifies the newest unmatched tile", UndoNewest);
         Console.WriteLine("Sheep checks: " + checks + " passed, " + failed + " failed.");
         return failed == 0 ? 0 : 1;
+    }
+
+    private static void DefaultUndoQuota()
+    {
+        var game = new SheepGame(2, 5); int id = FirstPickable(game);
+        for (int i = 0; i < 3; i++) { Assert(game.Pick(id).Changed, "pick for undo"); Assert(game.UseTool(SheepTool.Undo), "first three uses succeed"); }
+        Assert(game.Pick(id).Changed, "fourth pick");
+        Assert(!game.UseTool(SheepTool.Undo), "fourth undo must be rejected after default quota is exhausted");
+    }
+
+    private static void NormalKinds()
+    {
+        var kinds = new HashSet<int>(SheepLevelGenerator.Generate(2, 17).Snapshot.Kinds);
+        Assert(kinds.Count == 12, "default normal challenge must use 12 kinds; got " + kinds.Count);
+    }
+
+    private static void EndlessApi()
+    {
+        Assert(typeof(SheepGame).GetMethod("AdvanceWave") != null, "core must expose AdvanceWave for a won endless wave");
+    }
+
+    private static void ConfiguredQuotas()
+    {
+        var zero = new SheepGame(SheepLevelGenerator.Generate(SheepMode.Challenge, SheepDifficulty.Normal, 77, 0, 0, 0).Snapshot);
+        zero.Pick(FirstPickable(zero)); var before = zero.GetSnapshot();
+        foreach (var tool in new[] { SheepTool.RemoveThree, SheepTool.Undo, SheepTool.Shuffle })
+            Assert(zero.GetToolRemaining(tool) == 0 && !zero.CanUseTool(tool) && !zero.UseTool(tool), "zero quota disables tool");
+        Same(before, zero.GetSnapshot(), "zero quota rejects atomically");
+        var full = new SheepGame(SheepLevelGenerator.Generate(SheepMode.Challenge, SheepDifficulty.Extreme, 9, 99, 99, 99).Snapshot);
+        int id = FirstPickable(full);
+        for (int i = 0; i < 99; i++)
+        {
+            Assert(full.Pick(id).Changed && full.UseTool(SheepTool.Undo), "configured undo entitlement");
+            full = new SheepGame(full.GetSnapshot());
+            Assert(full.GetToolRemaining(SheepTool.Undo) == 98 - i && full.GetSnapshot().UndoLimit == 99, "run limit remains frozen");
+        }
+        full.Pick(id); before = full.GetSnapshot();
+        Assert(!full.UseTool(SheepTool.Undo), "99-use quota exhausted"); Same(before, full.GetSnapshot(), "exhausted undo is atomic");
+        var detached = full.GetSnapshot(); detached.UndoLimit = 2; detached.UndoRemaining = 2;
+        Assert(full.GetSnapshot().UndoLimit == 99 && full.GetToolRemaining(SheepTool.Undo) == 0, "export cannot change frozen run limits");
+        Throws<ArgumentOutOfRangeException>(delegate { SheepLevelGenerator.Generate((SheepMode)3, SheepDifficulty.Normal, 1); });
+        Throws<ArgumentOutOfRangeException>(delegate { SheepLevelGenerator.Generate(SheepMode.Challenge, (SheepDifficulty)4, 1); });
+        Throws<ArgumentOutOfRangeException>(delegate { SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 1, -1); });
+        Throws<ArgumentOutOfRangeException>(delegate { SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 1, 2, 100); });
+        Throws<ArgumentOutOfRangeException>(delegate { SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 1, 2, 3, 100); });
+    }
+
+    private static void Scores()
+    {
+        var game = new SheepGame(Fixture(new[] { 0, 0 }, new int[0]));
+        Assert(game.GetSnapshot().Score == 0, "picking alone gives no score");
+        int id = ExposedOfKind(game.GetSnapshot(), 0);
+        // ExposedOfKind may swap kinds, so import the prepared board.
+        var prepared = game.GetSnapshot(); id = ExposedOfKind(prepared, 0); game = new SheepGame(prepared);
+        Assert(game.Pick(id).MatchedIds.Length == 3 && game.GetSnapshot().Score == 3, "a match scores exactly three eliminated tiles");
+        game.Pick(FirstPickable(game)); long score = game.GetSnapshot().Score;
+        Assert(game.UseTool(SheepTool.Undo), "undo fixture"); Assert(game.GetSnapshot().Score == score, "undo scores zero");
+        game.Pick(FirstPickable(game)); Assert(game.UseTool(SheepTool.RemoveThree), "remove fixture");
+        Assert(game.GetSnapshot().Score == score, "reserve movement scores zero");
+        Assert(game.UseTool(SheepTool.Shuffle), "shuffle fixture"); Assert(game.GetSnapshot().Score == score, "shuffle scores zero");
+        game = new SheepGame(game.GetSnapshot()); Assert(game.GetSnapshot().Score == game.ClearedCount, "score restores consistently");
+    }
+
+    private static void EndlessWaves()
+    {
+        var generated = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Extreme, 456, 4, 5, 6);
+        Assert(generated.Snapshot.Difficulty == SheepDifficulty.Normal, "endless fixes normal difficulty");
+        var game = new SheepGame(generated.Snapshot);
+        int first = generated.SolutionIds[0];
+        game.Pick(first); Assert(game.UseTool(SheepTool.Undo), "spend undo in wave one");
+        game.Pick(first); Assert(game.UseTool(SheepTool.RemoveThree), "spend remove in wave one");
+        Assert(game.Pick(first).Changed, "return removed card");
+        for (int i = 1; i < generated.SolutionIds.Length; i++) Assert(game.Pick(generated.SolutionIds[i]).Changed, "finish wave one witness");
+        var won = game.GetSnapshot(); won.ReviveUsed = true; won.ShuffleRemaining--;
+        game = new SheepGame(won); var restored = new SheepGame(won);
+        var next = SheepLevelGenerator.Generate(won.Mode, won.Difficulty, won.RandomState, won.RemoveLimit, won.UndoLimit, won.ShuffleLimit, won.LayoutId);
+        Assert(game.AdvanceWave() && restored.AdvanceWave(), "won endless waves advance");
+        var second = game.GetSnapshot(); Same(second, restored.GetSnapshot(), "restored RNG produces identical next wave");
+        Assert(second.Wave == 2 && second.Score == 144 && second.LayoutId != won.LayoutId && game.ClearedCount == 0, "new wave retains cumulative score and changes layout");
+        Assert(second.RemoveLimit == 4 && second.UndoLimit == 5 && second.ShuffleLimit == 6 && second.RemoveRemaining == 3 && second.UndoRemaining == 4 && second.ShuffleRemaining == 5 && second.ReviveUsed, "whole-run quotas and revival carry over");
+        Assert(second.LastPickedId == -1 && second.Tray.Length == 0 && second.Reserve.Length == 0, "next wave clears per-wave storage and undo");
+        Valid(second);
+        foreach (int id in next.SolutionIds)
+        {
+            Assert(game.CanPick(id) && game.Pick(id).Changed, "new geometry is used by picks");
+            game = new SheepGame(game.GetSnapshot());
+            Assert(game.GetSnapshot().Score == 144 + game.ClearedCount, "wave two scores only cleared tiles");
+        }
+        Assert(game.Phase == SheepPhase.Won && game.GetSnapshot().Score == 288, "two complete waves score 288");
+        Assert(game.AdvanceWave() && game.GetSnapshot().Wave == 3 && game.GetSnapshot().Score == 288 && game.GetSnapshot().ReviveUsed, "third wave keeps run history");
+    }
+
+    private static void AdvanceGuards()
+    {
+        foreach (var mode in new[] { SheepMode.Tutorial, SheepMode.Challenge, SheepMode.Endless })
+        {
+            var generated = SheepLevelGenerator.Generate(mode, SheepDifficulty.Normal, 19); var game = new SheepGame(generated.Snapshot);
+            var before = game.GetSnapshot(); Assert(!game.AdvanceWave(), "playing game cannot advance"); Same(before, game.GetSnapshot(), "playing rejection atomic");
+            foreach (int id in generated.SolutionIds) game.Pick(id);
+            if (mode != SheepMode.Endless) { before = game.GetSnapshot(); Assert(!game.AdvanceWave(), "only endless advances"); Same(before, game.GetSnapshot(), "nonendless rejection atomic"); }
+        }
+        var max = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 11).Snapshot;
+        for (int i = 0; i < max.Locations.Length; i++) max.Locations[i] = SheepLocation.Removed;
+        max.Wave = int.MaxValue; max.Score = (long)int.MaxValue * 144;
+        var capped = new SheepGame(max); Assert(!capped.AdvanceWave(), "wave integer bound does not overflow"); Same(max, capped.GetSnapshot(), "wave bound is atomic");
+    }
+
+    private static void SnapshotContracts()
+    {
+        Invalid(delegate(SheepSnapshot s) { s.Mode = (SheepMode)(-1); });
+        Invalid(delegate(SheepSnapshot s) { s.Mode = (SheepMode)3; });
+        Invalid(delegate(SheepSnapshot s) { s.Mode = SheepMode.Tutorial; });
+        Invalid(delegate(SheepSnapshot s) { s.Difficulty = (SheepDifficulty)4; });
+        Invalid(delegate(SheepSnapshot s) { s.Difficulty = SheepDifficulty.Easy; });
+        Invalid(delegate(SheepSnapshot s) { s.Wave = 0; });
+        Invalid(delegate(SheepSnapshot s) { s.Wave = 2; });
+        Invalid(delegate(SheepSnapshot s) { s.Score = -1; });
+        Invalid(delegate(SheepSnapshot s) { s.Score = 3; });
+        Invalid(delegate(SheepSnapshot s) { s.RemoveLimit = -1; });
+        Invalid(delegate(SheepSnapshot s) { s.UndoLimit = 100; });
+        Invalid(delegate(SheepSnapshot s) { s.ShuffleLimit = 100; });
+        Invalid(delegate(SheepSnapshot s) { s.RemoveRemaining = -1; });
+        Invalid(delegate(SheepSnapshot s) { s.UndoRemaining = 4; });
+        Invalid(delegate(SheepSnapshot s) { s.ShuffleRemaining = 2; });
+        var endless = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 1).Snapshot;
+        endless.Wave = 2; Invalid(endless); endless.Score = 144; Valid(endless);
+        endless.Difficulty = SheepDifficulty.Hard; Invalid(endless);
+        var tutorial = SheepLevelGenerator.Generate(1, 1).Snapshot; tutorial.Difficulty = SheepDifficulty.Easy; Invalid(tutorial);
+        var history = SheepLevelGenerator.Generate(SheepMode.Endless, SheepDifficulty.Normal, 1).Snapshot;
+        history.Wave = 2; history.Score = 144; history.RemoveRemaining--; history.ReviveUsed = true; Valid(history);
+    }
+
+    private static void UndoNewest()
+    {
+        var state = Fixture(new[] { 0, 0 }, new int[0]);
+        state.LastPickedId = state.Tray[0]; state.LastSource = (int)SheepLocation.Board;
+        Invalid(state);
+        state.LastPickedId = state.Tray[1]; Valid(state);
     }
 
     private static void Layouts()
@@ -99,9 +246,9 @@ internal static class Program
             variants[level - 1].Add(a.Snapshot.LayoutId);
             Assert(level == 1 || a.Snapshot.LayoutId >= SheepBoardLayout.NewLayoutStart, "new challenges use the separated layouts");
             Assert(a.Snapshot.RandomState != 0 && a.Snapshot.Tray.Length == 0 && a.Snapshot.Reserve.Length == 0, "fresh state");
-            int[] kinds = new int[level == 1 ? 3 : 16];
+            int[] kinds = new int[level == 1 ? 3 : 12];
             foreach (int kind in a.Snapshot.Kinds) kinds[kind]++;
-            foreach (int count in kinds) Assert(count == (level == 1 ? 6 : 9), "balanced kinds");
+            foreach (int count in kinds) Assert(count == (level == 1 ? 6 : 12), "balanced kinds");
         }
         Assert(variants[0].Count == 3, "all tutorial layouts are selected");
         Assert(variants[1].Count == SheepBoardLayout.ChallengeLayoutCount - SheepBoardLayout.NewLayoutStart, "all new challenge layouts are selected");
@@ -127,7 +274,7 @@ internal static class Program
             }
             Assert(game.Phase == SheepPhase.Won && game.RemainingCount == 0 && game.ClearedCount == generated.SolutionIds.Length, "witness clears all cards");
         }
-        Assert(largestTray >= 5, "generation must interleave triples rather than always emit three identical cards");
+        Assert(largestTray >= 4, "generation must interleave triples rather than always emit three identical cards");
     }
 
     private static void Copies()
@@ -171,7 +318,7 @@ internal static class Program
         Invalid(delegate(SheepSnapshot s) { s.LastReserveIndex = 0; });
         var duplicate = Fixture(new[] { 0, 1 }, new int[0]); duplicate.Tray[1] = duplicate.Tray[0]; Invalid(duplicate);
         var fullMatch = Fixture(new[] { 0, 0, 0 }, new int[0]); Invalid(fullMatch);
-        var reserve = Fixture(new int[0], new[] { 0 }); reserve.RemoveUsed = false; Invalid(reserve);
+        var reserve = Fixture(new int[0], new[] { 0 }); reserve.RemoveRemaining = reserve.RemoveLimit; Invalid(reserve);
         var tooMany = Fixture(new[] { 0, 1, 2, 3, 4, 5, 6, 7 }, new int[0]); Invalid(tooMany);
         var impossibleUndo = Fixture(new[] { 0 }, new int[0]); impossibleUndo.LastPickedId = impossibleUndo.Tray[0]; impossibleUndo.LastSource = 2; impossibleUndo.LastReserveIndex = 10; Invalid(impossibleUndo);
     }
@@ -234,11 +381,11 @@ internal static class Program
         var s = Fixture(new[] { 0, 1, 2, 3, 4 }, new int[0]); var game = new SheepGame(s);
         Assert(game.CanUseTool(SheepTool.RemoveThree) && game.UseTool(SheepTool.RemoveThree), "remove available");
         var after = game.GetSnapshot(); Equal(new[] { s.Tray[0], s.Tray[1], s.Tray[2] }, after.Reserve, "first three move");
-        Assert(after.Tray.Length == 2 && after.RemoveUsed && after.LastPickedId == -1, "remove state");
-        Assert(game.UseTool(SheepTool.RemoveThree), "a prior remove does not consume future uses");
+        Assert(after.Tray.Length == 2 && after.RemoveRemaining == 1 && after.LastPickedId == -1, "remove state");
+        Assert(game.UseTool(SheepTool.RemoveThree), "second default remove remains available");
         var twice = game.GetSnapshot();
         Equal(s.Tray, twice.Reserve, "repeated removes append in original order");
-        Assert(twice.Tray.Length == 0 && twice.RemoveUsed && !game.CanUseTool(SheepTool.RemoveThree), "empty tray still disallows remove");
+        Assert(twice.Tray.Length == 0 && twice.RemoveRemaining == 0 && !game.CanUseTool(SheepTool.RemoveThree), "empty tray still disallows remove");
         foreach (int id in twice.Reserve) Assert(game.CanPick(id), "reserve may be picked independent of layers"); Valid(twice);
     }
 
@@ -250,7 +397,8 @@ internal static class Program
 
     private static void RemoveCapacity()
     {
-        var game = new SheepGame(Fixture(new[] { 6, 7, 8 }, new[] { 0, 1, 2, 3, 4, 5 }));
+        var fixture = Fixture(new[] { 6, 7, 8 }, new[] { 0, 1, 2, 3, 4, 5 }); fixture.RemoveLimit++; fixture.RemoveRemaining++;
+        var game = new SheepGame(fixture);
         var full = game.GetSnapshot();
         Assert(!game.CanUseTool(SheepTool.RemoveThree) && !game.UseTool(SheepTool.RemoveThree), "full reserve rejects another move");
         Same(full, game.GetSnapshot(), "capacity rejection is atomic");
@@ -264,13 +412,13 @@ internal static class Program
     {
         var game = new SheepGame(2, 5); var before = game.GetSnapshot(); int id = FirstPickable(game);
         game.Pick(id); Assert(game.CanUseTool(SheepTool.Undo) && game.UseTool(SheepTool.Undo), "undo available after pick");
-        var after = game.GetSnapshot(); Assert(after.Locations[id] == SheepLocation.Board && after.Tray.Length == 0 && after.UndoUsed, "undo puts card on original board location");
+        var after = game.GetSnapshot(); Assert(after.Locations[id] == SheepLocation.Board && after.Tray.Length == 0 && after.UndoRemaining == 2, "undo puts card on original board location");
         Equal(before.Kinds, after.Kinds, "undo preserves kinds"); Assert(!game.UseTool(SheepTool.Undo), "no earlier history is invented"); Valid(after);
-        for (int cycle = 0; cycle < 8; cycle++)
+        for (int cycle = 0; cycle < 2; cycle++)
         {
             Assert(game.Pick(id).Changed, "same restored board card remains selectable");
             game = new SheepGame(game.GetSnapshot());
-            Assert(game.CanUseTool(SheepTool.Undo) && game.UseTool(SheepTool.Undo), "used flag does not disable future undo");
+            Assert(game.CanUseTool(SheepTool.Undo) && game.UseTool(SheepTool.Undo), "remaining quota permits another undo");
             Assert(game.GetSnapshot().Locations[id] == SheepLocation.Board && game.GetSnapshot().Tray.Length == 0, "each undo returns latest pick");
             Valid(game.GetSnapshot());
         }
@@ -302,7 +450,7 @@ internal static class Program
     {
         var s = Fixture(new[] { 0, 1, 2, 3, 4, 5, 6 }, new int[0]); var game = new SheepGame(s);
         Assert(game.CanUseTool(SheepTool.Revive) && game.UseTool(SheepTool.Revive), "revive available after loss");
-        var revived = game.GetSnapshot(); Assert(revived.ReviveUsed && !revived.RemoveUsed && revived.Reserve.Length == 3 && revived.Tray.Length == 4, "revive keeps separate remove entitlement");
+        var revived = game.GetSnapshot(); Assert(revived.ReviveUsed && revived.RemoveRemaining == revived.RemoveLimit && revived.Reserve.Length == 3 && revived.Tray.Length == 4, "revive keeps separate remove entitlement");
         Assert(game.UseTool(SheepTool.RemoveThree) && game.GetSnapshot().Reserve.Length == 6, "remove can follow revive to cap six");
         Assert(!game.UseTool(SheepTool.Revive), "revive once"); Valid(game.GetSnapshot());
         Assert(!new SheepGame(2, 4).UseTool(SheepTool.Revive), "no revive during play");
@@ -311,7 +459,7 @@ internal static class Program
     private static void RepeatedRescue()
     {
         var game = new SheepGame(Fixture(new[] { 0, 1, 2, 3, 4, 5, 6 }, new int[0]));
-        for (int cycle = 0; cycle < 5; cycle++)
+        for (int cycle = 0; cycle < 2; cycle++)
         {
             Assert(game.Phase == SheepPhase.Lost && game.UseTool(SheepTool.RemoveThree), "remove rescues every full tray when space exists");
             var reserve = game.GetSnapshot().Reserve;
@@ -320,8 +468,8 @@ internal static class Program
             Valid(game.GetSnapshot());
         }
         Assert(game.UseTool(SheepTool.Revive), "revival remains available after repeated removes");
-        Assert(game.UseTool(SheepTool.RemoveThree), "move remains available after revival if capacity allows");
-        Assert(game.GetSnapshot().Reserve.Length == 6 && game.GetSnapshot().ReviveUsed, "combined reserve is bounded at six");
+        Assert(!game.UseTool(SheepTool.RemoveThree), "revival does not refill exhausted move quota");
+        Assert(game.GetSnapshot().Reserve.Length == 3 && game.GetSnapshot().ReviveUsed, "revival has its separate reserve operation");
         Assert(!game.UseTool(SheepTool.Revive), "revival still has one use");
         Valid(game.GetSnapshot());
     }
@@ -330,26 +478,15 @@ internal static class Program
     {
         var s = Fixture(new[] { 0, 1 }, new[] { 2, 3 }); var game = new SheepGame(s);
         Assert(game.UseTool(SheepTool.Shuffle), "shuffle succeeds"); var after = game.GetSnapshot();
-        Assert(after.ShuffleUsed && after.RandomState != s.RandomState && after.LastPickedId == -1, "shuffle uses RNG and clears undo");
+        Assert(after.ShuffleRemaining == 0 && after.RandomState != s.RandomState && after.LastPickedId == -1, "shuffle uses RNG and clears undo");
         Equal(s.Tray, after.Tray, "tray remains"); Equal(s.Reserve, after.Reserve, "reserve remains");
         var beforeKinds = new List<int>(); var afterKinds = new List<int>();
         for (int i = 0; i < s.Kinds.Length; i++) { Assert(s.Locations[i] == after.Locations[i], "positions remain"); if (s.Locations[i] == SheepLocation.Board) { beforeKinds.Add(s.Kinds[i]); afterKinds.Add(after.Kinds[i]); } else Assert(s.Kinds[i] == after.Kinds[i], "non-board kind unchanged"); }
         beforeKinds.Sort(); afterKinds.Sort(); Equal(beforeKinds.ToArray(), afterKinds.ToArray(), "board multiset preserved");
-        for (int repeat = 0; repeat < 8; repeat++)
-        {
-            var previous = game.GetSnapshot();
-            game = new SheepGame(previous);
-            Assert(game.CanUseTool(SheepTool.Shuffle) && game.UseTool(SheepTool.Shuffle), "shuffle stays available after use and restore");
-            var next = game.GetSnapshot();
-            Assert(next.RandomState != previous.RandomState, "each shuffle advances the saved RNG");
-            var currentKinds = new List<int>();
-            for (int i = 0; i < next.Kinds.Length; i++)
-                if (next.Locations[i] == SheepLocation.Board) currentKinds.Add(next.Kinds[i]);
-                else Assert(next.Kinds[i] == s.Kinds[i], "repeated shuffle leaves fixed kinds untouched");
-            currentKinds.Sort(); Equal(beforeKinds.ToArray(), currentKinds.ToArray(), "every shuffle preserves inventory");
-            Equal(s.Tray, next.Tray, "every shuffle preserves tray"); Equal(s.Reserve, next.Reserve, "every shuffle preserves reserve");
-            Valid(next);
-        }
+        var used = game.GetSnapshot();
+        game = new SheepGame(used);
+        Assert(!game.CanUseTool(SheepTool.Shuffle) && !game.UseTool(SheepTool.Shuffle), "default shuffle quota remains exhausted after restore");
+        Same(used, game.GetSnapshot(), "exhausted shuffle leaves RNG and all state unchanged");
         Assert(!new SheepGame(Fixture(new[] { 0, 1, 2, 3, 4, 5, 6 }, new int[0])).UseTool(SheepTool.Shuffle), "shuffle cannot rescue full tray");
     }
 
@@ -374,12 +511,12 @@ internal static class Program
     private static void Win()
     {
         var generated = SheepLevelGenerator.Generate(1, 29); var game = new SheepGame(generated.Snapshot);
-        foreach (int id in generated.SolutionIds) { game.Pick(id); if (game.GetSnapshot().Tray.Length > 0 && !game.GetSnapshot().RemoveUsed) { Assert(game.UseTool(SheepTool.RemoveThree), "move witness tile to reserve"); int reserve = game.GetSnapshot().Reserve[0]; game.Pick(reserve); } }
+        foreach (int id in generated.SolutionIds) { game.Pick(id); if (game.GetSnapshot().Tray.Length > 0 && game.GetSnapshot().RemoveRemaining == game.GetSnapshot().RemoveLimit) { Assert(game.UseTool(SheepTool.RemoveThree), "move witness tile to reserve"); int reserve = game.GetSnapshot().Reserve[0]; game.Pick(reserve); } }
         Assert(game.Phase == SheepPhase.Won && game.GetSnapshot().Reserve.Length == 0, "all areas empty wins"); Valid(game.GetSnapshot());
         var last = generated.Snapshot.Copy(); for (int i = 0; i < last.Locations.Length; i++) last.Locations[i] = SheepLocation.Removed;
         var ids = new List<int>(); for (int i = 0; i < last.Kinds.Length && ids.Count < 3; i++) if (last.Kinds[i] == 0) ids.Add(i);
         foreach (int id in ids) last.Locations[id] = SheepLocation.Reserve;
-        last.Reserve = ids.ToArray(); last.RemoveUsed = true; var reserveGame = new SheepGame(last);
+        last.Reserve = ids.ToArray(); last.RemoveRemaining--; last.Score = 15; var reserveGame = new SheepGame(last);
         Assert(reserveGame.Phase == SheepPhase.Playing && reserveGame.RemainingCount == 3, "empty board with reserve is not won");
         foreach (int id in ids) reserveGame.Pick(id); Assert(reserveGame.Phase == SheepPhase.Won, "reserve triple can finish game");
     }
@@ -394,7 +531,7 @@ internal static class Program
     private static void ReserveUndoCapacity()
     {
         var s = Fixture(new[] { 4, 5, 6, 7 }, new[] { 0, 1, 2 });
-        s.RemoveUsed = false; s.ReviveUsed = true;
+        s.RemoveRemaining = s.RemoveLimit; s.ReviveUsed = true;
         s.LastPickedId = s.Tray[0]; s.LastSource = 2; s.LastReserveIndex = 0;
         Invalid(s);
         var six = Fixture(new[] { 6 }, new[] { 0, 1, 2, 3, 4, 5 });
@@ -418,7 +555,7 @@ internal static class Program
     {
         var game = new SheepGame(2, 19);
         Assert(game.Pick(FirstPickable(game)).Changed, "pick fixture card");
-        var state = game.GetSnapshot(); state.RemoveUsed = true;
+        var state = game.GetSnapshot(); state.RemoveRemaining--;
         Invalid(state);
         state = Fixture(new[] { 0, 1, 2, 3, 4, 5, 6 }, new int[0]);
         state.ReviveUsed = true; state.LastPickedId = state.Tray[6]; state.LastSource = 0;
@@ -479,11 +616,11 @@ internal static class Program
 
     private static SheepSnapshot Fixture(int[] trayKinds, int[] reserveKinds)
     {
-        var s = SheepLevelGenerator.Generate(2, 1234).Snapshot;
+        var s = SheepLevelGenerator.Generate(SheepMode.Challenge, SheepDifficulty.Hard, 1234).Snapshot;
         var tray = new List<int>(); var reserve = new List<int>();
         foreach (int kind in trayKinds) { int id = ExposedOfKind(s, kind); s.Locations[id] = SheepLocation.Tray; tray.Add(id); }
         foreach (int kind in reserveKinds) { int id = ExposedOfKind(s, kind); s.Locations[id] = SheepLocation.Reserve; reserve.Add(id); }
-        s.Tray = tray.ToArray(); s.Reserve = reserve.ToArray(); s.RemoveUsed = reserve.Count > 0;
+        s.Tray = tray.ToArray(); s.Reserve = reserve.ToArray(); s.RemoveRemaining -= (reserve.Count + 2) / 3;
         return s;
     }
 
@@ -509,7 +646,7 @@ internal static class Program
     private static void Invalid(SheepSnapshot s) { string error; Assert(!s.TryValidate(out error) && !string.IsNullOrEmpty(error), "corrupt snapshot must be rejected"); Throws<ArgumentException>(delegate { new SheepGame(s); }); }
     private static void Same(SheepSnapshot a, SheepSnapshot b, string message)
     {
-        Assert(a.Level == b.Level && a.LayoutId == b.LayoutId && a.RandomState == b.RandomState && a.RemoveUsed == b.RemoveUsed && a.UndoUsed == b.UndoUsed && a.ShuffleUsed == b.ShuffleUsed && a.ReviveUsed == b.ReviveUsed && a.LastPickedId == b.LastPickedId && a.LastSource == b.LastSource && a.LastReserveIndex == b.LastReserveIndex, message);
+        Assert(a.Level == b.Level && a.LayoutId == b.LayoutId && a.RandomState == b.RandomState && a.Mode == b.Mode && a.Difficulty == b.Difficulty && a.Wave == b.Wave && a.Score == b.Score && a.RemoveLimit == b.RemoveLimit && a.UndoLimit == b.UndoLimit && a.ShuffleLimit == b.ShuffleLimit && a.RemoveRemaining == b.RemoveRemaining && a.UndoRemaining == b.UndoRemaining && a.ShuffleRemaining == b.ShuffleRemaining && a.ReviveUsed == b.ReviveUsed && a.LastPickedId == b.LastPickedId && a.LastSource == b.LastSource && a.LastReserveIndex == b.LastReserveIndex, message);
         Equal(a.Kinds, b.Kinds, message); Equal(a.Tray, b.Tray, message); Equal(a.Reserve, b.Reserve, message);
         Assert(a.Locations.Length == b.Locations.Length, message); for (int i = 0; i < a.Locations.Length; i++) Assert(a.Locations[i] == b.Locations[i], message);
     }

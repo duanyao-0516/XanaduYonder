@@ -22,6 +22,8 @@ internal static class Program
         Run("repeat generation excludes previous layout without changing tutorial selection", NoImmediateRepeat);
         Run("one thousand generated witnesses clear through the real game core", SolutionWitnesses);
         Run("restore preserves layout and future legal selections after each move", RestoreContinuation);
+        Run("all profiles have balanced deterministic legal witnesses and layout diversity", ProfileWitnesses);
+        Run("difficulty raises measured witness tray pressure and matching distance", PressureTrends);
         Console.WriteLine("Sheep layout checks: " + passed + " passed, " + failed + " failed.");
         return failed == 0 ? 0 : 1;
     }
@@ -213,4 +215,69 @@ internal static class Program
             Check(game.Phase == SheepPhase.Won, "Restored path did not win");
         }
     }
+    private static void ProfileWitnesses()
+    {
+        int count = 0;
+        foreach (SheepMode mode in Enum.GetValues(typeof(SheepMode)))
+        foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
+        {
+            if (mode != SheepMode.Challenge && difficulty != SheepDifficulty.Normal) continue;
+            var layouts = new HashSet<int>();
+            for (uint sample = 0; sample <= 100; sample++)
+            {
+                uint seed = sample == 100 ? uint.MaxValue : sample;
+                var board = SheepLevelGenerator.Generate(mode, difficulty, seed);
+                var again = SheepLevelGenerator.Generate(mode, difficulty, seed);
+                Check(board.Snapshot.Kinds.SequenceEqual(again.Snapshot.Kinds) && board.SolutionIds.SequenceEqual(again.SolutionIds) &&
+                    board.Snapshot.LayoutId == again.Snapshot.LayoutId && board.Snapshot.RandomState == again.Snapshot.RandomState, "profile generation must be deterministic");
+                int kinds = mode == SheepMode.Tutorial ? 3 : difficulty == SheepDifficulty.Easy ? 8 : difficulty == SheepDifficulty.Normal ? 12 : 16;
+                Check(board.Snapshot.Kinds.Distinct().Count() == kinds, "profile kind variety");
+                Check(board.Snapshot.Kinds.GroupBy(x => x).All(g => g.Count() == board.Snapshot.Kinds.Length / kinds), "balanced profile inventory");
+                layouts.Add(board.Snapshot.LayoutId);
+                var game = new SheepGame(board.Snapshot);
+                foreach (int id in board.SolutionIds)
+                {
+                    var move = game.Pick(id);
+                    Check(move.Changed && move.Phase != SheepPhase.Lost && game.GetSnapshot().Tray.Length <= 6, "profile witness must remain legal and under capacity");
+                }
+                Check(game.Phase == SheepPhase.Won && game.GetSnapshot().Score == board.SolutionIds.Length, "profile witness clears and scores every tile");
+                count++;
+            }
+            Check(layouts.Count == (mode == SheepMode.Tutorial ? 3 : 12), "profile samples cover every current layout");
+        }
+        Console.WriteLine("Verified profile witnesses: " + count + " (four challenge difficulties, endless normal, tutorial normal; seeds 0..99 and uint.MaxValue).");
+    }
+
+    private static void PressureTrends()
+    {
+        double previousTray = -1, previousDistance = -1;
+        foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
+        {
+            long traySum = 0, distanceSum = 0; int steps = 0, matches = 0, maximumTray = 0, maximumKinds = 0;
+            for (uint seed = 1; seed <= 100; seed++)
+            {
+                var board = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed);
+                var game = new SheepGame(board.Snapshot);
+                var start = Enumerable.Repeat(-1, 16).ToArray();
+                for (int step = 0; step < board.SolutionIds.Length; step++)
+                {
+                    int id = board.SolutionIds[step], kind = board.Snapshot.Kinds[id];
+                    if (start[kind] < 0) start[kind] = step;
+                    var move = game.Pick(id); var after = game.GetSnapshot();
+                    Check(move.Changed && move.Phase != SheepPhase.Lost, "pressure measurement only accepts legal witnesses");
+                    if (move.MatchedIds.Length == 3) { distanceSum += step - start[kind]; matches++; start[kind] = -1; }
+                    traySum += after.Tray.Length; steps++;
+                    maximumTray = Math.Max(maximumTray, after.Tray.Length);
+                    maximumKinds = Math.Max(maximumKinds, after.Tray.Select(x => after.Kinds[x]).Distinct().Count());
+                }
+            }
+            double tray = (double)traySum / steps, distance = (double)distanceSum / matches;
+            Console.WriteLine("Pressure " + difficulty + ": mean settled tray=" + tray.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) +
+                ", mean first-to-third pick distance=" + distance.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + ", max tray=" + maximumTray + ", max open kinds=" + maximumKinds + ".");
+            Check(tray > previousTray + 0.3 && distance > previousDistance + 0.8, "each harder profile must measurably increase tray pressure and triple interleaving");
+            Check(maximumTray <= 6 && maximumKinds <= (int)difficulty + 2, "profile never trades legality for pressure");
+            previousTray = tray; previousDistance = distance;
+        }
+    }
+
 }
