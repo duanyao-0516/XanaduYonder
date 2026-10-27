@@ -2,11 +2,13 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
-## Chromium Dino design reference assets
+## Chromium Dino runtime and design reference assets
 
 - Source: [Chromium](https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/), revision `64574fa0f2daa1b48f2703a072687272000178ce`, retrieved on 2026-10-27.
-- The two original sprite sheets and three sound files under `docs/superpowers/specs/assets/chrome-dino/` are design references, not Unity runtime resources. The layout illustration uses excerpts from the unmodified sprite sheet.
-- License: Chromium BSD-style license, Copyright 2015 The Chromium Authors. Its complete notice, conditions and disclaimer are reproduced in [LICENSE.chromium](docs/superpowers/specs/assets/chrome-dino/LICENSE.chromium); exact upstream paths and hashes are recorded in [source-manifest.json](docs/superpowers/specs/assets/chrome-dino/source-manifest.json).
+- The two original sprite sheets and three sound files under `docs/superpowers/specs/assets/chrome-dino/` remain the source references. The layout illustration uses excerpts from the unmodified sprite sheet.
+- Bundled runtime assets: `Assets/Resources/Dino/Sprites.png` is the unchanged 2× sprite sheet; `Audio/Jump.ogg`, `Audio/Hit.ogg` and `Audio/Score.ogg` are unchanged copies of `button-press.mp3`, `hit.mp3` and `score-reached.mp3`. The original audio files contain Ogg/Vorbis data despite their upstream `.mp3` extension; only names and extensions changed, with no re-encoding. The 1× sprite sheet is retained as a design reference and is not bundled as a Dino runtime resource.
+- License: Chromium BSD-style license, Copyright 2015 The Chromium Authors. Its complete notice, conditions and disclaimer are reproduced in [LICENSE.chromium](docs/superpowers/specs/assets/chrome-dino/LICENSE.chromium) and bundled unchanged in [Assets/Resources/Dino/LICENSE.txt](Assets/Resources/Dino/LICENSE.txt). The game exposes the complete text through 小恐龙 → 玩法说明 → 素材与许可; during landscape play, open 玩法说明 from the pause menu.
+- Exact upstream paths and hashes are recorded in [source-manifest.json](docs/superpowers/specs/assets/chrome-dino/source-manifest.json); runtime mappings, hashes and import settings are documented in [the Dino asset record](docs/dino-assets.md).
 - These assets retain their upstream terms and are not relicensed by the project's MIT license. This project does not claim Google endorsement. No Chromium gameplay implementation code is included.
 
 ## Offline idiom dictionary

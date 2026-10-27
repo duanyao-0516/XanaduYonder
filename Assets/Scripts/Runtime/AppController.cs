@@ -9,6 +9,7 @@ using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
 using XanaduYonder.Runtime.Watermelon;
 using XanaduYonder.Runtime.Sudoku;
+using XanaduYonder.Runtime.Dino;
 
 namespace XanaduYonder.Runtime
 {
@@ -45,9 +46,12 @@ namespace XanaduYonder.Runtime
         private WatermelonPage watermelonPage;
         private Text lobbyWatermelonRecordText;
         private SudokuPage sudokuPage;
+        private DinoPage dinoPage;
+        private DinoSaveData dinoPreview;
+        private Text lobbyDinoRecordText;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Dino }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -76,7 +80,7 @@ namespace XanaduYonder.Runtime
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
-            SetStatus(saveWarning ?? "所有玩法离线可用 · 进度自动保存");
+            SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
             Debug.Log("XanaduYonder ready; save=" + store.SavePath);
         }
 
@@ -185,15 +189,62 @@ namespace XanaduYonder.Runtime
                 UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
             }
             UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
+            var dinoCard = AddLobbyCard(content, "Dino", cardCount++, UiFactory.Hex("E7E8DB"));
+            UiFactory.Label(dinoCard.transform, cardCount.ToString("00") + "   /   像素跑酷", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(dinoCard.transform, "小恐龙", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(dinoCard.transform, "横屏或竖屏，跑得更远一点。", 32, 166, 548, 38, 25, UiFactory.Ink);
+            string dinoWarning;
+            dinoPreview = new DinoSaveStore(Application.persistentDataPath).Load(out dinoWarning);
+            lobbyDinoRecordText = UiFactory.Label(dinoCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            RefreshDinoRecord();
+            UiFactory.Button(dinoCard.transform, "选择方向 / 开始游戏  →", 32, 270, 544, 62, EnterDino, true);
             var footerTop = 216 + cardCount * 374 + 4;
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
-            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 进度自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  本地记录", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 对局或最高纪录自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             content.sizeDelta = new Vector2(720, footerTop + 108);
         }
 
         private static Image AddLobbyCard(Transform parent, string name, int index, Color color)
         {
             return UiFactory.Panel(parent, name + " game card", 56, 216 + index * 374, 608, 350, color);
+        }
+
+        private void EnterDino()
+        {
+            StopAnimation(); CloseModal();
+            sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            activePage = Page.Dino;
+            if (dinoPage == null)
+            {
+                var pageRoot = UiFactory.Rect(canvasRoot, "Dino page", 0, 0, 720, 1320);
+                dinoPage = pageRoot.gameObject.AddComponent<DinoPage>();
+                dinoPage.Initialize(pageRoot, canvasRoot, ShowLobby, RequestDinoOrientation,
+                    () => activePage == Page.Dino && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled,
+                    () => { data.SoundEnabled = !data.SoundEnabled; if (!data.SoundEnabled) feedback.Stop(); Save(); },
+                    () => { data.HapticsEnabled = !data.HapticsEnabled; Save(); });
+                dinoPage.Changed += RefreshDinoRecord;
+            }
+            dinoPage.transform.SetAsLastSibling();
+            dinoPage.Enter();
+        }
+
+        private void RequestDinoOrientation(bool landscape)
+        {
+            Screen.orientation = landscape
+                ? (Input.deviceOrientation == DeviceOrientation.LandscapeRight ? ScreenOrientation.LandscapeRight : ScreenOrientation.LandscapeLeft)
+                : ScreenOrientation.Portrait;
+        }
+
+        private void RefreshDinoRecord()
+        {
+            if (lobbyDinoRecordText == null) return;
+            long portrait = dinoPage != null ? dinoPage.PortraitBest : dinoPreview == null ? 0 : dinoPreview.BestPortraitScore;
+            long landscape = dinoPage != null ? dinoPage.LandscapeBest : dinoPreview == null ? 0 : dinoPreview.BestLandscapeScore;
+            lobbyDinoRecordText.text = "竖屏最高 " + portrait + "  ·  横屏最高 " + landscape;
         }
 
         private void BuildIdiom()
@@ -223,6 +274,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterIdiom()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -240,6 +292,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterWatermelon()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -356,6 +409,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterSudoku()
         {
+            dinoPage?.Leave();
             StopAnimation(); CloseModal(); jumpPage.Leave(); sheepPage.Leave();
             idiomPage?.Leave(); watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
@@ -365,6 +419,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterSheep()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -381,6 +436,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterJump()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -431,6 +487,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterGame()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             CloseModal();
             jumpPage.Leave();
@@ -450,6 +507,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -464,7 +522,7 @@ namespace XanaduYonder.Runtime
             lobbyPage.SetActive(true);
             RefreshScores();
             Save();
-            SetStatus(saveWarning ?? "所有玩法离线可用 · 进度自动保存");
+            SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
         }
 
         private void Move(Direction direction)
@@ -491,6 +549,7 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Dino) return;
             if (activePage == Page.Watermelon) { watermelonPage?.CheckEndState(); return; }
             if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
@@ -620,13 +679,14 @@ namespace XanaduYonder.Runtime
             RefreshIdiomRecord();
             RefreshWatermelonRecord();
             RefreshSudokuRecord();
+            RefreshDinoRecord();
         }
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? dinoPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
             if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
         }
@@ -639,6 +699,7 @@ namespace XanaduYonder.Runtime
 
         private void Save()
         {
+            dinoPage?.Save();
             jumpPage?.Save();
             sheepPage?.Save();
             idiomPage?.Save();
@@ -665,6 +726,7 @@ namespace XanaduYonder.Runtime
 
         private void StopAnimation()
         {
+            dinoPage?.Suspend();
             feedback?.Stop();
             jumpPage?.Suspend();
             sheepPage?.Suspend();
@@ -685,6 +747,7 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (modal != null) dismissModal?.Invoke();
+                else if (activePage == Page.Dino) dinoPage.Back();
                 else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
                 else if (activePage == Page.Sudoku) sudokuPage.Back();
                 else if (activePage != Page.Lobby) ShowLobby();
