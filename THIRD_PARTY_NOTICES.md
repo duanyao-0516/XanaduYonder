@@ -2,6 +2,13 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## Chromium Dino design reference assets
+
+- Source: [Chromium](https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/), revision `64574fa0f2daa1b48f2703a072687272000178ce`, retrieved on 2026-10-27.
+- The two original sprite sheets and three sound files under `docs/superpowers/specs/assets/chrome-dino/` are design references, not Unity runtime resources. The layout illustration uses excerpts from the unmodified sprite sheet.
+- License: Chromium BSD-style license, Copyright 2015 The Chromium Authors. Its complete notice, conditions and disclaimer are reproduced in [LICENSE.chromium](docs/superpowers/specs/assets/chrome-dino/LICENSE.chromium); exact upstream paths and hashes are recorded in [source-manifest.json](docs/superpowers/specs/assets/chrome-dino/source-manifest.json).
+- These assets retain their upstream terms and are not relicensed by the project's MIT license. This project does not claim Google endorsement. No Chromium gameplay implementation code is included.
+
 ## Offline idiom dictionary
 
 - `hefengbao/jingmo-data`, commit `dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72`, files `api/chinese_idiom_v5_1.json` through `_5.json`: MIT, Copyright 2024 贺丰宝. The independent data repository's license applies; no GPL-licensed jingmo app code is imported.

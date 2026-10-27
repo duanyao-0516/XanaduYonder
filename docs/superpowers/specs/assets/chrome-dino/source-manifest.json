@@ -1,0 +1,83 @@
+{
+  "source": "Chromium",
+  "revision": "64574fa0f2daa1b48f2703a072687272000178ce",
+  "retrieved_on": "2026-10-27",
+  "purpose": "Design reference only; these files are not runtime Resources assets.",
+  "license": "Chromium BSD-style; see LICENSE.chromium",
+  "files": [
+    {
+      "file": "100-offline-sprite.png",
+      "upstream_path": "components/neterror/resources/images/default_100_percent/offline/100-offline-sprite.png",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/images/default_100_percent/offline/100-offline-sprite.png",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/images/default_100_percent/offline/100-offline-sprite.png?format=TEXT",
+      "sha256": "04d05978fdb111358073ab0524e5c1fafc0826615c206987618416b8bd8a4747",
+      "bytes": 3002,
+      "modified": false,
+      "dimensions": [
+        1233,
+        100
+      ]
+    },
+    {
+      "file": "200-offline-sprite.png",
+      "upstream_path": "components/neterror/resources/images/default_200_percent/offline/200-offline-sprite.png",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/images/default_200_percent/offline/200-offline-sprite.png",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/images/default_200_percent/offline/200-offline-sprite.png?format=TEXT",
+      "sha256": "e4222715b556e7d99622c83e620d2f8e090047e56adb07923047f95828d561f2",
+      "bytes": 4758,
+      "modified": false,
+      "dimensions": [
+        2446,
+        194
+      ]
+    },
+    {
+      "file": "LICENSE.chromium",
+      "upstream_path": "LICENSE",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/LICENSE",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/LICENSE?format=TEXT",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "bytes": 1536,
+      "modified": false
+    },
+    {
+      "file": "button-press.mp3",
+      "upstream_path": "components/neterror/resources/sounds/button-press.mp3",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/button-press.mp3",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/button-press.mp3?format=TEXT",
+      "sha256": "c29ea1bb6353a9bd16753d3f46957f0c80fb08769cc945d83b20d3c48470236e",
+      "bytes": 5178,
+      "modified": false,
+      "auditioned": false,
+      "detected_format": "Ogg container / Vorbis audio; upstream .mp3 extension retained unchanged",
+      "sample_rate_hz": 44100,
+      "channels": 2
+    },
+    {
+      "file": "hit.mp3",
+      "upstream_path": "components/neterror/resources/sounds/hit.mp3",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/hit.mp3",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/hit.mp3?format=TEXT",
+      "sha256": "4a618da307a0e5807de7782693113328bf0bd2bcdedc1029a7ed5c545354f4a1",
+      "bytes": 7212,
+      "modified": false,
+      "auditioned": false,
+      "detected_format": "Ogg container / Vorbis audio; upstream .mp3 extension retained unchanged",
+      "sample_rate_hz": 44100,
+      "channels": 2
+    },
+    {
+      "file": "score-reached.mp3",
+      "upstream_path": "components/neterror/resources/sounds/score-reached.mp3",
+      "source_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/score-reached.mp3",
+      "download_url": "https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/components/neterror/resources/sounds/score-reached.mp3?format=TEXT",
+      "sha256": "cfd198edb6d6adb02456074d7617eec1c745cd00b5b912840cda2b8fbd1aa4fc",
+      "bytes": 9509,
+      "modified": false,
+      "auditioned": false,
+      "detected_format": "Ogg container / Vorbis audio; upstream .mp3 extension retained unchanged",
+      "sample_rate_hz": 44100,
+      "channels": 2
+    }
+  ]
+}
