@@ -81,46 +81,51 @@ Explicit test data opts out of production disk reads unless an explicit temporar
 
 ### 1. Freeze approved design and baseline
 
-- [ ] Record approved prototype and spec in Git; use current feature branch based on `0f6e4fd`.
-- [ ] Confirm applicable repository guidance, actual Unity/.NET availability and current device inventory without modifying other worktrees or installing over the user's app.
-- [ ] Reproduce the Core test project's missing Newtonsoft dependency, fix the test-project dependency boundary only, and rerun its existing production-source tests.
+- [x] Record approved prototype and spec in Git; use current feature branch based on `0f6e4fd`.
+- [x] Confirm applicable repository guidance, actual Unity/.NET availability and current device inventory without modifying other worktrees or installing over the user's app.
+- [x] Reproduce the Core test project's missing Newtonsoft dependency, fix the test-project dependency boundary only, and rerun its existing production-source tests.
 
 ### 2. Rules and session with regression checks
 
-- [ ] Write failing tests for first tap, one-tap impulse, gravity, ceiling, collision before score, one score per pipe, terminal freeze and deterministic seeds.
-- [ ] Implement the contracts above in `Core/FlappyBird`; use fixed stepping and swept contact, bound obstacle storage and integer score growth.
-- [ ] Verify the allowed discrete gap transitions and continuous playable paths with production simulation; record the generation contract, not just random sampling.
-- [ ] Write and pass phase/clock tests for Ready, Running, Dying, Result, Paused, Countdown, repeated interruptions and 30/60/90/120Hz render partitions.
-- [ ] Run `scripts/test-flappy-bird.sh` and `scripts/test-flappy-bird-session.sh` to zero failures; independently review requirements then correctness.
+- [x] Write failing tests for first tap, one-tap impulse, gravity, ceiling, collision before score, one score per pipe, terminal freeze and deterministic seeds.
+- [x] Implement the contracts above in `Core/FlappyBird`; use fixed stepping and swept contact, bound obstacle storage and integer score growth.
+- [x] Verify the allowed discrete gap transitions and continuous playable paths with production simulation; record the generation contract, not just random sampling.
+- [x] Write and pass phase/clock tests for Ready, Running, Dying, Result, Paused, Countdown, repeated interruptions and 30/60/90/120Hz render partitions.
+- [x] Run `scripts/test-flappy-bird.sh` and `scripts/test-flappy-bird-session.sh` to zero failures; independently review requirements then correctness.
 
 ### 3. Independent record persistence
 
-- [ ] Write rejection/roundtrip/file-transaction tests using real Newtonsoft before implementing.
-- [ ] Implement `flappy-bird-v1.json` with schema 1, gameId `flappy-bird`, nonnegative decimal-string bestScore; strict required types, duplicate keys, depth and size limits.
-- [ ] Implement tmp flush, valid-backup preservation, broken-primary recovery and clear errors. No game snapshot or duplicated global settings.
-- [ ] Run `scripts/test-flappy-bird-persistence.sh`, including filesystem failures and byte-identical unrelated-game files; independently review.
+- [x] Write rejection/roundtrip/file-transaction tests using real Newtonsoft before implementing.
+- [x] Implement `flappy-bird-v1.json` with schema 1, gameId `flappy-bird`, nonnegative decimal-string bestScore; strict required types, duplicate keys, depth and size limits.
+- [x] Implement tmp flush, valid-backup preservation, broken-primary recovery and clear errors. No game snapshot or duplicated global settings.
+- [x] Run `scripts/test-flappy-bird-persistence.sh`, including filesystem failures and byte-identical unrelated-game files; independently review.
 
 ### 4. Assets and production page
 
-- [ ] Preserve original atlas and source manifest; import only used bird/pipe/ground sprite regions or an optimized atlas plus exact slicing metadata. Do not alter approved art styles.
-- [ ] Implement sky gradient, clouds, hills, smooth scrolling ground, bird flap/tilt and pipe rendering from the approved example; gameplay and visible boundaries share model coordinates.
-- [ ] Implement the 388×784 reference layout using width-relative scale and a 3:5 contained field; shared Home/Book/Settings, score row and pause, no bottom flap button.
-- [ ] Implement pointer-down ownership and single submit path; overlays, keyboard, cancellation, background and resize cannot leak input.
-- [ ] Implement ready/flight/pause/countdown/death/result/help/settings/exit/unsaved UI, including retry and correct prior-state restoration. Shared settings affect synthesized short flap/point/hit sounds and haptics.
-- [ ] Compile in Unity and compare the same states and usable dimensions against prototype screenshots; fix differences before delivery.
+- [x] Preserve original atlas and source manifest; import only used bird/pipe/ground sprite regions or an optimized atlas plus exact slicing metadata. Do not alter approved art styles.
+- [x] Implement sky gradient, clouds, hills, smooth scrolling ground, bird flap/tilt and pipe rendering from the approved example; gameplay and visible boundaries share model coordinates.
+- [x] Implement the 388×784 reference layout using width-relative scale and a 3:5 contained field; shared Home/Book/Settings, score row and pause, no bottom flap button.
+- [x] Implement pointer-down ownership and single submit path; overlays, keyboard, cancellation, background and resize cannot leak input.
+- [x] Implement ready/flight/pause/countdown/death/result/help/settings/exit/unsaved UI, including retry and correct prior-state restoration. Shared settings affect synthesized short flap/point/hit sounds and haptics.
+- [x] Compile in Unity and compare the same states and usable dimensions against prototype screenshots; fix differences before delivery.
 
 ### 5. Shell integration and UI validation
 
-- [ ] Add the next lobby card without renumbering existing games; lazy page initialization, sound/haptics delegates and input predicate.
-- [ ] Add all affected enter/leave, foreground, Back, global-save, status and highest-score refresh paths.
-- [ ] Implement actual UGUI checks in `Assets/Editor/FlappyBirdUiChecks.cs`; exercise real graphics/raycast events with temporary stores. Cover sizes, input gates, page flow, overlays, max scores and failure retries.
-- [ ] Add `scripts/test-flappy-bird-ui.sh`; run serially with other Unity operations and inspect output PNGs.
+- [x] Add the next lobby card without renumbering existing games; lazy page initialization, sound/haptics delegates and input predicate.
+- [x] Add all affected enter/leave, foreground, Back, global-save, status and highest-score refresh paths.
+- [x] Implement actual UGUI checks in `Assets/Editor/FlappyBirdUiChecks.cs`; exercise real graphics/raycast events with temporary stores. Cover sizes, input gates, page flow, overlays, max scores and failure retries.
+- [x] Add `scripts/test-flappy-bird-ui.sh`; run serially with other Unity operations and inspect output PNGs.
 
 ### 6. Build, regression, review and documentation
 
-- [ ] Add isolated `com.duanyao.xanaduyonder.flappybirdtest` build entry and `scripts/build-flappy-bird-validation.sh`, restoring project settings via finally.
-- [ ] Run relevant existing Core, Dino, persistence and UI regression checks; don't claim unrelated suites were run.
-- [ ] Build fresh Android APK, verify success log/output SHA-256, install/launch only the dedicated test package on an explicitly selected available test device; preserve existing app data.
-- [ ] Perform reachable device checks for tap/hold/retry/pause/foreground and save reload; report actual device versus emulator evidence and remaining physical-device limits.
-- [ ] Independent spec and code review, fix concrete findings and rerun affected checks.
-- [ ] Update README, architecture, notices, approved spec status and verification record; commit only this task's changes and retain this worktree. No merge or push requested.
+- [x] Add isolated `com.duanyao.xanaduyonder.flappybirdtest` build entry and `scripts/build-flappy-bird-validation.sh`, restoring project settings via finally.
+- [x] Run relevant existing Core, Dino, persistence and UI regression checks; don't claim unrelated suites were run.
+- [x] Build fresh Android APK, verify success log/output SHA-256, install/launch only the dedicated test package on an explicitly selected available test device; preserve existing app data.
+- [x] Perform reachable device checks for tap/hold/retry/pause/foreground and save reload; report actual device versus emulator evidence and remaining physical-device limits.
+- [x] Independent spec and code review, fix concrete findings and rerun affected checks.
+- [x] Update README, architecture, notices, approved spec status and verification record; commit only this task's changes and retain this worktree. No merge or push requested.
+
+
+## Execution notes
+
+Completed production implementation, TDD rules/session/persistence, 176 real UGUI assertions, relevant Core/Dino/Sokoban regressions, independent reviews and isolated Android build. OPPO installation was explicitly requested and completed; subsequent physical-device feedback led to slower gravity, speed and wider/more separated pipes. Final parameters and fresh validation evidence are recorded in `docs/verification-flappy-bird.md`. The user completed OPPO hand-feel validation, accepted the result, explicitly stopped additional tests and requested merge/push to remote master.

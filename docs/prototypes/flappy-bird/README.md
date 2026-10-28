@@ -1,6 +1,6 @@
 # Flappy Bird UI 设计示例
 
-2026-10-28，基于主线 `0f6e4fd`；状态为待评审设计，不是正式游戏。
+2026-10-28，基于主线 `0f6e4fd`；此设计已获用户批准；本目录保留静态设计示例，实际 Unity 截图和验证结果见 [验证记录](../../verification-flappy-bird.md)。
 
 [设计与玩法调研](../../superpowers/specs/2026-10-28-flappy-bird-design.md) · [打开示例](index.html)
 
@@ -30,6 +30,6 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - 获取日期：2026-10-28。原图未修改；通过 CSS 背景位置展示局部，不把裁切前的透明边界视作碰撞范围。
 - SHA-256：`6468487709449dda2e31f1e49731a0ce4a4166c5f2e3a4d640b02ba97741279d`。
 - 图集中有不同姿态和旋转角度；这不证明所有姿态都是顺序扑翼帧。正式动画帧、锚点、碰撞几何另行确认。
-- 当前图片仅用于设计示例，未导入 Unity Resources；金币不进入首版玩法。没有引入 Kenney、MegaCrash 或其他备选的实际文件。
+- 完整原图作为 Unity 来源文件保留在 Resources 外，四个运行时精灵通过 SpriteAtlas 打包，区域见 [素材清单](../../flappy-bird-assets.json)；金币不进入首版玩法。没有引入 Kenney、MegaCrash 或其他备选的实际文件。
 
 界面沿用项目设计；浏览器字体与 Unity Noto 的渲染可能不同。后续实现须用相同可用尺寸和同一局面对照，不以本示例声称已经实现像素级还原。
