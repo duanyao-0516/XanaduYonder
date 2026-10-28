@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "created_on": "2026-10-28",
+  "purpose": "Two supplemental character illustrations for the approved ready and failed-result screens, plus the hand-drawn mode-selection wordmark. Original v1 artwork and atlas rectangles remain versioned separately.",
+  "source_provenance": "Built-in ImageGen original PNG outputs, copied without pixel edits. Source artifacts are ignored by Git; checked-in target PNGs are sufficient for a fresh build.",
+  "counts": {
+    "production_png": 3,
+    "transparent_png": 3,
+    "sprite_rectangles": 0
+  },
+  "import_profile": {
+    "max_texture_size": 1024,
+    "android_compression_quality": 100
+  },
+  "assets": [
+    {
+      "id": "ready-thumbsup-miner-v2",
+      "group": "characters",
+      "title": "准备开始界面的拇指鼓励矿工",
+      "source_path": "artifacts/gold-miner-ui-v2/characters/ready-thumbsup-miner-v2.png",
+      "source_sha256": "bf0647cdb794528411f8338192c975cd7075bc45a5ec2f1fbcb54be5808f5e65",
+      "source_bytes": 1569137,
+      "source_size_px": [1536, 1024],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [0, 254],
+      "target_path": "Assets/Resources/GoldMiner/characters/ready-thumbsup-miner-v2.png",
+      "resource_key": "GoldMiner/characters/ready-thumbsup-miner-v2",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [0.5, 0.5],
+      "slices": []
+    },
+    {
+      "id": "result-failed-miner-sign-v2",
+      "group": "characters",
+      "title": "未达目标结算界面的矿工与木牌",
+      "source_path": "artifacts/gold-miner-ui-v2/characters/result-failed-miner-sign-v2.png",
+      "source_sha256": "66b98e424dfd39093f523cd7c1a60adb1ea5764ab53430e2436eabcde83cb7d9",
+      "source_bytes": 1203098,
+      "source_size_px": [1478, 1064],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [0, 255],
+      "target_path": "Assets/Resources/GoldMiner/characters/result-failed-miner-sign-v2.png",
+      "resource_key": "GoldMiner/characters/result-failed-miner-sign-v2",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [0.5, 0.5],
+      "slices": []
+    },
+    {
+      "id": "gold-miner-wordmark-v2",
+      "group": "ui",
+      "title": "模式选择界面的手绘黄金矿工标题",
+      "source_path": "artifacts/gold-miner-ui-v2/ui/gold-miner-wordmark-v2.png",
+      "source_sha256": "24238db682adfc47a4e027b9d0fc29b991eba3f1acf78198d36a32547a350d34",
+      "source_bytes": 1175562,
+      "source_size_px": [2172, 724],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [0, 255],
+      "target_path": "Assets/Resources/GoldMiner/ui/gold-miner-wordmark-v2.png",
+      "resource_key": "GoldMiner/ui/gold-miner-wordmark-v2",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [0.5, 0.5],
+      "slices": []
+    }
+  ]
+}

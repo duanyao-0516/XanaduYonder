@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前 0.5.0 源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma、Dino、五子棋和欢乐球球，共十一款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[v0.5.0 版本记录](releases/v0.5.0.md)。
+当前 0.6.0 源码接入十三款游戏，包括黄金矿工、欢乐球球和推箱子。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。发布边界见[v0.6.0 版本记录](releases/v0.6.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -15,6 +15,8 @@
 | Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
 | 五子棋 | `Core/Gomoku` / `GomokuSession`、`GomokuPage`、`GomokuBoardView` | `gomoku-v1.json` | 人机／双人各一局、完整棋谱与新局偏好；预选和 AI 任务不落盘 |
 | 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
+| 推箱子 | `Core/Sokoban`、`SokobanPage` | `sokoban-v1.json` | 关卡进度、推箱局面与撤回记录 |
+| 黄金矿工 | `Core/GoldMiner`、`GoldMinerSession`、`GoldMinerPage` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、检查点与纪录 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -122,6 +124,14 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 `HappyBallPage` 负责连续输入、固定步推进、明确暂停/继续和独立存档；`HappyBallTouchInput` 的整帧 reducer 取消多指/丢失触点/失焦输入，并清空尚未消费的转角。`HappyBallSceneView` 使用独立 layer 30、相机、RenderTexture 和共享核心尺寸生成网格；表现不使用 Unity 3D Physics。普通穿层和重击接触分别触发脱离，已有碎层恢复后不重播；碎块固定脱离时的旋转，8 组/16 块对象池只负责视觉。页面隐藏时停相机、回收动效，销毁时释放网格、材质、纹理与程序音效。
 
 `happy-ball-v1.json` 保存 schema 1、`gameId=happy-ball`、核心规则版本、完整层扇区/竖板、球/塔/重击状态、RNG、最高分、HasStarted 和 ResultRecorded。当前规则版本为 2；版本 1 先按旧层距 1.65 和旧竖板上限 0.5 校验，再按当前层重新定位球和层高度，保留球速、塔角、随机状态及已有竖板。旧 Spent 连击标记仅补记尚未入账的重击分一次；已入账的状态不重复加分。构造模型和真实 Decode 共用迁移，之后保存版本 2。分数字段为非负十进制字符串；严格拒绝缺失/未知/重复字段、null、错误类型、非法 JSON 扩展、非有限数和不一致快照，上限 256 KiB/深度 12。真实文件写入采用临时文件 flush 后替换，只有有效主档才能更新备份；恢复优先主档再备份，失败提示可重试。进入游戏与恢复前台都保持暂停，不保存旧触点或碎片动画。其余游戏及公共设置文件不变。实际测试、截图与设备边界见[欢乐球球验证](verification-happy-ball.md)。
+
+## 黄金矿工的独立边界
+
+`GoldMinerGame` 用 60 Hz 固定步模拟，按相对扫掠首次接触分配矿物，所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
+
+`GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
+
+输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
 
 ## 验证层次
 

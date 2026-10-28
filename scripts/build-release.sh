@@ -32,8 +32,8 @@ done
 
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-android-release.log"
 SIGN_LOG="$PROJECT_ROOT/artifacts/logs/sign-android-release.log"
-INTERMEDIATE_APK="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.5.0-release-intermediate.apk"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.5.0-android-arm64.apk"
+INTERMEDIATE_APK="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.6.0-release-intermediate.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.6.0-android-arm64.apk"
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
 signed_apk="$(mktemp "$PROJECT_ROOT/artifacts/builds/.release-signed.XXXXXX")"
 trap 'rm -f "$signed_apk" "$INTERMEDIATE_APK"' EXIT

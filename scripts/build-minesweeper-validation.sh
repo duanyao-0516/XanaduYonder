@@ -3,7 +3,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-minesweeper-validation.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.5.0-minesweeper-validation.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.6.0-minesweeper-validation.apk"
 source "$PROJECT_ROOT/scripts/minesweeper-unity-environment.sh"
 if [[ ! -x "$UNITY_EDITOR" ]]; then
     printf 'Unity Editor not found: %s\n' "$UNITY_EDITOR" >&2
