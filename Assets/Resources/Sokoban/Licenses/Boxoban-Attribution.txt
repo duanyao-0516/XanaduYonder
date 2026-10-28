@@ -1,0 +1,7 @@
+Boxoban levels — Google DeepMind
+https://github.com/google-deepmind/boxoban-levels
+Commit: 78011d8c86ad423bfb2e1005012393b4c3c24409
+Source: unfiltered/test/000.txt
+License: Apache-2.0 (both upstream license files are included).
+Only the selected level data is reused; game code and tutorial levels are original.
+The complete upstream citation is preserved in Boxoban-Upstream-README.txt.

@@ -1,14 +1,22 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
+using XanaduYonder.Core.Sokoban;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
 using XanaduYonder.Runtime.Watermelon;
 using XanaduYonder.Runtime.Sudoku;
+using XanaduYonder.Runtime.Dino;
+using XanaduYonder.Runtime.Minesweeper;
+using XanaduYonder.Runtime.HappyBall;
+using XanaduYonder.Runtime.Zuma;
+using XanaduYonder.Runtime.Gomoku;
+using XanaduYonder.Runtime.Sokoban;
 using XanaduYonder.Runtime.GoldMiner;
 
 namespace XanaduYonder.Runtime
@@ -26,6 +34,7 @@ namespace XanaduYonder.Runtime
         private SaveData data;
         private LocalSaveStore store;
         private RectTransform canvasRoot;
+        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> zumaHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
         private RectTransform frame;
         private GameObject lobbyPage;
         private GameObject gamePage;
@@ -46,10 +55,23 @@ namespace XanaduYonder.Runtime
         private WatermelonPage watermelonPage;
         private Text lobbyWatermelonRecordText;
         private SudokuPage sudokuPage;
+        private DinoPage dinoPage;
+        private DinoSaveData dinoPreview;
+        private Text lobbyDinoRecordText;
+        private MinesweeperPage minesweeperPage;
+        private ZumaPage zumaPage;
+        private Text lobbyMinesweeperRecordText;
+        private HappyBallPage happyBallPage;
+        private Text lobbyHappyBallRecordText;
+        private long happyBallBest;
+        private GomokuPage gomokuPage;
+        private Text lobbyGomokuRecordText;
+        private SokobanPage sokobanPage;
+        private Text lobbySokobanRecordText;
         private GoldMinerPage goldMinerPage;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, GoldMiner }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -66,6 +88,7 @@ namespace XanaduYonder.Runtime
             if (UiFactory.Font == null) throw new InvalidOperationException("The bundled Chinese font is missing.");
             store = new LocalSaveStore(Application.persistentDataPath);
             data = store.Load(out saveWarning);
+            happyBallBest = new HappyBallSaveStore(Application.persistentDataPath).Load(out var happyBallWarning)?.BestScore ?? 0;
             if (data == null) data = new SaveData { Game = new Game2048(random).GetSnapshot() };
             game = new Game2048(data.Game, random);
             feedback = gameObject.AddComponent<GameFeedback>();
@@ -75,10 +98,14 @@ namespace XanaduYonder.Runtime
             BuildJump();
             BuildSheep();
             BuildSudoku();
+            BuildMinesweeper();
+            BuildZuma();
+            BuildGomoku();
+            BuildSokoban();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
-            SetStatus(saveWarning ?? "所有玩法离线可用 · 进度自动保存");
+            SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
             Debug.Log("XanaduYonder ready; save=" + store.SavePath);
         }
 
@@ -187,6 +214,59 @@ namespace XanaduYonder.Runtime
                 UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
             }
             UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
+            var minesweeperCard = AddLobbyCard(content, "Minesweeper", cardCount++, UiFactory.Hex("DFE8DE"));
+            UiFactory.Label(minesweeperCard.transform, cardCount.ToString("00") + "   /   经典扫雷", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(minesweeperCard.transform, "扫雷", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(minesweeperCard.transform, "数字之间，步步为营。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyMinesweeperRecordText = UiFactory.Label(minesweeperCard.transform, "首击安全 · 三档挑战", 32, 216, 548, 38, 21, UiFactory.Accent);
+            for (int i = 0; i < 9; i++)
+            {
+                var square = UiFactory.Panel(minesweeperCard.transform, "Minesweeper preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, i == 0 || i == 3 ? UiFactory.Paper : UiFactory.Hex("BBCBB6"), false);
+                if (i == 0 || i == 3) UiFactory.Label(square.transform, i == 0 ? "1" : "2", 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
+                if (i == 4)
+                {
+                    var icon = UiFactory.Rect(square.transform, "Flag", 8, 6, 24, 24).gameObject.AddComponent<MinesweeperIconGraphic>();
+                    icon.Kind = MinesweeperIconKind.Flag; icon.color = UiFactory.Hex("B34842"); icon.ContrastFlagPole = true; icon.raycastTarget = false;
+                }
+            }
+            UiFactory.Button(minesweeperCard.transform, "选择难度 / 继续  →", 32, 270, 544, 62, EnterMinesweeper, true);
+            var zumaCard = AddLobbyCard(content, "Zuma", cardCount++, UiFactory.Hex("394F35"));
+            UiFactory.Label(zumaCard.transform, cardCount.ToString("00") + "   /   神庙弹珠", 32, 22, 450, 36, 21, UiFactory.Hex("DAD7A4"));
+            UiFactory.Label(zumaCard.transform, "Zuma", 28, 74, 540, 90, 62, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(zumaCard.transform, "转动青蛙，让同色弹珠相遇。", 32, 170, 548, 40, 25, Color.white);
+            UiFactory.Label(zumaCard.transform, "横屏游玩  ·  18 张地图  ·  4 档难度", 32, 216, 548, 38, 21, UiFactory.Hex("DAD7A4"));
+            UiFactory.Button(zumaCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterZuma);
+            var dinoCard = AddLobbyCard(content, "Dino", cardCount++, UiFactory.Hex("E7E8DB"));
+            UiFactory.Label(dinoCard.transform, cardCount.ToString("00") + "   /   像素跑酷", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(dinoCard.transform, "Dino", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(dinoCard.transform, "横屏或竖屏，跑得更远一点。", 32, 166, 548, 38, 25, UiFactory.Ink);
+            string dinoWarning;
+            dinoPreview = new DinoSaveStore(Application.persistentDataPath).Load(out dinoWarning);
+            lobbyDinoRecordText = UiFactory.Label(dinoCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            RefreshDinoRecord();
+            UiFactory.Button(dinoCard.transform, "选择方向 / 开始游戏  →", 32, 270, 544, 62, EnterDino, true);
+            var gomokuCard = AddLobbyCard(content, "Gomoku", cardCount++, UiFactory.Hex("EEE7D3"));
+            UiFactory.Label(gomokuCard.transform, cardCount.ToString("00") + "   /   黑白对弈", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(gomokuCard.transform, "五子棋", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(gomokuCard.transform, "一子一步，先连成五。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyGomokuRecordText = UiFactory.Label(gomokuCard.transform, "人机 / 本地双人 · 三档难度", 32, 216, 548, 38, 21, UiFactory.Accent);
+            AddGomokuPreview(gomokuCard.transform);
+            UiFactory.Button(gomokuCard.transform, "选择模式 / 继续  →", 32, 270, 544, 62, EnterGomoku, true);
+            var happyCard = AddLobbyCard(content, "HappyBall", cardCount++, UiFactory.Hex("E4E9DC"));
+            UiFactory.Label(happyCard.transform, cardCount.ToString("00") + "   /   轻巧下落", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(happyCard.transform, "欢乐球球", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(happyCard.transform, "转动高塔，穿过层层豁口。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbyHappyBallRecordText = UiFactory.Label(happyCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(happyCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterHappyBall, true);
+            var sokobanCard = AddLobbyCard(content, "Sokoban", cardCount++, UiFactory.Hex("EAE4D4"));
+            UiFactory.Label(sokobanCard.transform, cardCount.ToString("00") + "   /   经典推箱", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sokobanCard.transform, "推箱子", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sokobanCard.transform, "把每一只箱子，推回它的位置。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            var cratePreview = UiFactory.Rect(sokobanCard.transform, "Sokoban crate preview", 462, 74, 90, 90).gameObject.AddComponent<RawImage>();
+            cratePreview.texture = Resources.Load<Texture2D>("Sokoban/Sprites/crate");
+            cratePreview.raycastTarget = false;
+            lobbySokobanRecordText = UiFactory.Label(sokobanCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(sokobanCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSokoban, true);
             var goldCard = AddLobbyCard(content, "Gold Miner", cardCount++, UiFactory.Hex("EDE0BD"));
             UiFactory.Label(goldCard.transform, cardCount.ToString("00") + "   /   一起寻宝", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(goldCard.transform, "黄金矿工", 28, 74, 380, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -203,8 +283,8 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(goldCard.transform, "单人竖屏 / 双人横屏合作 · 10 关挑战", 32, 216, 548, 38, 21, UiFactory.Accent);
             UiFactory.Button(goldCard.transform, "选择单人 / 双人  →", 32, 270, 544, 62, EnterGoldMiner, true);
             var footerTop = 216 + cardCount * 374 + 4;
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
-            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 进度自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(content, "无需联网  ·  无广告  ·  本地记录", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
+            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 对局或最高纪录自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             content.sizeDelta = new Vector2(720, footerTop + 108);
         }
 
@@ -215,6 +295,11 @@ namespace XanaduYonder.Runtime
 
         private void EnterGoldMiner()
         {
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             StopAnimation();
             CloseModal();
             jumpPage.Leave();
@@ -237,6 +322,64 @@ namespace XanaduYonder.Runtime
             frame.gameObject.SetActive(false);
             goldMinerPage.SetForeground(focused, paused);
             goldMinerPage.Enter();
+        }
+
+        private static void AddGomokuPreview(Transform parent)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                UiFactory.Panel(parent, "Gomoku preview row " + i, 432, 82 + i * 34, 136, 1.5f, UiFactory.Hex("8C907A"), false).raycastTarget = false;
+                UiFactory.Panel(parent, "Gomoku preview column " + i, 466 + i * 34, 62, 1.5f, 108, UiFactory.Hex("8C907A"), false).raycastTarget = false;
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                float x = 466 + (i % 3) * 34, y = 82 + (i / 3) * 34;
+                UiFactory.CirclePanel(parent, "Gomoku preview stone " + i, x - 13, y - 13, 26,
+                    i % 2 == 0 ? UiFactory.Ink : UiFactory.Paper).raycastTarget = false;
+            }
+        }
+
+        private void EnterDino()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            StopAnimation(); CloseModal();
+            minesweeperPage?.Leave();
+            sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            activePage = Page.Dino;
+            if (dinoPage == null)
+            {
+                var pageRoot = UiFactory.Rect(canvasRoot, "Dino page", 0, 0, 720, 1320);
+                dinoPage = pageRoot.gameObject.AddComponent<DinoPage>();
+                dinoPage.Initialize(pageRoot, canvasRoot, ShowLobby, RequestDinoOrientation,
+                    () => activePage == Page.Dino && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled,
+                    () => { data.SoundEnabled = !data.SoundEnabled; if (!data.SoundEnabled) feedback.Stop(); Save(); },
+                    () => { data.HapticsEnabled = !data.HapticsEnabled; Save(); });
+                dinoPage.Changed += RefreshDinoRecord;
+            }
+            dinoPage.transform.SetAsLastSibling();
+            dinoPage.Enter();
+        }
+
+        private void RequestDinoOrientation(bool landscape)
+        {
+            Screen.orientation = landscape
+                ? (Input.deviceOrientation == DeviceOrientation.LandscapeRight ? ScreenOrientation.LandscapeRight : ScreenOrientation.LandscapeLeft)
+                : ScreenOrientation.Portrait;
+        }
+
+        private void RefreshDinoRecord()
+        {
+            if (lobbyDinoRecordText == null) return;
+            long portrait = dinoPage != null ? dinoPage.PortraitBest : dinoPreview == null ? 0 : dinoPreview.BestPortraitScore;
+            long landscape = dinoPage != null ? dinoPage.LandscapeBest : dinoPreview == null ? 0 : dinoPreview.BestLandscapeScore;
+            lobbyDinoRecordText.text = "竖屏最高 " + portrait + "  ·  横屏最高 " + landscape;
         }
 
         private void BuildIdiom()
@@ -266,6 +409,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterIdiom()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -283,6 +432,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterWatermelon()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -317,6 +472,81 @@ namespace XanaduYonder.Runtime
         private void RefreshWatermelonRecord()
         {
             if (watermelonPage != null) lobbyWatermelonRecordText.text = "你的最高纪录   " + watermelonPage.BestScore + "  ·  三种主题";
+        }
+
+        private void BuildZuma()
+        {
+            // Keep the session host active when either canvas is hidden, so lifecycle saves still run.
+            var host = new GameObject("Zuma session host");
+            host.transform.SetParent(transform, false);
+            zumaPage = host.AddComponent<ZumaPage>();
+            zumaPage.Initialize(FinishZumaExit, () => data.SoundEnabled, () => data.HapticsEnabled,
+                SetZumaSetting, feedback);
+            zumaPage.PresentationReady += () => { if (activePage == Page.Zuma) canvasRoot.gameObject.SetActive(false); };
+        }
+
+        private void EnterZuma()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            if (activePage == Page.Zuma) return;
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            StopAnimation();
+            CloseModal();
+            jumpPage.Leave();
+            sheepPage.Leave();
+            sudokuPage.Leave();
+            minesweeperPage.Leave();
+            idiomPage?.Leave();
+            watermelonPage?.Leave();
+            Save();
+            activePage = Page.Zuma;
+            // Keep the lobby visible while Android rotates; the complete Zuma page hides it.
+            SetZumaHostInput(false);
+            zumaPage.Enter();
+        }
+
+        private void FinishZumaExit()
+        {
+            activePage = Page.Lobby;
+            SetZumaHostInput(true);
+            canvasRoot.gameObject.SetActive(true);
+            ShowLobby();
+        }
+
+        private void SetZumaHostInput(bool enabled)
+        {
+            var interaction = canvasRoot.GetComponent<CanvasGroup>();
+            if (interaction == null) interaction = canvasRoot.gameObject.AddComponent<CanvasGroup>();
+            if (!enabled)
+            {
+                zumaHostTransitions.Clear();
+                foreach (var control in canvasRoot.GetComponentsInChildren<Selectable>())
+                {
+                    zumaHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
+                    control.transition = Selectable.Transition.None;
+                }
+                interaction.interactable = false;
+                if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            }
+            else
+            {
+                interaction.interactable = true;
+                foreach (var entry in zumaHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
+                zumaHostTransitions.Clear();
+            }
+            canvasRoot.GetComponent<GraphicRaycaster>().enabled = enabled;
+        }
+
+        private bool SetZumaSetting(bool soundSetting, bool enabled)
+        {
+            if (soundSetting) data.SoundEnabled = enabled;
+            else data.HapticsEnabled = enabled;
+            if (!data.SoundEnabled) feedback.Stop();
+            Save();
+            return !saveFailed;
         }
 
         private static void AddSheepPreview(Transform parent)
@@ -397,8 +627,152 @@ namespace XanaduYonder.Runtime
                 " · 中等 " + sudokuPage.CompletedCountForDifficulty(2) + " · 困难 " + sudokuPage.CompletedCountForDifficulty(3);
         }
 
+        private void BuildSokoban(SokobanCatalog initialCatalog = null, SokobanProfile initialProfile = null, SokobanSaveStore initialStore = null)
+        {
+            var safeFrame = frame.GetComponent<SafeDesignFrame>();
+            bool previousWidthOnly = safeFrame.WidthOnly;
+            try
+            {
+                // Construct at the same 720-wide coordinate system used on entry, including short screens.
+                safeFrame.WidthOnly = true;
+                var root = UiFactory.Rect(frame, "Sokoban page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                sokobanPage = root.gameObject.AddComponent<SokobanPage>();
+                sokobanPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                    () => activePage == Page.Sokoban && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus,
+                    initialCatalog, initialProfile, initialStore);
+                sokobanPage.Changed += RefreshSokobanRecord;
+                sokobanPage.Leave();
+            }
+            finally { safeFrame.WidthOnly = previousWidthOnly; }
+        }
+
+        private void RefreshSokobanRecord()
+        {
+            if (sokobanPage != null && lobbySokobanRecordText != null)
+                lobbySokobanRecordText.text = "已完成 " + sokobanPage.CompletedCount + "/108 关 · 随时撤回";
+        }
+
+        private void EnterSokoban()
+        {
+            LeaveGoldMiner();
+            happyBallPage?.Leave(); gomokuPage?.Leave(); dinoPage?.Leave();
+            StopAnimation(); CloseModal(); minesweeperPage.Leave(); sudokuPage.Leave();
+            jumpPage.Leave(); sheepPage.Leave(); idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
+            activePage = Page.Sokoban; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            sokobanPage.Enter();
+            SetStatus("");
+        }
+
+        private void BuildMinesweeper()
+        {
+            var root = UiFactory.Rect(frame, "Minesweeper page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            minesweeperPage = root.gameObject.AddComponent<MinesweeperPage>();
+            minesweeperPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                () => activePage == Page.Minesweeper && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus,
+                full => { if (status != null && activePage == Page.Minesweeper) status.gameObject.SetActive(!full); });
+            minesweeperPage.Changed += RefreshMinesweeperRecord;
+            minesweeperPage.Leave();
+        }
+
+        private void EnterHappyBall()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            gomokuPage?.Leave(); dinoPage?.Leave();
+            StopAnimation(); CloseModal();
+            minesweeperPage.Leave(); sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            activePage = Page.HappyBall; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            if (happyBallPage == null)
+            {
+                var root = UiFactory.Rect(frame, "HappyBall page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                happyBallPage = root.gameObject.AddComponent<HappyBallPage>();
+                happyBallPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                    () => activePage == Page.HappyBall && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog);
+                happyBallPage.Changed += RefreshHappyBallRecord;
+            }
+            happyBallPage.SetForeground(!paused && focused);
+            happyBallPage.SetHostSaveWarning(saveFailed ? saveWarning : null);
+            happyBallPage.Enter();
+        }
+
+        private void RefreshHappyBallRecord()
+        {
+            if (lobbyHappyBallRecordText == null) return;
+            if (happyBallPage != null) happyBallBest = Math.Max(happyBallBest, happyBallPage.BestScore);
+            lobbyHappyBallRecordText.text = "你的最高纪录   " + happyBallBest;
+        }
+
+        private void RefreshMinesweeperRecord()
+        {
+            if (minesweeperPage != null && lobbyMinesweeperRecordText != null)
+                lobbyMinesweeperRecordText.text = minesweeperPage.CompletedCount == 0 ? "首击安全 · 三档挑战" : "累计胜局 " + minesweeperPage.CompletedCount + " · 三档独立纪录";
+        }
+
+        private void BuildGomoku()
+        {
+            var root = UiFactory.Rect(frame, "Gomoku page", 0, 0, 720, 1320);
+            UiFactory.Stretch(root);
+            gomokuPage = root.gameObject.AddComponent<GomokuPage>();
+            gomokuPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                () => activePage == Page.Gomoku && modal == null && !paused && focused,
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus);
+            gomokuPage.Changed += RefreshGomokuRecord;
+            gomokuPage.Leave();
+        }
+
+        private void RefreshGomokuRecord()
+        {
+            if (lobbyGomokuRecordText != null) lobbyGomokuRecordText.text = "人机 / 本地双人 · 三档难度";
+        }
+
+        private void EnterGomoku()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            dinoPage?.Leave();
+            StopAnimation(); CloseModal(); minesweeperPage?.Leave(); sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            activePage = Page.Gomoku; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(true);
+            gomokuPage.Enter();
+        }
+
+        private void EnterMinesweeper()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            StopAnimation(); CloseModal(); sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
+            idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            activePage = Page.Minesweeper; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(true);
+            minesweeperPage.Enter();
+        }
+
         private void EnterSudoku()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             StopAnimation(); CloseModal(); jumpPage.Leave(); sheepPage.Leave();
             idiomPage?.Leave(); watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
@@ -408,6 +782,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterSheep()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -424,6 +804,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterJump()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -474,6 +860,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterGame()
         {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            gomokuPage?.Leave();
+            dinoPage?.Leave();
+            minesweeperPage?.Leave();
             sudokuPage.Leave();
             CloseModal();
             jumpPage.Leave();
@@ -491,10 +883,21 @@ namespace XanaduYonder.Runtime
             CheckEndState();
         }
 
-        private void ShowLobby()
+        private void LeaveGoldMiner()
         {
             goldMinerPage?.Leave();
             frame.gameObject.SetActive(true);
+        }
+
+        private void ShowLobby()
+        {
+            LeaveGoldMiner();
+            sokobanPage?.Leave();
+            happyBallPage?.Leave();
+            if (activePage == Page.Zuma && zumaPage.IsVisible) { zumaPage.Exit(); return; }
+            gomokuPage?.Leave();
+            minesweeperPage?.Leave();
+            dinoPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
             CloseModal();
@@ -509,7 +912,7 @@ namespace XanaduYonder.Runtime
             lobbyPage.SetActive(true);
             RefreshScores();
             Save();
-            SetStatus(saveWarning ?? "所有玩法离线可用 · 进度自动保存");
+            SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
         }
 
         private void Move(Direction direction)
@@ -536,6 +939,11 @@ namespace XanaduYonder.Runtime
 
         private void CheckEndState()
         {
+            if (activePage == Page.Sokoban) { sokobanPage?.CheckEndState(); return; }
+            if (activePage == Page.HappyBall) { happyBallPage?.CheckEndState(); return; }
+            if (activePage == Page.Dino) return;
+            if (activePage == Page.Gomoku) { gomokuPage?.CheckEndState(); return; }
+            if (activePage == Page.Minesweeper) { minesweeperPage?.CheckEndState(); return; }
             if (activePage == Page.Watermelon) { watermelonPage?.CheckEndState(); return; }
             if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
@@ -666,14 +1074,23 @@ namespace XanaduYonder.Runtime
             RefreshIdiomRecord();
             RefreshWatermelonRecord();
             RefreshSudokuRecord();
+            RefreshDinoRecord();
+            RefreshMinesweeperRecord();
+            RefreshSokobanRecord();
+            RefreshHappyBallRecord();
+            RefreshGomokuRecord();
         }
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.HappyBall ? happyBallPage?.SaveError : activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Zuma ? zumaPage?.SaveError : activePage == Page.Gomoku ? gomokuPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? goldMinerPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? goldMinerPage?.SaveError ?? sokobanPage?.SaveError ?? happyBallPage?.SaveError ?? dinoPage?.SaveError ?? zumaPage?.SaveError ?? gomokuPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
+            // The normal footer is hidden in Minesweeper focus mode; preserve shared save errors there.
+            if (activePage == Page.Minesweeper) minesweeperPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
+            if (activePage == Page.HappyBall) happyBallPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
+            if (activePage == Page.Sokoban) sokobanPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -685,11 +1102,17 @@ namespace XanaduYonder.Runtime
 
         private void Save()
         {
+            happyBallPage?.Save();
+            dinoPage?.Save();
             jumpPage?.Save();
             sheepPage?.Save();
             idiomPage?.Save();
             watermelonPage?.Save();
             sudokuPage?.Save();
+            minesweeperPage?.Save();
+            zumaPage?.Save();
+            gomokuPage?.Save();
+            sokobanPage?.Save();
             goldMinerPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
@@ -706,17 +1129,24 @@ namespace XanaduYonder.Runtime
             {
                 saveFailed = false;
                 saveWarning = null;
-                SetStatus("进度已保存。");
+                SetStatus(activePage == Page.Minesweeper || activePage == Page.Sokoban ? "" : "进度已保存。");
             }
+            zumaPage?.CommonSettingsSaved(!saveFailed);
         }
 
         private void StopAnimation()
         {
+            happyBallPage?.Suspend();
+            dinoPage?.Suspend();
             feedback?.Stop();
             jumpPage?.Suspend();
             sheepPage?.Suspend();
             idiomPage?.Suspend();
             watermelonPage?.Suspend();
+            minesweeperPage?.Suspend();
+            zumaPage?.Suspend();
+            gomokuPage?.Suspend();
+            sokobanPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -731,10 +1161,16 @@ namespace XanaduYonder.Runtime
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
                 if (modal != null) dismissModal?.Invoke();
                 else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
+                else if (activePage == Page.Dino) dinoPage.Back();
                 else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
                 else if (activePage == Page.Sudoku) sudokuPage.Back();
+                else if (activePage == Page.Minesweeper) minesweeperPage.Back();
+                else if (activePage == Page.Sokoban) sokobanPage.Back();
+                else if (activePage == Page.HappyBall) happyBallPage.Back();
+                else if (activePage == Page.Gomoku) gomokuPage.Back();
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
@@ -749,6 +1185,12 @@ namespace XanaduYonder.Runtime
         {
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
+            zumaPage?.HostActivity(!paused && focused);
+            if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban)) CloseModal();
+            happyBallPage?.SetForeground(!paused && focused);
+            minesweeperPage?.SetForeground(!paused && focused);
+            sokobanPage?.SetForeground(!paused && focused);
+            gomokuPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
@@ -758,6 +1200,12 @@ namespace XanaduYonder.Runtime
         {
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
+            zumaPage?.HostActivity(!paused && focused);
+            if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban)) CloseModal();
+            happyBallPage?.SetForeground(!paused && focused);
+            minesweeperPage?.SetForeground(!paused && focused);
+            sokobanPage?.SetForeground(!paused && focused);
+            gomokuPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (!value)
             {
@@ -770,6 +1218,6 @@ namespace XanaduYonder.Runtime
             else CheckEndState();
         }
 
-        private void OnApplicationQuit() { Save(); }
+        private void OnApplicationQuit() { zumaPage?.Suspend(); Save(); }
     }
 }

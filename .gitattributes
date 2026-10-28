@@ -2,3 +2,5 @@
 *.meta text eol=lf whitespace=-blank-at-eol
 *.unity text eol=lf whitespace=-blank-at-eol
 *.asset text eol=lf whitespace=-blank-at-eol
+# Bundled upstream license/readme bytes are pinned in the Sokoban source manifest.
+Assets/Resources/Sokoban/Licenses/*.txt -text whitespace=-blank-at-eol

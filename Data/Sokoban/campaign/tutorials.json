@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "sokoban-campaign-v1",
+  "author": "Xanadu Yonder",
+  "license": "MIT",
+  "levels": [
+    {
+      "levelId": "tutorial-001",
+      "title": "初次搬运",
+      "objective": "四向走动与推动，观察人物必须站在箱子后方。",
+      "rows": [
+        "########",
+        "#  .   #",
+        "#  $   #",
+        "#  @   #",
+        "#      #",
+        "# $ .  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "ULLDDDRR"
+    },
+    {
+      "levelId": "tutorial-002",
+      "title": "转过墙角",
+      "objective": "推动后绕到箱子侧面，改变推动方向。",
+      "rows": [
+        "########",
+        "#     .#",
+        "#  ##  #",
+        "#  $   #",
+        "#  @   #",
+        "#      #",
+        "########"
+      ],
+      "solution": "LURRDRUUDLLLUURRR"
+    },
+    {
+      "levelId": "tutorial-003",
+      "title": "绕行就位",
+      "objective": "先绕开隔墙，为箱子保留通往目标的路线。",
+      "rows": [
+        "########",
+        "#  .   #",
+        "#  #   #",
+        "# $    #",
+        "#  ##  #",
+        "# @    #",
+        "########"
+      ],
+      "solution": "UUULUR"
+    },
+    {
+      "levelId": "tutorial-004",
+      "title": "目标仍在",
+      "objective": "将已归位的箱子推向前一个目标，空出的目标仍然有效。",
+      "rows": [
+        "#######",
+        "#  .  #",
+        "#  *  #",
+        "#  $  #",
+        "#  @  #",
+        "#     #",
+        "#######"
+      ],
+      "solution": "RUULULLDDRULURDDDRU"
+    },
+    {
+      "levelId": "tutorial-005",
+      "title": "留出退路",
+      "objective": "非目标角落会困住箱子，推动前保留绕行空间。",
+      "rows": [
+        "########",
+        "#    . #",
+        "#   #  #",
+        "# $    #",
+        "# @ #  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "UULURRR"
+    },
+    {
+      "levelId": "tutorial-006",
+      "title": "先后顺序",
+      "objective": "多箱彼此阻挡时，先整理可通行的空间。",
+      "rows": [
+        "########",
+        "# . .  #",
+        "# $$#  #",
+        "#   #  #",
+        "# @    #",
+        "########"
+      ],
+      "solution": "URUDLLUURRDDLU"
+    },
+    {
+      "levelId": "tutorial-007",
+      "title": "试走与撤回",
+      "objective": "可先试推再撤回，撤回同时还原人物、箱子和计数。",
+      "rows": [
+        "########",
+        "#    . #",
+        "#  #   #",
+        "# @$   #",
+        "#   #  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "RRLDDRRUUU"
+    },
+    {
+      "levelId": "tutorial-008",
+      "title": "长仓库",
+      "objective": "先把前箱送到远处目标，再处理后箱；可缩放查看长地图。",
+      "rows": [
+        "########",
+        "#  .   #",
+        "#      #",
+        "#  .   #",
+        "#      #",
+        "#      #",
+        "#      #",
+        "#      #",
+        "#  $   #",
+        "#      #",
+        "#  $   #",
+        "#  @   #",
+        "########"
+      ],
+      "solution": "LUURUUUUUUULDDDDDDDDDRUUUUUUU"
+    }
+  ]
+}

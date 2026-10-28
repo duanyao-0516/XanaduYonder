@@ -1,0 +1,15 @@
+Generated with the built-in image_gen tool on 2026-10-28.
+Current v2: replaces the earlier UI mockup for header and score layout.
+Edit target: 2026-10-28-happy-ball-ui.png
+
+Edit the supplied existing UI concept board. Make only the requested compact-header layout changes to BOTH portrait screens, preserving the paired-screen concept board, warm paper color, dark green existing icons, 3D game art style, green ball, safe black horizontal rings, red hazard sectors, black vertical wall, and especially the right screen's TWO large curved platform halves flying left/right.
+
+REQUIRED HEADER REPLACEMENT ON BOTH SCREENS:
+1. In the top navigation row, remove the exact English text "XANADU / YONDER" completely. Replace that centered label with the four Chinese characters "欢乐球球", dark green #173D35, clean Noto Sans Chinese style, semibold, comfortable medium size fitted BETWEEN the existing left HOME/RESTART buttons and right BOOK/GEAR buttons. Keep all FOUR nav icons their existing rounded-square pale-green shape and original left/right positions. The game name is on the SAME row as the icons, aligned vertically with their centers.
+2. DELETE the separate large "欢乐球球" heading row below navigation entirely. DELETE its right-hand subtitle "08 / 轻巧下落". Do not leave an empty title-sized gap.
+3. Directly under navigation create ONE SLIM HORIZONTAL INFO ROW, about 42-50 logical pixels tall compared to 58 logical px nav buttons. Every label AND its numeric value must share the SAME text baseline and same line: "本局 32" on left, "最高 128" toward middle, and a small standard text button "暂停" at right. Never stack labels over numbers. Use familiar dark-green text with numbers slightly semibold and muted labels, subtle pale sage background or no heavy card, very restrained separators. NO huge number cards, NO second text row, NO extra badges. Preserve full comfortable hit target for pause while keeping the visible bar slim.
+4. Move the 3D scene UP to begin immediately after this slim info row. Use all the height recovered by removing the big title and tall score cards for a visibly TALLER scene within the SAME overall phone-panel bounds. At least one extra lower platform can be visible. Do not shrink the tower to create blank space; keep comparable ring width, sphere size, low-poly solid thickness, soft shadows. Entire central pillar remains intact.
+5. Left normal play and right just-passed-layer split moment remain consistent. Right still shows two large dark half-rings moving laterally outward, slight outward tilt and downwards, with ball below the passed level; lower intact rings remain attached. Preserve bottom instructional captions.
+6. Board's external title "欢乐球球 · UI 示意" and labels "正常游玩" / "穿层后 · 左右分裂" may stay. They are outside game screens. Inside each screen there is ONLY ONE occurrence of "欢乐球球", centered in its nav bar. There must be ZERO English "XANADU" or "YONDER" anywhere in output.
+
+This is a careful revision of the same design, not a new visual direction. Accurate Simplified Chinese, clean hierarchy, practical implementable compact layout.
