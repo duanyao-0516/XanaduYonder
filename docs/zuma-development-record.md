@@ -328,12 +328,12 @@ bash scripts/build-zuma-preview.sh
 
 | 项目 | 本次结果 |
 | --- | --- |
-| 拉取的远端 master / 整合基线 | `origin/master@8d64b5f` 与 Zuma `3479291`，整合后大厅八款；正式发行记录仍为原 v0.4.0 |
+| 首次整合基线 / 后续同步 | 首先整合 `origin/master@8d64b5f` 与 Zuma `3479291`，随后合入最新 `41a235d`（只增加扫雷开发总结文档）；整合后大厅八款，正式发行记录仍为原 v0.4.0 |
 | 合并冲突与处理 | 处理 `AppController.cs`、`ProjectBuild.cs`、README、第三方许可和架构说明的冲突；保留七款主线功能、0.4.0/code 4 和全部原验证入口。Zuma 为第八张卡，沿用主线自动高度和序号；保存、焦点、IME 和错误提示按游戏分别保留 |
 | 当前主线测试和 Zuma 回归 | 32 组独立脚本全部 exit 0，覆盖主线七款和 Zuma 的规则、输入、会话、存档、数据/资源与完整数独题库；Unity 大厅/小游戏 UI 215 项、扫雷 UI 4568 项、成语 UI 6238 项、独立西瓜物理 7 场景通过。没有将数百万布局断言当作同等数量的独立业务用例 |
 | Unity 编译 / APK 构建 / 实际包校验 | Unity Android 构建成功；非 Development、独立 `.zumapreview`、ARM64、0.4.0/code 4。APK 为 72,895,754 bytes（72.90 MB），SHA-256 `4fe9eaeb7ef1b0445e1c9e51685c1fe4e087ba046dca9dfcd46d3f3ce25330fd`。实际包审计通过：不可调试、无额外权限、无 Development Console 运行库、签名有效、486 个 ZIP 条目无条目间空洞。该包采用本地调试签名，没有发布为新正式版本 |
 | 整合后设备验证范围 | 专用 Android API 36 模拟器覆盖安装旧 Zuma 预览，八款大厅及页脚可见；选关、中文帮助、放大瞄准线、按住时切后台后的暂停菜单、返回竖屏大厅和进入扫雷通过。帮助开关不改变旧存档；继续游戏保持同一 sessionId，playTicks 从 188 增至 349；SOUND 通过公共设置文件切换并还原。上述流程当前进程的 Unity/AndroidRuntime 错误日志为空。本轮没有在实体手机上重跑合并后八款版本，也没有宣称全关卡或长时间性能回归通过 |
-| 文档 / 实现提交与远端 master | 实现、冲突整合与本文一并提交；直接普通推送 `HEAD:refs/heads/master`，不强制覆盖。推送前发现远端新增 `41a235d`，仅增加扫雷开发总结文档，继续合入并核对运行代码不变；最终提交与远端一致性以交付时的 Git ref 核验为准 |
+| 文档 / 实现提交与远端 master | 实现、冲突整合与本文集中提交于 `01402daa`；追加合入最新主线 `41a235d` 时仅变更两份开发文档，最终运行代码与上述已验证版本一致。采用普通推送 `HEAD:refs/heads/master`，不强制覆盖；交付核验使用 `git ls-remote origin refs/heads/master` 与 `git rev-parse HEAD` 比较最终完整 SHA，并确认两个源分支提交均为祖先 |
 | 工作树保留与未验证项 | 保留当前 Zuma 工作树、构建包和验证记录，未修改其他工作树；APK、设备存档和日志位于被忽略的 artifacts 目录，不进入 Git。验证证据在 `artifacts/verification/zuma-master-merge/`，包括 32 组测试、Unity 结果、APK 审计、安装前后存档、截图和运行错误日志。发布签名/商店上架、真机全量回归和历史架构审查中的跨游戏重构不在本次交付范围 |
 
 本轮前两次 Unity UI 启动日志曾记录 Editor QuickSearch 的 `SearchDatabase.EnumerateAll` 索引异常；调用栈不含游戏代码，测试仍完成并返回成功。后续成语 UI 与物理检查未出现此异常；构建与 Android 运行结果单独核对，不把编辑器缓存日志隐藏或描述成游戏异常已复现。
