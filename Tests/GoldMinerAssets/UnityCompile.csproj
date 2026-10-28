@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings><EnableDefaultCompileItems>false</EnableDefaultCompileItems><TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DefineConstants>UNITY_EDITOR;UNITY_5_3_OR_NEWER</DefineConstants>
+    <UnityManaged Condition="'$(UnityManaged)' == ''">/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine</UnityManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/Editor/GoldMinerAssetImporter.cs" />
+    <Compile Include="../../Assets/Scripts/Runtime/GoldMiner/GoldMinerAudio.cs" />
+    <Compile Include="../../Assets/Scripts/Runtime/GoldMiner/GoldMinerArtwork.cs" />
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(UnityManaged)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(UnityManaged)/UnityEngine.AudioModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule"><HintPath>$(UnityManaged)/UnityEngine.JSONSerializeModule.dll</HintPath></Reference>
+    <Reference Include="UnityEditor.CoreModule"><HintPath>$(UnityManaged)/UnityEditor.CoreModule.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

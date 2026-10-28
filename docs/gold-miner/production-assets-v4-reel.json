@@ -1,0 +1,624 @@
+{
+  "schema_version": 4,
+  "created_on": "2026-10-28",
+  "purpose": "Two six-frame whole-miner reeling atlases. Each pose includes the miner, connected arms, handle, winch and short rope as one authored sprite. Rope endpoint is the pivot; feet and axle are independent registration checks. No runtime assembly of disconnected arm components.",
+  "source_provenance": "Built-in image_gen originals copied byte-for-byte. No recoloring, raster crop, scaling, alpha edits or compositing was applied by code. Unity sprite rectangles select poses without changing the source PNG. Generated source paths and complete prompts are retained below.",
+  "counts": {
+    "production_png": 2,
+    "transparent_png": 2,
+    "sprite_rectangles": 12,
+    "frames_per_atlas": 6
+  },
+  "import_profile": {
+    "max_texture_size": 1024,
+    "android_compression_quality": 100
+  },
+  "coordinate_contract": {
+    "source_rectangles": "Whole-source pixels, top-left origin; arbitrary non-overlapping per-frame rectangles are supported.",
+    "anchors": "All anchors use whole-source top-left pixels. Rope endpoint is measured from each visible short rope/alpha silhouette. Foot and axle are supplied registration reference points, not per-frame pixel detections.",
+    "unity_rectangles": "Same original source pixels, converted to bottom-left origin before platform texture downscaling.",
+    "pivot": "Normalized to each individual frame, bottom-left origin, exactly at the rope endpoint. Foot is not the pivot.",
+    "registration": "The import contract checks that supplied foot/axle reference offsets relative to the measured rope endpoint vary by at most 2 source pixels. This validates metadata consistency, not mechanical consistency of the image pixels.",
+    "alpha_top": "Use the fixed local source y=18 for runtime sizing. Measured tops below use alpha>200 to ignore the 1-pixel antialias fringe; actual artwork is unchanged.",
+    "screen_tolerance_target_px": 0.6
+  },
+  "assets": [
+    {
+      "id": "miner-p1-reel-v4",
+      "group": "characters",
+      "title": "P1橙色矿工与绞盘整体六帧收线动画",
+      "source_path": "artifacts/gold-miner-followup-20261028/reel-art/miner-p1-reel-v4.png",
+      "source_sha256": "8a85abc2ee26ac2a0d4d76df8c705d71c44e82889901f92deba41b33cadb465f",
+      "source_bytes": 2217415,
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p1-reel-v4.png",
+      "resource_key": "GoldMiner/characters/miner-p1-reel-v4",
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "registered_alpha_top_in_frame_source_px": 18,
+      "measured_alpha_top_range_in_frame_source_px": [
+        18,
+        20
+      ],
+      "alpha_top_measurement_threshold_exclusive": 200,
+      "registration_tolerance_source_px": 2,
+      "generation_tool": "built-in image_gen",
+      "generation_source_path": "/Users/bytedance/.codex/generated_images/01a17b6e-40b0-7b13-892a-1847ce593c28/exec-18644406-9119-4721-b665-93a6d6c1bb30.png",
+      "generation_prompts": [
+        "Use case: illustration-story. Asset type: production Unity 2D SIX FRAME looping sprite sheet. Create a coherent hand drawn animation sheet of the orange gold miner REELING a wooden rope winch. References: first image is the exact friendly orange uniform, yellow hard hat, white beard miner identity; second image is winch material/style. Transparent background.\nOutput one landscape 3 columns by 2 rows grid, 1536x1024 pixels, six equal 512x512 cells in row-major order. No labels or grid lines. Every cell is the SAME fixed camera full assembly: entire miner on left, smaller wooden rope winch on right, both boots, full arms naturally attached to orange shoulders, brown gloved right hand holding the crank. Whole silhouette fits each cell x=60..460, y=60..450; hat top y=60, boot sole y=445. Miner is about 310px tall, machine about 135px tall, a squat broad cylindrical drum with beige twisted hemp rope and fixed wooden supports. Feet planted. Fixed axle x=300,y=340. A small fixed rope outlet on front bottom of the machine at x=380,y=425; short beige rope ends at x=380,y=450. No long rope, hook, ground or shadows outside assembly.\nSix distinct phases of ONE FULL crank revolution: 0,60,120,180,240,300 degrees. Crank grip travels in a SMALL ellipse around the actual drum axle, not around the machine. Shoulder and elbow naturally bend to keep hand tightly grasping it, no disconnected limbs. The free left hand braces upper machine frame consistently. This is an animation sheet, not six separate composition sketches. Across all six cells lock hat/head/body position and scale, boots, machine base and drum/axle and rope outlet exactly. Only arms, hands, crank grip and subtle rope winding highlights vary. No machine rocking, no entire machine rotation, no duplicated handles, no tools/pickaxe, no floating hands, no face morphing, no text. Match warm polished cartoon shading and dark brown outlines in references. Clear silhouettes at phone display size.",
+        "Use case: precise-object-edit. Edit this six-cell 3×2 transparent sprite sheet into a mechanically consistent single-hand cranking loop. Preserve EXACT same cell grid 1536×1024, miner identity/colors, fixed boots/head/body and wooden machine location. Remove ALL surrounding glow or shadow outside silhouettes, use fully clear transparent gaps.\nMost important correction: each frame must have ONLY ONE crank, attached at the LEFT END of the horizontal drum axle, at local cell (240,320). The crank endpoint travels a small vertical ellipse with radii x=45 y=40 around that axle. Near/right arm (viewer left arm rooted at cell (130,225)) turns this single crank. Its gloved hand positions, relative to its cell, are frame0 (195,320), frame1 (218,285), frame2 (263,285), frame3 (285,320), frame4 (263,355), frame5 (218,355). Keep hand physically attached along orange sleeve and elbow. The other/far hand ALWAYS stays in the SAME resting place on the top of the rear wooden frame (320,270) across every frame; never raise it. No disconnected sleeve, no third hand.\nDelete all protruding unused cranks at right end and any vertical extra crank in first row. The machine right end has only a short round axle cap. Keep wooden base shape, posts, beige hemp coil and rope outlet IDENTICAL each cell. Reel axle does not move. Only near arm and single crank articulate. Feet and head stay exactly registered. Rope eye at local (338,448), short rope end at (338,480) same in all cells. Do not add text, cell lines, ground, long rope, hook or labels. The result will be cycled as an animation, so invariant geometry is essential."
+      ],
+      "slices": [
+        {
+          "name": "frame_0",
+          "rect_xywh_top_left": [
+            0,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6591796875,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            80,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            337.5,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            247,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 20,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_1",
+          "rect_xywh_top_left": [
+            512,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            592,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            850.5,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            759,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 20,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_2",
+          "rect_xywh_top_left": [
+            1024,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1024,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            1104,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            1362.5,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            1271,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 20,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_3",
+          "rect_xywh_top_left": [
+            0,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6591796875,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            80,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            337.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            247,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_4",
+          "rect_xywh_top_left": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            512,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            592,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            850.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            759,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_5",
+          "rect_xywh_top_left": [
+            1024,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1024,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            1104,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            1362.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            1271,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        }
+      ]
+    },
+    {
+      "id": "miner-p2-reel-v4",
+      "group": "characters",
+      "title": "P2青色矿工与绞盘整体六帧收线动画",
+      "source_path": "artifacts/gold-miner-followup-20261028/reel-art/miner-p2-reel-v4.png",
+      "source_sha256": "3698819ed343e32cb74ed80279276e4756be80c37ccae1720f0a7b8be7cb6b73",
+      "source_bytes": 2261635,
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p2-reel-v4.png",
+      "resource_key": "GoldMiner/characters/miner-p2-reel-v4",
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "registered_alpha_top_in_frame_source_px": 18,
+      "measured_alpha_top_range_in_frame_source_px": [
+        18,
+        19
+      ],
+      "alpha_top_measurement_threshold_exclusive": 200,
+      "registration_tolerance_source_px": 2,
+      "generation_tool": "built-in image_gen",
+      "generation_source_path": "/Users/bytedance/.codex/generated_images/01a17b6e-40b0-7b13-892a-1847ce593c28/exec-9e69a17f-ada4-4c5d-a421-471489d63afe.png",
+      "generation_prompts": [
+        "Use case: precise-object-edit. This is the production six frame orange miner sprite sheet, 3 columns by 2 rows. Make ONLY ONE CHANGE: recolor the orange fabric uniform jacket and trousers in all six cells to the teal/turquoise green uniform of the second player reference image. Match reference teal shadows and highlights; keep collar undershirt cream, cuffs and gloves brown. Preserve ALL original pixel geometry and locations: exactly the same six poses, head, face, yellow hat, hands, boots, wooden winch, beige rope, crank, feet and frame grid. Do not redraw or change the character or machine shapes, do not change scale or framing, do not move any object. First image is edit target; second is uniform-color reference ONLY. Output same 1536x1024 transparent PNG with fully transparent empty background and margins. No new text, no highlights or glow outside the silhouette."
+      ],
+      "slices": [
+        {
+          "name": "frame_0",
+          "rect_xywh_top_left": [
+            0,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            80,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            338.5,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            247,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 19,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_1",
+          "rect_xywh_top_left": [
+            512,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.662109375,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            592,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            851,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            759,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 19,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_2",
+          "rect_xywh_top_left": [
+            1024,
+            0,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1024,
+            512,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6630859375,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            1104,
+            462
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            1363.5,
+            479
+          ],
+          "axle_xy_top_left_source_px": [
+            1271,
+            318
+          ],
+          "measured_alpha_top_in_frame_source_px": 19,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_3",
+          "rect_xywh_top_left": [
+            0,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            80,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            338.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            247,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_4",
+          "rect_xywh_top_left": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            512,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6611328125,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            592,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            850.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            759,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        },
+        {
+          "name": "frame_5",
+          "rect_xywh_top_left": [
+            1024,
+            512,
+            512,
+            512
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1024,
+            0,
+            512,
+            512
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.6630859375,
+            0.064453125
+          ],
+          "planned_pivot_semantic": "End of the short authored hemp rope; joins the runtime rope without a moving gap.",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "foot_anchor_xy_top_left_source_px": [
+            1104,
+            974
+          ],
+          "rope_exit_xy_top_left_source_px": [
+            1363.5,
+            991
+          ],
+          "axle_xy_top_left_source_px": [
+            1271,
+            830
+          ],
+          "measured_alpha_top_in_frame_source_px": 18,
+          "foot_anchor_semantic": "Near-boot baseline registration reference; not a per-frame pixel detection.",
+          "axle_anchor_semantic": "Shared axle registration reference; some frames are hand-occluded, not a detected mechanical center.",
+          "rope_exit_anchor_semantic": "Measured visible short-rope endpoint; the sprite pivot."
+        }
+      ]
+    }
+  ],
+  "anchor_provenance": {
+    "rope_exit": "Measured independently for each frame at the visible short hemp-rope endpoint, with alpha inspection. This is the Unity pivot.",
+    "foot": "Near-boot baseline reference: local (80,462). Visible boot-bottom bounds were observed at local y462..463; the reference is intentionally shared, not an automatically detected foot position per frame.",
+    "axle": "Shared reference point: local (247,318). The axle is partly obscured by the hand in some poses, so this is a registration reference rather than a per-frame detected mechanical center.",
+    "verification_scope": "Automated tests prove the import contract, original source bytes, exact slicing and reference-anchor conversion. Runtime screenshots and manual motion review independently assess visual mechanics."
+  }
+}

@@ -1,0 +1,2082 @@
+{
+  "recordedAt": "2026-10-28",
+  "rulesVersion": 3,
+  "scope": "All 240 original geometries, real production Core. Per-layout policies: no buffs/bombs, bags=100, five fixed seeds each. Coarse=300ms,+-4deg,70% reaction; focused=100ms,+-2deg,95%. These synthetic aiming policies are not human win rates, nor optimal upper bounds.",
+  "campaignScope": "960 actual Core/Session campaigns: two modes x two policies x old/current targets x no shop/buy every available item x 60 fixed seeds. Same current geometry for both curves; only the accepted target is overridden to the supported legacy value for the old control. Real Catalog RNG, bags, buffs, inventory caps, spending and cumulative carry. Policies do not use dynamite, but purchases obey real caps. A campaign stops on its first genuine failure; no retries or adaptive target changes.",
+  "perLayoutPolicyIncomesIdenticalToV2Control": true,
+  "catalogSha256": "c1b4f6b0489d22ef2a9bda7133e7e38a110245891517afd0ce38a07cc394768b",
+  "fullMeasurementSha256": "c22d423cf556a317ca82f8d8b5c42032190c87aa55de646e823a6d5ed7dd7af0",
+  "originalGeometryCount": 240,
+  "changedGeometryCount": 0,
+  "replayedWitnessCount": 240,
+  "drainingWitnessCount": 26,
+  "maximumWitnessEndTick": 4230,
+  "totalPolicySearchAttempts": 330,
+  "maxPolicySearchAttempts": 23,
+  "summary": [
+    {
+      "mode": "solo",
+      "level": 1,
+      "legacyTarget": 650,
+      "target": 1200,
+      "requiredIncome": 1200,
+      "coarseIncome": {
+        "q10": 1250,
+        "median": 1660.0,
+        "q90": 1770
+      },
+      "focusedIncome": {
+        "q10": 1500,
+        "median": 1870.0,
+        "q90": 1890
+      },
+      "witnessMedianNeededSeconds": 21.841666666666665
+    },
+    {
+      "mode": "solo",
+      "level": 2,
+      "legacyTarget": 1500,
+      "target": 3000,
+      "requiredIncome": 2470,
+      "coarseIncome": {
+        "q10": 1800,
+        "median": 2420.0,
+        "q90": 3000
+      },
+      "focusedIncome": {
+        "q10": 2620,
+        "median": 3135.0,
+        "q90": 3220
+      },
+      "witnessMedianNeededSeconds": 35.29166666666667
+    },
+    {
+      "mode": "solo",
+      "level": 3,
+      "legacyTarget": 2550,
+      "target": 5100,
+      "requiredIncome": 2860,
+      "coarseIncome": {
+        "q10": 2050,
+        "median": 2430.0,
+        "q90": 2950
+      },
+      "focusedIncome": {
+        "q10": 2690,
+        "median": 3200.0,
+        "q90": 3250
+      },
+      "witnessMedianNeededSeconds": 47.3
+    },
+    {
+      "mode": "solo",
+      "level": 4,
+      "legacyTarget": 3900,
+      "target": 7600,
+      "requiredIncome": 3350,
+      "coarseIncome": {
+        "q10": 2200,
+        "median": 2840.0,
+        "q90": 3500
+      },
+      "focusedIncome": {
+        "q10": 3300,
+        "median": 3750.0,
+        "q90": 3830
+      },
+      "witnessMedianNeededSeconds": 49.2
+    },
+    {
+      "mode": "solo",
+      "level": 5,
+      "legacyTarget": 5550,
+      "target": 10400,
+      "requiredIncome": 3740,
+      "coarseIncome": {
+        "q10": 2600,
+        "median": 3095.0,
+        "q90": 3820
+      },
+      "focusedIncome": {
+        "q10": 3670,
+        "median": 4165.0,
+        "q90": 4850
+      },
+      "witnessMedianNeededSeconds": 55.31666666666666
+    },
+    {
+      "mode": "solo",
+      "level": 6,
+      "legacyTarget": 7500,
+      "target": 13600,
+      "requiredIncome": 4230,
+      "coarseIncome": {
+        "q10": 2600,
+        "median": 3485.0,
+        "q90": 4230
+      },
+      "focusedIncome": {
+        "q10": 3630,
+        "median": 4510.0,
+        "q90": 5460
+      },
+      "witnessMedianNeededSeconds": 57.36666666666667
+    },
+    {
+      "mode": "solo",
+      "level": 7,
+      "legacyTarget": 9750,
+      "target": 17200,
+      "requiredIncome": 4720,
+      "coarseIncome": {
+        "q10": 3180,
+        "median": 3880.0,
+        "q90": 4650
+      },
+      "focusedIncome": {
+        "q10": 4120,
+        "median": 4960.0,
+        "q90": 5530
+      },
+      "witnessMedianNeededSeconds": 54.3
+    },
+    {
+      "mode": "solo",
+      "level": 8,
+      "legacyTarget": 12300,
+      "target": 21200,
+      "requiredIncome": 5210,
+      "coarseIncome": {
+        "q10": 3330,
+        "median": 4240.0,
+        "q90": 5200
+      },
+      "focusedIncome": {
+        "q10": 4800,
+        "median": 5480.0,
+        "q90": 6210
+      },
+      "witnessMedianNeededSeconds": 59.03333333333333
+    },
+    {
+      "mode": "solo",
+      "level": 9,
+      "legacyTarget": 15150,
+      "target": 25600,
+      "requiredIncome": 5700,
+      "coarseIncome": {
+        "q10": 3600,
+        "median": 4615.0,
+        "q90": 5480
+      },
+      "focusedIncome": {
+        "q10": 5130,
+        "median": 5905.0,
+        "q90": 6980
+      },
+      "witnessMedianNeededSeconds": 56.358333333333334
+    },
+    {
+      "mode": "solo",
+      "level": 10,
+      "legacyTarget": 18300,
+      "target": 30400,
+      "requiredIncome": 6190,
+      "coarseIncome": {
+        "q10": 4020,
+        "median": 5000.0,
+        "q90": 5880
+      },
+      "focusedIncome": {
+        "q10": 5080,
+        "median": 6405.0,
+        "q90": 7360
+      },
+      "witnessMedianNeededSeconds": 55.083333333333336
+    },
+    {
+      "mode": "coop",
+      "level": 1,
+      "legacyTarget": 1040,
+      "target": 2400,
+      "requiredIncome": 2400,
+      "coarseIncome": {
+        "q10": 3040,
+        "median": 3320.0,
+        "q90": 3390
+      },
+      "focusedIncome": {
+        "q10": 3350,
+        "median": 3370.0,
+        "q90": 3420
+      },
+      "witnessMedianNeededSeconds": 21.633333333333333
+    },
+    {
+      "mode": "coop",
+      "level": 2,
+      "legacyTarget": 2400,
+      "target": 6000,
+      "requiredIncome": 4270,
+      "coarseIncome": {
+        "q10": 4610,
+        "median": 5470.0,
+        "q90": 5890
+      },
+      "focusedIncome": {
+        "q10": 5610,
+        "median": 6090.0,
+        "q90": 6160
+      },
+      "witnessMedianNeededSeconds": 27.34166666666667
+    },
+    {
+      "mode": "coop",
+      "level": 3,
+      "legacyTarget": 4080,
+      "target": 10200,
+      "requiredIncome": 4960,
+      "coarseIncome": {
+        "q10": 4850,
+        "median": 5600.0,
+        "q90": 6050
+      },
+      "focusedIncome": {
+        "q10": 6050,
+        "median": 6120.0,
+        "q90": 6220
+      },
+      "witnessMedianNeededSeconds": 32.416666666666664
+    },
+    {
+      "mode": "coop",
+      "level": 4,
+      "legacyTarget": 6240,
+      "target": 15200,
+      "requiredIncome": 5850,
+      "coarseIncome": {
+        "q10": 5170,
+        "median": 6070.0,
+        "q90": 6890
+      },
+      "focusedIncome": {
+        "q10": 6580,
+        "median": 7285.0,
+        "q90": 7410
+      },
+      "witnessMedianNeededSeconds": 38.63333333333333
+    },
+    {
+      "mode": "coop",
+      "level": 5,
+      "legacyTarget": 8880,
+      "target": 20800,
+      "requiredIncome": 6540,
+      "coarseIncome": {
+        "q10": 6160,
+        "median": 7220.0,
+        "q90": 7980
+      },
+      "focusedIncome": {
+        "q10": 8310,
+        "median": 8845.0,
+        "q90": 8940
+      },
+      "witnessMedianNeededSeconds": 37.94166666666666
+    },
+    {
+      "mode": "coop",
+      "level": 6,
+      "legacyTarget": 12000,
+      "target": 27200,
+      "requiredIncome": 7430,
+      "coarseIncome": {
+        "q10": 6680,
+        "median": 7925.0,
+        "q90": 8880
+      },
+      "focusedIncome": {
+        "q10": 8740,
+        "median": 9200.0,
+        "q90": 9520
+      },
+      "witnessMedianNeededSeconds": 46.891666666666666
+    },
+    {
+      "mode": "coop",
+      "level": 7,
+      "legacyTarget": 15600,
+      "target": 34400,
+      "requiredIncome": 8320,
+      "coarseIncome": {
+        "q10": 7320,
+        "median": 8565.0,
+        "q90": 9710
+      },
+      "focusedIncome": {
+        "q10": 9550,
+        "median": 10470.0,
+        "q90": 10740
+      },
+      "witnessMedianNeededSeconds": 44.19166666666666
+    },
+    {
+      "mode": "coop",
+      "level": 8,
+      "legacyTarget": 19680,
+      "target": 42400,
+      "requiredIncome": 9210,
+      "coarseIncome": {
+        "q10": 7610,
+        "median": 9370.0,
+        "q90": 10610
+      },
+      "focusedIncome": {
+        "q10": 10600,
+        "median": 11380.0,
+        "q90": 11950
+      },
+      "witnessMedianNeededSeconds": 48.00833333333333
+    },
+    {
+      "mode": "coop",
+      "level": 9,
+      "legacyTarget": 24240,
+      "target": 51200,
+      "requiredIncome": 10100,
+      "coarseIncome": {
+        "q10": 7910,
+        "median": 9405.0,
+        "q90": 11100
+      },
+      "focusedIncome": {
+        "q10": 9760,
+        "median": 11815.0,
+        "q90": 12460
+      },
+      "witnessMedianNeededSeconds": 51.30833333333334
+    },
+    {
+      "mode": "coop",
+      "level": 10,
+      "legacyTarget": 29280,
+      "target": 60800,
+      "requiredIncome": 10990,
+      "coarseIncome": {
+        "q10": 8780,
+        "median": 9940.0,
+        "q90": 11220
+      },
+      "focusedIncome": {
+        "q10": 10500,
+        "median": 12030.0,
+        "q90": 13420
+      },
+      "witnessMedianNeededSeconds": 55.083333333333336
+    }
+  ],
+  "legacyWitnessTiming": [
+    {
+      "mode": "solo",
+      "level": 1,
+      "medianOldWitnessNeededSeconds": 9.983333333333334
+    },
+    {
+      "mode": "solo",
+      "level": 2,
+      "medianOldWitnessNeededSeconds": 17.525
+    },
+    {
+      "mode": "solo",
+      "level": 3,
+      "medianOldWitnessNeededSeconds": 22.291666666666664
+    },
+    {
+      "mode": "solo",
+      "level": 4,
+      "medianOldWitnessNeededSeconds": 17.233333333333334
+    },
+    {
+      "mode": "solo",
+      "level": 5,
+      "medianOldWitnessNeededSeconds": 23.200000000000003
+    },
+    {
+      "mode": "solo",
+      "level": 6,
+      "medianOldWitnessNeededSeconds": 26.641666666666666
+    },
+    {
+      "mode": "solo",
+      "level": 7,
+      "medianOldWitnessNeededSeconds": 27.633333333333333
+    },
+    {
+      "mode": "solo",
+      "level": 8,
+      "medianOldWitnessNeededSeconds": 24.258333333333333
+    },
+    {
+      "mode": "solo",
+      "level": 9,
+      "medianOldWitnessNeededSeconds": 23.56666666666667
+    },
+    {
+      "mode": "solo",
+      "level": 10,
+      "medianOldWitnessNeededSeconds": 26.683333333333334
+    },
+    {
+      "mode": "coop",
+      "level": 1,
+      "medianOldWitnessNeededSeconds": 9.666666666666668
+    },
+    {
+      "mode": "coop",
+      "level": 2,
+      "medianOldWitnessNeededSeconds": 13.641666666666666
+    },
+    {
+      "mode": "coop",
+      "level": 3,
+      "medianOldWitnessNeededSeconds": 17.450000000000003
+    },
+    {
+      "mode": "coop",
+      "level": 4,
+      "medianOldWitnessNeededSeconds": 18.933333333333334
+    },
+    {
+      "mode": "coop",
+      "level": 5,
+      "medianOldWitnessNeededSeconds": 18.241666666666667
+    },
+    {
+      "mode": "coop",
+      "level": 6,
+      "medianOldWitnessNeededSeconds": 19.558333333333334
+    },
+    {
+      "mode": "coop",
+      "level": 7,
+      "medianOldWitnessNeededSeconds": 18.675
+    },
+    {
+      "mode": "coop",
+      "level": 8,
+      "medianOldWitnessNeededSeconds": 20.133333333333333
+    },
+    {
+      "mode": "coop",
+      "level": 9,
+      "medianOldWitnessNeededSeconds": 20.583333333333336
+    },
+    {
+      "mode": "coop",
+      "level": 10,
+      "medianOldWitnessNeededSeconds": 24.933333333333334
+    }
+  ],
+  "campaignSummary": [
+    {
+      "mode": "coop",
+      "profile": "coarse",
+      "curve": "legacy",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3570.0,
+          "medianFinalCash": 3570.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 2900.0,
+          "medianIncome": 7570.0,
+          "medianFinalCash": 10435.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 9675.0,
+          "medianIncome": 7660.0,
+          "medianFinalCash": 17275.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 16515.0,
+          "medianIncome": 9070.0,
+          "medianFinalCash": 25600.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 24960.0,
+          "medianIncome": 10405.0,
+          "medianFinalCash": 35245.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 34545.0,
+          "medianIncome": 11255.0,
+          "medianFinalCash": 45520.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 44760.0,
+          "medianIncome": 12475.0,
+          "medianFinalCash": 56715.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 55895.0,
+          "medianIncome": 13465.0,
+          "medianFinalCash": 70020.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 69140.0,
+          "medianIncome": 14225.0,
+          "medianFinalCash": 82985.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 82045.0,
+          "medianIncome": 14895.0,
+          "medianFinalCash": 97185.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "coarse",
+      "curve": "legacy",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3570.0,
+          "medianFinalCash": 3570.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 3570.0,
+          "medianIncome": 5830.0,
+          "medianFinalCash": 9460.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 9460.0,
+          "medianIncome": 5930.0,
+          "medianFinalCash": 15440.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 15440.0,
+          "medianIncome": 6520.0,
+          "medianFinalCash": 21635.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 21635.0,
+          "medianIncome": 7595.0,
+          "medianFinalCash": 29210.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 29210.0,
+          "medianIncome": 8115.0,
+          "medianFinalCash": 37435.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 37435.0,
+          "medianIncome": 8830.0,
+          "medianFinalCash": 46400.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 46400.0,
+          "medianIncome": 9540.0,
+          "medianFinalCash": 56025.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 56025.0,
+          "medianIncome": 9660.0,
+          "medianFinalCash": 65575.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 65575.0,
+          "medianIncome": 10630.0,
+          "medianFinalCash": 76215.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "coarse",
+      "curve": "v3",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3570.0,
+          "medianFinalCash": 3570.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 2900.0,
+          "medianIncome": 7570.0,
+          "medianFinalCash": 10435.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 12,
+          "medianOpeningCash": 9675.0,
+          "medianIncome": 7660.0,
+          "medianFinalCash": 17275.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 54,
+          "medianOpeningCash": 16515.0,
+          "medianIncome": 9070.0,
+          "medianFinalCash": 25600.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 59,
+          "medianOpeningCash": 24960.0,
+          "medianIncome": 10405.0,
+          "medianFinalCash": 35245.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 34545.0,
+          "medianIncome": 11255.0,
+          "medianFinalCash": 45520.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 44760.0,
+          "medianIncome": 12475.0,
+          "medianFinalCash": 56715.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 55895.0,
+          "medianIncome": 13465.0,
+          "medianFinalCash": 70020.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 69140.0,
+          "medianIncome": 14225.0,
+          "medianFinalCash": 82985.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 82045.0,
+          "medianIncome": 14895.0,
+          "medianFinalCash": 97185.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "coarse",
+      "curve": "v3",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3570.0,
+          "medianFinalCash": 3570.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 3570.0,
+          "medianIncome": 5830.0,
+          "medianFinalCash": 9460.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 5,
+          "medianOpeningCash": 9460.0,
+          "medianIncome": 5930.0,
+          "medianFinalCash": 15440.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 35,
+          "medianOpeningCash": 15440.0,
+          "medianIncome": 6520.0,
+          "medianFinalCash": 21635.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 43,
+          "medianOpeningCash": 21635.0,
+          "medianIncome": 7595.0,
+          "medianFinalCash": 29210.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 54,
+          "medianOpeningCash": 29210.0,
+          "medianIncome": 8115.0,
+          "medianFinalCash": 37435.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 56,
+          "medianOpeningCash": 37435.0,
+          "medianIncome": 8830.0,
+          "medianFinalCash": 46400.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 57,
+          "medianOpeningCash": 46400.0,
+          "medianIncome": 9540.0,
+          "medianFinalCash": 56025.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 58,
+          "medianOpeningCash": 56025.0,
+          "medianIncome": 9660.0,
+          "medianFinalCash": 65575.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 57,
+          "medianOpeningCash": 65575.0,
+          "medianIncome": 10630.0,
+          "medianFinalCash": 76215.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "focused",
+      "curve": "legacy",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3690.0,
+          "medianFinalCash": 3690.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 3020.0,
+          "medianIncome": 8115.0,
+          "medianFinalCash": 11190.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 10430.0,
+          "medianIncome": 8165.0,
+          "medianFinalCash": 18600.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17840.0,
+          "medianIncome": 10000.0,
+          "medianFinalCash": 27860.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 27220.0,
+          "medianIncome": 12245.0,
+          "medianFinalCash": 39325.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 38625.0,
+          "medianIncome": 12975.0,
+          "medianFinalCash": 51550.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 50790.0,
+          "medianIncome": 14745.0,
+          "medianFinalCash": 65335.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 64515.0,
+          "medianIncome": 16495.0,
+          "medianFinalCash": 80800.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 79920.0,
+          "medianIncome": 17345.0,
+          "medianFinalCash": 97160.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 96220.0,
+          "medianIncome": 17800.0,
+          "medianFinalCash": 113745.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "focused",
+      "curve": "legacy",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3690.0,
+          "medianFinalCash": 3690.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 3690.0,
+          "medianIncome": 6260.0,
+          "medianFinalCash": 9990.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 9990.0,
+          "medianIncome": 6365.0,
+          "medianFinalCash": 16310.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 16310.0,
+          "medianIncome": 7495.0,
+          "medianFinalCash": 23865.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 23865.0,
+          "medianIncome": 9075.0,
+          "medianFinalCash": 33085.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 33085.0,
+          "medianIncome": 9640.0,
+          "medianFinalCash": 42615.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 42615.0,
+          "medianIncome": 10625.0,
+          "medianFinalCash": 52765.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 52765.0,
+          "medianIncome": 11675.0,
+          "medianFinalCash": 64365.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 64365.0,
+          "medianIncome": 11945.0,
+          "medianFinalCash": 76440.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 76440.0,
+          "medianIncome": 12750.0,
+          "medianFinalCash": 88560.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "focused",
+      "curve": "v3",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3690.0,
+          "medianFinalCash": 3690.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 3020.0,
+          "medianIncome": 8115.0,
+          "medianFinalCash": 11190.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 42,
+          "medianOpeningCash": 10430.0,
+          "medianIncome": 8165.0,
+          "medianFinalCash": 18600.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17840.0,
+          "medianIncome": 10000.0,
+          "medianFinalCash": 27860.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 27220.0,
+          "medianIncome": 12245.0,
+          "medianFinalCash": 39325.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 38625.0,
+          "medianIncome": 12975.0,
+          "medianFinalCash": 51550.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 50790.0,
+          "medianIncome": 14745.0,
+          "medianFinalCash": 65335.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 64515.0,
+          "medianIncome": 16495.0,
+          "medianFinalCash": 80800.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 79920.0,
+          "medianIncome": 17345.0,
+          "medianFinalCash": 97160.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 96220.0,
+          "medianIncome": 17800.0,
+          "medianFinalCash": 113745.0
+        }
+      ]
+    },
+    {
+      "mode": "coop",
+      "profile": "focused",
+      "curve": "v3",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 3690.0,
+          "medianFinalCash": 3690.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 3690.0,
+          "medianIncome": 6260.0,
+          "medianFinalCash": 9990.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 18,
+          "medianOpeningCash": 9990.0,
+          "medianIncome": 6365.0,
+          "medianFinalCash": 16310.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 58,
+          "medianOpeningCash": 16310.0,
+          "medianIncome": 7495.0,
+          "medianFinalCash": 23865.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 23865.0,
+          "medianIncome": 9075.0,
+          "medianFinalCash": 33085.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 33085.0,
+          "medianIncome": 9640.0,
+          "medianFinalCash": 42615.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 42615.0,
+          "medianIncome": 10625.0,
+          "medianFinalCash": 52765.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 52765.0,
+          "medianIncome": 11675.0,
+          "medianFinalCash": 64365.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 64365.0,
+          "medianIncome": 11945.0,
+          "medianFinalCash": 76440.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 76440.0,
+          "medianIncome": 12750.0,
+          "medianFinalCash": 88560.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "coarse",
+      "curve": "legacy",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 1750.0,
+          "medianFinalCash": 1750.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 8,
+          "medianOpeningCash": 1080.0,
+          "medianIncome": 3535.0,
+          "medianFinalCash": 4570.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 59,
+          "medianOpeningCash": 3810.0,
+          "medianIncome": 3345.0,
+          "medianFinalCash": 6980.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 6220.0,
+          "medianIncome": 4315.0,
+          "medianFinalCash": 10270.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 9630.0,
+          "medianIncome": 4560.0,
+          "medianFinalCash": 14200.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 13500.0,
+          "medianIncome": 4875.0,
+          "medianFinalCash": 18425.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17665.0,
+          "medianIncome": 5420.0,
+          "medianFinalCash": 22960.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 22140.0,
+          "medianIncome": 6270.0,
+          "medianFinalCash": 28755.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 27875.0,
+          "medianIncome": 6500.0,
+          "medianFinalCash": 34350.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 33410.0,
+          "medianIncome": 7075.0,
+          "medianFinalCash": 39995.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "coarse",
+      "curve": "legacy",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 1750.0,
+          "medianFinalCash": 1750.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 48,
+          "medianOpeningCash": 1750.0,
+          "medianIncome": 2550.0,
+          "medianFinalCash": 4320.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 4320.0,
+          "medianIncome": 2575.0,
+          "medianFinalCash": 6970.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 6970.0,
+          "medianIncome": 3035.0,
+          "medianFinalCash": 10160.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 10160.0,
+          "medianIncome": 3365.0,
+          "medianFinalCash": 13750.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 13750.0,
+          "medianIncome": 3670.0,
+          "medianFinalCash": 17380.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17380.0,
+          "medianIncome": 3945.0,
+          "medianFinalCash": 21025.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 21025.0,
+          "medianIncome": 4370.0,
+          "medianFinalCash": 25535.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 25535.0,
+          "medianIncome": 4630.0,
+          "medianFinalCash": 29870.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 29870.0,
+          "medianIncome": 4950.0,
+          "medianFinalCash": 34890.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "coarse",
+      "curve": "v3",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 56,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 56,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 1750.0,
+          "medianFinalCash": 1750.0
+        },
+        {
+          "level": 2,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 1090.0,
+          "medianIncome": 3500.0,
+          "medianFinalCash": 4605.0
+        },
+        {
+          "level": 3,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 3845.0,
+          "medianIncome": 3345.0,
+          "medianFinalCash": 6980.0
+        },
+        {
+          "level": 4,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 5,
+          "medianOpeningCash": 6220.0,
+          "medianIncome": 4315.0,
+          "medianFinalCash": 10245.0
+        },
+        {
+          "level": 5,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 13,
+          "medianOpeningCash": 9605.0,
+          "medianIncome": 4560.0,
+          "medianFinalCash": 14200.0
+        },
+        {
+          "level": 6,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 26,
+          "medianOpeningCash": 13500.0,
+          "medianIncome": 4850.0,
+          "medianFinalCash": 18345.0
+        },
+        {
+          "level": 7,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 34,
+          "medianOpeningCash": 17585.0,
+          "medianIncome": 5450.0,
+          "medianFinalCash": 22960.0
+        },
+        {
+          "level": 8,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 41,
+          "medianOpeningCash": 22140.0,
+          "medianIncome": 6250.0,
+          "medianFinalCash": 28655.0
+        },
+        {
+          "level": 9,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 45,
+          "medianOpeningCash": 27775.0,
+          "medianIncome": 6595.0,
+          "medianFinalCash": 34245.0
+        },
+        {
+          "level": 10,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 47,
+          "medianOpeningCash": 33305.0,
+          "medianIncome": 7035.0,
+          "medianFinalCash": 39985.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "coarse",
+      "curve": "v3",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 55,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 56,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 1750.0,
+          "medianFinalCash": 1750.0
+        },
+        {
+          "level": 2,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 1760.0,
+          "medianIncome": 2550.0,
+          "medianFinalCash": 4345.0
+        },
+        {
+          "level": 3,
+          "reached": 56,
+          "passed": 56,
+          "startedAboveTarget": 10,
+          "medianOpeningCash": 4345.0,
+          "medianIncome": 2590.0,
+          "medianFinalCash": 7000.0
+        },
+        {
+          "level": 4,
+          "reached": 56,
+          "passed": 55,
+          "startedAboveTarget": 15,
+          "medianOpeningCash": 7000.0,
+          "medianIncome": 3100.0,
+          "medianFinalCash": 10200.0
+        },
+        {
+          "level": 5,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 20,
+          "medianOpeningCash": 10220,
+          "medianIncome": 3400,
+          "medianFinalCash": 13870
+        },
+        {
+          "level": 6,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 31,
+          "medianOpeningCash": 13870,
+          "medianIncome": 3650,
+          "medianFinalCash": 17400
+        },
+        {
+          "level": 7,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 34,
+          "medianOpeningCash": 17400,
+          "medianIncome": 3950,
+          "medianFinalCash": 21230
+        },
+        {
+          "level": 8,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 28,
+          "medianOpeningCash": 21230,
+          "medianIncome": 4380,
+          "medianFinalCash": 25550
+        },
+        {
+          "level": 9,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 27,
+          "medianOpeningCash": 25550,
+          "medianIncome": 4660,
+          "medianFinalCash": 30070
+        },
+        {
+          "level": 10,
+          "reached": 55,
+          "passed": 55,
+          "startedAboveTarget": 23,
+          "medianOpeningCash": 30070,
+          "medianIncome": 4950,
+          "medianFinalCash": 35070
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "focused",
+      "curve": "legacy",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 2010.0,
+          "medianFinalCash": 2010.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 14,
+          "medianOpeningCash": 1340.0,
+          "medianIncome": 4180.0,
+          "medianFinalCash": 5480.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 4720.0,
+          "medianIncome": 4155.0,
+          "medianFinalCash": 8850.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 8090.0,
+          "medianIncome": 5060.0,
+          "medianFinalCash": 13090.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 12450.0,
+          "medianIncome": 6065.0,
+          "medianFinalCash": 18565.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17865.0,
+          "medianIncome": 6880.0,
+          "medianFinalCash": 24485.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 23725.0,
+          "medianIncome": 7370.0,
+          "medianFinalCash": 31195.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 30375.0,
+          "medianIncome": 8285.0,
+          "medianFinalCash": 38335.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 37455.0,
+          "medianIncome": 9005.0,
+          "medianFinalCash": 46440.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 45500.0,
+          "medianIncome": 8840.0,
+          "medianFinalCash": 54650.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "focused",
+      "curve": "legacy",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 2010.0,
+          "medianFinalCash": 2010.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 57,
+          "medianOpeningCash": 2010.0,
+          "medianIncome": 3220.0,
+          "medianFinalCash": 5260.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 5260.0,
+          "medianIncome": 3250.0,
+          "medianFinalCash": 8580.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 8580.0,
+          "medianIncome": 3800.0,
+          "medianFinalCash": 12385.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 12385.0,
+          "medianIncome": 4545.0,
+          "medianFinalCash": 16720.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 16720.0,
+          "medianIncome": 4785.0,
+          "medianFinalCash": 21460.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 21460.0,
+          "medianIncome": 5140.0,
+          "medianFinalCash": 26575.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 26575.0,
+          "medianIncome": 5655.0,
+          "medianFinalCash": 32210.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 32210.0,
+          "medianIncome": 6155.0,
+          "medianFinalCash": 37980.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 37980.0,
+          "medianIncome": 6135.0,
+          "medianFinalCash": 43980.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "focused",
+      "curve": "v3",
+      "shop": "all-available",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 2010.0,
+          "medianFinalCash": 2010.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 1340.0,
+          "medianIncome": 4180.0,
+          "medianFinalCash": 5480.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 15,
+          "medianOpeningCash": 4720.0,
+          "medianIncome": 4155.0,
+          "medianFinalCash": 8850.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 47,
+          "medianOpeningCash": 8090.0,
+          "medianIncome": 5060.0,
+          "medianFinalCash": 13090.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 59,
+          "medianOpeningCash": 12450.0,
+          "medianIncome": 6065.0,
+          "medianFinalCash": 18565.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 17865.0,
+          "medianIncome": 6880.0,
+          "medianFinalCash": 24485.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 23725.0,
+          "medianIncome": 7370.0,
+          "medianFinalCash": 31195.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 30375.0,
+          "medianIncome": 8285.0,
+          "medianFinalCash": 38335.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 37455.0,
+          "medianIncome": 9005.0,
+          "medianFinalCash": 46440.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 45500.0,
+          "medianIncome": 8840.0,
+          "medianFinalCash": 54650.0
+        }
+      ]
+    },
+    {
+      "mode": "solo",
+      "profile": "focused",
+      "curve": "v3",
+      "shop": "none",
+      "campaignCount": 60,
+      "completedCount": 60,
+      "levels": [
+        {
+          "level": 1,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 0.0,
+          "medianIncome": 2010.0,
+          "medianFinalCash": 2010.0
+        },
+        {
+          "level": 2,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 0,
+          "medianOpeningCash": 2010.0,
+          "medianIncome": 3220.0,
+          "medianFinalCash": 5260.0
+        },
+        {
+          "level": 3,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 43,
+          "medianOpeningCash": 5260.0,
+          "medianIncome": 3250.0,
+          "medianFinalCash": 8580.0
+        },
+        {
+          "level": 4,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 53,
+          "medianOpeningCash": 8580.0,
+          "medianIncome": 3800.0,
+          "medianFinalCash": 12385.0
+        },
+        {
+          "level": 5,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 12385.0,
+          "medianIncome": 4545.0,
+          "medianFinalCash": 16720.0
+        },
+        {
+          "level": 6,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 16720.0,
+          "medianIncome": 4785.0,
+          "medianFinalCash": 21460.0
+        },
+        {
+          "level": 7,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 21460.0,
+          "medianIncome": 5140.0,
+          "medianFinalCash": 26575.0
+        },
+        {
+          "level": 8,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 26575.0,
+          "medianIncome": 5655.0,
+          "medianFinalCash": 32210.0
+        },
+        {
+          "level": 9,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 32210.0,
+          "medianIncome": 6155.0,
+          "medianFinalCash": 37980.0
+        },
+        {
+          "level": 10,
+          "reached": 60,
+          "passed": 60,
+          "startedAboveTarget": 60,
+          "medianOpeningCash": 37980.0,
+          "medianIncome": 6135.0,
+          "medianFinalCash": 43980.0
+        }
+      ]
+    }
+  ]
+}

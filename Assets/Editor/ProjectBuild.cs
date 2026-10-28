@@ -14,7 +14,7 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.5.0";
+        public const string Version = "0.6.0";
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()
@@ -165,6 +165,51 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidSlidingPuzzleValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".slidingpuzzletest");
+                    PlayerSettings.productName = "Xanadu 华容道测试";
+                    BuildApk("-sliding-puzzle-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidFlappyBirdValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".flappybirdtest");
+                    PlayerSettings.productName = "Xanadu 飞行测试";
+                    FlappyAssetPreparation.Ensure();
+                    BuildApk("-flappy-bird-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         public static void BuildAndroidLinkMatchValidation()
         {
             RunOrFail(() =>
@@ -246,6 +291,38 @@ namespace XanaduYonder.EditorTools
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
                     PlayerSettings.productName = productName;
                     AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidTetrisValidation()
+        {
+            RunOrFail(() =>
+            {
+                // This existing scope snapshots shared Unity settings, independently of game assets.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".tetristest");
+                    PlayerSettings.productName = "Xanadu 方块测试";
+                    BuildApk("-tetris-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+            });
+        }
+
+        public static void BuildAndroidGoldMinerValidation()
+        {
+            RunOrFail(() =>
+            {
+                // Capture before Prepare, including its branding, graphics, quality and editor changes.
+                // Dispose runs before RunOrFail can exit the batch process on a failed build.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    GoldMinerAssetImporter.Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".goldminertest");
+                    PlayerSettings.productName = "Xanadu 矿工测试";
+                    BuildApk("-gold-miner-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
                 }
             });
         }
@@ -366,7 +443,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.bundleVersionCode = 5;
+            PlayerSettings.Android.bundleVersionCode = 6;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

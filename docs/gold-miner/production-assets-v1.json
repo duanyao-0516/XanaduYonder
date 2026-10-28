@@ -1,0 +1,2919 @@
+{
+  "schema_version": 1,
+  "status": "approved-artwork; planned Unity import, not yet applied",
+  "created_on": "2026-10-27",
+  "source_manifest_sha256": "fe7f589431a27998bbf8ec94a369ced7472e5010ed5de889272d23e14d77262f",
+  "source_archive": {
+    "path": "artifacts/Xanadu-GoldMiner-UI-v1.zip",
+    "sha256": "609a50c1ade3f111f1fefd783d4c605dfe7f7e5e820698bfc5dbbc1c7eac23f4",
+    "member_root": "Xanadu-GoldMiner-UI-v1",
+    "ignored_by_git": true
+  },
+  "counts": {
+    "production_png": 44,
+    "transparent_png": 37,
+    "opaque_png": 7,
+    "sprite_rectangles": 43
+  },
+  "source_measurement": {
+    "png_bytes": 51711510,
+    "theoretical_all_rgba32_bytes_no_mipmaps": 276789864,
+    "is_runtime_measurement": false
+  },
+  "common_import_settings": {
+    "unity_version": "6000.3.27f1",
+    "texture_type": "Sprite",
+    "pixels_per_unit": 100,
+    "filter_mode": "Bilinear",
+    "wrap_mode": "Clamp",
+    "aniso_level": 1,
+    "sRGB": true,
+    "mipmap_enabled": false,
+    "is_readable": false,
+    "npot_scale": "None",
+    "mesh_type": "FullRect",
+    "generate_fallback_physics_shape": false,
+    "crunched_compression": false,
+    "sprite_extrude_pixels": 1,
+    "slice_coordinate_space": "original source pixels, not platform-scaled pixels",
+    "border_coordinate_space": "relative to original source slice; left,bottom,right,top",
+    "pivot_coordinate_space": "normalized to individual slice; origin bottom-left",
+    "pivot_and_border_status": "planned first-pass values; visual alignment acceptance required during import"
+  },
+  "import_profiles": {
+    "standalone": {
+      "max_texture_size": 1024,
+      "reason": "独立角色、矿物和道具；运行时显示尺寸远小于源尺寸",
+      "android_compression_quality": 100
+    },
+    "sheet": {
+      "max_texture_size": 2048,
+      "reason": "角色/设备多切片共图，保留小部件边缘",
+      "android_compression_quality": 100
+    },
+    "background": {
+      "max_texture_size": 2048,
+      "reason": "全屏或宽幅场景，按横竖屏只加载当前构图",
+      "android_compression_quality": 100
+    },
+    "illustration": {
+      "max_texture_size": 1024,
+      "reason": "模式卡插画和大厅封面",
+      "android_compression_quality": 100
+    },
+    "ui": {
+      "max_texture_size": 1024,
+      "reason": "使用原矩形切片及九宫格，正文由字体渲染",
+      "android_compression_quality": 100
+    },
+    "effect": {
+      "max_texture_size": 512,
+      "reason": "单帧粒子峰值图；尺寸和透明度由动画控制",
+      "android_compression_quality": 100
+    }
+  },
+  "assets": [
+    {
+      "id": "hook-open-closed",
+      "group": "characters",
+      "title": "钩爪张开与闭合状态",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/hook-open-closed.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/hook-open-closed.png",
+      "source_sha256": "f00aadaf13d65941eed8b7d72ffbd0adf4f8492ac5924aa96de39d55210933f3",
+      "target_path": "Assets/Resources/GoldMiner/characters/hook-open-closed.png",
+      "resource_key": "GoldMiner/characters/hook-open-closed",
+      "source_size_px": [
+        1774,
+        887
+      ],
+      "source_bytes": 653300,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        115,
+        83,
+        1665,
+        789
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "open",
+          "rect_xywh_top_left": [
+            113,
+            81,
+            817,
+            694
+          ],
+          "unity_rect_xywh_bottom_left": [
+            113,
+            112,
+            817,
+            694
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "顶部挂环中心；初始值，接入时核对绳端与环心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "closed",
+          "rect_xywh_top_left": [
+            1124,
+            80,
+            543,
+            712
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1124,
+            95,
+            543,
+            712
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "顶部挂环中心；初始值，接入时核对绳端与环心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "左右两状态不等宽，采用所附矩形；锚点应放在顶部挂环中心。"
+    },
+    {
+      "id": "miner-p1-idle",
+      "group": "characters",
+      "title": "P1 橙服待机/选择页角色",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p1-idle.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p1-idle.png",
+      "source_sha256": "f582fd12c465812813bd1c88f06433c03dd0df09d7489e601b38b43548aa1b1b",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p1-idle.png",
+      "resource_key": "GoldMiner/characters/miner-p1-idle",
+      "source_size_px": [
+        1237,
+        1271
+      ],
+      "source_bytes": 863717,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        281,
+        94,
+        977,
+        1203
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "full",
+          "rect_xywh_top_left": [
+            278,
+            91,
+            701,
+            1115
+          ],
+          "unity_rect_xywh_bottom_left": [
+            278,
+            65,
+            701,
+            1115
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "站立底部为建议落脚锚点。"
+    },
+    {
+      "id": "miner-p1-rig-parts",
+      "group": "characters",
+      "title": "P1 头、身体腿和两侧手臂部件",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p1-rig-parts.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p1-rig-parts.png",
+      "source_sha256": "0d51bb55b3f2221652bdb5b6eff0393bbec0e4318834cde6d4dd24b6da23f598",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p1-rig-parts.png",
+      "resource_key": "GoldMiner/characters/miner-p1-rig-parts",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1644223,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        43,
+        46,
+        1462,
+        975
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "head",
+          "rect_xywh_top_left": [
+            40,
+            76,
+            503,
+            523
+          ],
+          "unity_rect_xywh_bottom_left": [
+            40,
+            425,
+            503,
+            523
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.1
+          ],
+          "planned_pivot_semantic": "颈部",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "body_legs",
+          "rect_xywh_top_left": [
+            594,
+            43,
+            490,
+            550
+          ],
+          "unity_rect_xywh_bottom_left": [
+            594,
+            431,
+            490,
+            550
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "near_upper_arm",
+          "rect_xywh_top_left": [
+            1182,
+            199,
+            283,
+            320
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1182,
+            505,
+            283,
+            320
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "near_forearm_glove",
+          "rect_xywh_top_left": [
+            175,
+            623,
+            253,
+            355
+          ],
+          "unity_rect_xywh_bottom_left": [
+            175,
+            46,
+            253,
+            355
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "far_upper_arm",
+          "rect_xywh_top_left": [
+            639,
+            643,
+            278,
+            309
+          ],
+          "unity_rect_xywh_bottom_left": [
+            639,
+            72,
+            278,
+            309
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "far_forearm_glove",
+          "rect_xywh_top_left": [
+            1132,
+            615,
+            301,
+            363
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1132,
+            46,
+            301,
+            363
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "部件已绘制，关节旋转中心、缩放、遮挡和骨骼需接入 Unity 时配置；不声称已绑定骨骼。"
+    },
+    {
+      "id": "miner-p1-states",
+      "group": "characters",
+      "title": "P1 操作、用力、成功、失落四状态",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p1-states.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p1-states.png",
+      "source_sha256": "f631f97e26e3649dd8cda1c31408f6aaa52e4faf92bf95ab4fd076f8144bf0de",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p1-states.png",
+      "resource_key": "GoldMiner/characters/miner-p1-states",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1316948,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        143,
+        23,
+        1173,
+        1232
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "operate",
+          "rect_xywh_top_left": [
+            140,
+            21,
+            480,
+            597
+          ],
+          "unity_rect_xywh_bottom_left": [
+            140,
+            636,
+            480,
+            597
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "effort",
+          "rect_xywh_top_left": [
+            687,
+            64,
+            489,
+            554
+          ],
+          "unity_rect_xywh_bottom_left": [
+            687,
+            636,
+            489,
+            554
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "success",
+          "rect_xywh_top_left": [
+            182,
+            629,
+            451,
+            604
+          ],
+          "unity_rect_xywh_bottom_left": [
+            182,
+            21,
+            451,
+            604
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "failure",
+          "rect_xywh_top_left": [
+            760,
+            656,
+            368,
+            577
+          ],
+          "unity_rect_xywh_bottom_left": [
+            760,
+            21,
+            368,
+            577
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "按提供矩形切片；四张是状态姿态，不是连贯逐帧动画。"
+    },
+    {
+      "id": "miner-p2-idle",
+      "group": "characters",
+      "title": "P2 青服待机/选择页角色",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p2-idle.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p2-idle.png",
+      "source_sha256": "af486104d55f4d542b101652d578c7149ac8fe39e8cf0b2215faff4ec4e04577",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p2-idle.png",
+      "resource_key": "GoldMiner/characters/miner-p2-idle",
+      "source_size_px": [
+        1237,
+        1272
+      ],
+      "source_bytes": 926880,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        281,
+        91,
+        980,
+        1206
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "full",
+          "rect_xywh_top_left": [
+            278,
+            88,
+            705,
+            1120
+          ],
+          "unity_rect_xywh_bottom_left": [
+            278,
+            64,
+            705,
+            1120
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "与 P1 同一人物，服装配色变体；源画布相差 1px，接入时按落脚点对齐。"
+    },
+    {
+      "id": "miner-p2-rig-parts",
+      "group": "characters",
+      "title": "P2 同构角色部件",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p2-rig-parts.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p2-rig-parts.png",
+      "source_sha256": "657c1e133c7fc9c2a0aeedcb813ceb86fd56d477bac172e967e51456d735dd4d",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p2-rig-parts.png",
+      "resource_key": "GoldMiner/characters/miner-p2-rig-parts",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1669753,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        43,
+        45,
+        1463,
+        976
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "head",
+          "rect_xywh_top_left": [
+            40,
+            76,
+            503,
+            524
+          ],
+          "unity_rect_xywh_bottom_left": [
+            40,
+            424,
+            503,
+            524
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.1
+          ],
+          "planned_pivot_semantic": "颈部",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "body_legs",
+          "rect_xywh_top_left": [
+            594,
+            42,
+            491,
+            552
+          ],
+          "unity_rect_xywh_bottom_left": [
+            594,
+            430,
+            491,
+            552
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "near_upper_arm",
+          "rect_xywh_top_left": [
+            1182,
+            199,
+            284,
+            321
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1182,
+            504,
+            284,
+            321
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "near_forearm_glove",
+          "rect_xywh_top_left": [
+            175,
+            622,
+            254,
+            357
+          ],
+          "unity_rect_xywh_bottom_left": [
+            175,
+            45,
+            254,
+            357
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "far_upper_arm",
+          "rect_xywh_top_left": [
+            639,
+            643,
+            280,
+            311
+          ],
+          "unity_rect_xywh_bottom_left": [
+            639,
+            70,
+            280,
+            311
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "far_forearm_glove",
+          "rect_xywh_top_left": [
+            1131,
+            615,
+            303,
+            363
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1131,
+            46,
+            303,
+            363
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.85
+          ],
+          "planned_pivot_semantic": "肩/肘连接端；初始值，按两部件接缝校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "只换服装色；锚点沿用 P1 校准后设置。"
+    },
+    {
+      "id": "miner-p2-states",
+      "group": "characters",
+      "title": "P2 操作、用力、成功、失落四状态",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/miner-p2-states.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/miner-p2-states.png",
+      "source_sha256": "cc1754e411a7436c9e56ccbe0cb1ab3b13227d41712721d1255bb5e2ba30b2c5",
+      "target_path": "Assets/Resources/GoldMiner/characters/miner-p2-states.png",
+      "resource_key": "GoldMiner/characters/miner-p2-states",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1343444,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        142,
+        23,
+        1174,
+        1232
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "operate",
+          "rect_xywh_top_left": [
+            140,
+            21,
+            480,
+            598
+          ],
+          "unity_rect_xywh_bottom_left": [
+            140,
+            635,
+            480,
+            598
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "effort",
+          "rect_xywh_top_left": [
+            688,
+            64,
+            489,
+            556
+          ],
+          "unity_rect_xywh_bottom_left": [
+            688,
+            634,
+            489,
+            556
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "success",
+          "rect_xywh_top_left": [
+            182,
+            629,
+            452,
+            606
+          ],
+          "unity_rect_xywh_bottom_left": [
+            182,
+            19,
+            452,
+            606
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "failure",
+          "rect_xywh_top_left": [
+            760,
+            656,
+            369,
+            579
+          ],
+          "unity_rect_xywh_bottom_left": [
+            760,
+            19,
+            369,
+            579
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "与 P1 顺序和构图一致，按落脚点对齐；并非已绑定动画。"
+    },
+    {
+      "id": "mole-caught",
+      "group": "characters",
+      "title": "小动物被抓起/回收姿态",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/mole-caught.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/mole-caught.png",
+      "source_sha256": "284f33645d0c3f74e8807e6490e7606836eb241d92bd4b32828e76fbccaace5c",
+      "target_path": "Assets/Resources/GoldMiner/characters/mole-caught.png",
+      "resource_key": "GoldMiner/characters/mole-caught",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1069288,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        262,
+        157,
+        1314,
+        845
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "full",
+          "rect_xywh_top_left": [
+            259,
+            154,
+            1057,
+            694
+          ],
+          "unity_rect_xywh_bottom_left": [
+            259,
+            176,
+            1057,
+            694
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "外部钩爪附着于背部；钻石单独挂载。"
+    },
+    {
+      "id": "mole-idle",
+      "group": "characters",
+      "title": "动物待机与动画身份参考",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/mole-idle.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/mole-idle.png",
+      "source_sha256": "2b22e1600c2a3fa58b66b586c3dae9ae3ea79f593d03e36d587a12db90150019",
+      "target_path": "Assets/Resources/GoldMiner/characters/mole-idle.png",
+      "resource_key": "GoldMiner/characters/mole-idle",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1041902,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        266,
+        253,
+        1332,
+        788
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "full",
+          "rect_xywh_top_left": [
+            263,
+            250,
+            1072,
+            541
+          ],
+          "unity_rect_xywh_bottom_left": [
+            263,
+            233,
+            1072,
+            541
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "无钻石。携钻版本通过挂载独立钻石实现。"
+    },
+    {
+      "id": "mole-run-4frames",
+      "group": "characters",
+      "title": "小动物四个跑动姿态",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/mole-run-4frames.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/mole-run-4frames.png",
+      "source_sha256": "5dbca806a0297a469ec306f02ad170a3bdf181268a05d78b417aac6fbc34066b",
+      "target_path": "Assets/Resources/GoldMiner/characters/mole-run-4frames.png",
+      "resource_key": "GoldMiner/characters/mole-run-4frames",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1559025,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        69,
+        107,
+        1493,
+        917
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "run_01",
+          "rect_xywh_top_left": [
+            66,
+            106,
+            700,
+            359
+          ],
+          "unity_rect_xywh_bottom_left": [
+            66,
+            559,
+            700,
+            359
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "run_02",
+          "rect_xywh_top_left": [
+            820,
+            104,
+            666,
+            376
+          ],
+          "unity_rect_xywh_bottom_left": [
+            820,
+            544,
+            666,
+            376
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "run_03",
+          "rect_xywh_top_left": [
+            71,
+            550,
+            693,
+            370
+          ],
+          "unity_rect_xywh_bottom_left": [
+            71,
+            104,
+            693,
+            370
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "run_04",
+          "rect_xywh_top_left": [
+            820,
+            554,
+            676,
+            321
+          ],
+          "unity_rect_xywh_bottom_left": [
+            820,
+            149,
+            676,
+            321
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "读序左上、右上、左下、右下；是动画候选帧，接入时需校准基线、枢轴、帧率并验证循环，不声称已验证无跳动。"
+    },
+    {
+      "id": "winch-assembly",
+      "group": "characters",
+      "title": "完整绞盘静态参考或静态使用",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/winch-assembly.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/winch-assembly.png",
+      "source_sha256": "adf6fe672d6f0675790ab7d2b6cb9682ac1d422a6bd668ab3f1d7204ff6c2fef",
+      "target_path": "Assets/Resources/GoldMiner/characters/winch-assembly.png",
+      "resource_key": "GoldMiner/characters/winch-assembly",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1665662,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        170,
+        181,
+        1499,
+        908
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "full",
+          "rect_xywh_top_left": [
+            167,
+            179,
+            1334,
+            732
+          ],
+          "unity_rect_xywh_bottom_left": [
+            167,
+            113,
+            1334,
+            732
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线；各帧按共同脚底对齐，不能按PNG整幅中心对齐",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "独立部件见 winch_parts；绳索由游戏代码绘制。"
+    },
+    {
+      "id": "winch-parts",
+      "group": "characters",
+      "title": "木框基座、绳筒轴、摇柄三部件",
+      "source_path": "artifacts/gold-miner-ui-v1/characters/winch-parts.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/characters/winch-parts.png",
+      "source_sha256": "53fb92db95885ede62ecd12b551a88dd5f5688e4b70088ed413f11bd9bd27c9f",
+      "target_path": "Assets/Resources/GoldMiner/characters/winch-parts.png",
+      "resource_key": "GoldMiner/characters/winch-parts",
+      "source_size_px": [
+        2172,
+        724
+      ],
+      "source_bytes": 957012,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        24,
+        83,
+        2115,
+        658
+      ],
+      "import_profile": "sheet",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "frame",
+          "rect_xywh_top_left": [
+            22,
+            81,
+            877,
+            580
+          ],
+          "unity_rect_xywh_bottom_left": [
+            22,
+            63,
+            877,
+            580
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0
+          ],
+          "planned_pivot_semantic": "落脚基线",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "drum",
+          "rect_xywh_top_left": [
+            901,
+            166,
+            719,
+            337
+          ],
+          "unity_rect_xywh_bottom_left": [
+            901,
+            221,
+            719,
+            337
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "鼓轮轴心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "crank",
+          "rect_xywh_top_left": [
+            1688,
+            218,
+            430,
+            321
+          ],
+          "unity_rect_xywh_bottom_left": [
+            1688,
+            185,
+            430,
+            321
+          ],
+          "pivot_note": "按部件功能设置轴心；全身角色/跑动动物建议以落脚点对齐，钩爪以顶部挂环对齐。",
+          "planned_pivot_normalized_bottom_left": [
+            0.18,
+            0.5
+          ],
+          "planned_pivot_semantic": "摇柄左端转轴；初始值，按连接孔校准",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "图集并非等宽网格，务必使用所附矩形切片；轴心/遮挡/比例需要接入时校准。"
+    },
+    {
+      "id": "item_diamond_polish",
+      "group": "objects",
+      "title": "钻石增值剂",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/item_diamond_polish.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/item_diamond_polish.png",
+      "source_sha256": "fb263fbbe055556df82c15add9d1aefb3b8600892f87736aff40a6cc0feea43f",
+      "target_path": "Assets/Resources/GoldMiner/objects/item_diamond_polish.png",
+      "resource_key": "GoldMiner/objects/item_diamond_polish",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 897784,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        200,
+        142,
+        1053,
+        1144
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "item_dynamite",
+      "group": "objects",
+      "title": "炸药",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/item_dynamite.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/item_dynamite.png",
+      "source_sha256": "81599ea3e8f4ca1082be63d847e1f0a9506fae9a9da271303acb88c33ae54bb2",
+      "target_path": "Assets/Resources/GoldMiner/objects/item_dynamite.png",
+      "resource_key": "GoldMiner/objects/item_dynamite",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 546746,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        264,
+        210,
+        1021,
+        1086
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "item_lucky_clover",
+      "group": "objects",
+      "title": "幸运草",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/item_lucky_clover.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/item_lucky_clover.png",
+      "source_sha256": "edcc6f0bead8b97c4a692a6fbc76700ba7076318cbd22eaf34f64d5b520f74a6",
+      "target_path": "Assets/Resources/GoldMiner/objects/item_lucky_clover.png",
+      "resource_key": "GoldMiner/objects/item_lucky_clover",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 884344,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        200,
+        161,
+        1097,
+        1135
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "item_rock_book",
+      "group": "objects",
+      "title": "石头收藏书",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/item_rock_book.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/item_rock_book.png",
+      "source_sha256": "cd53b328b7ddeb60b8eacc736fc75b759cc2b130f69eef00bb97fc33f27885ae",
+      "target_path": "Assets/Resources/GoldMiner/objects/item_rock_book.png",
+      "resource_key": "GoldMiner/objects/item_rock_book",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1534694,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        72,
+        111,
+        1205,
+        1222
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "item_strength",
+      "group": "objects",
+      "title": "大力药",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/item_strength.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/item_strength.png",
+      "source_sha256": "ad982035aad9df0ecd3f9304d303d6fe88a1c255a88099ca43fe74c5bdc2e994",
+      "target_path": "Assets/Resources/GoldMiner/objects/item_strength.png",
+      "resource_key": "GoldMiner/objects/item_strength",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1147925,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        176,
+        77,
+        1142,
+        1181
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_diamond",
+      "group": "objects",
+      "title": "钻石",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_diamond.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_diamond.png",
+      "source_sha256": "0a21c33d38aeb8673133d30b38436175db47dcacd7bbe66f6572baa109d9b7c7",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_diamond.png",
+      "resource_key": "GoldMiner/objects/ore_diamond",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 641832,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        161,
+        236,
+        1094,
+        1051
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_gold_large",
+      "group": "objects",
+      "title": "大金块",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_gold_large.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_gold_large.png",
+      "source_sha256": "f9b90455b4142f6186734d55c36a5ae7be4d931479a7bf8ce952407235fc9b9c",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_gold_large.png",
+      "resource_key": "GoldMiner/objects/ore_gold_large",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1099578,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        59,
+        133,
+        1200,
+        1142
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_gold_medium",
+      "group": "objects",
+      "title": "中金块",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_gold_medium.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_gold_medium.png",
+      "source_sha256": "a6ae7096e2afe44ab37036a28f5bfc15822d5ba6e07726a20d5678c259a9603a",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_gold_medium.png",
+      "resource_key": "GoldMiner/objects/ore_gold_medium",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 999271,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        161,
+        93,
+        1098,
+        1172
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_gold_small",
+      "group": "objects",
+      "title": "小金块",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_gold_small.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_gold_small.png",
+      "source_sha256": "8c64e8f8da8a57f6aabe3c3576945ee90cf2d43b72eaaec87544b21708a3cadf",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_gold_small.png",
+      "resource_key": "GoldMiner/objects/ore_gold_small",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 718203,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        156,
+        193,
+        1104,
+        1074
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_mystery_bag",
+      "group": "objects",
+      "title": "神秘袋",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_mystery_bag.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_mystery_bag.png",
+      "source_sha256": "cb65ffa849d0f063b81fb3926642f86fa176f6d76f6cb8901d0a1bacf0549637",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_mystery_bag.png",
+      "resource_key": "GoldMiner/objects/ore_mystery_bag",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1151394,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        99,
+        108,
+        1154,
+        1153
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_rock_large",
+      "group": "objects",
+      "title": "大石块",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_rock_large.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_rock_large.png",
+      "source_sha256": "abe1d370153ed9889137e80e1674f26e57d0c9de0da905cdb211a0acb7631fbc",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_rock_large.png",
+      "resource_key": "GoldMiner/objects/ore_rock_large",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 834836,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        83,
+        228,
+        1179,
+        1041
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ore_rock_small",
+      "group": "objects",
+      "title": "小石块",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ore_rock_small.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ore_rock_small.png",
+      "source_sha256": "4a6956705c928878d4ca982c26ab38daeabb5c08196b83df09a7cc6acd8ce67a",
+      "target_path": "Assets/Resources/GoldMiner/objects/ore_rock_small.png",
+      "resource_key": "GoldMiner/objects/ore_rock_small",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 634550,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        167,
+        309,
+        1093,
+        999
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "ui_gold_coin",
+      "group": "objects",
+      "title": "金币",
+      "source_path": "artifacts/gold-miner-ui-v1/objects/ui_gold_coin.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/objects/ui_gold_coin.png",
+      "source_sha256": "54b9176c1bd2dfd38be81ae4877c8558a9a9d37e2d8ab750af12d1680bd2ec79",
+      "target_path": "Assets/Resources/GoldMiner/objects/ui_gold_coin.png",
+      "resource_key": "GoldMiner/objects/ui_gold_coin",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1172568,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        114,
+        118,
+        1145,
+        1162
+      ],
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Import as a transparent single sprite; tune world size and collider separately."
+    },
+    {
+      "id": "bg-coop",
+      "group": "backgrounds",
+      "title": "双人横屏干净矿区",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/bg-coop.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/bg-coop.png",
+      "source_sha256": "916362bf7c4370c585b70827419a4f0a8103bf4256347284d9a8df1eb550ef7a",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/bg-coop.png",
+      "resource_key": "GoldMiner/backgrounds/bg-coop",
+      "source_size_px": [
+        1843,
+        853
+      ],
+      "source_bytes": 1987933,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        1843,
+        853
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "可叠独立矿工、设备、矿物和HUD的干净矿区"
+    },
+    {
+      "id": "bg-mode-select",
+      "group": "backgrounds",
+      "title": "模式选择页背景",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/bg-mode-select.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/bg-mode-select.png",
+      "source_sha256": "df572eda4f3e2555210df5b4117d8bb5f1625aa91abe63be5793722bb3f114c2",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/bg-mode-select.png",
+      "resource_key": "GoldMiner/backgrounds/bg-mode-select",
+      "source_size_px": [
+        853,
+        1844
+      ],
+      "source_bytes": 1997370,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        853,
+        1844
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "上方叠标题，下方叠模式卡；背景不含角色与文字"
+    },
+    {
+      "id": "bg-shop-landscape",
+      "group": "backgrounds",
+      "title": "横屏商店背景",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/bg-shop-landscape.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/bg-shop-landscape.png",
+      "source_sha256": "77f3ac74d511ef037a080daa81dfe0b6b3487719fbd18c70bfa041a3cd3ad6a3",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/bg-shop-landscape.png",
+      "resource_key": "GoldMiner/backgrounds/bg-shop-landscape",
+      "source_size_px": [
+        1844,
+        853
+      ],
+      "source_bytes": 1850708,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        1844,
+        853
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "运行时叠加商品卡、价格、文字与按钮"
+    },
+    {
+      "id": "bg-shop-portrait",
+      "group": "backgrounds",
+      "title": "竖屏商店背景",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/bg-shop-portrait.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/bg-shop-portrait.png",
+      "source_sha256": "ae1c8f6fffe78bb0d7202260e65d3a5a8c40680edaa8913c549beb6766a069ce",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/bg-shop-portrait.png",
+      "resource_key": "GoldMiner/backgrounds/bg-shop-portrait",
+      "source_size_px": [
+        853,
+        1844
+      ],
+      "source_bytes": 1937904,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        853,
+        1844
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "运行时叠加商品卡、价格、文字与按钮"
+    },
+    {
+      "id": "bg-solo",
+      "group": "backgrounds",
+      "title": "单人竖屏干净矿区",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/bg-solo.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/bg-solo.png",
+      "source_sha256": "f3dd7f33dd0774430c27052497292700e840076da9bb6ee95ac7c61c3742f526",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/bg-solo.png",
+      "resource_key": "GoldMiner/backgrounds/bg-solo",
+      "source_size_px": [
+        853,
+        1844
+      ],
+      "source_bytes": 2058327,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        853,
+        1844
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "可叠独立矿工、设备、矿物和HUD的干净矿区"
+    },
+    {
+      "id": "layer-ground-edge",
+      "group": "backgrounds",
+      "title": "地表边缘透明分层",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/layer-ground-edge.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/layer-ground-edge.png",
+      "source_sha256": "80a08b40dc9a52ba31d65f827855d74610b43f505a7fcd414d01ea0981b180c2",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/layer-ground-edge.png",
+      "resource_key": "GoldMiner/backgrounds/layer-ground-edge",
+      "source_size_px": [
+        2172,
+        724
+      ],
+      "source_bytes": 794793,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        20,
+        274,
+        2153,
+        518
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "独立地表边缘；未验证无缝平铺"
+    },
+    {
+      "id": "layer-sky",
+      "group": "backgrounds",
+      "title": "天空远景分层",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/layer-sky.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/layer-sky.png",
+      "source_sha256": "da45f6e3e59decb9f9040281926a7f7966bc365f1567e225d6fb17ec98c5d4c7",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/layer-sky.png",
+      "resource_key": "GoldMiner/backgrounds/layer-sky",
+      "source_size_px": [
+        2172,
+        724
+      ],
+      "source_bytes": 1608601,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        2172,
+        724
+      ],
+      "import_profile": "background",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "独立远景分层，布局需按游戏构图定位"
+    },
+    {
+      "id": "lobby-cover",
+      "group": "backgrounds",
+      "title": "大厅横幅封面",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/lobby-cover.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/lobby-cover.png",
+      "source_sha256": "414ec07689262f9f179580a43e14f6303b62bd4cf4125ad1f25a8a8fd3cd7478",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/lobby-cover.png",
+      "resource_key": "GoldMiner/backgrounds/lobby-cover",
+      "source_size_px": [
+        1983,
+        793
+      ],
+      "source_bytes": 2162950,
+      "source_mode": "RGB",
+      "source_has_transparency": false,
+      "source_alpha_range": [
+        255,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        0,
+        0,
+        1983,
+        793
+      ],
+      "import_profile": "illustration",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGB4",
+      "alpha_source": "None",
+      "alpha_is_transparency": false,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "大厅非交互封面，含角色与采集物装饰，不作游戏矿区"
+    },
+    {
+      "id": "mode-coop-illustration",
+      "group": "backgrounds",
+      "title": "双人模式卡透明插画",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/mode-coop-illustration.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/mode-coop-illustration.png",
+      "source_sha256": "40943754337a28ba44926b4bd24b99e5b76143a0a443af4cb02cba68ca3fb272",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/mode-coop-illustration.png",
+      "resource_key": "GoldMiner/backgrounds/mode-coop-illustration",
+      "source_size_px": [
+        1774,
+        887
+      ],
+      "source_bytes": 1252760,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        164,
+        83,
+        1611,
+        839
+      ],
+      "import_profile": "illustration",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "模式选择卡片装饰，不作可独立动画角色"
+    },
+    {
+      "id": "mode-solo-illustration",
+      "group": "backgrounds",
+      "title": "单人模式卡透明插画",
+      "source_path": "artifacts/gold-miner-ui-v1/backgrounds/mode-solo-illustration.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/backgrounds/mode-solo-illustration.png",
+      "source_sha256": "5fb912530e1a25a0726fce54c534fcca66a1c4bafa3bb2856bd9e809b5317cf0",
+      "target_path": "Assets/Resources/GoldMiner/backgrounds/mode-solo-illustration.png",
+      "resource_key": "GoldMiner/backgrounds/mode-solo-illustration",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1120437,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        100,
+        107,
+        1151,
+        1192
+      ],
+      "import_profile": "illustration",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "模式选择卡片装饰，不作可独立动画角色"
+    },
+    {
+      "id": "badge-victory",
+      "group": "ui",
+      "title": "过关徽章",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/badge-victory.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/badge-victory.png",
+      "source_sha256": "ac5123219fda3368f67c7fbe672f6ee2e05b8bf8c3e1a9bafeaee7b40b7f6002",
+      "target_path": "Assets/Resources/GoldMiner/ui/badge-victory.png",
+      "resource_key": "GoldMiner/ui/badge-victory",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1671170,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        119,
+        63,
+        1417,
+        960
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "badge-victory",
+          "rect_xywh_top_left": [
+            119,
+            63,
+            1298,
+            897
+          ],
+          "unity_rect_xywh_bottom_left": [
+            119,
+            64,
+            1298,
+            897
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；按提供的Sprite矩形导入，按钮及面板使用九宫格时另设边界。文字、禁用状态、按下反馈由程序叠加。"
+    },
+    {
+      "id": "button-p1-amber",
+      "group": "ui",
+      "title": "P1 琥珀按钮",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/button-p1-amber.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/button-p1-amber.png",
+      "source_sha256": "7e371e0139822474f9754cf8991c87ed97be3c296b85649ac8ef9aec7daba634",
+      "target_path": "Assets/Resources/GoldMiner/ui/button-p1-amber.png",
+      "resource_key": "GoldMiner/ui/button-p1-amber",
+      "source_size_px": [
+        1983,
+        793
+      ],
+      "source_bytes": 896500,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        113,
+        178,
+        1870,
+        615
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "button-p1-amber",
+          "rect_xywh_top_left": [
+            113,
+            178,
+            1757,
+            437
+          ],
+          "unity_rect_xywh_bottom_left": [
+            113,
+            178,
+            1757,
+            437
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            220,
+            100,
+            220,
+            100
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；按提供的Sprite矩形导入，按钮及面板使用九宫格时另设边界。文字、禁用状态、按下反馈由程序叠加。"
+    },
+    {
+      "id": "button-p2-teal",
+      "group": "ui",
+      "title": "P2 青绿按钮",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/button-p2-teal.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/button-p2-teal.png",
+      "source_sha256": "08356ee20d86a6c17a23420a3cf24fd4c9bc85378737fd2d3a8afb2f99942a32",
+      "target_path": "Assets/Resources/GoldMiner/ui/button-p2-teal.png",
+      "resource_key": "GoldMiner/ui/button-p2-teal",
+      "source_size_px": [
+        1983,
+        793
+      ],
+      "source_bytes": 879768,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        114,
+        177,
+        1870,
+        615
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "button-p2-teal",
+          "rect_xywh_top_left": [
+            114,
+            177,
+            1756,
+            438
+          ],
+          "unity_rect_xywh_bottom_left": [
+            114,
+            178,
+            1756,
+            438
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            220,
+            100,
+            220,
+            100
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；按提供的Sprite矩形导入，按钮及面板使用九宫格时另设边界。文字、禁用状态、按下反馈由程序叠加。"
+    },
+    {
+      "id": "button-primary-green",
+      "group": "ui",
+      "title": "深绿主按钮",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/button-primary-green.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/button-primary-green.png",
+      "source_sha256": "d4d2b6c44bb8a36cdf8eb5680d4029b476a89f1a3e33bd81eb2b43e418ccdf53",
+      "target_path": "Assets/Resources/GoldMiner/ui/button-primary-green.png",
+      "resource_key": "GoldMiner/ui/button-primary-green",
+      "source_size_px": [
+        1983,
+        793
+      ],
+      "source_bytes": 700609,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        114,
+        179,
+        1869,
+        614
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "button-primary-green",
+          "rect_xywh_top_left": [
+            114,
+            179,
+            1755,
+            435
+          ],
+          "unity_rect_xywh_bottom_left": [
+            114,
+            179,
+            1755,
+            435
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            220,
+            100,
+            220,
+            100
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；按提供的Sprite矩形导入，按钮及面板使用九宫格时另设边界。文字、禁用状态、按下反馈由程序叠加。"
+    },
+    {
+      "id": "hud-icon-atlas",
+      "group": "ui",
+      "title": "时钟 / 目标 / 暂停 / 返回图集",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/hud-icon-atlas.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/hud-icon-atlas.png",
+      "source_sha256": "7955f35ea6e0b0fb9ca11d21707e6721ccfbd24453bf88aa273e70001e011f0a",
+      "target_path": "Assets/Resources/GoldMiner/ui/hud-icon-atlas.png",
+      "resource_key": "GoldMiner/ui/hud-icon-atlas",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 643325,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        133,
+        109,
+        1173,
+        1143
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "clock",
+          "rect_xywh_top_left": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "target_flag",
+          "rect_xywh_top_left": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "unity_rect_xywh_bottom_left": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "pause",
+          "rect_xywh_top_left": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "unity_rect_xywh_bottom_left": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "back",
+          "rect_xywh_top_left": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "unity_rect_xywh_bottom_left": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；切片坐标由透明边界测得。按钮/面板可设置九宫格，边界需在Unity实际尺寸下确认。图集四格是时钟、目标旗、暂停、返回。"
+    },
+    {
+      "id": "panel-ivory",
+      "group": "ui",
+      "title": "米白通用面板",
+      "source_path": "artifacts/gold-miner-ui-v1/ui/panel-ivory.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/ui/panel-ivory.png",
+      "source_sha256": "2b0a4c5d94f644d000bc47e5559b64ff6c054d8bf9a2e2221c3b10c3b1181dd6",
+      "target_path": "Assets/Resources/GoldMiner/ui/panel-ivory.png",
+      "resource_key": "GoldMiner/ui/panel-ivory",
+      "source_size_px": [
+        1536,
+        1024
+      ],
+      "source_bytes": 1347230,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        254
+      ],
+      "source_visible_bbox_top_left": [
+        40,
+        170,
+        1497,
+        854
+      ],
+      "import_profile": "ui",
+      "sprite_mode": "Multiple",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [
+        {
+          "name": "panel-ivory",
+          "rect_xywh_top_left": [
+            40,
+            170,
+            1457,
+            684
+          ],
+          "unity_rect_xywh_bottom_left": [
+            40,
+            170,
+            1457,
+            684
+          ],
+          "planned_pivot_normalized_bottom_left": [
+            0.5,
+            0.5
+          ],
+          "planned_pivot_semantic": "中心",
+          "planned_border_left_bottom_right_top_source_px": [
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "source_notes": "原始PNG未裁切；按提供的Sprite矩形导入，按钮及面板使用九宫格时另设边界。文字、禁用状态、按下反馈由程序叠加。"
+    },
+    {
+      "id": "fx_collect_sparkle",
+      "group": "effects",
+      "title": "收获闪光",
+      "source_path": "artifacts/gold-miner-ui-v1/effects/fx_collect_sparkle.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/effects/fx_collect_sparkle.png",
+      "source_sha256": "79816fd53e6e1d7e9de02471996bde60daa376ea8f7d039e795cf6084068eb58",
+      "target_path": "Assets/Resources/GoldMiner/effects/fx_collect_sparkle.png",
+      "resource_key": "GoldMiner/effects/fx_collect_sparkle",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 393227,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        255,
+        249,
+        1034,
+        1008
+      ],
+      "import_profile": "effect",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Single static effect texture. Animate scale/opacity in code; not a pre-rendered frame sequence."
+    },
+    {
+      "id": "fx_dust_puff",
+      "group": "effects",
+      "title": "跑动尘土",
+      "source_path": "artifacts/gold-miner-ui-v1/effects/fx_dust_puff.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/effects/fx_dust_puff.png",
+      "source_sha256": "69211b39990af437015013a0db80bb11af63f2613db3b519042f30e76acdffcd",
+      "target_path": "Assets/Resources/GoldMiner/effects/fx_dust_puff.png",
+      "resource_key": "GoldMiner/effects/fx_dust_puff",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 426433,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        58,
+        453,
+        1204,
+        862
+      ],
+      "import_profile": "effect",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Single static effect texture. Animate scale/opacity in code; not a pre-rendered frame sequence."
+    },
+    {
+      "id": "fx_explosion",
+      "group": "effects",
+      "title": "爆炸峰值",
+      "source_path": "artifacts/gold-miner-ui-v1/effects/fx_explosion.png",
+      "source_archive_member": "Xanadu-GoldMiner-UI-v1/effects/fx_explosion.png",
+      "source_sha256": "6b17c47f96274f85b50f462efb9bde3a9374c3f5f70b3e7ab3e5e5087bb68576",
+      "target_path": "Assets/Resources/GoldMiner/effects/fx_explosion.png",
+      "resource_key": "GoldMiner/effects/fx_explosion",
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_bytes": 1006586,
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "source_visible_bbox_top_left": [
+        78,
+        125,
+        1177,
+        1129
+      ],
+      "import_profile": "effect",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "slices": [],
+      "source_notes": "Single static effect texture. Animate scale/opacity in code; not a pre-rendered frame sequence."
+    }
+  ]
+}

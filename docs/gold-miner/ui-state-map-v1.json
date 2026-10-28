@@ -1,0 +1,160 @@
+{
+  "source_path": "artifacts/gold-miner-ui-v1/ui-state-map.json",
+  "source_sha256": "9f4c5ef39c775d0c8130f31ada848e31d3f2805f5d85021200dd47f339c54e22",
+  "snapshot_status": "artwork design reference; gameplay and technical docs define runtime behavior",
+  "content": {
+    "scope": "运行时界面状态与素材复用约定，不是已实现的游戏行为",
+    "views": [
+      {
+        "name": "模式选择",
+        "reference": "screens/01-mode-select.png",
+        "states": [
+          "无存档：开始游戏",
+          "有存档：继续游戏，并显示重新开始入口",
+          "单人和合作进度分别显示"
+        ],
+        "art": [
+          "backgrounds/bg-mode-select.png",
+          "backgrounds/mode-solo-illustration.png",
+          "backgrounds/mode-coop-illustration.png",
+          "ui/panel-ivory.png",
+          "ui/button-primary-green.png"
+        ]
+      },
+      {
+        "name": "游戏中",
+        "reference": [
+          "screens/02-solo.png",
+          "screens/03-coop.png"
+        ],
+        "states": [
+          "摆动：点击对应矿区出钩",
+          "回收：炸药有库存时可使用",
+          "无炸药或无负载：炸药按钮禁用",
+          "倒计时警告：文字变色/脉冲",
+          "暂停：冻结游戏状态"
+        ],
+        "art": [
+          "backgrounds/bg-solo.png",
+          "backgrounds/bg-coop.png",
+          "characters/",
+          "objects/",
+          "ui/hud-icon-atlas.png"
+        ]
+      },
+      {
+        "name": "商店",
+        "reference": [
+          "screens/04-shop-solo.png",
+          "screens/05-shop-coop.png"
+        ],
+        "states": [
+          "可购买",
+          "余额不足：禁用并显示资金不足",
+          "一次性增益已购买：显示已购买",
+          "合作炸药选择给P1或P2",
+          "进入下一关"
+        ],
+        "art": [
+          "backgrounds/bg-shop-portrait.png",
+          "backgrounds/bg-shop-landscape.png",
+          "objects/item_dynamite.png",
+          "objects/item_strength.png",
+          "objects/item_lucky_clover.png",
+          "objects/item_rock_book.png",
+          "objects/item_diamond_polish.png",
+          "objects/ui_gold_coin.png",
+          "ui/panel-ivory.png",
+          "ui/button-primary-green.png",
+          "ui/button-p1-amber.png",
+          "ui/button-p2-teal.png"
+        ]
+      },
+      {
+        "name": "结算",
+        "reference": [
+          "screens/06-result-coop-success.png",
+          "screens/08-result-solo-failed.png"
+        ],
+        "states": [
+          "单人成功：金额/目标/进入商店",
+          "合作成功：增加双方本关贡献",
+          "失败：差额/重新挑战/返回大厅"
+        ],
+        "art": [
+          "ui/panel-ivory.png",
+          "ui/badge-victory.png",
+          "characters/miner-p1-states.png",
+          "characters/miner-p2-states.png"
+        ]
+      },
+      {
+        "name": "暂停",
+        "reference": "screens/07-paused-coop.png",
+        "states": [
+          "继续游戏",
+          "声音开关",
+          "触感开关",
+          "重新开始确认",
+          "返回大厅确认"
+        ],
+        "art": [
+          "ui/panel-ivory.png",
+          "ui/button-primary-green.png"
+        ]
+      },
+      {
+        "name": "准备与说明",
+        "reference": [
+          "screens/09-level-ready.png",
+          "screens/10-help-coop.png"
+        ],
+        "states": [
+          "关卡目标与新对象提示",
+          "单人：点击矿区出钩",
+          "双人：左右半屏各自出钩",
+          "开始前不倒计时"
+        ],
+        "art": [
+          "ui/panel-ivory.png",
+          "ui/button-primary-green.png",
+          "characters/miner-p1-states.png",
+          "characters/mole-run-4frames.png",
+          "objects/ore_diamond.png"
+        ]
+      },
+      {
+        "name": "确认弹窗",
+        "reference": "screens/11-confirm-exit.png",
+        "states": [
+          "返回大厅？本局进度会自动保存",
+          "重新开始？当前模式的本局进度将被替换",
+          "存档不可用：无法继续，请重新开始"
+        ],
+        "art": [
+          "ui/panel-ivory.png",
+          "ui/button-primary-green.png"
+        ]
+      },
+      {
+        "name": "大厅入口",
+        "states": [
+          "固定高度卡片，随大厅列表滚动"
+        ],
+        "art": [
+          "backgrounds/lobby-cover.png"
+        ]
+      }
+    ],
+    "runtime_generated": [
+      "金额和时间文本",
+      "玩家标识文字",
+      "绳索",
+      "按钮禁用与按下效果",
+      "声音/触感开关",
+      "弹窗遮罩",
+      "入账数字",
+      "粒子缩放和淡出"
+    ]
+  }
+}

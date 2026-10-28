@@ -1,0 +1,178 @@
+<div id="xy-sliding-preview" class="viz-dotted-background">
+  <div class="xy-phone" aria-label="XanaduYonder 数字华容道接入示例">
+    <div class="xy-top"><button type="button" class="xy-button xy-back cursor-interaction">‹ 大厅</button><span>XANADU / YONDER</span><button type="button" class="xy-button xy-settings cursor-interaction">设置</button></div>
+    <div class="xy-page">
+      <div class="xy-heading"><h1>数字华容道</h1><p>留一格空白，让数字慢慢归位。</p></div>
+      <div class="xy-modes" aria-label="玩法模式"><button type="button" data-mode="free" aria-pressed="true" class="cursor-interaction">自由拼图</button><button type="button" data-mode="levels" aria-pressed="false" class="cursor-interaction">解锁闯关</button></div>
+      <div class="xy-content"></div>
+    </div>
+    <div class="xy-bottom">一格一格，回到恰好的位置。</div>
+    <div class="xy-modal-layer" hidden></div>
+  </div>
+</div>
+<style>
+#xy-sliding-preview { padding:24px 0; }
+#xy-sliding-preview .xy-phone { --xy-paper:#F6F4EC; --xy-ink:#173D35; --xy-muted:#65786D; --xy-accent:#276653; --xy-panel:#E7EDE4; --xy-tray:#BBCBB6; --xy-empty:#D9E1D3; --xy-tile:#F5F1D9; color-scheme:light; position:relative; box-sizing:border-box; width:min(100%,390px); min-height:770px; margin:0 auto; padding:25px 28px 20px; background:var(--xy-paper); color:var(--xy-ink); font-family:"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif; border-radius:18px; box-shadow:0 5px 26px #173d3514; display:flex; flex-direction:column; font-size:14px; line-height:1.6; }
+#xy-sliding-preview .xy-phone * { box-sizing:border-box; }
+#xy-sliding-preview .xy-phone button { font:inherit; border:0; color:inherit; -webkit-tap-highlight-color:transparent; }
+#xy-sliding-preview .xy-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:22px; }
+#xy-sliding-preview .xy-top>span { font-size:10px; color:var(--xy-muted); letter-spacing:.2px; white-space:nowrap; }
+#xy-sliding-preview .xy-button { border-radius:9px; padding:9px 12px; background:var(--xy-panel); min-height:42px; }
+#xy-sliding-preview .xy-top .xy-button { padding:7px 10px; font-size:13px; white-space:nowrap; }
+#xy-sliding-preview .xy-phone button:disabled { opacity:.48; cursor:default; }
+#xy-sliding-preview .xy-phone button:active:not(:disabled) { filter:brightness(.95); }
+#xy-sliding-preview .xy-heading h1 { font-size:33px; line-height:1.25; letter-spacing:-.8px; font-weight:700; margin:0 0 10px; }
+#xy-sliding-preview .xy-heading p { margin:0 0 22px; color:var(--xy-muted); font-size:13px; }
+#xy-sliding-preview .xy-modes { display:flex; background:var(--xy-panel); padding:4px; border-radius:10px; gap:4px; margin-bottom:20px; }
+#xy-sliding-preview .xy-modes button { flex:1; background:transparent; min-height:38px; border-radius:7px; }
+#xy-sliding-preview .xy-modes button[aria-pressed=true] { background:var(--xy-accent); color:#fff; }
+#xy-sliding-preview .xy-context { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:8px; }
+#xy-sliding-preview .xy-context strong { font-size:14px; font-weight:600; }
+#xy-sliding-preview .xy-context small { font-size:11px; color:var(--xy-muted); }
+#xy-sliding-preview .xy-sizes { display:flex; gap:5px; }
+#xy-sliding-preview .xy-sizes button { background:transparent; padding:4px 8px; border-radius:6px; font-size:12px; min-height:32px; }
+#xy-sliding-preview .xy-sizes button[aria-pressed=true] { background:var(--xy-panel); color:var(--xy-accent); font-weight:600; }
+#xy-sliding-preview .xy-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; }
+#xy-sliding-preview .xy-stat { background:var(--xy-panel); border-radius:10px; padding:11px 14px; }
+#xy-sliding-preview .xy-stat span { display:block; color:var(--xy-muted); font-size:12px; }
+#xy-sliding-preview .xy-stat strong { font-variant-numeric:tabular-nums; display:block; font-size:26px; font-weight:600; line-height:1.35; }
+#xy-sliding-preview .xy-board { position:relative; width:100%; aspect-ratio:1; background:var(--xy-tray); border-radius:12px; touch-action:none; }
+#xy-sliding-preview .xy-cell { position:absolute; display:flex; align-items:center; justify-content:center; background:var(--xy-empty); border-radius:8px; }
+#xy-sliding-preview .xy-tile { position:absolute; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--xy-tile); font-variant-numeric:tabular-nums; transition:left 130ms ease-out,top 130ms ease-out; user-select:none; touch-action:none; }
+#xy-sliding-preview .xy-phone .xy-tile { font-weight:650; font-size:29px; }
+#xy-sliding-preview .xy-phone .xy-board[data-size="3"] .xy-tile { font-size:36px; }
+#xy-sliding-preview .xy-phone .xy-board[data-size="5"] .xy-tile { font-size:24px; }
+#xy-sliding-preview .xy-tile.xy-placed::after { content:""; width:4px; height:4px; background:var(--xy-accent); border-radius:50%; position:absolute; bottom:8px; opacity:.6; }
+#xy-sliding-preview .xy-actions { display:grid; grid-template-columns:1fr 1.4fr 1fr; gap:8px; margin-top:17px; }
+#xy-sliding-preview .xy-actions button { padding:9px 4px; font-size:13px; }
+#xy-sliding-preview .xy-note { min-height:40px; color:var(--xy-muted); text-align:center; margin:13px 0 7px; font-size:12px; }
+#xy-sliding-preview .xy-record { color:var(--xy-muted); font-size:11px; text-align:center; min-height:19px; }
+#xy-sliding-preview .xy-bottom { margin-top:auto; padding-top:22px; text-align:center; color:var(--xy-muted); font-size:11px; }
+#xy-sliding-preview .xy-primary { background:var(--xy-accent); color:#fff !important; }
+#xy-sliding-preview .xy-link { background:transparent; color:var(--xy-accent); font-size:12px; padding:6px 0; min-height:32px; }
+#xy-sliding-preview .xy-chapter { background:var(--xy-panel); padding:17px; border-radius:11px; margin:0 0 16px; }
+#xy-sliding-preview .xy-chapter h2 { font-size:20px; line-height:1.4; margin:3px 0 5px; font-weight:650; }
+#xy-sliding-preview .xy-chapter p { font-size:12px; color:var(--xy-muted); margin:0; }
+#xy-sliding-preview .xy-eyebrow { letter-spacing:1px; font-size:10px; color:var(--xy-muted); }
+#xy-sliding-preview .xy-level-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:20px 0; }
+#xy-sliding-preview .xy-level { min-height:80px; background:var(--xy-panel); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+#xy-sliding-preview .xy-level strong { font-size:25px; line-height:1.4; }
+#xy-sliding-preview .xy-level small { font-size:11px; }
+#xy-sliding-preview .xy-level.current { background:var(--xy-accent); color:#fff; }
+#xy-sliding-preview .xy-next-chapter { padding:18px 0; border-top:1px solid #d9dfd3; }
+#xy-sliding-preview .xy-next-chapter strong { display:block; font-size:15px; }
+#xy-sliding-preview .xy-next-chapter span { font-size:12px; color:var(--xy-muted); }
+#xy-sliding-preview .xy-modal-layer { position:absolute; inset:0; border-radius:18px; background:#173d3575; z-index:4; display:flex; align-items:center; justify-content:center; padding:24px; }
+#xy-sliding-preview .xy-modal-layer[hidden] { display:none; }
+#xy-sliding-preview .xy-dialog { width:100%; background:var(--xy-paper); border-radius:14px; padding:25px 21px; box-shadow:0 12px 35px #173d3520; }
+#xy-sliding-preview .xy-dialog h2 { font-size:26px; line-height:1.4; margin:0 0 12px; }
+#xy-sliding-preview .xy-dialog p { font-size:13px; color:var(--xy-muted); margin:9px 0; }
+#xy-sliding-preview .xy-dialog .xy-button { display:block; width:100%; margin-top:10px; }
+#xy-sliding-preview .xy-dialog .xy-win-mark { width:56px; height:56px; display:flex; align-items:center; justify-content:center; background:var(--xy-panel); border-radius:50%; color:var(--xy-accent); font-size:27px; margin:0 auto 15px; }
+#xy-sliding-preview .xy-dialog.xy-win { text-align:center; }
+#xy-sliding-preview .xy-dialog .xy-stats { margin:20px 0; }
+#xy-sliding-preview .xy-settings-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; font-size:15px; }
+#xy-sliding-preview .xy-settings-row input { width:20px; height:20px; accent-color:var(--xy-accent); }
+#xy-sliding-preview .xy-goal { display:grid; gap:5px; margin:17px auto; width:180px; padding:7px; background:var(--xy-tray); border-radius:7px; }
+#xy-sliding-preview .xy-goal span { background:var(--xy-tile); border-radius:4px; text-align:center; padding:5px 0; font-size:14px; }
+#xy-sliding-preview .xy-lobby h1 { font-size:26px; margin:16px 0 10px; line-height:1.5; }
+#xy-sliding-preview .xy-lobby>p { color:var(--xy-muted); font-size:13px; margin:0 0 27px; }
+#xy-sliding-preview .xy-game-card { position:relative; border-radius:10px; padding:15px 17px; background:#E4E9D2; margin-bottom:13px; min-height:190px; }
+#xy-sliding-preview .xy-game-card .xy-eyebrow { color:inherit; opacity:.8; }
+#xy-sliding-preview .xy-game-card h2 { font-size:31px; line-height:1.4; margin:6px 0; }
+#xy-sliding-preview .xy-game-card p { font-size:13px; margin:3px 0 12px; }
+#xy-sliding-preview .xy-game-card .xy-button { width:100%; min-height:38px; padding:6px 9px; }
+#xy-sliding-preview .xy-game-card:first-of-type { background:#173D35; color:#F5E8B0; }
+#xy-sliding-preview .xy-game-card:nth-of-type(3) { background:#EEE7D1; }
+#xy-sliding-preview .xy-game-card:last-of-type { background:#DFE8DC; }
+#xy-sliding-preview .xy-game-card:first-of-type .xy-button { color:var(--xy-ink); }
+@media(max-width:360px) { #xy-sliding-preview .xy-phone { padding:20px 19px 17px; min-height:720px; border-radius:13px; } #xy-sliding-preview .xy-top>span { font-size:9px; } #xy-sliding-preview .xy-heading h1 { font-size:30px; } #xy-sliding-preview .xy-top .xy-button { padding:7px 8px; } #xy-sliding-preview .xy-sizes button { padding:4px 7px; } }
+@media(prefers-reduced-motion:reduce) { #xy-sliding-preview .xy-tile { transition:none; } }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('xy-sliding-preview');
+  const phone = root.querySelector('.xy-phone');
+  const page = root.querySelector('.xy-page');
+  const content = root.querySelector('.xy-content');
+  const heading = root.querySelector('.xy-heading');
+  const modes = root.querySelector('.xy-modes');
+  const modal = root.querySelector('.xy-modal-layer');
+  const back = root.querySelector('.xy-back');
+  const prefs = { markers:false, sound:true, haptics:true };
+  let mode = 'free', screen = 'game', unlocked = 1, activeLevel = 1, lastTick = performance.now(), lockedUntil = 0;
+  let free, level = null;
+  const finish = n => Array.from({length:n*n},(_,i)=>(i+1)%(n*n));
+  const neighbours = (blank,n) => [blank-n,blank+n,blank-1,blank+1].filter(i => i>=0&&i<n*n&&Math.abs(i%n-blank%n)+Math.abs(Math.floor(i/n)-Math.floor(blank/n))===1);
+  const solved = game => game.cells.every((v,i) => v===(i+1)%(game.n*game.n));
+  function make(n,steps,seed) {
+    const cells=finish(n); let blank=cells.length-1, previous=-1, s=seed;
+    for(let k=0;k<steps;k++) { s=(Math.imul(s,1664525)+1013904223)>>>0; const choices=neighbours(blank,n).filter(i=>i!==previous); const p=choices[s%choices.length]; [cells[blank],cells[p]]=[cells[p],cells[blank]]; previous=blank; blank=p; }
+    if(cells.every((v,i)=>v===(i+1)%(n*n))) { const p=neighbours(blank,n)[0]; [cells[blank],cells[p]]=[cells[p],cells[blank]]; }
+    return { n,cells,initial:[...cells],moves:0,elapsed:0,started:false,won:false,assisted:false,history:[] };
+  }
+  free=make(4,10,2026);
+  function current(){return mode==='free'?free:level;}
+  function format(ms){const sec=Math.floor(ms/1000);return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}
+  function remember(){ if(window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{mode:mode==='free'?'自由拼图':'解锁闯关',size:current()?.n||3},privateContent:{markers:prefs.markers}}).catch(()=>{}); }
+  function applySaved(saved){ if(saved?.privateContent&&typeof saved.privateContent.markers==='boolean')prefs.markers=saved.privateContent.markers; }
+  applySaved(window.openai?.widgetState);
+  window.addEventListener('openai:set_globals',e=>{applySaved(e.detail?.globals?.widgetState);updateBoard();});
+  function showDialog(html,handlers={}) {
+    modal.innerHTML=`<section class="xy-dialog" role="dialog" aria-modal="true" aria-label="数字华容道对话框">${html}</section>`;
+    modal.hidden=false;
+    Object.entries(handlers).forEach(([key,handler])=>modal.querySelector(`[data-dialog="${key}"]`)?.addEventListener('click',handler));
+    modal.querySelector('button')?.focus();
+  }
+  function closeDialog(){modal.hidden=true;modal.innerHTML='';lastTick=performance.now();}
+  const button=(label,key,primary=false)=>`<button type="button" class="xy-button ${primary?'xy-primary':''} cursor-interaction" data-dialog="${key}">${label}</button>`;
+  function confirmChange(title,description,action){showDialog(`<h2>${title}</h2><p>${description}</p>${button('确认','yes',true)}${button('继续当前对局','no')}`,{yes:()=>{closeDialog();action();},no:closeDialog});}
+  function renderGame(){
+    screen='game'; const g=current(); if(!g)return;
+    content.innerHTML=`<div class="xy-context"><strong>${mode==='free'?'经典 · 自由拼图':`第 ${String(activeLevel).padStart(2,'0')} 关 · 3×3`}</strong>${mode==='free'?`<div class="xy-sizes" aria-label="棋盘尺寸">${[3,4,5].map(n=>`<button type="button" data-size="${n}" class="cursor-interaction" aria-pressed="${g.n===n}">${n}×${n}</button>`).join('')}</div>`:'<button type="button" class="xy-link cursor-interaction" data-action="select">选择关卡 ›</button>'}</div>
+      <div class="xy-stats"><div class="xy-stat"><span>用时</span><strong data-stat="time">${format(g.elapsed)}</strong></div><div class="xy-stat"><span>步数</span><strong data-stat="moves">${g.moves}</strong></div></div>
+      <div class="xy-board" data-size="${g.n}" aria-label="${g.n}乘${g.n}数字棋盘，点击与空格相邻的数字移动"></div>
+      <div class="xy-actions"><button type="button" class="xy-button cursor-interaction" data-action="undo">撤回</button><button type="button" class="xy-button cursor-interaction" data-action="restart">${mode==='free'?'重新开始':'重玩本关'}</button><button type="button" class="xy-button cursor-interaction" data-action="help">玩法</button></div>
+      <div class="xy-note" aria-live="polite">${g.won?'已完成，所有数字都归位了。':g.started?'点击相邻数字，移入空格。':'首次移动开始计时 · 不限时'}</div>
+      <div class="xy-record">${mode==='free'?'体验局 · 进度仅在本次预览保留':'通关即可解锁下一关 · 不限步数'}</div>`;
+    const board=content.querySelector('.xy-board');
+    for(let i=0;i<g.n*g.n;i++){const cell=document.createElement('div');cell.className='xy-cell';place(cell,i,g.n);board.append(cell);}
+    for(let value=1;value<g.n*g.n;value++){
+      const tile=document.createElement('button');tile.type='button';tile.className='xy-tile cursor-interaction';tile.dataset.value=value;tile.textContent=value;
+      let start=null,dragged=false;
+      tile.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY};dragged=false;});
+      tile.addEventListener('pointercancel',()=>{start=null;dragged=false;});
+      tile.addEventListener('pointerup',e=>{if(!start)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;start=null;if(Math.hypot(dx,dy)<18)return;dragged=true;const idx=g.cells.indexOf(value),blank=g.cells.indexOf(0);const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?1:-1):(dy>0?g.n:-g.n);if(idx+direction===blank)move(value);else note('请把相邻数字滑向空格。');});
+      tile.addEventListener('click',()=>{if(dragged){dragged=false;return;}move(value);});board.append(tile);
+    }
+    content.querySelectorAll('[data-size]').forEach(el=>{if(el.tagName!=='BUTTON')return;el.addEventListener('click',()=>{const n=Number(el.dataset.size);if(n===free.n)return;const act=()=>{free=make(n,n===3?8:n===4?24:40,Date.now());renderGame();remember();};if(free.started&&!free.won)confirmChange('切换棋盘？','将结束当前自由对局，开启所选尺寸的新题。',act);else act();});});
+    content.querySelector('[data-action="select"]')?.addEventListener('click',renderLevels);
+    content.querySelector('[data-action="undo"]').addEventListener('click',()=>{if(!g.history.length||g.won||performance.now()<lockedUntil)return;g.cells=g.history.pop();g.moves++;g.assisted=true;lockedUntil=performance.now()+140;updateBoard();note('已撤回 · 本局标记为练习。');});
+    content.querySelector('[data-action="restart"]').addEventListener('click',()=>{
+      if(mode==='levels')confirmChange('重玩本关？','回到本关初始局面，重新计时、计步。',restart);
+      else showDialog(`<h2>重新开始</h2><p>想再试一次，还是换个局面？当前对局将被替换。</p>${button('重玩这题','same',true)}${button('换一题','new')}${button('继续当前对局','cancel')}`,{same:()=>{closeDialog();restart();},new:()=>{closeDialog();free=make(free.n,free.n*free.n*12,Date.now());renderGame();},cancel:closeDialog});
+    });
+    content.querySelector('[data-action="help"]').addEventListener('click',help);
+    updateBoard();if(g.won)note('已完成，所有数字都归位了。');
+  }
+  function place(el,index,n){const pad=2.63,gap=1.97,size=(100-2*pad-(n-1)*gap)/n;el.style.width=`${size}%`;el.style.height=`${size}%`;el.style.left=`${pad+(index%n)*(size+gap)}%`;el.style.top=`${pad+Math.floor(index/n)*(size+gap)}%`;}
+  function updateBoard(){const g=current(),board=content.querySelector('.xy-board');if(!g||!board)return;board.querySelectorAll('.xy-tile').forEach(tile=>{const v=Number(tile.dataset.value),i=g.cells.indexOf(v);place(tile,i,g.n);tile.classList.toggle('xy-placed',prefs.markers&&i===v-1);tile.setAttribute('aria-label',`数字 ${v}${neighbours(g.cells.indexOf(0),g.n).includes(i)?'，可移入空格':''}`);tile.disabled=g.won;});const moves=content.querySelector('[data-stat="moves"]');moves.textContent=g.moves;moves.previousElementSibling.textContent=g.assisted?'步数 · 练习':'步数';content.querySelector('[data-action="undo"]').disabled=!g.history.length||g.won;}
+  function note(text){const el=content.querySelector('.xy-note');if(el)el.textContent=text;}
+  function move(value){const g=current();if(!g||g.won||!modal.hidden||screen!=='game'||performance.now()<lockedUntil)return;const index=g.cells.indexOf(value),blank=g.cells.indexOf(0);if(!neighbours(blank,g.n).includes(index)){note('只有紧邻空格的数字可以移动。');return;}g.history.push([...g.cells]);[g.cells[blank],g.cells[index]]=[g.cells[index],g.cells[blank]];g.moves++;g.started=true;g.won=solved(g);lockedUntil=performance.now()+140;updateBoard();note('点击相邻数字，移入空格。');if(g.won){if(mode==='levels')unlocked=Math.min(7,Math.max(unlocked,activeLevel+1));setTimeout(win,150);}}
+  function restart(){const g=current();g.cells=[...g.initial];g.moves=0;g.elapsed=0;g.started=false;g.won=false;g.assisted=false;g.history=[];renderGame();}
+  function help(){const n=current()?.n||4;showDialog(`<h2>让数字依次归位</h2><p>点击紧邻空格的数字，或将它滑向空格。每次只移动一块，记 1 步。</p><div class="xy-goal" style="grid-template-columns:repeat(${n},1fr)">${finish(n).map(v=>`<span style="${v?'':'background:transparent'}">${v||' '}</span>`).join('')}</div><p>按从左到右、从上到下排列，空格留在右下角。无需合并数字。</p><p>没有时间和步数上限。撤回会增加 1 步，并标记为练习；闯关仍可解锁。</p>${button('明白了','close',true)}`,{close:closeDialog});}
+  function win(){const g=current();if(!g||!g.won||screen!=='game')return;showDialog(`<div class="xy-win-mark">✓</div><h2>每一格，都刚刚好。</h2><p>${mode==='levels'?activeLevel<6?`第 ${activeLevel} 关完成 · 下一关已解锁`:'入门体验章节已完成':'本局完成'}${g.assisted?' · 练习局':''}</p><div class="xy-stats"><div class="xy-stat"><span>用时</span><strong>${format(g.elapsed)}</strong></div><div class="xy-stat"><span>步数</span><strong>${g.moves}</strong></div></div>${button(mode==='levels'?(activeLevel<6?'下一关':'返回选关'):'再来一局','next',true)}${button('查看棋盘','close')}`,{next:()=>{closeDialog();if(mode==='levels'){if(activeLevel<6)startLevel(activeLevel+1);else renderLevels();}else{free=make(free.n,free.n*free.n*12,Date.now());renderGame();}},close:closeDialog});modal.querySelector('.xy-dialog').classList.add('xy-win');}
+  function startLevel(id){activeLevel=id;const depths=[2,4,6,8,12,16];level=make(3,depths[id-1],100+id);renderGame();remember();}
+  function renderLevels(){screen='levels';content.innerHTML=`<div class="xy-chapter"><span class="xy-eyebrow">入门章节 / 3 × 3</span><h2>从一格空白开始</h2><p>已通关 ${Math.min(6,unlocked-1)} / 6 · 先学会移动，再学会还原</p></div><div class="xy-level-grid">${Array.from({length:6},(_,i)=>{const id=i+1,done=id<unlocked;return `<button type="button" class="xy-level ${id===unlocked?'current':''} cursor-interaction" data-level="${id}" ${id>unlocked?'disabled':''}><strong>${String(id).padStart(2,'0')}</strong><small>${done?'已通关 ✓':id===unlocked?'开始挑战':'未解锁'}</small></button>`;}).join('')}</div><p class="xy-note">完成当前关卡，即可解锁下一关。</p><div class="xy-next-chapter"><strong>进阶篇 · 4×4</strong><span>更多空间，学会安排归位的顺序。</span></div><div class="xy-next-chapter"><strong>挑战篇 · 5×5</strong><span>给想再多走一步的你。</span></div><div class="xy-record">示例展示 6 个入门关卡</div>`;content.querySelectorAll('[data-level]').forEach(b=>b.addEventListener('click',()=>{const id=Number(b.dataset.level);if(level&&!level.won&&id===activeLevel)renderGame();else startLevel(id);}));}
+  function setMode(next){closeDialog();mode=next;screen=next==='free'?'game':'levels';heading.hidden=false;modes.hidden=false;heading.innerHTML='<h1>数字华容道</h1><p>留一格空白，让数字慢慢归位。</p>';back.textContent='‹ 大厅';modes.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));if(next==='free')renderGame();else renderLevels();remember();}
+  modes.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  function lobby(){closeDialog();screen='lobby';heading.hidden=true;modes.hidden=true;back.textContent='‹ 返回';content.innerHTML=`<div class="xy-lobby"><h1>小小一局，慢慢向前。</h1><p>把片刻空闲，留给一点简单的快乐。</p>${[['01 / 数字益智','2048','让相同的数字相遇。'],['02 / 轻巧向前','跳一跳','按住，松手，再远一点。'],['03 / 层层三消','旸了个旸','翻开一层，凑齐三个。'],['04 / 数字归位','数字华容道','留一格空白，理顺每一步。']].map((a,i)=>`<section class="xy-game-card"><span class="xy-eyebrow">${a[0]}</span><h2>${a[1]}</h2><p>${a[2]}</p><button type="button" class="xy-button ${i?'xy-primary':''} cursor-interaction" ${i===3?'data-enter':'disabled'}>${i===3?'开始 / 继续游戏 →':'已有游戏'}</button></section>`).join('')}</div>`;content.querySelector('[data-enter]').addEventListener('click',()=>setMode(mode));}
+  back.addEventListener('click',()=>{if(screen==='lobby')setMode(mode);else lobby();});
+  root.querySelector('.xy-settings').addEventListener('click',()=>{showDialog(`<h2>设置</h2><label class="xy-settings-row">声音<input type="checkbox" data-pref="sound" ${prefs.sound?'checked':''}></label><label class="xy-settings-row">触感<input type="checkbox" data-pref="haptics" ${prefs.haptics?'checked':''}></label><p>沿用 App 公共设置；示例不播放声音或触发振动。</p>${button('完成','close',true)}`,{close:closeDialog});modal.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{prefs[i.dataset.pref]=i.checked;}));});
+  const timer=setInterval(()=>{if(!root.isConnected){clearInterval(timer);return;}const now=performance.now(),delta=now-lastTick;lastTick=now;const g=current();if(g&&screen==='game'&&modal.hidden&&g.started&&!g.won&&!document.hidden){g.elapsed+=Math.min(delta,500);const t=content.querySelector('[data-stat="time"]');if(t)t.textContent=format(g.elapsed);}},100);
+  document.addEventListener('visibilitychange',()=>{lastTick=performance.now();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modal.hidden)closeDialog();});
+  renderGame();
+  if(globalThis.Tweak){const tweak=new Tweak({container:phone,onChange:()=>{updateBoard();remember();}});tweak.addToggle(prefs,'markers',{label:'已归位数字显示圆点'});}
+})();
+</script>
