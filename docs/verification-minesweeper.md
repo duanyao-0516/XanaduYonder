@@ -1,6 +1,6 @@
 # 扫雷开发与验证记录
 
-初版日期：2026-10-27；用户反馈修订：2026-10-28。实现基于用户确认的[完整玩法与交互设计](superpowers/specs/2026-10-27-minesweeper-design.md)，开发任务见[实施计划](superpowers/plans/2026-10-27-minesweeper-implementation.md)。下文保存初版证据，最新反馈修订与构建见文末；不以源码、独立测试或编辑器检查替代真机验收。
+初版日期：2026-10-27；用户反馈修订与合并检查：2026-10-28。实现基于用户确认的[完整玩法与交互设计](superpowers/specs/2026-10-27-minesweeper-design.md)，开发任务见[实施计划](superpowers/plans/2026-10-27-minesweeper-implementation.md)。下文按时间保存各轮证据，最新完整回归与构建见文末；不以源码、独立测试或编辑器检查替代真机验收。
 
 ## 工作树与范围
 
@@ -8,7 +8,7 @@
 - 开发分支：`p/duanyao.0516/feature/minesweeper`；创建基线为 `master` 的 `ca50db0f381b96c7a024586792bdc60eb3f0fd3c`。
 - 所有源码、测试、Unity Library/Temp 和构建产物都位于该工作树。没有将其他游戏开发分支的未合入内容带入扫雷。
 - 原六款游戏顺序保持，扫雷作为第七张大厅卡片。公共修改限于 AppController 路由/共享设置生命周期、GameFeedback 通用触感入口、验证构建入口和大厅卡片断言。
-- 仍为源码版本 0.4.0 / versionCode 4；未合并 master、推送、创建 Release 或发布新版本。
+- 初版仍为源码版本 0.4.0 / versionCode 4；当时尚未合并 master、推送、创建 Release 或发布新版本。后续修订与合并检查见文末。
 
 ## 已实现功能
 
@@ -172,3 +172,50 @@ Unity 6000.3.27f1，Android 编译目标，真实 UGUI + Camera.Render。扫雷�
 - SHA-256：`a6f954a79c9ad747e6ff1d1e52ed253220d86e1ac1f6e24b1a9da05934bd21d3`。
 - 已使用指定物理设备的 `adb install -r` 覆盖安装到 PKM110，退出 0/`Success`；设备已安装 APK 哈希与此构建一致，未卸载或清空数据。设备证据限于安装及产物一致性。
 - 前一版紧凑底栏 APK 备份为 `XanaduYonder-0.4.0-minesweeper-validation-20261028-compact-toolbar.apk`。
+
+## 2026-10-28 最终完整回归与 master 合并检查
+
+用户确认上一轮界面调整可以，并要求完成扫雷功能、UI 全面检查后合入 master。本轮以最新已提交的 `origin/master`（`b793fe8b43f3bafe6380a32464dfe7b45993437e`）为目标；先将其同步到扫雷分支，再完成下列回归。该目标提交包含已在 master 中的校园主题调整，不读取或引入其他工作树的未提交改动。
+
+### 审查与修复
+
+三路独立源码审查分别检查规则/会话/实际存档链路、整帧输入/视口/控件布局、页面/公共宿主/UI。规则、输入、数据恢复链路未发现新的阻塞问题。页面审查发现一个 P2：公共存档失败时，进入全屏会隐藏普通状态栏，而紧凑状态只读取扫雷自身错误，导致公共保存错误不可见。
+
+修复由宿主将当前公共错误同步至扫雷紧凑状态区；普通/全屏一致按公共错误优先、扫雷错误其次展示。两种存档均恢复后清空文字，不显示常驻成功说明；不可见的扫雷页仍不覆盖其他页面状态。修改收敛于 `AppController.SetStatus/Save` 与 `MinesweeperPage` 的错误呈现，不变更存档格式或游戏规则。生产源码提交为 `fad41d084c170aa6b5a5d6503088ab767c839a76`。
+
+新增回归通过真实临时目录阻断公共存储，先在第 1722 条断言观察全屏错误不可见，修复后通过。覆盖普通/全屏往返、全屏期间新失败、扫雷保存不清公共失败、两种错误同时存在、各自恢复及恢复后清空。修订经过独立复核，未发现新的 P1/P2。
+
+### 本轮实际执行结果
+
+所有命令均在扫雷独立工作树执行并退出 0；Unity 检查与构建依次运行，使用本树隔离的 Gradle/ADB 环境。
+
+| 检查 | 通过数 | 范围 |
+| --- | --- | --- |
+| `test-minesweeper.sh` | 11 | 首击安全、展开、旗与数字展开、胜负/快照 |
+| `test-minesweeper-session.sh` | 13 | 计时、暂停/恢复、独立槽位、终局幂等 |
+| `test-minesweeper-input.sh` | 76 | 长按即时提交、多指取消、50%～200%、平移/命中、工具栏重排 |
+| `test-minesweeper-persistence.sh` | 20 | 严格真实 JSON、备份/损坏、实际读写失败与恢复 |
+| 已有基础与六款游戏独立回归 | 271 | Core 43、Input 10、Persistence 13、SudokuSession 8、Jump 25、Sheep 40、Idiom 45、Sudoku 27、Watermelon 36、WatermelonPersistence 24 |
+| `test-minesweeper-ui.sh` | 4568 条断言 | 两种屏高、真实 UGUI/输入、导航、状态/保存恢复、小棋盘禁用、普通/全屏/总览、按钮几何 |
+| `test-minigame-ui.sh` | 209 条断言 | 七张大厅卡片、数独、跳一跳、旸了个旸及公共图标/弹窗 |
+| `test-idiom-ui.sh` | 6238 条断言 | 三种尺寸、八种页面状态、统一导航、键盘布局、生词本往返、实际射线点击 |
+
+合计 391 组独立检查和 11015 条 Unity UI 断言。已人工查看本轮渲染的选择、规则、教程、初级禁用态、50% 棋盘、全屏暂停、胜负与全屏公共保存错误截图，未见裁切、重叠或配色偏离。全部 412 个 Assets GUID 无重复，新加入资源均有 `.meta`；`git diff --check` 通过。
+
+本轮日志集中于 `artifacts/validation/minesweeper-final-review/`；最终界面报告/截图仍位于 `artifacts/validation/minesweeper-ui/`、`artifacts/validation/minigame-ui/`，成语报告为 `artifacts/logs/idiom-ui-checks.txt`。
+
+### 最终 Android 产物与验证边界
+
+构建脚本退出 0，`aapt` 核对独立包名、0.4.0/code 4、minSdk 26、targetSdk 36、ARM64，`apksigner verify` 退出 0。ProjectSettings 构建后无差异。
+
+- APK：`artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，77,980,178 字节。
+- SHA-256：`fefd34d9adc607366ad84dafe7f22ec65da9aefb47e5192f1531e5c31c2de228`。
+- 上一版已安装的 APK 另存为 `XanaduYonder-0.4.0-minesweeper-validation-20261028-footer-padding.apk`。
+
+用户对先前设备版的验收结论保持为本轮输入。本轮补充的是源码审查、真实存储回归、Unity 渲染/操作和 Android 构建；没有再次执行整套物理设备触摸、实际 dp、原生键盘或声音/振动体验验收。最终构建尚未替换手机已安装的上一版测试包。
+
+### 合并范围
+
+新增内容为扫雷模块、对应测试、独立构建脚本与玩法/验证文档；公共接入限于宿主路由、设置/生命周期/错误状态、触感入口和大厅卡片。成语仅保留用户此前明确要求的七处页头坐标统一及相应回归。与 `origin/master` 比较，`Assets/Resources` 和 `Runtime/Watermelon` 无增量改动；不夹带其他工作树中的数独/祖玛未提交文件。
+
+交付采用本扫雷工作树内的本地 master 快进合并。主目录原有分支及未提交修改不切换、不暂存、不清理；不推送远程，不创建 Release，不修改正式版本号。精确合并提交及树一致性由交付时 Git 检查确认。
