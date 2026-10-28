@@ -17,6 +17,8 @@
 
 当前源码已接入第七款 **07 · 扫雷**：三档随机棋盘、首击安全、翻开/插旗、50%～200% 缩放、单双指平移、全屏和只读总览，以及按难度独立续局与纪录。扫雷尚未随现有 v0.4.0 正式包发布；验证范围见[扫雷验证记录](docs/verification-minesweeper.md)。
 
+当前开发分支新增 **08 · 贪吃蛇**：20×24 棋盘、三档经典速度、四边相通或围墙边界，以及 12 关静态障碍。六种经典规则分别续局，闯关按顺序解锁；暂停后明确继续并倒计时，填满可行走格即结算。页面使用统一纸色/墨绿，右侧方向键、左侧暂停/重来/边界开关，等级选择参考数独。使用独立 `snake-v1.json`，尚未正式发布；具体证据见[贪吃蛇实现验证](docs/snake/verification-implementation.md)。
+
 大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
 **最新正式版本为 v0.4.0**，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.4.0)。本版新增数独和合成大西瓜，并更新成语接龙、旸了个旸及大厅和游戏界面。沿用已有发布签名，支持覆盖升级；2048、跳一跳和公共设置保持兼容，旸了个旸与成语接龙改用独立新存档，旧版对应记录不迁移、原文件保留。详情与验证范围见[v0.4.0 发布记录](docs/releases/v0.4.0.md)。正式版与开发测试 APK 分开构建。项目使用原创代码，素材来源及权利说明见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
@@ -58,11 +60,17 @@ scripts/test-minesweeper-session.sh
 scripts/test-minesweeper-input.sh
 scripts/test-minesweeper-persistence.sh
 scripts/test-minesweeper-ui.sh
+scripts/test-snake.sh
+scripts/test-snake-persistence.sh
+scripts/test-snake-ui.sh
+scripts/build-snake-validation.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
 扫雷验证使用专用 `scripts/build-minesweeper-validation.sh` 和 `com.duanyao.xanaduyonder.minesweepertest`，操作步骤见[扫雷独立验证](docs/development.md#扫雷独立验证)。UI 检查与构建须在同一本工作树中串行执行，不覆盖正式应用。
+
+贪吃蛇独立验证包使用 `com.duanyao.xanaduyonder.snaketest`，由 `scripts/build-snake-validation.sh` 构建；UI 检查与构建仍须串行。贪吃蛇支持方向键/WASD、右侧按键按下转向，以及棋盘内连续滑动转向。
 
 通用开发 APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 

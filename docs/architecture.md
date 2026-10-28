@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和扫雷；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
+当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷和贪吃蛇；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -11,6 +11,7 @@
 | 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 | 合成大西瓜 | `Core/Watermelon` / `WatermelonPage`、`WatermelonPhysicsWorld` | `watermelon-v1.json` | 对局、物体运动状态、最高分、主题 |
 | 扫雷 | `Core/Minesweeper` / `MinesweeperSession`、`MinesweeperPage`、`MinesweeperBoardView` | `minesweeper-v1.json` | 三档独立对局、模式、正常视口、累计胜负和最佳毫秒数 |
+| 贪吃蛇 | `Core/Snake` / `SnakeSession`、`SnakePage`、`SnakeBoardView` | `snake-v1.json` | 六组经典续局、闯关续局、独立纪录、顺序解锁 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)与[数独模块](sudoku-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -85,6 +86,18 @@
 `WatermelonSaveCodec` 只接受 schemaVersion 1、gameId `watermelon`、固定字段、精确类型和合法完整快照，限制 128 KiB、深度 8。保存球的位置、速度、旋转、角速度、接触历史和年龄，以及当前/下一颗、RNG、下一个 ID、冷却、危险计时、终局、主题、最高分和目标确认状态。`WatermelonSaveStore` 仅操作 `watermelon-v1.json/.bak/.tmp`，原子替换时只备份有效主档。恢复不默认填补缺失字段；新对局保留主题与最高分。
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
+
+## 贪吃蛇的独立边界
+
+`Core/Snake` 拥有格子、边界、碰撞、增长、速度和确定性随机状态；`SnakeSession` 拥有最多两步方向队列、逻辑节拍、暂停、倒计时及有效游戏时间。四边相通在坐标归一化后仍检查蛇身与障碍；满盘先于关卡目标判胜，空格为零时不再生成食物。前台帧超过 250 ms 或将积压超过两步时整帧暂停，后台不补跑。
+
+`SnakePage` 使用统一导航、完整 20×24 棋盘、左侧操作与右侧十字键；`SnakeDropdown` 复刻数独选项面板的几何与色彩。展开菜单先暂停；经典难度选择直接加载独立槽，手动关卡预览确认后开始。轻量菜单返回保留来源意图，重开与边界变更取消仍保留原局暂停。页面和控制区不提供全屏、缩放或常驻提示；存档失败使用异常横条提示。`SnakeBoardView` 只接收规则和快照绘制，`SnakeInput` 负责连续手势和按下转向。
+
+`SnakeProfile` 分别保留三档难度×两种边界的六场经典对局，以及一场闯关对局；记录与解锁只在终局记账一次。`SnakeSaveCodec` 使用真实 Newtonsoft token 校验版本、坐标邻接、食物、计分、随机状态与终局一致性，`SnakeSaveStore` 独立原子写入 `snake-v1.json/.bak/.tmp`。不兼容的内容版本清理活动槽、保留可验证纪录，并在覆盖前归档旧文件。底层恢复会话保持暂停；用户主动进入 / 开始时直接倒计时，系统前台恢复仍需明确继续。开始、吃食、终局、暂停、离开、后台及运行中每两秒保存，不改其他游戏协议。
+
+内置 `Resources/Snake/levels.json` 与设计阶段 12 关配置一致；地图包、规则、schema 分别版本化。静态连通与通道校验不代表任意蛇身局面可解。图形为原创 UGUI 几何，音效与触感沿用 `GameFeedback` 和共用设置。
+
+独立验证入口为 `scripts/test-snake.sh`、`scripts/test-snake-persistence.sh`、`scripts/test-snake-ui.sh`；Android 验证包使用 `.snaketest` 后缀。完整入口与返回政策见[操作动线](snake/interaction-flow.md)；实际完成的编译、运行与设备验证分别记录在[贪吃蛇实现验证](snake/verification-implementation.md)。
 
 ## 验证层次
 
