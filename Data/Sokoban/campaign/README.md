@@ -17,7 +17,7 @@
 
 Tutorials 001 and 008 exactly preserve the approved compact 8×8 and tall 8×13 maps from `docs/prototypes/sokoban/prototype.js`. Import fails if either fixture drifts. Other tutorials are original maps; witnesses are stored in `tutorials.json`, so importing never depends on solver timing. Teaching objectives describe intended practice, not a claim of completed user research or automated instruction inside the page.
 
-Boxoban levels preserve the 100 existing verified candidates and their source IDs in ascending order. The first 20 are `warehouse-01`, then `warehouse-02` through `warehouse-05`, each containing 20. Display names are neutral: 仓库 1–5. Source IDs 21, 46, 65 and 78 remain omitted because the earlier bounded search exceeded its budget; that is not evidence that they are impossible. No machine cost, solution length or upstream dataset label is presented as a human difficulty grade, and no witness is claimed to use the minimum number of moves. Human playtesting and difficulty tuning remain unverified.
+Boxoban levels preserve the 100 existing verified candidates and their source IDs in ascending order. The first 20 are `warehouse-01`, then `warehouse-02` through `warehouse-05`, each containing 20. These are stable internal chapter IDs; the UI displays actual ranges 第 1–20 关 through 第 81–100 关, with regular levels numbered 1–100 independently of the eight tutorials. Source IDs 21, 46, 65 and 78 remain omitted because the earlier bounded search exceeded its budget; that is not evidence that they are impossible. No machine cost, solution length or upstream dataset label is presented as a human difficulty grade, and no witness is claimed to use the minimum number of moves. Human playtesting and difficulty tuning remain unverified.
 
 ## Reproduction and validation
 
@@ -34,7 +34,7 @@ All files are staged on the destination filesystem. The production C# test parse
 
 `--check` rebuilds into staging and compares every byte to the published bundle without replacing it. Changing a map under the same `contentVersion` and `levelId` is rejected against the existing release. Catalog membership changes also require a new content version, so completed IDs cannot silently disappear from a same-version save. Issue a new ID for a replacement map and version the resulting catalog. Output uses stable import GUIDs and no generation timestamps.
 
-The content test entry point covers 17 import/failure tests, 19 malformed production catalog cases, all 108 witnesses and full nonterminal undo. The current witnesses contain **4,596 moves and 1,203 pushes**. This is content/production-rule validation, not Unity rendering, sound-volume, touch, Android device or human difficulty acceptance.
+The content test entry point covers 20 import/failure tests, 19 malformed production catalog cases, all 108 witnesses and full nonterminal undo. The current witnesses contain **4,596 moves and 1,203 pushes**. This is content/production-rule validation, not Unity rendering, sound-volume, touch, Android device or human difficulty acceptance.
 
 ## Release evidence
 

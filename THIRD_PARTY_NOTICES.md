@@ -2,13 +2,13 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
-## Sokoban design and content preparation (not yet bundled in the player)
+## Sokoban archived design and content sources
 
 - Kenney Sokoban: [official page](https://kenney.nl/assets/sokoban), [author's OpenGameArt upload](https://opengameart.org/content/sokoban-100-tiles). CC0, Kenney Vleugels. Original PNG sizes, spritesheets, tilesheets, vector files and license are retained in `ThirdParty/Sokoban/kenney-sokoban/`. The UI prototype references these local images.
 - Kenney Interface Sounds: [official page](https://kenney.nl/assets/interface-sounds), [author's upload](https://opengameart.org/content/interface-sounds). 100 OGG files, CC0, Kenney Vleugels; retained with the original license in `ThirdParty/Sokoban/kenney-interface-sounds/`. Not played by the UI prototype.
 - Both asset folders contain `source-manifest.json` with download URLs, archive SHA-256 and hashes of retained files. The original archives contain promotional links that are not imported; retained resource bytes are unchanged.
 - [Google DeepMind Boxoban levels](https://github.com/google-deepmind/boxoban-levels), commit `78011d8c86ad423bfb2e1005012393b4c3c24409`, Apache-2.0: `unfiltered/test/000.txt` is archived unchanged in `Data/Sokoban/boxoban/`, with both upstream license files and README including the requested author citation. No upstream game implementation is copied. Derived candidate lists and solution witnesses are explicitly marked as local verification outputs in `Data/Sokoban/verification/`.
-- These resources currently support design and content preparation outside `Assets/`; they are not part of the Unity player. The two maps used in the prototype are original demonstration layouts. Microban is researched but not imported.
+- These full source archives remain outside `Assets/`. The player now bundles the selected resources and verified campaign described in the Sokoban production sections below; the complete source archives are not bundled. The two prototype maps are original layouts retained as tutorials 001 and 008. Microban is researched but not imported.
 
 ## Offline idiom dictionary
 
@@ -74,7 +74,7 @@ All gameplay code, UI layout and synthesized sound generation in this repository
 - Bundled file: `Assets/Resources/Sudoku/puzzles.txt`, a selection of 2,000 standard 9×9 puzzles with locally computed answers and difficulty labels. Import provenance and verification are documented in `docs/sudoku-content.md`.
 - Only puzzle data is reused. The Sudoku rules, solver, hint explanations, interface and persistence code are original. No Sudoku Exchange web application code, QQWing or HoDoKu code is bundled.
 
-## Sokoban graphics and feedback audio (08 · 推箱子)
+## Sokoban graphics and feedback audio (推箱子)
 
 - Graphics: [Kenney Sokoban](https://kenney.nl/assets/sokoban), by Kenney Vleugels, CC0. The archived source and its unchanged license are in `ThirdParty/Sokoban/kenney-sokoban/`. Archive SHA-256: `d8cc8af649a5e21d87a9f30a8a616fe2c0e94e68c80cdfe0df8ca72ec0f208ac`.
 - Included unchanged in `Assets/Resources/Sokoban/Sprites/`: wall `block_06`, normal crate `crate_02`, occupied-goal crate `crate_05`, and four outlined player directions `player_05`, `player_08`, `player_17`, `player_20`, all from the source's `PNG/Default size/` directory. Only these seven PNGs are bundled.

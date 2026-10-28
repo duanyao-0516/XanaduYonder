@@ -1,5 +1,7 @@
 # 本地开发与 Android 构建
 
+新小游戏的设计和接入先参考[推箱子开发复盘与小游戏 UI 参考规范](sokoban-development-guide.md)。其中将共享风格、实际缺陷、内容/存档契约和验证层次分开说明；推箱子的紧凑选关、取消缩放等取舍不应直接套用到所有玩法。
+
 ## 固定环境
 
 - Unity Editor **6000.3.27f1**，changeset `672d562a42a7`，Mac 使用 Apple Silicon 版本。
