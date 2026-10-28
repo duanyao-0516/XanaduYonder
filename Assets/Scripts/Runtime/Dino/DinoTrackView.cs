@@ -24,7 +24,8 @@ namespace XanaduYonder.Runtime.Dino
 
         private const int ObstacleCapacity = 32;
         private const float GroundInset = 30;
-        private const float GroundTileWidth = 600;
+        private const float GroundTileWidth = 600 * (float)DinoRules.SpriteScale;
+        private const float GroundTileHeight = 12 * (float)DinoRules.SpriteScale;
         private const float DayNightSeconds = .8f;
         private static readonly Color DayBackground = Color.white;
         private static readonly Color NightBackground = Color.black;
@@ -229,9 +230,31 @@ namespace XanaduYonder.Runtime.Dino
         private void RenderGround(double distance)
         {
             var offset = Wrap(distance, GroundTileWidth);
+            long firstTile = (long)Math.Floor(distance / GroundTileWidth);
             for (var i = 0; i < groundCount; i++)
-                // The opaque horizon is 8 logical units above this slice's bottom edge.
-                Place(ground[i], i * GroundTileWidth - offset, GroundInset - 8, GroundTileWidth, 12);
+            {
+                // Both complete 2x strips share the same endpoints: flat, then small hills/dips.
+                // Absolute world tile IDs keep each choice stable while scrolling or rebuilding.
+                SetSlice(ground[i], IsBumpyGround(firstTile + i) ? 1202 : 2, 104, 1200, 24);
+                // Chromium places its 12px ground strip one pixel above the sprite bottom.
+                // Its line at source rows 8..9 crosses the lower feet, rather than sitting
+                // underneath them. Scale the whole strip like the character, purely visually.
+                Place(ground[i], i * GroundTileWidth - offset, GroundInset + DinoRules.SpriteScale,
+                    GroundTileWidth, GroundTileHeight);
+            }
+        }
+
+        private static bool IsBumpyGround(long tileIndex)
+        {
+            if (tileIndex == 0) return false;
+            unchecked
+            {
+                uint hash = (uint)tileIndex ^ (uint)(tileIndex >> 32) ^ 0x9E3779B9u;
+                hash ^= hash >> 16;
+                hash *= 0x7FEB352Du;
+                hash ^= hash >> 15;
+                return (hash & 1u) != 0;
+            }
         }
 
         private void RenderPlayer(DinoGame game)

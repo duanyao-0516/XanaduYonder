@@ -54,7 +54,7 @@ namespace XanaduYonder.EditorTools
             {
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Require(UiFactory.Font != null, "Bundled shared font loads");
-                foreach (var size in new[] { new Vector2Int(720, 1320), new Vector2Int(720, 1582),
+                foreach (var size in new[] { new Vector2Int(720, 1152), new Vector2Int(720, 1320), new Vector2Int(720, 1582),
                     new Vector2Int(1515, 720), new Vector2Int(730, 720) })
                 using (var fixture = new Fixture(size.x, size.y))
                 {
@@ -80,6 +80,14 @@ namespace XanaduYonder.EditorTools
                         fixture.Open("ShowHelp"); fixture.Capture("help");
                     }
                     Report.AppendLine("PASS production UI render " + size.x + "x" + size.y);
+                }
+                using (var fixture = new Fixture(720, 960))
+                {
+                    fixture.Selection(); fixture.CaptureShortSelection();
+                }
+                using (var fixture = new Fixture(720, 720, new DateTime(2026, 5, 31)))
+                {
+                    fixture.Selection(); fixture.CheckBirthdayBanner(); fixture.CaptureShortSelection();
                 }
                 foreach (var date in new[] { new DateTime(2026, 1, 1), new DateTime(2026, 10, 31),
                     new DateTime(2026, 12, 25), new DateTime(2026, 5, 31), new DateTime(2026, 6, 30) })
@@ -201,6 +209,28 @@ namespace XanaduYonder.EditorTools
                 Require(page.CurrentPhase == "Ready", "Requested visual viewport reaches Ready: " + width + "x" + height);
             }
 
+            internal void CaptureShortSelection()
+            {
+                var content = Get<RectTransform>(page, "content");
+                var scroll = content.GetComponentInChildren<ScrollRect>();
+                Require(scroll != null && scroll.viewport.rect.height > 0 && scroll.content.rect.height > scroll.viewport.rect.height,
+                    "Short selection renders a real scrollable choice area: " + width + "x" + height);
+                scroll.verticalNormalizedPosition = 1;
+                Capture("selection-scroll-top");
+                scroll.verticalNormalizedPosition = 0;
+                Capture("selection-scroll-bottom");
+                scroll.verticalNormalizedPosition = .35f;
+                Canvas.ForceUpdateCanvases();
+                scroll.content.Find("Landscape choice").GetComponent<Button>().onClick.Invoke();
+                var rebuiltScroll = Get<RectTransform>(page, "content").GetComponentInChildren<ScrollRect>();
+                Canvas.ForceUpdateCanvases();
+                Require(Math.Abs(rebuiltScroll.verticalNormalizedPosition - .35f) < .001f &&
+                    Get<bool>(page, "selectedLandscape") && Get<DinoGame>(page, "game") == null,
+                    "Visible choice selection preserves its actual scroll position without starting gameplay");
+                Capture("selection-scroll-selected");
+                Report.AppendLine("PASS short selection scroll render " + width + "x" + height);
+            }
+
             internal void Pause()
             {
                 Invoke(page, "JumpDown", -101);
@@ -267,7 +297,8 @@ namespace XanaduYonder.EditorTools
                 var oldState = oldTrack.Capture(game);
                 long tick = game.Tick;
                 page.Suspend();
-                Set(Get<object>(page, "viewport"), "Height", height + 24f);
+                // The normal landscape track reaches its height cap, so shrink to exercise a real layout replacement.
+                Set(Get<object>(page, "viewport"), "Height", height - 24f);
                 Invoke(page, "BuildGame");
                 var rebuilt = Get<DinoTrackView>(page, "track");
                 var newState = rebuilt.Capture(game);
@@ -334,7 +365,8 @@ namespace XanaduYonder.EditorTools
                 var corners = new Vector3[4]; track.GetWorldCorners(corners);
                 float left = content.InverseTransformPoint(corners[0]).x;
                 float right = content.InverseTransformPoint(corners[2]).x;
-                Require(Math.Abs(left - 56) < .1 && Math.Abs(width - right - 56) < .1, "Actual track retains 56-unit margins");
+                Require(Math.Abs(left - 32) < .1 && Math.Abs(width - right - 32) < .1,
+                    "Actual track matches Jump's 32-unit scene margins");
                 Require(track.rect.height <= 320.1f, "Track height stays compact");
                 Require(Math.Abs(page.WorldWidth - track.rect.width / 1.2) < .01, "Core width uses visible track width");
                 var mask = track.GetComponent<Mask>() ?? track.GetComponentInParent<Mask>();

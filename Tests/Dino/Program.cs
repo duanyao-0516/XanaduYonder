@@ -7,7 +7,7 @@ internal static class Program
 {
     private static int passed;
     private static int failed;
-    private static readonly double[] Widths = { 420, 608 / 1.2, 600, 900, 1403 / 1.2, 1200 };
+    private static readonly double[] Widths = { 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2 };
 
     private static int Main()
     {
@@ -30,31 +30,35 @@ internal static class Program
                 Assert(r.MaxSpeed > 0 && r.MaxSpeed <= 360, "bounded speed");
             }
         });
-        Run("wide track accelerates noticeably by ten seconds and reaches full speed by thirty", delegate {
-            var rules = new DinoRules(1403 / 1.2);
+        Run("wide track reaches its unchanged top speed in fifteen seconds", delegate {
+            var rules = new DinoRules(1451 / 1.2);
             Near(rules.SpeedAt(0), 180, "starting speed is unchanged");
-            Near(rules.SpeedAt(600), 240, "ten seconds is one third faster");
-            Near(rules.SpeedAt(1200), 300, "twenty second speed");
-            Near(rules.SpeedAt(1800), 360, "thirty second speed cap");
+            Near(rules.SpeedAt(900), 360, "fifteen second speed cap");
+            Near(rules.SpeedAt(300), 240, "five seconds is one third faster");
+            Near(rules.SpeedAt(600), 300, "ten second speed");
+            Near(rules.SpeedAt(899), 359.8, "the final accelerating tick stays below the cap");
+            Near(rules.SpeedAt(1800), 360, "faster acceleration does not raise the top speed");
             var game = new DinoGame(rules, 17); game.Jump();
-            for (int tick = 0; tick < 1800; tick++) { Drive(game); game.Step(); }
-            Assert(!game.IsGameOver && game.Tick == 1800, "real simulation reaches thirty seconds");
+            for (int tick = 0; tick < 900; tick++) { Drive(game); game.Step(); }
+            Assert(!game.IsGameOver && game.Tick == 900, "real simulation reaches fifteen seconds");
             Near(game.Speed, 360, "real simulation uses the accelerated curve");
         });
         Run("inset portrait uses the same acceleration without exceeding its response cap", delegate {
-            var rules = new DinoRules(608 / 1.2);
-            Near(rules.MaxSpeed, 241, "actual inset viewport keeps its existing safe cap");
+            var rules = new DinoRules(656 / 1.2);
             Near(rules.SpeedAt(0), 180, "portrait starts at the shared speed");
-            Near(rules.SpeedAt(600), 240, "portrait shares the ten second acceleration");
-            Near(rules.SpeedAt(610), 241, "portrait reaches its own cap after about ten seconds");
-            Near(rules.SpeedAt(3600), 241, "portrait remains capped");
+            Near(rules.SpeedAt(300), 240, "portrait shares the five second acceleration");
+            long capTick = (long)Math.Ceiling((rules.MaxSpeed - 180) / .2);
+            Assert(rules.SpeedAt(capTick - 1) < rules.MaxSpeed, "the last portrait accelerating tick stays below its cap");
+            Near(rules.SpeedAt(capTick), rules.MaxSpeed, "portrait reaches its viewport-derived cap");
+            Near(rules.SpeedAt(3600), rules.MaxSpeed, "portrait remains capped");
         });
         Run("traversal distance exactly matches accelerated fixed steps across speed caps", delegate {
-            var wide = new DinoRules(1403 / 1.2);
-            Near(wide.Travel(0, 1800), 8101.5, "thirty second acceleration distance");
-            foreach (double width in new[] { 320.0, 420, 608 / 1.2, 600, 900, 1403 / 1.2, 1200, 4096 }) {
+            var wide = new DinoRules(1451 / 1.2);
+            Near(wide.Travel(0, 900), 4051.5, "fifteen second acceleration distance");
+            Near(wide.Travel(0, 1800), 9451.5, "thirty second distance includes fifteen capped seconds");
+            foreach (double width in new[] { 320.0, 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2, 4096 }) {
                 var rules = new DinoRules(width);
-                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .1));
+                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .2));
                 foreach (long start in new[] { 0L, 10L, 500L, Math.Max(0, capTick - 3), capTick, capTick + 3, 5400L, long.MaxValue - 2048 }) {
                     foreach (int length in new[] { 1, 7, 120, 2048 }) {
                         double sum = 0;

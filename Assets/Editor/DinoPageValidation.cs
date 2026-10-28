@@ -64,7 +64,11 @@ namespace XanaduYonder.EditorTools
                 Check("new run rejects wrong orientation and insufficient headroom before saving preference", BlockedNewRun);
                 Check("near-square landscape separates jump duck and pause targets", NearSquareControls);
                 Check("inset rounded track supplies its actual visible width to Core", InsetTrackGeometry);
-                Check("portrait typography and score cards reuse the existing game tokens", SharedUiTokens);
+                Check("portrait score hierarchy and controls follow the approved sketch", SharedUiTokens);
+                Check("selection cards and start button stay within the lower reach area", SelectionReach);
+                Check("short selection windows scroll both cards without covering fixed actions", ShortSelectionScroll);
+                Check("game Back returns to selection before the lobby", ReturnHierarchy);
+                Check("portrait and landscape controls stay low and expose pause", ControlsReach);
                 Check("birthday entry uses the local lunar date without blocking selection", BirthdayEntry);
                 Check("celebration hat follows jump duck and collision without changing the model", CelebrationHatPoses);
                 Check("celebration snapshot survives layout replacement and refreshes on re-entry", CelebrationLifecycle);
@@ -94,7 +98,7 @@ namespace XanaduYonder.EditorTools
             Require(!Get<DinoActionOwners>(f.Page, "owners").JumpHeld, "Physical jump ownership clears on suspend");
             Require(game.PlayerY == y && game.PlayerVelocity == velocity, "Suspend retains current jump trajectory");
             f.Page.Back();
-            Require(f.HasText("结束本局并返回？"), "Back from pause asks to end the current run");
+            Require(f.HasText("结束本局并返回选择？"), "Back from pause asks to end the current run and return to selection");
             Require(f.HomeCalls == 0 && ReferenceEquals(game, f.Game) && game.Tick == tick, "Confirmation does not leave or advance");
             f.Page.Back();
             Require(f.HasText("已暂停"), "Back cancels exit confirmation to pause");
@@ -156,7 +160,7 @@ namespace XanaduYonder.EditorTools
             Require(f.Page.CurrentPhase == "Paused" && f.HasText("等待恢复游戏窗口") && original.Tick == tick, "Continue cannot bypass unsafe viewport");
             // Return to a legible, sufficiently tall window. This validates the real recheck and Continue
             // methods separately from platform-specific Screen/rotation delivery.
-            float restoredWidth = (float)(original.Rules.ViewportWidth * 1.2 + 112);
+            float restoredWidth = (float)(original.Rules.ViewportWidth * 1.2 + 64);
             float restoredHeight = landscape ? Math.Max(720, physicalHeight) : Math.Max(physicalHeight, restoredWidth + 200);
             f.FakeViewport(restoredWidth, restoredHeight, landscape);
             Invoke(f.Page, "ShowWindowChanged"); Invoke(f.Page, "Continue");
@@ -238,6 +242,14 @@ namespace XanaduYonder.EditorTools
             f.FakeViewport(1320, 520, true); f.CacheViewport();
             Invoke(f.Page, "StartNewGame");
             Require(f.Page.CurrentPhase == "Unavailable" && f.Game == null, "Insufficient vertical clearance cannot create a run");
+            Set(f.Page, "landscape", false);
+            foreach (float height in new[] { 1068f, 1080f, 1107f })
+            {
+                f.FakeViewport(720, height, false); f.CacheViewport();
+                Invoke(f.Page, "StartNewGame");
+                Require(f.Page.CurrentPhase == "Unavailable" && f.Game == null, "A compact portrait window cannot overlap status and track: " + height);
+            }
+            Set(f.Page, "landscape", true);
             f.FakeViewport(1320, 720, true); f.CacheViewport();
             Invoke(f.Page, "StartNewGame");
             Require(f.Page.CurrentPhase == "Ready" && f.Game != null && !f.Game.IsStarted, "Adequate restored window reaches Ready");
@@ -266,15 +278,15 @@ namespace XanaduYonder.EditorTools
 
         private static void InsetTrackGeometry(Fixture f)
         {
-            foreach (var size in new[] { new Vector2(720, 1320), new Vector2(720, 1582),
+            foreach (var size in new[] { new Vector2(720, 1152), new Vector2(720, 1320), new Vector2(720, 1582),
                 new Vector2(1515, 720), new Vector2(730, 720) })
             {
                 f.ReadyAt(size.x, size.y);
                 var content = Get<RectTransform>(f.Page, "content");
                 var track = Get<DinoTrackView>(f.Page, "track").GetComponent<RectTransform>();
                 Rect area = RelativeRect(content, track);
-                Require(Math.Abs(area.xMin - 56) < .01 && Math.Abs(size.x - area.xMax - 56) < .01,
-                    "Track has equal 56-unit inset at " + size);
+                Require(Math.Abs(area.xMin - 32) < .01 && Math.Abs(size.x - area.xMax - 32) < .01,
+                    "Track has the same 32-unit scene inset as Jump at " + size);
                 Require(track.rect.height > 0 && track.rect.height <= 320.1f,
                     "Track uses a compact bounded height at " + size);
                 Require(Math.Abs(f.Game.Rules.ViewportWidth - track.rect.width / 1.2) < .01,
@@ -299,12 +311,12 @@ namespace XanaduYonder.EditorTools
             var title = FindText(content, "Dino");
             Require(title != null && title.fontSize == 63 && title.fontStyle == FontStyle.Bold && title.color == UiFactory.Ink,
                 "Portrait title uses Jump's 63-point bold Ink style");
-            Require(Math.Abs(title.rectTransform.anchoredPosition.x - 56) < .01 &&
-                Math.Abs(title.rectTransform.anchoredPosition.y + 112) < .01, "Portrait title follows Jump heading coordinates");
+            Require(Math.Abs(title.rectTransform.anchoredPosition.x - 56) < .01,
+                "Portrait title retains the shared text inset");
             var brand = FindText(content, "XANADU / YONDER");
             Require(brand != null && brand.fontSize == 19 && brand.color == UiFactory.Muted,
                 "Navigation uses the shared 19-point muted brand");
-            foreach (var kind in new[] { UiIconKind.Home, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings })
+            foreach (var kind in new[] { UiIconKind.Back, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings })
             {
                 UiIconGraphic found = null;
                 foreach (var icon in content.GetComponentsInChildren<UiIconGraphic>()) if (icon.Kind == kind) found = icon;
@@ -316,13 +328,14 @@ namespace XanaduYonder.EditorTools
             {
                 var value = Get<Text>(f.Page, field);
                 var card = value.transform.parent.GetComponent<Image>();
-                Require(value.fontSize == 37 && value.fontStyle == FontStyle.Bold && value.color == UiFactory.Ink &&
-                    value.resizeTextForBestFit && value.resizeTextMinSize == 14 && value.resizeTextMaxSize == 37,
-                    "Score value reuses shared typography and overflow adaptation");
-                Require(card != null && card.color == UiFactory.Hex("E7EDE4") && card.rectTransform.rect.size == new Vector2(296, 96),
-                    "Portrait score card reuses 296x96 dimensions and shared fill");
-                Text label = null;
-                foreach (var child in card.GetComponentsInChildren<Text>()) if (child != value) label = child;
+                bool current = field == "scoreLabel";
+                int size = current ? 52 : 44;
+                Require(value.fontSize == size && value.fontStyle == (current ? FontStyle.Bold : FontStyle.Normal) &&
+                    value.color == (current ? UiFactory.Ink : UiFactory.Muted) && value.resizeTextForBestFit &&
+                    value.resizeTextMinSize == 14 && value.resizeTextMaxSize == size,
+                    "Current score is prominent, best score secondary, and both fit large records");
+                Require(card == null || card.color.a == 0, "Sketch scores do not sit inside filled cards");
+                var label = FindText(content, current ? "本局分数" : "竖屏最高纪录");
                 Require(label != null && label.fontSize == 19 && label.color == UiFactory.Muted,
                     "Score title remains a separate muted label");
             }
@@ -334,6 +347,172 @@ namespace XanaduYonder.EditorTools
                 Require(text.font == UiFactory.Font, "Every visible UI label uses the shared bundled font");
                 Require(!text.text.Contains("小恐龙"), "Visible product name is Dino");
             }
+        }
+
+        private static void SelectionReach(Fixture f)
+        {
+            Set(f.Page, "profile", new DinoSaveData { BestPortraitScore = 1234, BestLandscapeScore = 5678 });
+            foreach (float height in new[] { 1320f, 1582f })
+            {
+                f.SelectionAt(720, height);
+                var content = Get<RectTransform>(f.Page, "content");
+                var portrait = (RectTransform)content.Find("Portrait choice");
+                var landscape = (RectTransform)content.Find("Landscape choice");
+                var start = (RectTransform)content.Find("Dino start");
+                Require(portrait != null && landscape != null && start != null, "Both choices and the start action exist");
+                Rect portraitArea = RelativeRect(content, portrait), landscapeArea = RelativeRect(content, landscape), startArea = RelativeRect(content, start);
+                Require(-portraitArea.center.y >= height * .5f && -landscapeArea.center.y > -portraitArea.center.y,
+                    "Orientation choices occupy the reachable lower half at " + height);
+                Require(-startArea.center.y >= height * .84f && -startArea.yMin <= height - 96,
+                    "Start stays near the bottom with footer clearance at " + height);
+                Require(!portraitArea.Overlaps(landscapeArea) && !landscapeArea.Overlaps(startArea),
+                    "Choice cards and start target do not overlap");
+                foreach (var card in new[] { portrait, landscape })
+                {
+                    var preview = (RectTransform)card.Find("Orientation preview");
+                    Require(preview != null && preview.rect.width > 0 && preview.rect.height > 0,
+                        "Orientation card contains a real device outline");
+                    Require(card == portrait ? preview.rect.height > preview.rect.width : preview.rect.width > preview.rect.height,
+                        "Preview aspect ratio depicts its selected orientation");
+                    foreach (var graphic in preview.GetComponentsInChildren<Graphic>())
+                        Require(!graphic.raycastTarget, "Device preview does not steal the choice tap");
+                    var record = FindText(card, card == portrait ? "1234" : "5678");
+                    var caption = FindText(card, "最高纪录");
+                    Require(record != null && caption != null && record.fontStyle == FontStyle.Bold && record.fontSize == 37 &&
+                        record.resizeTextForBestFit && caption.fontSize == 19, "Record has a separate caption and bold numeric line");
+                    Require(RelativeRect(card, record.rectTransform).yMax <= RelativeRect(card, caption.rectTransform).yMin + 2,
+                        "Record value sits below its caption rather than sharing the same line");
+                }
+                landscape.GetComponent<Button>().onClick.Invoke();
+                Require(Get<bool>(f.Page, "selectedLandscape") && f.Page.CurrentPhase == "Selecting",
+                    "Selecting a preview does not start or rotate a run");
+                Require(FindText(Get<RectTransform>(f.Page, "content"), "横屏开始") != null,
+                    "The lower primary action reflects the chosen direction");
+            }
+        }
+
+        private static void ShortSelectionScroll(Fixture f)
+        {
+            Set(f.Page, "profile", new DinoSaveData { BestPortraitScore = 1234, BestLandscapeScore = 5678 });
+            foreach (float height in new[] { 960f, 720f })
+            {
+                Set(f.Page, "localDate", (Func<DateTime>)(() => height == 720 ? new DateTime(2026, 5, 31) : new DateTime(2026, 10, 27)));
+                f.SelectionAt(720, height);
+                var content = Get<RectTransform>(f.Page, "content");
+                var scroll = content.GetComponentInChildren<ScrollRect>();
+                Require(scroll != null && scroll.vertical && !scroll.horizontal && scroll.viewport != null && scroll.content != null,
+                    "Short selection has a real vertical ScrollRect at " + height);
+                Require(scroll.viewport.GetComponent<RectMask2D>() != null && scroll.content.rect.height > scroll.viewport.rect.height &&
+                    scroll.viewport.rect.height >= 224, "The masked viewport fits at least one complete direction card");
+                Rect viewportArea = RelativeRect(content, scroll.viewport);
+                var start = (RectTransform)content.Find("Dino start");
+                var description = FindText(content, "选择游玩方向，再向前跑远一点。");
+                Require(viewportArea.yMax <= RelativeRect(content, description.rectTransform).yMin &&
+                    RelativeRect(content, start).yMax <= viewportArea.yMin,
+                    "Scrollable choices stay between the fixed heading and start button");
+                var banner = (RectTransform)content.Find("Birthday banner");
+                if (height == 720)
+                {
+                    Require(banner != null && FindText(banner, "生日快乐") != null, "Short birthday window retains the banner");
+                    Rect bannerArea = RelativeRect(content, banner);
+                    Require(bannerArea.yMax <= RelativeRect(content, description.rectTransform).yMin &&
+                        viewportArea.yMax <= bannerArea.yMin, "Birthday banner does not overlap the heading or card viewport");
+                }
+                var portrait = (RectTransform)scroll.content.Find("Portrait choice");
+                var landscape = (RectTransform)scroll.content.Find("Landscape choice");
+                Require(portrait != null && landscape != null && portrait.rect.height == 224 && landscape.rect.height == 224,
+                    "Short windows preserve both full-size choice cards inside the scroll content");
+                scroll.verticalNormalizedPosition = 1;
+                Require(scroll.viewport.rect.Contains(RelativeRect(scroll.viewport, FindText(portrait, "竖屏").rectTransform).center),
+                    "The upper scroll limit exposes the portrait choice title");
+                scroll.verticalNormalizedPosition = 0;
+                Require(scroll.viewport.rect.Contains(RelativeRect(scroll.viewport, FindText(landscape, "5678").rectTransform).center),
+                    "The lower scroll limit exposes the landscape record");
+
+                // Place the landscape title at the middle of the actual viewport before tapping its card.
+                scroll.verticalNormalizedPosition = 1;
+                var landscapeTitle = FindText(landscape, "横屏").rectTransform;
+                float titleY = -RelativeRect(scroll.viewport, landscapeTitle).center.y;
+                float travel = scroll.content.rect.height - scroll.viewport.rect.height;
+                float position = Mathf.Clamp01(1 - (titleY - scroll.viewport.rect.height * .5f) / travel);
+                scroll.verticalNormalizedPosition = position;
+                Require(scroll.viewport.rect.Contains(RelativeRect(scroll.viewport, landscapeTitle).center),
+                    "The landscape choice can be visibly reached before selecting it");
+                landscape.GetComponent<Button>().onClick.Invoke();
+                var rebuilt = Get<RectTransform>(f.Page, "content");
+                var rebuiltScroll = rebuilt.GetComponentInChildren<ScrollRect>();
+                Canvas.ForceUpdateCanvases();
+                Require(Get<bool>(f.Page, "selectedLandscape") && f.Page.CurrentPhase == "Selecting" &&
+                    Math.Abs(rebuiltScroll.verticalNormalizedPosition - position) < .001f,
+                    "Choosing a direction preserves the scroll position through the real page rebuild");
+                Require(FindText(rebuilt, "横屏开始") != null && f.Game == null && f.HomeCalls == 0,
+                    "A short-window choice updates the fixed start action without starting a run");
+            }
+        }
+
+        private static void ReturnHierarchy(Fixture f)
+        {
+            f.ReadyAt(720, 1320);
+            ClickIcon(f.Page, UiIconKind.Back);
+            f.FinishPortraitTurn();
+            Require(f.Page.CurrentPhase == "Selecting" && f.Game == null && f.HomeCalls == 0,
+                "Ready navigation returns to direction selection, not the lobby");
+
+            f.ReadyAt(720, 1320); f.PressJump();
+            for (int i = 0; i < 12; i++) f.Game.Step();
+            var running = f.Game; long tick = running.Tick;
+            f.Page.Back();
+            Require(f.Page.CurrentPhase == "Paused" && f.HasText("结束本局并返回选择？") && running.Tick == tick && f.HomeCalls == 0,
+                "Running Back freezes and confirms before discarding this run");
+            var confirm = FindText(Get<RectTransform>(f.Page, "overlay"), "返回方向选择");
+            Require(confirm != null && confirm.GetComponentInParent<Button>() != null, "Return confirmation has a concrete selection action");
+            confirm.GetComponentInParent<Button>().onClick.Invoke();
+            f.FinishPortraitTurn();
+            Require(f.Page.CurrentPhase == "Selecting" && f.Game == null && f.HomeCalls == 0,
+                "Confirmed game Back returns only one navigation level");
+
+            f.ReadyAt(720, 1320); f.PressJump();
+            for (int i = 0; i < 2400 && !f.Game.IsGameOver; i++) f.Game.Step();
+            Require(f.Game.IsGameOver, "Result return test reaches an actual collision");
+            Invoke(f.Page, "EndRun"); f.Page.Back(); f.FinishPortraitTurn();
+            Require(f.Page.CurrentPhase == "Selecting" && f.HomeCalls == 0, "Result Back also returns to selection");
+            ClickIcon(f.Page, UiIconKind.Home); f.FinishPortraitTurn();
+            Require(f.HomeCalls == 1, "Only Back from the selection page leaves for the lobby");
+        }
+
+        private static void ControlsReach(Fixture f)
+        {
+            foreach (var size in new[] { new Vector2(720, 1152), new Vector2(720, 1320), new Vector2(720, 1582), new Vector2(1515, 720), new Vector2(730, 720) })
+            {
+                f.ReadyAt(size.x, size.y);
+                var content = Get<RectTransform>(f.Page, "content");
+                var jump = (RectTransform)content.Find("Dino jump input");
+                var duck = (RectTransform)content.Find("Dino duck input");
+                var pause = (RectTransform)content.Find("暂停");
+                Require(jump != null && duck != null && pause != null && pause.gameObject.activeSelf,
+                    "Ready always offers jump, duck and pause");
+                Require(FindText(content, "更换方向") == null, "There is no redundant direction action on the game page");
+                var jumpArea = RelativeRect(content, jump); var duckArea = RelativeRect(content, duck);
+                var pauseArea = RelativeRect(content, pause);
+                Require(jump.rect.width > duck.rect.width && jump.GetComponent<Image>().color == UiFactory.Accent,
+                    "The larger right jump target is the primary action");
+                Require(-jumpArea.center.y > size.y * .72f && -duckArea.center.y > size.y * .72f,
+                    "Both action targets occupy the lower thumb area at " + size);
+                Require(!jumpArea.Overlaps(duckArea) && !jumpArea.Overlaps(pauseArea) && !duckArea.Overlaps(pauseArea),
+                    "Jump, duck and pause are separate touch targets");
+                Require(Math.Abs(duckArea.xMin - 32) < .01 && Math.Abs(size.x - jumpArea.xMax - 32) < .01,
+                    "Action cards align with the 32-unit playfield margins");
+                Require(ContainsText(jump, "轻按") && ContainsText(jump, "按住") && ContainsText(duck, "按住"),
+                    "Action instructions are contained in their associated cards");
+            }
+        }
+
+        private static void ClickIcon(DinoPage page, UiIconKind kind)
+        {
+            var content = Get<RectTransform>(page, "content");
+            foreach (var icon in content.GetComponentsInChildren<UiIconGraphic>())
+                if (icon.Kind == kind) { icon.GetComponentInParent<Button>().onClick.Invoke(); return; }
+            throw new InvalidOperationException("Missing navigation icon " + kind);
         }
 
         private static Rect RelativeRect(RectTransform ancestor, RectTransform child)
@@ -449,6 +628,12 @@ namespace XanaduYonder.EditorTools
             return null;
         }
 
+        private static bool ContainsText(Transform parent, string value)
+        {
+            foreach (var text in parent.GetComponentsInChildren<Text>()) if (text.text.Contains(value)) return true;
+            return false;
+        }
+
         private static void Check(string name, Action<Fixture> body)
         {
             cases++;
@@ -511,6 +696,17 @@ namespace XanaduYonder.EditorTools
                 FakeViewport(width, height, width > height); CacheViewport();
                 Invoke(Page, "StartNewGame"); Set(Page, "unlockAt", -1f);
                 Require(Page.CurrentPhase == "Ready" && Game != null, "Prepared real page at " + width + "x" + height);
+            }
+            internal void SelectionAt(float width, float height)
+            {
+                Page.Enter(); FakeViewport(width, height, false); CacheViewport();
+                Invoke(Page, "Update"); Invoke(Page, "Update");
+                Require(Page.CurrentPhase == "Selecting", "Reached selection through the real entry flow");
+            }
+            internal void FinishPortraitTurn()
+            {
+                FakeViewport(720, 1320, false); CacheViewport();
+                Invoke(Page, "Update"); Invoke(Page, "Update");
             }
             internal void PressJump() { Set(Page, "unlockAt", -1f); Invoke(Page, "JumpDown", 12); Require(Game.IsStarted && Page.CurrentPhase == "Running", "Real jump callback starts run"); }
             internal void FakeViewport(float width, float height, bool landscape) { Set(Viewport, "Width", width); Set(Viewport, "Height", height); Set(Viewport, "Landscape", landscape); }

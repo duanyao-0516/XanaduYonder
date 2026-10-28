@@ -18,7 +18,7 @@ namespace XanaduYonder.Core.Dino
         internal const double ReleasedVelocity = 180;
         internal const int MaximumPlanTicks = 2048;
         private const double InitialSpeed = 180;
-        private const double Acceleration = 6;
+        private const double Acceleration = 12;
         private const double SpeedPerTick = Acceleration * StepSeconds;
         private static readonly Dictionary<double, double> SpeedCaps = new Dictionary<double, double>();
 
