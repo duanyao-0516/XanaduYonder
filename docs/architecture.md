@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前 0.6.0 源码接入十三款游戏，包括黄金矿工、欢乐球球和推箱子。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。发布边界见[v0.6.0 版本记录](releases/v0.6.0.md)。
+当前开发源码接入十四款游戏，新增俄罗斯方块；版本字段仍为 0.6.0，本次未升版或发布。已发布 v0.6.0 的范围仍为十三款游戏，见[版本记录](releases/v0.6.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -17,6 +17,7 @@
 | 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
 | 推箱子 | `Core/Sokoban`、`SokobanPage` | `sokoban-v1.json` | 关卡进度、推箱局面与撤回记录 |
 | 黄金矿工 | `Core/GoldMiner`、`GoldMinerSession`、`GoldMinerPage` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、检查点与纪录 |
+| 俄罗斯方块 | `Core/Tetris`、`TetrisSession`、`TetrisPage`、`TetrisView` | `tetris-v1.json` | 完整棋盘/活动块、七袋/RNG、Next/Hold、规则计时、分数与最高分、结果标记；`game: null` 表示未开始 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -132,6 +133,22 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 `GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
 
 输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
+
+## 俄罗斯方块的独立边界
+
+`TetrisGame` 独占 10×22 棋盘（顶部两行为隐藏区）、活动块、七袋/RNG、Next 3、Hold、Ghost 碰撞、SRS、计分与规则时间。每步为 1/60 秒，自然重力以整数 tick 表示：`round(60 × max(0.2, 0.85^(等级−1)))`，半 tick 向上取整，第 11 级起为 12 tick；每累计消除 10 行升一级。软降使用独立的 3 tick 计时并清零自然重力计时，每实际下降一格加 1 分；硬降每格 2 分且立即锁定。单/双/三/四行按消行前等级乘 100/300/500/800，不计 T-spin、Mini、Combo、B2B 或全清奖励。
+
+首次触地启动 30 tick 锁定期。成功横移或非 O 旋转最多重置 15 次，失败操作、离地、向下移动和踢地均不补充预算；离地后计时继续。到期在空中时不悬空锁定，也不能恢复计时，下次接地立即锁定。落锁先同时消行、计分，再检查隐藏区残留；新块和 Hold 换入恢复出生位置与新预算。规则版本、完整出生几何和双向踢墙表见[Core 规则说明](../Assets/Scripts/Core/Tetris/README.md)，不宣称完整复刻官方 Guideline。
+
+`TetrisSession` 管理准备、运行、暂停、三秒继续倒计时和终局，使用固定步累积器；单帧间隔超过 0.25 秒时暂停，不补跑后台时间。`TetrisInput` 先归并整帧触点，再仲裁最多两个独立动作 owner；第三触点或取消使本轮输入失效，全部释放后才重新获取。左右后按优先，同帧冲突不横移，首次延迟 180 ms、重复间隔 60 ms 按规则步消费。离散命令绑定 `PieceSerial`，换块后丢弃旧指令、重置横移重复计时，并阻止仍按住的软降影响新块。`TetrisTouchInput` 负责真实射线命中、触摸/鼠标/键盘适配，滑入按钮不能开启动作。
+
+`TetrisPage` 拥有保存调度、前台门禁、共享设置/反馈回调和页面状态；`TetrisView`、`TetrisBoardView` 只投影模型与消行闪光。页面在首次进入时由 `AppController` 延迟构造，构造和进入都使用 `SafeDesignFrame.WidthOnly=true`；`TetrisLayout` 以实际安全区根节点计算完整 10×20 正方格棋盘，预留 Hold/Next、导航和两行操作区。公共宿主只处理一次系统安全区，不新增相机、方向切换或专注模式。离页、弹窗、失焦、后台、尺寸变化和禁用都会暂停并清理输入；续局显示三秒倒计时，帮助/设置关闭后仍保持暂停。宿主分发路由、保存与前台状态，并通过 `SetHostSaveWarning` 转交公共设置的保存错误。
+
+`TetrisSaveCodec` 独立保存 schema 1、`gameId=tetris`、规则版本 1，使用严格 JSON 语法与 Newtonsoft token 校验，限制 128 KiB / 深度 8。根字段为 `game`、`bestScore` 和 `resultRecorded` 等固定字段；`game: null` 是尚未开始的有意状态，预览不产生已开始对局。非空游戏保存 220 格、活动块类型/方向/坐标、Next 队列、七袋剩余顺序与 RNG、Hold/可用状态、分数/行数、重力/软降/锁定 tick、锁定重置次数与是否触地、终局、有效游戏 tick 和方块身份。等级从行数派生；暂停、倒计时、真实触点、按键持有、动画和后台时长不落盘。恢复非终局时明确暂停；规则快照进出均深复制，校验局部状态一致性，不把它称为完整历史可达性证明。
+
+`TetrisSaveStore` 只访问 `tetris-v1.json/.bak/.tmp` 及明确确认后的损坏归档。主档损坏时可恢复合法备份；主备任一不支持的版本或 I/O 错误均禁止写入。每次保存前及临时文件 flush 后重新读取主备，避免合法主档轮换掉未来版本备份；只有合法主档可更新备份，损坏主档不会覆盖最后合法备份。主备均不可恢复时，需明确确认并先归档损坏文件；不支持版本不提供破坏性重置。页面以 dirty 与 session revision 去重，运行期间每 1 秒尝试检查点，开始、锁定、Hold、终局及生命周期边界立即补写；写失败保留内存局与错误提示。系统强杀可能退回最后成功检查点。
+
+独立检查入口为 `scripts/test-tetris.sh`、`scripts/test-tetris-input.sh`、`scripts/test-tetris-persistence.sh`、`scripts/test-tetris-layout.sh` 和 `scripts/test-tetris-ui.sh`。`scripts/build-tetris-validation.sh` 动态读取 `ProjectBuild.Version`，生成 `XanaduYonder-<版本>-tetris-validation.apk`，包名为 `com.duanyao.xanaduyonder.tetristest`；使用工作树内 Gradle 目录与独立 ADB 端口，Unity 检查和构建串行。入口存在不等于检查通过，当前结果见[验证记录](verification-tetris.md)，实际 UGUI 图集见[Unity 页面](prototypes/tetris/unity.html)，原始[研究原型](prototypes/tetris/README.md)单独保留。
 
 ## 验证层次
 

@@ -1,0 +1,23 @@
+# Tetris rules, version 1
+
+This directory owns the deterministic board, pieces, random stream, scoring, and fixed-step timing. Runtime owns pause, input ownership, touch repeats, persistence scheduling, and UI. Calling neither `Tick` nor `Execute` freezes the game. `Tick` is exactly 1/60 second; terminal calls do not advance time.
+
+The board is 10 × 22, with hidden rows 0 and 1. Coordinates increase downward. Every piece spawns at local-frame origin (3, 0), rotation 0. `TetrisPieces.GetCells` returns an independent four-cell array for a 4 × 4 local frame; `None` returns an empty array. Internal collision and Ghost use that same geometry.
+
+JLSTZ rotate about (1, 1), I about (1.5, 1.5); O stays in the same geometry and does not consume a lock reset. Both rotation directions try the complete five SRS candidates in order. Numeric SRS rule facts were checked against the [NullpoMino project's StandardWallkick](https://github.com/nullpomino/nullpomino/blob/master/nullpomino-core/src/main/java/mu/nu/nullpo/game/subsystem/wallkick/StandardWallkick.java). Geometry, state transitions, collision, and random generation here are independently implemented; no source implementation was copied. No 180-degree rotation or nonstandard I kick variant is included.
+
+The seven-bag uses xorshift32, Fisher–Yates, and rejection sampling. Seed 0 maps to `0x6d2b79f5`; a saved RNG state of 0 is invalid. `NextQueue` always contains three future pieces; `Bag` contains the ordered undrawn remainder (0–6 pieces). Hold is usable once per active piece. An occupied Hold swaps without consuming the queue; either form creates a new `PieceSerial` and resets spawn geometry/timers.
+
+Natural gravity is `round(60 × max(0.2, 0.85^(Level-1)))` ticks, with halves rounded upward. Soft drop runs an independent 3-tick interval, resets the natural timer, and scores 1 per actual descended cell. Releasing it resets its timer. Hard drop scores 2 per cell and locks immediately. Ordinary clears score 100/300/500/800 multiplied by the level before the clear; level is `1 + Lines/10`. Score and progress counters saturate, never wrap. There are no T-spin, combo, back-to-back, or perfect-clear bonuses.
+
+First contact starts a full 30-tick lock period. Successful movement or non-O rotation can refresh a still-running period at most 15 times; failed actions do not refresh it. Leaving ground, downward motion, and floor kicks never replenish the reset budget. The period keeps counting while airborne. Once it reaches zero it cannot be revived; an airborne piece stays active until its next contact, which locks immediately. A new piece receives a fresh period and reset budget.
+
+Locking writes cells, clears all completed rows together, scores using the old level, and only then checks hidden residue. A clear can move the formerly hidden cells into visible rows and save the game. Residue in a hidden row ends the game before drawing a successor. The resulting terminal snapshot has `ActivePiece=None`, canonical spawn coordinates and zero timers. A blocked spawn is represented by the attempted piece at canonical spawn coordinates, overlapping board cells, with `GameOver=true` and zero timers.
+
+With all spawn cells inside the two hidden rows and immediate hidden-row lockout, a blocked spawn cannot arise from a legal live board under version 1. The defensive collision check and terminal validation remain explicit. Tests exercise live Hold above visible support, hidden-row lockout and clear rescue; a blocked-spawn terminal fixture tests validation, not a supposedly reachable live sequence.
+
+Snapshots are copied both when entering and leaving the model, including all arrays. Validation rejects unsupported versions, invalid geometry, unknown pieces, inconsistent queue/bag suffixes, invalid/overlapping timer phases, expired grounded active pieces, remaining completed rows, hidden cells in a live board, and inconsistent terminal phases. Validation checks representable local state invariants; it does not solve reachability of an arbitrary board from a historical input stream. The persistence codec must separately reject missing fields and wrong JSON types before constructing a snapshot.
+
+`TetrisStepResult.Changed` includes timer-only changes. `Locked`, `Held`, `ClearedRows` (original row indexes), `ClearedLines`, and saturated `ScoreDelta` describe this operation. `GameOver` describes the resulting state. `PieceSerial` and `GameOver` on the game are allocation-free read-only scalar getters. `GetSnapshot` deliberately allocates copies, so views should request it only when needed.
+
+Run `./scripts/test-tetris.sh` from the repository root for the standalone .NET rule suite. It does not invoke Unity or depend on the other games' Core project.

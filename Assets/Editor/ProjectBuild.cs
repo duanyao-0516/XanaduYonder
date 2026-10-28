@@ -228,6 +228,21 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidTetrisValidation()
+        {
+            RunOrFail(() =>
+            {
+                // This existing scope snapshots shared Unity settings, independently of game assets.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".tetristest");
+                    PlayerSettings.productName = "Xanadu 方块测试";
+                    BuildApk("-tetris-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidGoldMinerValidation()
         {
             RunOrFail(() =>

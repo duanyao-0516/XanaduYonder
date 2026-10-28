@@ -1,0 +1,150 @@
+PASS Bundled CJK font available
+PASS 10 x 20 square-cell board at 784
+PASS Expected board width at 784
+PASS Board has real UGUI geometry
+PASS Seven touch targets including Hold
+PASS 48px target Tetris Hold
+PASS 48px target Tetris Left
+PASS 48px target Tetris SoftDrop
+PASS 48px target Tetris Right
+PASS 48px target Tetris CounterClockwise
+PASS 48px target Tetris Clockwise
+PASS 48px target Tetris HardDrop
+PASS No gameplay hit overlap 0/1
+PASS No gameplay hit overlap 0/2
+PASS No gameplay hit overlap 0/3
+PASS No gameplay hit overlap 0/4
+PASS No gameplay hit overlap 0/5
+PASS No gameplay hit overlap 0/6
+PASS No gameplay hit overlap 1/2
+PASS No gameplay hit overlap 1/3
+PASS No gameplay hit overlap 1/4
+PASS No gameplay hit overlap 1/5
+PASS No gameplay hit overlap 1/6
+PASS No gameplay hit overlap 2/3
+PASS No gameplay hit overlap 2/4
+PASS No gameplay hit overlap 2/5
+PASS No gameplay hit overlap 2/6
+PASS No gameplay hit overlap 3/4
+PASS No gameplay hit overlap 3/5
+PASS No gameplay hit overlap 3/6
+PASS No gameplay hit overlap 4/5
+PASS No gameplay hit overlap 4/6
+PASS No gameplay hit overlap 5/6
+PASS Shared navigation icon Home
+PASS Shared navigation icon Book
+PASS Shared navigation icon Settings
+PASS Preview creates no active save
+PASS Start runs only on explicit action
+PASS Actual UGUI raycast acquires Hold
+PASS Actual UGUI raycast acquires Left
+PASS Actual UGUI raycast acquires SoftDrop
+PASS Actual UGUI raycast acquires Right
+PASS Actual UGUI raycast acquires CounterClockwise
+PASS Actual UGUI raycast acquires Clockwise
+PASS Actual UGUI raycast acquires HardDrop
+PASS Real Hold command consumes permission
+PASS Used Hold cannot acquire another touch
+PASS Reference state valid:
+PASS Clear feedback starts on visible rows
+PASS Clear flash ends within120ms
+PASS Feedback advances no rule time
+PASS Pause cancels clear feedback
+PASS Pause freezes real model
+PASS Continue uses three-second countdown
+PASS Foreground return remains paused
+PASS Page commits valid independent save
+PASS Page saves full current dynamics
+PASS Help/settings preserve pause
+PASS Shared warning remains visible
+PASS Maximum score fits a single line
+PASS Maximum score fits a single line
+PASS Real core produces terminal board
+PASS Terminal snapshot shows ended phase
+PASS Leave deactivates page
+PASS Reentry cannot resume terminal game
+PASS Future save UI cannot start or overwrite file
+PASS Unsupported save has dedicated UI
+PASS Unsupported save does not invent zero best score
+PASS Load failure appears only once in persistent warning
+PASS Corrupt save stays intact before explicit reset
+PASS Corrupt save exposes explicit reset action
+PASS 10 x 20 square-cell board at 688
+PASS Expected board width at 688
+PASS Board has real UGUI geometry
+PASS Seven touch targets including Hold
+PASS 48px target Tetris Hold
+PASS 48px target Tetris Left
+PASS 48px target Tetris SoftDrop
+PASS 48px target Tetris Right
+PASS 48px target Tetris CounterClockwise
+PASS 48px target Tetris Clockwise
+PASS 48px target Tetris HardDrop
+PASS No gameplay hit overlap 0/1
+PASS No gameplay hit overlap 0/2
+PASS No gameplay hit overlap 0/3
+PASS No gameplay hit overlap 0/4
+PASS No gameplay hit overlap 0/5
+PASS No gameplay hit overlap 0/6
+PASS No gameplay hit overlap 1/2
+PASS No gameplay hit overlap 1/3
+PASS No gameplay hit overlap 1/4
+PASS No gameplay hit overlap 1/5
+PASS No gameplay hit overlap 1/6
+PASS No gameplay hit overlap 2/3
+PASS No gameplay hit overlap 2/4
+PASS No gameplay hit overlap 2/5
+PASS No gameplay hit overlap 2/6
+PASS No gameplay hit overlap 3/4
+PASS No gameplay hit overlap 3/5
+PASS No gameplay hit overlap 3/6
+PASS No gameplay hit overlap 4/5
+PASS No gameplay hit overlap 4/6
+PASS No gameplay hit overlap 5/6
+PASS Shared navigation icon Home
+PASS Shared navigation icon Book
+PASS Shared navigation icon Settings
+PASS Preview creates no active save
+PASS Start runs only on explicit action
+PASS Actual UGUI raycast acquires Hold
+PASS Actual UGUI raycast acquires Left
+PASS Actual UGUI raycast acquires SoftDrop
+PASS Actual UGUI raycast acquires Right
+PASS Actual UGUI raycast acquires CounterClockwise
+PASS Actual UGUI raycast acquires Clockwise
+PASS Actual UGUI raycast acquires HardDrop
+PASS Real Hold command consumes permission
+PASS Used Hold cannot acquire another touch
+PASS Reference state valid:
+PASS Clear feedback starts on visible rows
+PASS Clear flash ends within120ms
+PASS Feedback advances no rule time
+PASS Pause cancels clear feedback
+PASS Pause freezes real model
+PASS Continue uses three-second countdown
+PASS Foreground return remains paused
+PASS Page commits valid independent save
+PASS Page saves full current dynamics
+PASS Help/settings preserve pause
+PASS Shared warning remains visible
+PASS Maximum score fits a single line
+PASS Maximum score fits a single line
+PASS Real core produces terminal board
+PASS Terminal snapshot shows ended phase
+PASS Leave deactivates page
+PASS Reentry cannot resume terminal game
+PASS Future save UI cannot start or overwrite file
+PASS Unsupported save has dedicated UI
+PASS Unsupported save does not invent zero best score
+PASS Load failure appears only once in persistent warning
+PASS Corrupt save stays intact before explicit reset
+PASS Corrupt save exposes explicit reset action
+PASS Lobby contains 14 independent game cards
+PASS Tetris appended after current master games
+PASS Card number follows dynamic cardCount
+PASS Lobby preview creates no live session
+PASS Lobby content grows for new card
+PASS Lobby preserves unreadable record semantics
+PASS Host help body fits fixed dialog without overflow
+PASS Host help body fits fixed dialog without overflow
+TETRIS_UI_CHECKS_PASS: 149 assertions
