@@ -2,6 +2,13 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## Offline idiom dictionary
+
+- `hefengbao/jingmo-data`, commit `dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72`, files `api/chinese_idiom_v5_1.json` through `_5.json`: MIT, Copyright 2024 贺丰宝. The independent data repository's license applies; no GPL-licensed jingmo app code is imported.
+- `pwxcoo/chinese-xinhua`, commit `fe6d6c2e8baa82187f4c96bbe042e43f96c05666`, file `data/idiom.json`: MIT, Copyright 2018 PWXCOO. Its README describes the data as collected from the web; this notice does not assert independent verification of every upstream text's rights.
+- Exact source URLs, SHA256 values and original license URLs are pinned in `Data/Idioms/source-manifest.json`. The importer preserves both license texts in its generated `licenses/` directory and keeps field-level source references.
+- The player bundles 42,851 eligible four-character idioms in `Assets/Resources/Idioms/`, with a compressed catalog and 168 detail chunks. Both original MIT license texts are retained in `Assets/Resources/Idioms/licenses/`; resource hashes and the dictionary version are recorded in `Assets/Resources/Idioms/manifest.json`. Full cleaning audit artifacts remain local and are not bundled.
+
 ## Noto Sans CJK SC
 
 - Source: https://github.com/notofonts/noto-cjk/tree/main/Sans/OTF/SimplifiedChinese
@@ -72,3 +79,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Authorized watermelon game assets (06 · 合成大西瓜)
+
+- Source: [idootop/watermelon](https://github.com/idootop/watermelon), commit `8af7d8892c0218206a579d4b5717facab2d26d6e`, imported on 2026-10-27.
+- The project owner explicitly confirmed authorization to use the materials for this game's development and distribution. This confirmation is the authorization basis for the bundled assets; it does not grant independent reuse rights to other parties.
+- Included unchanged: `Assets/Resources/Watermelon/Fruit/1.png` through `11.png`, `Emoji/1.png` through `11.png`, and `Campus/1.png` through `10.png`. Fruit and emoji keep their source numbering under `assets/images/friuts/` and `qq/`; campus slots 1–10 now contain source `assets/images/985/2.png` through `11.png`, respectively. The Ocean University of China image is no longer bundled. The original misspelling `friuts` is preserved in the provenance record.
+- Included audio: `Audio/Drop.mp3`, `Merge.mp3`, `Win.mp3`, and `Lose.mp3`, copied without re-encoding from source `assets/audio/fall.mp3`, `boom2.mp3`, `cheer.mp3`, and `boom1.mp3`, respectively. File hashes, dimensions and theme order are recorded in [the asset manifest](docs/watermelon-assets.md).
+- The source repository's code is licensed under AGPL-3.0. Its README attributes some images and audio to 微伞 (Wesane) and other Internet sources. No Dart/Flutter implementation code is copied or bundled; the C# rules, Unity Physics2D integration, interface and persistence implementation are original.
+- These images and audio retain their original rights. The project's MIT code license does not relicense them. Only 32 images and 4 audio files from this source are bundled; the source app, QR code, unrelated themes and other assets are excluded.
+
+## Sun Yat-sen University emblem
+
+- Source: [Sun Yat-sen University's official introduction page, university emblem section](https://www.sysu.edu.cn/xxg/zdjj1.htm), [original PNG](https://www.sysu.edu.cn/__local/C/8E/79/6236A91AEAFBB9F7F2C23A9F836_97F1F3B5_178FF.png?e=.png), retrieved on 2026-10-27 at the project owner's request.
+- Bundled unchanged as `Assets/Resources/Watermelon/Campus/11.png`: 229×229 pixels, 96,511 bytes, SHA-256 `61b24c100d11ada4738623ceb9855a027dee199223b959c506f2f5d2be003f4f`. No cropping, resizing, recoloring or re-encoding was performed; Unity uses the existing circular mask.
+- The emblem retains its original rights and is not relicensed under the project's MIT code license. The earlier authorization for assets from `idootop/watermelon` does not cover this separately sourced image; this record documents provenance, not an independent redistribution license.
+
+## Sudoku Exchange puzzle data
+
+- Source: https://github.com/grantm/sudoku-exchange-puzzle-bank at commit `d8c8ebaee0c08c412cfba96af1923dfa61c83317`.
+- License: Unlicense, reproduced in `ThirdParty/Sudoku/LICENSE.txt`.
+- Bundled file: `Assets/Resources/Sudoku/puzzles.txt`, a selection of 2,000 standard 9×9 puzzles with locally computed answers and difficulty labels. Import provenance and verification are documented in `docs/sudoku-content.md`.
+- Only puzzle data is reused. The Sudoku rules, solver, hint explanations, interface and persistence code are original. No Sudoku Exchange web application code, QQWing or HoDoKu code is bundled.

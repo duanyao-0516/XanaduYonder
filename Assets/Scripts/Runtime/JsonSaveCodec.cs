@@ -19,6 +19,8 @@ namespace XanaduYonder.Runtime
                 throw new ArgumentException(reason ?? "Invalid saved game or best score.", nameof(data));
             if (!HasPlayableTileCount(data.Game.cells))
                 throw new ArgumentException("A saved game must contain at least two tiles.", nameof(data));
+            if (data.BestTile != 0 && !IsSupportedTile(data.BestTile))
+                throw new ArgumentException("Best tile is unsupported.", nameof(data));
             var game = new JObject
             {
                 ["schemaVersion"] = data.Game.schemaVersion,
@@ -33,6 +35,7 @@ namespace XanaduYonder.Runtime
                 ["saveKind"] = "xanaduyonder",
                 ["game"] = game,
                 ["bestScore"] = data.BestScore.ToString(CultureInfo.InvariantCulture),
+                ["bestTile"] = Math.Max(data.BestTile, LargestTile(data.Game.cells)),
                 ["soundState"] = data.SoundEnabled ? 1 : 2,
                 ["hapticsState"] = data.HapticsEnabled ? 1 : 2
             }.ToString(Formatting.None);
@@ -75,9 +78,16 @@ namespace XanaduYonder.Runtime
                 if (!HasPlayableTileCount(snapshot.cells)) throw new FormatException("A saved game must contain at least two tiles.");
                 var best = Score(root["bestScore"]);
                 if (best < snapshot.score) throw new FormatException("Best score is below the current score.");
+                var currentTile = LargestTile(snapshot.cells);
+                // Legacy schema-1 saves have no history beyond the board they contain.
+                // An explicit null is a corrupt supplied field, not a legacy omission.
+                var bestTileToken = root["bestTile"];
+                var bestTile = bestTileToken == null ? currentTile : Integer(bestTileToken);
+                if (!IsSupportedTile(bestTile) || bestTile < currentTile)
+                    throw new FormatException("Best tile is unsupported or below the current board maximum.");
                 var sound = Flag(root["soundState"]) == 1;
                 var haptics = Flag(root["hapticsState"]) == 1;
-                data = new SaveData { Game = snapshot, BestScore = best, SoundEnabled = sound, HapticsEnabled = haptics };
+                data = new SaveData { Game = snapshot, BestScore = best, BestTile = bestTile, SoundEnabled = sound, HapticsEnabled = haptics };
                 return true;
             }
             catch (Exception exception) when (exception is JsonException || exception is FormatException ||
@@ -99,6 +109,18 @@ namespace XanaduYonder.Runtime
             var occupied = 0;
             foreach (var cell in cells) if (cell != 0) occupied++;
             return occupied >= 2;
+        }
+
+        private static int LargestTile(int[] cells)
+        {
+            var largest = 0;
+            foreach (var cell in cells) largest = Math.Max(largest, cell);
+            return largest;
+        }
+
+        private static bool IsSupportedTile(int tile)
+        {
+            return tile >= 2 && tile <= (1 << 30) && (tile & (tile - 1)) == 0;
         }
 
         private static string Text(JToken token)

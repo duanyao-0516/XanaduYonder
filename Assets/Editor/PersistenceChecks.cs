@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Newtonsoft.Json.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
@@ -23,6 +24,10 @@ namespace XanaduYonder.EditorTools
             var failed = 0;
             Check("JSON round trip preserves all fields", RoundTrip, ref passed, ref failed);
             Check("Decode accepts explicit valid schema", DecodeKnownPayload, ref passed, ref failed);
+            Check("Legacy saves seed best tile from their current board", LegacyBestTile, ref passed, ref failed);
+            Check("Best tile survives round trip, restart and real file writes", BestTileHistory, ref passed, ref failed);
+            Check("Best tile rejects explicit malformed or impossible fields", RejectInvalidBestTilePayloads, ref passed, ref failed);
+            Check("Encode initializes valid best tiles and rejects impossible values", BestTileEncoding, ref passed, ref failed);
             Check("Codec rejects malformed and incompatible payloads", RejectInvalidPayloads, ref passed, ref failed);
             Check("Encode rejects invalid state", RejectInvalidState, ref passed, ref failed);
             Check("Missing save starts without warning", MissingSave, ref passed, ref failed);
@@ -77,6 +82,7 @@ namespace XanaduYonder.EditorTools
             original.Game.score = 9007199254740993L;
             original.Game.winAcknowledged = true;
             original.BestScore = long.MaxValue;
+            original.BestTile = 4096;
             original.SoundEnabled = false;
             original.HapticsEnabled = true;
             var json = JsonSaveCodec.Encode(original);
@@ -88,6 +94,83 @@ namespace XanaduYonder.EditorTools
         {
             Assert(JsonSaveCodec.TryDecode(ValidJson, out var decoded, out var reason), reason);
             EqualState(Example(), decoded);
+        }
+
+        private static void LegacyBestTile()
+        {
+            Assert(JsonSaveCodec.TryDecode(ValidJson, out var decoded, out var reason), reason);
+            Assert(decoded.BestTile == 4, "Decoded legacy state must expose an initialized record.");
+            Assert(EncodedBestTile(decoded) == 4, "Legacy best tile must start from the saved board maximum.");
+            Assert(JsonSaveCodec.TryDecode(ValidJson.Replace("[2,4,", "[1024,4,"), out decoded, out reason), reason);
+            Assert(EncodedBestTile(decoded) == 1024, "Legacy migration must inspect every saved tile.");
+        }
+
+        private static void BestTileHistory()
+        {
+            Assert(JsonSaveCodec.TryDecode(WithBestTile("4096"), out var history, out var reason), reason);
+            Assert(EncodedBestTile(history) == 4096, "A historical tile larger than the board must survive encoding.");
+            history.Game = new GameSnapshot { cells = new[] { 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+            WithDirectory(directory =>
+            {
+                var store = new LocalSaveStore(directory);
+                Assert(store.TrySave(history, out var error), error);
+                var loaded = new LocalSaveStore(directory).Load(out var warning);
+                Assert(string.IsNullOrEmpty(warning), warning);
+                Assert(EncodedBestTile(loaded) == 4096, "Restarted board must preserve the historical tile on disk.");
+                loaded.Game.cells[0] = 8192;
+                Assert(store.TrySave(loaded, out error), error);
+                loaded = new LocalSaveStore(directory).Load(out warning);
+                Assert(EncodedBestTile(loaded) == 8192, "Writing a newly reached tile must raise the record.");
+                loaded.Game.cells[0] = 2;
+                Assert(store.TrySave(loaded, out error), error);
+                loaded = new LocalSaveStore(directory).Load(out warning);
+                Assert(EncodedBestTile(loaded) == 8192, "Later lower boards must retain the reached record.");
+                File.WriteAllText(store.SavePath, "broken");
+                loaded = new LocalSaveStore(directory).Load(out warning);
+                Assert(!string.IsNullOrEmpty(warning), "Record recovery must report backup use.");
+                Assert(EncodedBestTile(loaded) == 8192, "Backup recovery must retain its historical record.");
+            });
+            Assert(JsonSaveCodec.TryDecode(WithBestTile("1073741824"), out history, out reason), reason);
+            Assert(EncodedBestTile(history) == 1073741824, "Largest supported tile must round trip.");
+        }
+
+        private static void RejectInvalidBestTilePayloads()
+        {
+            foreach (var field in new[] { "null", "\"4\"", "true", "4.0", "{}", "[]", "0", "1", "-2", "3", "2", "1073741825", "2147483648", "4294967296" })
+            {
+                Assert(!JsonSaveCodec.TryDecode(WithBestTile(field), out var data, out var reason), "Invalid bestTile accepted: " + field);
+                Assert(data == null && !string.IsNullOrWhiteSpace(reason), "Invalid bestTile must expose no partial data: " + field);
+            }
+            Assert(!JsonSaveCodec.TryDecode(WithBestTile("4,\"bestTile\":8"), out var duplicate, out var duplicateReason),
+                "Duplicate bestTile fields must be rejected.");
+        }
+
+        private static string WithBestTile(string field)
+        {
+            return ValidJson.Replace("\"bestScore\":", "\"bestTile\":" + field + ",\"bestScore\":");
+        }
+
+        private static void BestTileEncoding()
+        {
+            var uninitialized = Example();
+            uninitialized.BestTile = 0;
+            Assert(EncodedBestTile(uninitialized) == 4, "Existing callers may omit the new in-memory record.");
+            uninitialized.BestTile = 2;
+            Assert(EncodedBestTile(uninitialized) == 4, "A valid in-memory record must advance with the current board.");
+            foreach (var tile in new[] { -2, 1, 3, 1073741825, int.MaxValue })
+            {
+                var invalid = Example();
+                invalid.BestTile = tile;
+                ExpectArgumentException(() => JsonSaveCodec.Encode(invalid));
+            }
+        }
+
+        private static int EncodedBestTile(SaveData data)
+        {
+            var root = JObject.Parse(JsonSaveCodec.Encode(data));
+            var token = root["bestTile"];
+            Assert(token != null && token.Type == JTokenType.Integer, "Encoded bestTile must be an explicit integer.");
+            return (int)token;
         }
 
         private static void RejectInvalidPayloads()
@@ -198,6 +281,7 @@ namespace XanaduYonder.EditorTools
                 second.Game.cells[0] = 8;
                 second.Game.score = 12;
                 second.BestScore = 32;
+                second.BestTile = 8;
                 second.SoundEnabled = false;
                 Assert(store.TrySave(second, out var secondError), secondError);
                 EqualState(second, new LocalSaveStore(directory).Load(out var secondWarning));
@@ -239,6 +323,7 @@ namespace XanaduYonder.EditorTools
             {
                 Game = new GameSnapshot { cells = new[] { 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, score = 4 },
                 BestScore = 16,
+                BestTile = 4,
                 SoundEnabled = true,
                 HapticsEnabled = false
             };
@@ -255,6 +340,7 @@ namespace XanaduYonder.EditorTools
             Assert(expected.Game.score == actual.Game.score, "Score changed.");
             Assert(expected.Game.winAcknowledged == actual.Game.winAcknowledged, "Win acknowledgement changed.");
             Assert(expected.BestScore == actual.BestScore, "Best score changed.");
+            Assert(expected.BestTile == actual.BestTile, "Best tile changed.");
             Assert(expected.SoundEnabled == actual.SoundEnabled, "Sound setting changed.");
             Assert(expected.HapticsEnabled == actual.HapticsEnabled, "Haptics setting changed.");
         }

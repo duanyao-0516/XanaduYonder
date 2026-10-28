@@ -11,26 +11,58 @@ namespace XanaduYonder.Runtime.Sheep
     public static class SheepSaveCodec
     {
         public const int MaximumLength = 128 * 1024;
-        private static readonly string[] RootFields = { "schemaVersion", "gameId", "game", "completedRuns", "winRecorded" };
-        private static readonly string[] GameFields =
-        {
-            "level", "layoutId", "kinds", "locations", "tray", "reserve", "randomState",
-            "removeUsed", "undoUsed", "shuffleUsed", "reviveUsed", "lastPickedId", "lastSource", "lastReserveIndex"
+        private static readonly string[] RootFields = {
+            "schemaVersion", "gameId", "challenge", "endless", "tutorial", "activeMode",
+            "preferences", "completedRuns", "endlessBest", "winRecorded"
+        };
+        private static readonly string[] PreferenceFields = {
+            "defaultDifficulty", "skipDifficultyPrompt", "removeLimit", "undoLimit", "shuffleLimit"
+        };
+        private static readonly string[] GameFields = {
+            "mode", "difficulty", "wave", "score", "level", "layoutId", "kinds", "locations", "tray", "reserve", "randomState",
+            "removeLimit", "undoLimit", "shuffleLimit", "removeRemaining", "undoRemaining", "shuffleRemaining",
+            "reviveUsed", "lastPickedId", "lastSource", "lastReserveIndex"
         };
 
         public static string Encode(SheepSaveData data)
         {
-            if (data == null || data.Game == null)
-                throw new ArgumentException("Missing sheep save state.", nameof(data));
-            if (!data.Game.TryValidate(out var reason)) throw new ArgumentException(reason, nameof(data));
-            var snapshot = data.Game.Copy();
-            var completedRuns = data.CompletedRuns;
-            var winRecorded = data.WinRecorded;
-            if (!Validate(snapshot, completedRuns, winRecorded, out reason)) throw new ArgumentException(reason, nameof(data));
+            if (!Validate(data, out var reason)) throw new ArgumentException(reason, nameof(data));
+            var preferences = data.Preferences.Copy();
+            var root = new JObject {
+                ["schemaVersion"] = 2,
+                ["gameId"] = "sheep",
+                ["challenge"] = EncodeGame(data.Challenge),
+                ["endless"] = EncodeGame(data.Endless),
+                ["tutorial"] = EncodeGame(data.Tutorial),
+                ["activeMode"] = (int)data.ActiveMode,
+                ["preferences"] = new JObject {
+                    ["defaultDifficulty"] = (int)preferences.DefaultDifficulty,
+                    ["skipDifficultyPrompt"] = preferences.SkipDifficultyPrompt,
+                    ["removeLimit"] = preferences.RemoveLimit,
+                    ["undoLimit"] = preferences.UndoLimit,
+                    ["shuffleLimit"] = preferences.ShuffleLimit
+                },
+                ["completedRuns"] = Decimal(data.CompletedRuns),
+                ["endlessBest"] = Decimal(data.EndlessBest),
+                ["winRecorded"] = data.WinRecorded
+            };
+            var json = root.ToString(Formatting.None);
+            if (Encoding.UTF8.GetByteCount(json) > MaximumLength)
+                throw new ArgumentException("Sheep save state is too large.", nameof(data));
+            return json;
+        }
+
+        private static JToken EncodeGame(SheepSnapshot source)
+        {
+            if (source == null) return JValue.CreateNull();
+            var snapshot = source.Copy();
             var locations = new JArray();
             foreach (var location in snapshot.Locations) locations.Add((int)location);
-            var game = new JObject
-            {
+            return new JObject {
+                ["mode"] = (int)snapshot.Mode,
+                ["difficulty"] = (int)snapshot.Difficulty,
+                ["wave"] = snapshot.Wave,
+                ["score"] = Decimal(snapshot.Score),
                 ["level"] = snapshot.Level,
                 ["layoutId"] = snapshot.LayoutId,
                 ["kinds"] = new JArray(snapshot.Kinds),
@@ -38,22 +70,17 @@ namespace XanaduYonder.Runtime.Sheep
                 ["tray"] = new JArray(snapshot.Tray),
                 ["reserve"] = new JArray(snapshot.Reserve),
                 ["randomState"] = snapshot.RandomState,
-                ["removeUsed"] = snapshot.RemoveUsed,
-                ["undoUsed"] = snapshot.UndoUsed,
-                ["shuffleUsed"] = snapshot.ShuffleUsed,
+                ["removeLimit"] = snapshot.RemoveLimit,
+                ["undoLimit"] = snapshot.UndoLimit,
+                ["shuffleLimit"] = snapshot.ShuffleLimit,
+                ["removeRemaining"] = snapshot.RemoveRemaining,
+                ["undoRemaining"] = snapshot.UndoRemaining,
+                ["shuffleRemaining"] = snapshot.ShuffleRemaining,
                 ["reviveUsed"] = snapshot.ReviveUsed,
                 ["lastPickedId"] = snapshot.LastPickedId,
                 ["lastSource"] = snapshot.LastSource,
                 ["lastReserveIndex"] = snapshot.LastReserveIndex
             };
-            return new JObject
-            {
-                ["schemaVersion"] = 1,
-                ["gameId"] = "sheep",
-                ["game"] = game,
-                ["completedRuns"] = completedRuns.ToString(CultureInfo.InvariantCulture),
-                ["winRecorded"] = winRecorded
-            }.ToString(Formatting.None);
         }
 
         public static bool TryDecode(string json, out SheepSaveData data, out string reason)
@@ -75,41 +102,29 @@ namespace XanaduYonder.Runtime.Sheep
                     if (reader.Read()) throw new FormatException("Trailing data after sheep save object.");
                 }
                 RequireFields(root, RootFields);
-                if (Integer(root["schemaVersion"]) != 1 || Text(root["gameId"]) != "sheep")
+                if (Integer(root["schemaVersion"]) != 2 || Text(root["gameId"]) != "sheep")
                     throw new FormatException("Unsupported sheep save schema.");
-                var game = root["game"] as JObject;
-                if (game == null) throw new FormatException("Missing sheep game state.");
-                RequireFields(game, GameFields);
-                var locationValues = IntegerArray(game["locations"], 144);
-                var locations = new SheepLocation[locationValues.Length];
-                for (var index = 0; index < locations.Length; index++)
-                {
-                    var value = locationValues[index];
-                    if (value < (int)SheepLocation.Board || value > (int)SheepLocation.Removed)
-                        throw new FormatException("Unknown sheep card location.");
-                    locations[index] = (SheepLocation)value;
-                }
-                var snapshot = new SheepSnapshot
-                {
-                    Level = Integer(game["level"]),
-                    LayoutId = Integer(game["layoutId"]),
-                    Kinds = IntegerArray(game["kinds"], 144),
-                    Locations = locations,
-                    Tray = IntegerArray(game["tray"], 7),
-                    Reserve = IntegerArray(game["reserve"], 6),
-                    RandomState = UnsignedInteger(game["randomState"]),
-                    RemoveUsed = Boolean(game["removeUsed"]),
-                    UndoUsed = Boolean(game["undoUsed"]),
-                    ShuffleUsed = Boolean(game["shuffleUsed"]),
-                    ReviveUsed = Boolean(game["reviveUsed"]),
-                    LastPickedId = Integer(game["lastPickedId"]),
-                    LastSource = Integer(game["lastSource"]),
-                    LastReserveIndex = Integer(game["lastReserveIndex"])
+                var preferences = root["preferences"] as JObject;
+                if (preferences == null) throw new FormatException("Missing sheep preferences.");
+                RequireFields(preferences, PreferenceFields);
+                var candidate = new SheepSaveData {
+                    Challenge = DecodeGame(root["challenge"]),
+                    Endless = DecodeGame(root["endless"]),
+                    Tutorial = DecodeGame(root["tutorial"]),
+                    ActiveMode = (SheepMode)Integer(root["activeMode"]),
+                    Preferences = new SheepPreferences {
+                        DefaultDifficulty = (SheepDifficulty)Integer(preferences["defaultDifficulty"]),
+                        SkipDifficultyPrompt = Boolean(preferences["skipDifficultyPrompt"]),
+                        RemoveLimit = Integer(preferences["removeLimit"]),
+                        UndoLimit = Integer(preferences["undoLimit"]),
+                        ShuffleLimit = Integer(preferences["shuffleLimit"])
+                    },
+                    CompletedRuns = NonnegativeLong(root["completedRuns"]),
+                    EndlessBest = NonnegativeLong(root["endlessBest"]),
+                    WinRecorded = Boolean(root["winRecorded"])
                 };
-                var completedRuns = CompletionCount(root["completedRuns"]);
-                var winRecorded = Boolean(root["winRecorded"]);
-                if (!Validate(snapshot, completedRuns, winRecorded, out reason)) return false;
-                data = new SheepSaveData { Game = snapshot, CompletedRuns = completedRuns, WinRecorded = winRecorded };
+                if (!Validate(candidate, out reason)) return false;
+                data = candidate;
                 return true;
             }
             catch (Exception exception) when (exception is JsonException || exception is FormatException ||
@@ -120,25 +135,84 @@ namespace XanaduYonder.Runtime.Sheep
             }
         }
 
-        private static bool Validate(SheepSnapshot snapshot, long completedRuns, bool winRecorded, out string reason)
+        private static SheepSnapshot DecodeGame(JToken token)
         {
-            if (!snapshot.TryValidate(out reason)) return false;
-            if (completedRuns < 0)
+            if (token != null && token.Type == JTokenType.Null) return null;
+            var game = token as JObject;
+            if (game == null) throw new FormatException("Expected a sheep game object or null slot.");
+            RequireFields(game, GameFields);
+            var locationValues = IntegerArray(game["locations"], 144);
+            var locations = new SheepLocation[locationValues.Length];
+            for (var index = 0; index < locations.Length; index++)
             {
-                reason = "Completion count must not be negative.";
-                return false;
+                var value = locationValues[index];
+                if (value < (int)SheepLocation.Board || value > (int)SheepLocation.Removed)
+                    throw new FormatException("Unknown sheep card location.");
+                locations[index] = (SheepLocation)value;
             }
-            var challengeWon = snapshot.Level == 2;
-            foreach (var location in snapshot.Locations)
-                if (location != SheepLocation.Removed) challengeWon = false;
-            // The page records a challenge win before saving, so a restore cannot count it twice.
-            if (winRecorded != challengeWon || (winRecorded && completedRuns == 0))
-            {
-                reason = "Completion accounting does not match the saved game.";
-                return false;
-            }
+            return new SheepSnapshot {
+                Mode = (SheepMode)Integer(game["mode"]),
+                Difficulty = (SheepDifficulty)Integer(game["difficulty"]),
+                Wave = Integer(game["wave"]),
+                Score = NonnegativeLong(game["score"]),
+                Level = Integer(game["level"]),
+                LayoutId = Integer(game["layoutId"]),
+                Kinds = IntegerArray(game["kinds"], 144),
+                Locations = locations,
+                Tray = IntegerArray(game["tray"], 7),
+                Reserve = IntegerArray(game["reserve"], 6),
+                RandomState = UnsignedInteger(game["randomState"]),
+                RemoveLimit = Integer(game["removeLimit"]),
+                UndoLimit = Integer(game["undoLimit"]),
+                ShuffleLimit = Integer(game["shuffleLimit"]),
+                RemoveRemaining = Integer(game["removeRemaining"]),
+                UndoRemaining = Integer(game["undoRemaining"]),
+                ShuffleRemaining = Integer(game["shuffleRemaining"]),
+                ReviveUsed = Boolean(game["reviveUsed"]),
+                LastPickedId = Integer(game["lastPickedId"]),
+                LastSource = Integer(game["lastSource"]),
+                LastReserveIndex = Integer(game["lastReserveIndex"])
+            };
+        }
+
+        private static bool Validate(SheepSaveData data, out string reason)
+        {
+            reason = null;
+            if (data == null) return Invalid("Missing sheep save state.", out reason);
+            if (data.ActiveMode < SheepMode.Challenge || data.ActiveMode > SheepMode.Tutorial)
+                return Invalid("Unknown active sheep mode.", out reason);
+            if (data.Preferences == null) return Invalid("Missing sheep preferences.", out reason);
+            if (!data.Preferences.TryValidate(out reason) ||
+                !ValidateSlot(data.Challenge, SheepMode.Challenge, out reason) ||
+                !ValidateSlot(data.Endless, SheepMode.Endless, out reason) ||
+                !ValidateSlot(data.Tutorial, SheepMode.Tutorial, out reason)) return false;
+            if (data.CompletedRuns < 0 || data.EndlessBest < 0)
+                return Invalid("Sheep records must not be negative.", out reason);
+            var challengeWon = data.Challenge != null;
+            if (data.Challenge != null)
+                foreach (var location in data.Challenge.Locations)
+                    if (location != SheepLocation.Removed) challengeWon = false;
+            // Challenge accounting belongs to its slot even while another mode is active.
+            if (data.WinRecorded != challengeWon || (data.WinRecorded && data.CompletedRuns == 0))
+                return Invalid("Completion accounting does not match the challenge slot.", out reason);
+            var endless = data.Endless;
+            // Eligibility is frozen in the run; changing future preferences cannot change its rank.
+            if (endless != null && endless.RemoveLimit == 2 && endless.UndoLimit == 3 && endless.ShuffleLimit == 1 &&
+                data.EndlessBest < endless.Score)
+                return Invalid("Endless best is below the current standard run score.", out reason);
             return true;
         }
+
+        private static bool ValidateSlot(SheepSnapshot snapshot, SheepMode mode, out string reason)
+        {
+            reason = null;
+            if (snapshot == null) return true;
+            if (snapshot.Mode != mode) return Invalid("Sheep slot does not match its run mode.", out reason);
+            return snapshot.TryValidate(out reason);
+        }
+
+        private static bool Invalid(string message, out string reason) { reason = message; return false; }
+        private static string Decimal(long value) { return value.ToString(CultureInfo.InvariantCulture); }
 
         private static void RequireFields(JObject value, string[] fields)
         {
@@ -180,10 +254,10 @@ namespace XanaduYonder.Runtime.Sheep
             return (string)token;
         }
 
-        private static long CompletionCount(JToken token)
+        private static long NonnegativeLong(JToken token)
         {
             if (!long.TryParse(Text(token), NumberStyles.None, CultureInfo.InvariantCulture, out var value))
-                throw new FormatException("Expected a nonnegative 64-bit completion count string.");
+                throw new FormatException("Expected a nonnegative 64-bit decimal string.");
             return value;
         }
     }

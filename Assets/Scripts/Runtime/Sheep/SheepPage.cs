@@ -6,116 +6,73 @@ using XanaduYonder.Core.Sheep;
 
 namespace XanaduYonder.Runtime.Sheep
 {
-    internal sealed class SheepPage : MonoBehaviour
+    internal sealed partial class SheepPage : MonoBehaviour
     {
-        private SheepGame game;
+        private SheepSession session;
+        private SheepGame game => session == null ? null : session.Game;
+        private SheepSaveData data => session.Data;
         private SheepSaveStore store;
-        private SheepSaveData data;
         private SheepBoardView board;
         private GameFeedback feedback;
         private Func<bool> shellAcceptsInput, soundEnabled, hapticsEnabled;
         private Action<string> setStatus;
         private Action<string, string, string, Action, string, Action> showDialog;
-        private Action returnLobby;
+        private Func<string, float, Action, RectTransform> openModal;
+        private Action closeModal, returnLobby;
+        private Action<Action> commonSettings;
         private Text levelText, progress, hint, resultTitle, resultMessage;
         private Button removeButton, undoButton, shuffleButton, resultPrimary;
         private Text removeLabel, undoLabel, shuffleLabel, resultPrimaryLabel;
-        private GameObject resultPanel;
+        private GameObject resultPanel, playArea;
         private bool visible, saveFailed, animating;
         private string warning;
         public event Action Changed;
-        public long CompletedRuns => data == null ? 0 : data.CompletedRuns;
+        public long CompletedRuns => session == null ? 0 : data.CompletedRuns;
+        public long EndlessBest => session == null ? 0 : data.EndlessBest;
         public string SaveError => saveFailed ? warning : null;
 
-        public void Initialize(RectTransform root, Action lobby, Action settings, Func<bool> acceptsInput,
+        public void Initialize(RectTransform root, Action lobby, Action<Action> settings, Func<bool> acceptsInput,
             Func<bool> sound, Func<bool> haptics, GameFeedback commonFeedback, Action<string> status,
-            Action<string, string, string, Action, string, Action> dialog)
+            Action<string, string, string, Action, string, Action> dialog,
+            Func<string, float, Action, RectTransform> modal, Action dismiss)
         {
-            returnLobby = lobby; shellAcceptsInput = acceptsInput;
+            returnLobby = lobby; commonSettings = settings; shellAcceptsInput = acceptsInput;
             soundEnabled = sound; hapticsEnabled = haptics; feedback = commonFeedback;
-            setStatus = status; showDialog = dialog;
+            setStatus = status; showDialog = dialog; openModal = modal; closeModal = dismiss;
             store = new SheepSaveStore(Application.persistentDataPath);
-            data = store.Load(out warning);
-            if (data == null) data = new SheepSaveData { Game = NewGame(1).GetSnapshot() };
-            game = new SheepGame(data.Game);
-
-            var nav = UiFactory.Band(root, "Sheep navigation", 0, 92, 0);
-            UiFactory.Button(nav, "‹  大厅", 56, 34, 150, 58, lobby);
-            UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(nav, "设置", 552, 34, 112, 58, settings);
-            var heading = UiFactory.Band(root, "Sheep heading", 102, 92, .04f);
-            UiFactory.Label(heading, "旸了个旸", 56, 0, 440, 84, 58, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(heading, "03 / 层层三消", 464, 24, 200, 42, 20, UiFactory.Muted, TextAnchor.MiddleRight);
-            var stats = UiFactory.Band(root, "Sheep progress", 198, 38, .12f);
-            levelText = UiFactory.Label(stats, "", 56, 0, 300, 38, 25, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            progress = UiFactory.Label(stats, "", 340, 0, 324, 38, 21, UiFactory.Muted, TextAnchor.MiddleRight);
-            var stageBand = UiFactory.Band(root, "Sheep board", 248, 630, .30f);
-            var stage = UiFactory.Panel(stageBand, "Layered tile board", 32, 0, 656, 630, UiFactory.Hex("E9EEDB")).rectTransform;
-            var reserveBand = UiFactory.Band(root, "Sheep reserve", 888, 104, .62f);
-            var reserve = UiFactory.Rect(reserveBand, "Move-out reserve", 56, 0, 608, 104);
-            var trayBand = UiFactory.Band(root, "Sheep tray", 1008, 136, .78f);
-            var tray = UiFactory.Panel(trayBand, "Seven-slot tray", 48, 0, 624, 136, UiFactory.Hex("E1E8CE")).rectTransform;
-            board = new SheepBoardView(root, stage, tray, reserve, Pick);
-
-            var tools = UiFactory.Band(root, "Sheep tools", 1156, 62, .92f);
-            removeButton = UiFactory.Button(tools, "移出", 56, 0, 192, 62, () => UseTool(SheepTool.RemoveThree));
-            undoButton = UiFactory.Button(tools, "撤回", 264, 0, 192, 62, () => UseTool(SheepTool.Undo));
-            shuffleButton = UiFactory.Button(tools, "洗牌", 472, 0, 192, 62, () => UseTool(SheepTool.Shuffle));
-            removeLabel = removeButton.GetComponentInChildren<Text>();
-            undoLabel = undoButton.GetComponentInChildren<Text>();
-            shuffleLabel = shuffleButton.GetComponentInChildren<Text>();
-            var actions = UiFactory.Band(root, "Sheep actions", 1232, 40, 1);
-            UiFactory.Button(actions, "重开本关", 56, 0, 190, 40, ConfirmRestart);
-            UiFactory.Button(actions, "玩法", 534, 0, 130, 40, ShowHelp);
-            hint = UiFactory.Label(actions, "只取未被盖住的牌", 252, 0, 278, 40, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-
-            // Result controls occupy the board only. Available rescue tools and reserve stay reachable below.
-            var resultBand = UiFactory.Band(root, "Sheep result", 248, 630, .30f);
-            resultPanel = resultBand.gameObject;
-            var panel = UiFactory.Panel(resultBand, "Round result", 88, 120, 544, 390, UiFactory.Paper);
-            panel.raycastTarget = true;
-            resultTitle = UiFactory.Label(panel.transform, "", 24, 24, 496, 64, 36, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            resultMessage = UiFactory.Label(panel.transform, "", 32, 100, 480, 94, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
-            resultPrimary = UiFactory.Button(panel.transform, "", 32, 210, 480, 68, ResultAction, true);
-            resultPrimaryLabel = resultPrimary.GetComponentInChildren<Text>();
-            UiFactory.Button(panel.transform, "重开本关", 32, 300, 232, 60, RestartLevel);
-            UiFactory.Button(panel.transform, "返回大厅", 280, 300, 232, 60, lobby);
+            session = new SheepSession(store.Load(out warning) ?? new SheepSaveData());
+            BuildLayout(root);
             Refresh();
             Debug.Log("XanaduYonder sheep ready; save=" + store.SavePath);
         }
 
-        private static SheepGame NewGame(int level, int previousLayoutId = -1)
+        private static uint NewSeed()
         {
             var seed = unchecked((uint)DateTime.UtcNow.Ticks ^ (uint)Environment.TickCount);
-            return new SheepGame(SheepLevelGenerator.Generate(level, seed == 0 ? 1u : seed, previousLayoutId).Snapshot);
+            return seed == 0 ? 1u : seed;
         }
 
         public void Enter()
         {
             visible = true; gameObject.SetActive(true);
-            Refresh(); Save();
-            setStatus(warning ?? "三张相同图案会自动消除，留意卡槽余量。");
-            CheckEndState();
+            Refresh(); ShowModes();
+            setStatus(warning ?? "选择第二关挑战，或按消除数量计分的无尽模式。");
         }
 
-        public void Leave()
-        {
-            Suspend(); Save(); visible = false; gameObject.SetActive(false);
-        }
+        public void Leave() { Suspend(); Save(); visible = false; gameObject.SetActive(false); }
 
         public void Suspend()
         {
             StopAllCoroutines(); animating = false;
             if (game != null && board != null) board.FinishAnimations(game);
-            if (game != null && resultPanel != null) Refresh();
+            if (resultPanel != null) Refresh();
         }
 
         private bool AcceptsInput => visible && shellAcceptsInput();
 
         private void Pick(int id)
         {
-            if (!AcceptsInput || !game.CanPick(id)) return;
-            // Commit immediately. A fast next tap finishes the visual transition instead of being discarded.
+            if (!AcceptsInput || game == null || !game.CanPick(id)) return;
             Suspend();
             var before = game.GetSnapshot();
             var move = game.Pick(id);
@@ -129,129 +86,150 @@ namespace XanaduYonder.Runtime.Sheep
         private IEnumerator AnimatePick(SheepSnapshot before, SheepMove move)
         {
             yield return board.AnimatePick(game, before, move);
-            animating = false;
-            Refresh();
-            CheckEndState();
+            animating = false; Refresh(); CheckEndState();
         }
 
         private void UseTool(SheepTool tool)
         {
-            if (!AcceptsInput || !game.CanUseTool(tool)) return;
+            if (!AcceptsInput || game == null || !game.CanUseTool(tool)) return;
             Suspend();
+            var moved = Math.Min(3, game.GetSnapshot().Tray.Length);
             if (!game.UseTool(tool)) return;
-            Save(); Refresh();
-            feedback.Play(false, soundEnabled(), false);
+            Save(); Refresh(); feedback.Play(false, soundEnabled(), false);
             setStatus(warning ?? (tool == SheepTool.RemoveThree || tool == SheepTool.Revive
-                ? "前三张已移出，点击暂存牌可放回卡槽。"
+                ? "已移出 " + moved + " 张，点击暂存牌可放回卡槽。"
                 : tool == SheepTool.Undo ? "上一张牌已退回原位。" : "场上图案已重新排列。"));
             CheckEndState();
         }
 
         private void Refresh()
         {
-            board.Render(game);
-            RefreshLabels();
-            RenderResult();
+            playArea.SetActive(game != null);
+            if (game == null) { resultPanel.SetActive(false); return; }
+            board.Render(game); RefreshLabels(); RenderResult();
         }
 
         private void RefreshLabels()
         {
+            if (game == null) return;
             var snapshot = game.GetSnapshot();
-            levelText.text = snapshot.Level == 1 ? "第 1 关 · 热身" : "第 2 关 · 挑战";
-            progress.text = "已消 " + game.ClearedCount + "  /  余 " + game.RemainingCount;
-            UpdateTool(removeButton, removeLabel, "移出", game.CanUseTool(SheepTool.RemoveThree));
-            UpdateTool(undoButton, undoLabel, "撤回", game.CanUseTool(SheepTool.Undo));
-            UpdateTool(shuffleButton, shuffleLabel, "洗牌", game.CanUseTool(SheepTool.Shuffle));
-            hint.text = snapshot.Tray.Length >= 6 ? "卡槽只剩 1 格！" :
-                snapshot.Reserve.Length == 6 ? "移出区已满，先点回" : "只取未被盖住的牌";
-            if (game.Phase == SheepPhase.Lost) hint.text = "可用道具解困";
-            else if (game.Phase == SheepPhase.Won) hint.text = "全部清空！";
+            levelText.text = snapshot.Mode == SheepMode.Tutorial ? "第 1 关 · 热身" : snapshot.Mode == SheepMode.Endless
+                ? "无尽 · 第 " + snapshot.Wave + " 波" : "第 2 关 · " + DifficultyName(snapshot.Difficulty);
+            progress.text = snapshot.Mode == SheepMode.Endless ? "已消除 " + snapshot.Score + " 个" : "已消 " + game.ClearedCount + " / 余 " + game.RemainingCount;
+            UpdateTool(removeButton, removeLabel, "移出", SheepTool.RemoveThree);
+            UpdateTool(undoButton, undoLabel, "撤回", SheepTool.Undo);
+            UpdateTool(shuffleButton, shuffleLabel, "洗牌", SheepTool.Shuffle);
+            hint.text = snapshot.Tray.Length >= 6 ? "卡槽将满，留意下一组三消" : "只取未被盖住的牌";
+            if (session.IsCustomRun) hint.text += snapshot.Mode == SheepMode.Endless ? " · 自定义，不计最高" : " · 自定义规则";
+            if (game.Phase == SheepPhase.Lost) hint.text = (HasRescue ? "可以尝试道具或复活" : "本局已结束，可重新开始") + (session.IsCustomRun ? " · 自定义规则" : "");
             Changed?.Invoke();
         }
 
-        private static void UpdateTool(Button button, Text label, string title, bool canUse)
+        private void UpdateTool(Button button, Text label, string title, SheepTool tool)
         {
+            var canUse = game.CanUseTool(tool);
             button.interactable = canUse;
-            label.text = title;
+            label.text = title + "  " + game.GetToolRemaining(tool);
             label.color = canUse ? UiFactory.Ink : UiFactory.Muted;
         }
 
+        private bool HasRescue => game.CanUseTool(SheepTool.RemoveThree) || game.CanUseTool(SheepTool.Undo) || game.CanUseTool(SheepTool.Revive);
+
         private void RenderResult()
         {
-            var show = visible && !animating && game.Phase != SheepPhase.Playing;
-            resultPanel.SetActive(show);
-            if (!show) return;
+            if (game == null) { resultPanel.SetActive(false); return; }
             var snapshot = game.GetSnapshot();
             var won = game.Phase == SheepPhase.Won;
-            resultTitle.text = won ? (snapshot.Level == 1 ? "热身完成！" : "旸了个旸，过关！") : "卡槽满了，再想一想";
-            resultMessage.text = won ? (snapshot.Level == 1 ? "接下来，挑战更多图案与叠层。" : "这一轮的牌已经全部消除。\n累计通关 " + data.CompletedRuns + " 次")
-                : (game.CanUseTool(SheepTool.Revive) ? "免费复活可移出前三张。\n下方的移出、撤回也可解困。" : "本关的复活机会已用完。\n仍可尝试下方可用道具，或重新挑战。");
+            var show = visible && !animating && game.Phase != SheepPhase.Playing && !(won && snapshot.Mode == SheepMode.Endless);
+            resultPanel.SetActive(show);
+            if (show) resultPanel.transform.SetAsLastSibling();
+            if (!show) return;
+            resultTitle.text = won ? (snapshot.Mode == SheepMode.Tutorial ? "热身完成！" : "旸了个旸，过关！") : "卡槽满了，再想一想";
+            resultMessage.text = won ? (snapshot.Mode == SheepMode.Tutorial ? "接下来，进入第二关挑战。" : "这一轮的牌已经全部消除。\n累计通关 " + data.CompletedRuns + " 次")
+                : (snapshot.Mode == SheepMode.Endless ? "本局已消除 " + snapshot.Score + " 个\n" : "")
+                + (game.CanUseTool(SheepTool.Revive) ? "免费复活可移出前三张。" : snapshot.ReviveUsed ? "本局复活已使用。" : "移出区空间不足以复活。")
+                + (game.CanUseTool(SheepTool.RemoveThree) || game.CanUseTool(SheepTool.Undo) ? "\n下方可用道具仍能解困。" : HasRescue ? "\n点击下方按钮继续。" : "\n重新开始，再挑战一局。");
             resultPrimary.interactable = won || game.CanUseTool(SheepTool.Revive);
-            resultPrimaryLabel.text = won ? (snapshot.Level == 1 ? "进入第 2 关  →" : "再闯一轮")
-                : (snapshot.ReviveUsed ? "复活已使用" : "免费复活 ×1");
+            resultPrimaryLabel.text = won ? (snapshot.Mode == SheepMode.Tutorial ? (data.Challenge != null && new SheepGame(data.Challenge).Phase != SheepPhase.Won ? "继续第 2 关" : "挑战第 2 关") : "再闯一轮")
+                : snapshot.ReviveUsed ? "复活已使用" : "免费复活 ×1";
         }
 
         public void CheckEndState()
         {
-            if (!visible || animating || !shellAcceptsInput()) return;
+            if (!visible || animating || !shellAcceptsInput() || game == null) return;
+            if (session.AdvanceWave())
+            {
+                Save(); Refresh(); setStatus(warning ?? "进入第 " + game.GetSnapshot().Wave + " 波 · 道具余量沿用本局");
+            }
             RenderResult();
         }
 
         private void ResultAction()
         {
-            if (!AcceptsInput) return;
+            if (!AcceptsInput || game == null) return;
             if (game.Phase == SheepPhase.Lost) { UseTool(SheepTool.Revive); return; }
-            if (game.Phase != SheepPhase.Won) return;
-            StartLevel(game.GetSnapshot().Level == 1 ? 2 : 1);
+            if (game.Phase == SheepPhase.Won)
+            {
+                if (game.GetSnapshot().Mode == SheepMode.Tutorial && data.Challenge != null && new SheepGame(data.Challenge).Phase != SheepPhase.Won)
+                    Resume(SheepMode.Challenge);
+                else ChooseChallenge();
+            }
         }
 
-        private void StartLevel(int level)
+        private void Begin(SheepMode mode, SheepDifficulty difficulty)
         {
-            var previousLayoutId = game.GetSnapshot().Level == level ? game.GetSnapshot().LayoutId : -1;
-            Suspend(); game = NewGame(level, previousLayoutId); data.WinRecorded = false;
-            Save(); Refresh();
-            setStatus(warning ?? (level == 1 ? "从热身开始，找齐三张相同图案。" : "挑战开始：先观察叠层，再安排卡槽。"));
+            closeModal(); Suspend(); session.Start(mode, difficulty, NewSeed());
+            Save(); Refresh(); setStatus(warning ?? (mode == SheepMode.Endless ? "消除一个计 1 分，道具与复活次数整局共用。" : "先观察叠层，再安排卡槽。"));
         }
 
-        private void RestartLevel() { if (AcceptsInput) StartLevel(game.GetSnapshot().Level); }
+        private void Resume(SheepMode mode)
+        {
+            closeModal(); Suspend();
+            if (!session.Resume(mode)) return;
+            Save(); Refresh(); CheckEndState();
+            setStatus(warning ?? "已继续原有对局，难度和道具余量保持不变。");
+        }
 
         private void ConfirmRestart()
         {
-            if (!AcceptsInput) return;
-            showDialog("重新开始本关？", "本关棋盘和道具将重置，\n累计通关次数会保留。", "重新开始", RestartLevel, "继续本关", CheckEndState);
+            if (!AcceptsInput || game == null) return;
+            var mode = game.GetSnapshot().Mode;
+            showDialog(mode == SheepMode.Endless ? "重新开始无尽挑战？" : "重新开始本关？",
+                "当前模式的进度将清空，\n新局使用设置中的道具次数。", "重新开始", () => {
+                    if (mode == SheepMode.Challenge) ChooseChallenge(); else Begin(mode, SheepDifficulty.Normal);
+                }, "继续本局", CheckEndState);
         }
 
         private void ShowHelp()
         {
             if (!AcceptsInput) return;
-            showDialog("旸了个旸 · 玩法", "只取未被盖住的牌，三个相同即消除。\n卡槽满7张失败，第2关全清记一次通关。\n移出前三张至移出区，最多暂存6张。\n撤回最近未消除的一张，洗牌重排场上。\n三种道具不限次数，复活每关一次。", "知道了", CheckEndState, null, null);
+            Action finish = () => { closeModal(); CheckEndState(); };
+            var panel = openModal("旸了个旸 · 玩法", 652, finish);
+            UiFactory.Label(panel, "只取未被盖住的牌，三个相同即消除。\n卡槽满 7 张失败，移出区最多暂存 6 张。\n移出：把卡槽前三张放到移出区。\n撤回：退回最近一张尚未消除的牌。\n洗牌：重排棋盘图案，不影响卡槽。\n每局可免费复活一次，移出前三张。\n无尽每消除一个计 1 分，清空后换波。\n道具整局共用，设置只影响新开对局。",
+                32, 116, 532, 376, 23, UiFactory.Muted, TextAnchor.MiddleLeft);
+            UiFactory.Button(panel, "知道了", 32, 550, 532, 64, finish, true);
         }
 
         public void Save()
         {
-            if (store == null || game == null) return;
-            data.Game = game.GetSnapshot();
-            if (data.Game.Level == 2 && game.Phase == SheepPhase.Won && !data.WinRecorded)
+            if (store == null || session == null) return;
+            session.Capture();
+            if (!store.TrySave(data, out var error))
             {
-                if (data.CompletedRuns < long.MaxValue) data.CompletedRuns++;
-                data.WinRecorded = true;
-                Changed?.Invoke();
-            }
-            string error;
-            if (!store.TrySave(data, out error))
-            {
-                saveFailed = true;
-                warning = "旸了个旸进度暂未保存，请检查剩余空间。";
+                saveFailed = true; warning = "旸了个旸进度暂未保存，请检查剩余空间。";
                 Debug.LogWarning("XanaduYonder sheep save failed: " + error);
             }
-            else if (saveFailed)
-            {
-                saveFailed = false; warning = null;
-                if (visible) setStatus("旸了个旸进度已保存。");
-            }
+            else if (saveFailed) { saveFailed = false; warning = null; }
             if (visible && warning != null) setStatus(warning);
+            Changed?.Invoke();
         }
 
-        private void OnDisable() { if (game != null) Suspend(); }
+        private void LateUpdate()
+        {
+            if (!visible || game == null || animating) return;
+            board.RefreshLayout(game);
+            if (resultPanel.activeSelf) resultPanel.transform.SetAsLastSibling();
+        }
+        private void OnDisable() { if (session != null) Suspend(); }
     }
 }

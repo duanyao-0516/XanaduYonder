@@ -14,7 +14,7 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.3.0";
+        public const string Version = "0.4.0";
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()
@@ -29,6 +29,95 @@ namespace XanaduYonder.EditorTools
             {
                 Prepare();
                 BuildApk(".apk", BuildOptions.Development | BuildOptions.StrictMode);
+            });
+        }
+
+        // Isolated device validation never replaces a release or another worktree's APK.
+        public static void BuildAndroidIdiomValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".idiomtest");
+                    PlayerSettings.productName = "Xanadu 成语测试";
+                    BuildApk("-idiom-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidSheepValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".sheeptest");
+                    PlayerSettings.productName = "Xanadu 旸测试";
+                    BuildApk("-sheep-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidWatermelonValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".watermelontest");
+                    PlayerSettings.productName = "Xanadu 西瓜测试";
+                    BuildApk("-watermelon-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidMinesweeperValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".minesweepertest");
+                    PlayerSettings.productName = "Xanadu 扫雷测试";
+                    BuildApk("-minesweeper-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
             });
         }
 
@@ -167,7 +256,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.bundleVersionCode = 3;
+            PlayerSettings.Android.bundleVersionCode = 4;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

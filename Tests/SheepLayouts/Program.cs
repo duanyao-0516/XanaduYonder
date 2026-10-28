@@ -22,6 +22,8 @@ internal static class Program
         Run("repeat generation excludes previous layout without changing tutorial selection", NoImmediateRepeat);
         Run("one thousand generated witnesses clear through the real game core", SolutionWitnesses);
         Run("restore preserves layout and future legal selections after each move", RestoreContinuation);
+        Run("all profiles have balanced deterministic legal witnesses and layout diversity", ProfileWitnesses);
+        Run("custom tool quotas do not change or consume generated boards", ToolIndependentGeneration);
         Console.WriteLine("Sheep layout checks: " + passed + " passed, " + failed + " failed.");
         return failed == 0 ? 0 : 1;
     }
@@ -213,4 +215,62 @@ internal static class Program
             Check(game.Phase == SheepPhase.Won, "Restored path did not win");
         }
     }
+    private static void ProfileWitnesses()
+    {
+        int count = 0;
+        foreach (SheepMode mode in Enum.GetValues(typeof(SheepMode)))
+        foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
+        {
+            if (mode != SheepMode.Challenge && difficulty != SheepDifficulty.Normal) continue;
+            var layouts = new HashSet<int>();
+            for (uint sample = 0; sample <= 100; sample++)
+            {
+                uint seed = sample == 100 ? uint.MaxValue : sample;
+                var board = SheepLevelGenerator.Generate(mode, difficulty, seed);
+                var again = SheepLevelGenerator.Generate(mode, difficulty, seed);
+                Check(board.Snapshot.Kinds.SequenceEqual(again.Snapshot.Kinds) && board.SolutionIds.SequenceEqual(again.SolutionIds) &&
+                    board.Snapshot.LayoutId == again.Snapshot.LayoutId && board.Snapshot.RandomState == again.Snapshot.RandomState, "profile generation must be deterministic");
+                int kinds = mode == SheepMode.Tutorial ? 3 : difficulty == SheepDifficulty.Easy ? 8 : difficulty == SheepDifficulty.Normal ? 12 : 16;
+                Check(board.Snapshot.Kinds.Distinct().Count() == kinds, "profile kind variety");
+                Check(board.Snapshot.Kinds.GroupBy(x => x).All(g => g.Count() == board.Snapshot.Kinds.Length / kinds), "balanced profile inventory");
+                layouts.Add(board.Snapshot.LayoutId);
+                var game = new SheepGame(board.Snapshot);
+                foreach (int id in board.SolutionIds)
+                {
+                    var move = game.Pick(id);
+                    Check(move.Changed && move.Phase != SheepPhase.Lost && game.GetSnapshot().Tray.Length <= 6, "profile witness must remain legal and under capacity");
+                }
+                Check(game.Phase == SheepPhase.Won && game.GetSnapshot().Score == board.SolutionIds.Length, "profile witness clears and scores every tile");
+                count++;
+            }
+            Check(layouts.Count == (mode == SheepMode.Tutorial ? 3 : 12), "profile samples cover every current layout");
+        }
+        Console.WriteLine("Verified profile witnesses: " + count + " (four challenge difficulties, endless normal, tutorial normal; seeds 0..99 and uint.MaxValue).");
+    }
+
+    private static void ToolIndependentGeneration()
+    {
+        foreach (SheepDifficulty difficulty in Enum.GetValues(typeof(SheepDifficulty)))
+        for (uint seed = 11; seed <= 22; seed++)
+        {
+            var baseline = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed);
+            foreach (int limit in new[] { 0, 99 })
+            {
+                var custom = SheepLevelGenerator.Generate(SheepMode.Challenge, difficulty, seed, limit, limit, limit);
+                Check(baseline.Snapshot.Kinds.SequenceEqual(custom.Snapshot.Kinds) &&
+                    baseline.SolutionIds.SequenceEqual(custom.SolutionIds) &&
+                    baseline.Snapshot.RandomState == custom.Snapshot.RandomState &&
+                    baseline.Snapshot.LayoutId == custom.Snapshot.LayoutId,
+                    "candidate rating must use a fixed inventory, not adapt difficulty to custom quotas");
+                Check(custom.Snapshot.RemoveLimit == limit && custom.Snapshot.RemoveRemaining == limit &&
+                    custom.Snapshot.UndoLimit == limit && custom.Snapshot.UndoRemaining == limit &&
+                    custom.Snapshot.ShuffleLimit == limit && custom.Snapshot.ShuffleRemaining == limit &&
+                    !custom.Snapshot.ReviveUsed && custom.Snapshot.Score == 0 &&
+                    custom.Snapshot.Tray.Length == 0 && custom.Snapshot.Reserve.Length == 0 &&
+                    custom.Snapshot.Locations.All(location => location == SheepLocation.Board),
+                    "rating and witness verification must not mutate the published board");
+            }
+        }
+    }
+
 }

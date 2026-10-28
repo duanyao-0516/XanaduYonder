@@ -24,11 +24,13 @@ namespace XanaduYonder.Runtime.Sheep
         private readonly List<Tile> tiles = new List<Tile>();
         private readonly List<GameObject> ghosts = new List<GameObject>();
         private readonly Text[] stackCounts = new Text[2];
-        private readonly Text reserveHint, trayCount;
+        private readonly Text reserveHint;
         private SheepPosition[] positions;
+        private SheepBoardGeometry geometry;
+        private Vector2 renderedStageSize;
         private int level = -1, layout = -1;
-        private const float TileWidth = 72, TileHeight = 81;
-        private const float TrayTilesTop = 46;
+        private const float TileWidth = SheepBoardGeometry.TileWidth, TileHeight = SheepBoardGeometry.TileHeight;
+        private const float TrayTilesTop = 10, ReserveTilesTop = 24;
 
         public SheepBoardView(RectTransform root, RectTransform boardArea, RectTransform trayArea,
             RectTransform reserveArea, Action<int> onPick)
@@ -44,12 +46,10 @@ namespace XanaduYonder.Runtime.Sheep
             for (var i = 0; i < 7; i++)
                 UiFactory.Panel(tray, "Tray slot " + (i + 1), 16 + i * 84, TrayTilesTop, TileWidth, TileHeight,
                     UiFactory.Hex("D1DCC0"));
-            trayCount = UiFactory.Label(tray, "0 / 7", 466, 10, 134, 28, 18, UiFactory.Accent, TextAnchor.MiddleRight);
-            UiFactory.Label(tray, "集齐三个，自动消除", 16, 10, 400, 28, 20, UiFactory.Accent);
-            reserveHint = UiFactory.Label(reserve, "移出区 · 暂存的牌可随时点回", 0, 0, 608, 28, 19,
+            reserveHint = UiFactory.Label(reserve, "移出区 · 暂存的牌可随时点回", 0, 0, 608, 20, 17,
                 UiFactory.Muted, TextAnchor.MiddleCenter);
             for (var i = 0; i < 6; i++)
-                UiFactory.Panel(reserve, "Reserve slot " + i, 64 + i * 80, 32, 64, 72, UiFactory.Hex("E6EAD9"));
+                UiFactory.Panel(reserve, "Reserve slot " + i, 64 + i * 80, ReserveTilesTop, 64, 72, UiFactory.Hex("E6EAD9"));
             for (var i = 0; i < 2; i++)
                 stackCounts[i] = UiFactory.Label(stage, "", 0, 0, 84, 26, 17, UiFactory.Ink, TextAnchor.MiddleCenter);
             overlay = UiFactory.Rect(root, "Tile animation overlay", 0, 0, 720, 1320);
@@ -87,6 +87,12 @@ namespace XanaduYonder.Runtime.Sheep
             {
                 level = snapshot.Level; layout = snapshot.LayoutId;
                 positions = SheepBoardLayout.GetPositions(level, layout);
+                geometry = null;
+            }
+            if (geometry == null || renderedStageSize != stage.rect.size)
+            {
+                renderedStageSize = stage.rect.size;
+                geometry = new SheepBoardGeometry(positions, renderedStageSize.x, renderedStageSize.y);
             }
             while (tiles.Count < positions.Length) tiles.Add(CreateTile(stage, tiles.Count));
             for (var i = positions.Length; i < tiles.Count; i++) tiles[i].Rect.gameObject.SetActive(false);
@@ -116,14 +122,12 @@ namespace XanaduYonder.Runtime.Sheep
                 tile.Background.color = tile.Icon.color = Color.white;
                 if (location == SheepLocation.Board)
                 {
-                    Place(tile, stage, 40 + pos.X * 36, 18 + pos.Y * 36, TileWidth, TileHeight);
+                    var depth = pos.BlindStack > 0 ? topLayer[pos.BlindStack] - pos.Layer : 0;
+                    var bounds = geometry.TileBounds(pos, depth);
+                    Place(tile, stage, bounds.X, bounds.Y, bounds.Width, bounds.Height);
                     if (pos.BlindStack > 0)
                     {
                         tile.Icon.enabled = pos.Layer == topLayer[pos.BlindStack];
-                        // Fan out blank backs like a deck; the selectable face stays at its core position.
-                        var depth = Math.Min(11, topLayer[pos.BlindStack] - pos.Layer);
-                        var side = pos.BlindStack == 1 ? -1 : 1;
-                        tile.Rect.anchoredPosition += new Vector2(side * depth * 2.7f, -depth * .35f);
                     }
                     if (!canPick)
                     {
@@ -134,7 +138,7 @@ namespace XanaduYonder.Runtime.Sheep
                 else if (location == SheepLocation.Tray)
                     Place(tile, tray, 16 + Array.IndexOf(snapshot.Tray, id) * 84, TrayTilesTop, TileWidth, TileHeight);
                 else
-                    Place(tile, reserve, 64 + Array.IndexOf(snapshot.Reserve, id) * 80, 32, 64, 72);
+                    Place(tile, reserve, 64 + Array.IndexOf(snapshot.Reserve, id) * 80, ReserveTilesTop, 64, 72);
             }
             for (var stack = 1; stack <= 2; stack++)
             {
@@ -142,13 +146,20 @@ namespace XanaduYonder.Runtime.Sheep
                 label.gameObject.SetActive(stackCount[stack] > 0);
                 if (stackCount[stack] == 0) continue;
                 var pos = Array.Find(positions, p => p.BlindStack == stack);
-                label.rectTransform.anchoredPosition = new Vector2(34 + pos.X * 36, -(110 + pos.Y * 36));
+                var bounds = geometry.StackLabelBounds(pos);
+                label.rectTransform.anchoredPosition = new Vector2(bounds.X, -bounds.Y);
+                label.rectTransform.sizeDelta = new Vector2(bounds.Width, bounds.Height);
+                label.fontSize = Math.Max(1, Mathf.RoundToInt(17 * geometry.Scale));
                 label.text = "余 " + stackCount[stack] + " 张";
                 label.transform.SetAsLastSibling();
             }
-            trayCount.text = snapshot.Tray.Length + " / 7";
-            trayCount.color = snapshot.Tray.Length >= 6 ? UiFactory.Hex("B55A3F") : UiFactory.Accent;
             reserveHint.text = snapshot.Reserve.Length == 0 ? "移出区 · 暂存的牌可随时点回" : "移出区 · 点击放回卡槽";
+        }
+
+        // The page calls this after safe-area layout, outside an active tile animation.
+        public void RefreshLayout(SheepGame game)
+        {
+            if (renderedStageSize != stage.rect.size) Render(game);
         }
 
         private static void Place(Tile tile, Transform parent, float x, float y, float width, float height)
@@ -162,6 +173,7 @@ namespace XanaduYonder.Runtime.Sheep
         public IEnumerator AnimatePick(SheepGame game, SheepSnapshot before, SheepMove move)
         {
             var source = tiles[move.PickedId].Rect.position;
+            var sourceSize = SizeInOverlay(tiles[move.PickedId].Rect);
             var matched = move.MatchedIds.Length > 0;
             var oldMatchOrigins = new List<Vector3>();
             foreach (var id in move.MatchedIds)
@@ -177,19 +189,22 @@ namespace XanaduYonder.Runtime.Sheep
                     if (before.Kinds[before.Tray[i]] == before.Kinds[move.PickedId]) { index = Math.Min(i + 2, 6); break; }
             }
             var target = tray.TransformPoint(new Vector3(16 + index * 84, -TrayTilesTop, 0));
-            var ghost = Ghost(before.Kinds[move.PickedId], source);
+            var targetSize = overlay.InverseTransformVector(tray.TransformVector(new Vector3(TileWidth, TileHeight, 0)));
+            var ghost = Ghost(before.Kinds[move.PickedId], source, sourceSize);
             picked.Rect.gameObject.SetActive(false);
             var companions = new List<Tile>();
             if (matched)
-                foreach (var origin in oldMatchOrigins) companions.Add(Ghost(before.Kinds[move.PickedId], origin));
+                foreach (var origin in oldMatchOrigins) companions.Add(Ghost(before.Kinds[move.PickedId], origin, targetSize));
             const float travel = .16f;
             for (var time = 0f; time < travel; time += Time.unscaledDeltaTime)
             {
                 var t = Mathf.Clamp01(time / travel); t = 1 - (1 - t) * (1 - t);
                 ghost.Rect.position = Vector3.Lerp(source, target, t);
+                ghost.Rect.sizeDelta = Vector2.Lerp(sourceSize, targetSize, t);
                 yield return null;
             }
             ghost.Rect.position = target;
+            ghost.Rect.sizeDelta = targetSize;
             if (matched)
             {
                 companions.Add(ghost);
@@ -208,11 +223,17 @@ namespace XanaduYonder.Runtime.Sheep
             FinishAnimations(game);
         }
 
-        private Tile Ghost(int kind, Vector3 position)
+        private Vector2 SizeInOverlay(RectTransform rect)
+        {
+            return overlay.InverseTransformVector(rect.TransformVector(new Vector3(rect.rect.width, rect.rect.height, 0)));
+        }
+
+        private Tile Ghost(int kind, Vector3 position, Vector2 size)
         {
             var tile = CreateTile(overlay, -1);
             tile.Icon.texture = icons[kind];
             tile.Rect.position = position;
+            tile.Rect.sizeDelta = size;
             ghosts.Add(tile.Rect.gameObject);
             return tile;
         }

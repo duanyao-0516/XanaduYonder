@@ -12,6 +12,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="../../Assets/Scripts/Core/Sheep/**/*.cs" Link="Core/Sheep/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../Assets/Scripts/Runtime/Sheep/SheepSave*.cs" Link="Runtime/Sheep/%(Filename)%(Extension)" />
+    <Compile Include="../../Assets/Scripts/Runtime/Sheep/SheepPreferences.cs" Link="Runtime/Sheep/SheepPreferences.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 </Project>

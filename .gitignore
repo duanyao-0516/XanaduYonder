@@ -49,6 +49,8 @@ local.properties
 /TestResults/
 Tests/**/bin/
 Tests/**/obj/
+__pycache__/
+*.py[cod]
 *.log
 /sysinfo.txt
 /mono_crash.*
