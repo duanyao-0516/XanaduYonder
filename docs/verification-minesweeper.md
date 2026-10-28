@@ -153,3 +153,22 @@ Unity 6000.3.27f1，Android 编译目标，真实 UGUI + Camera.Render。扫雷�
 独立源码审查未发现阻塞问题。`scripts/build-minesweeper-validation.sh` 退出 0，`aapt` 确认独立测试包名、0.4.0/code 4 和 ARM64，`apksigner verify --verbose` 退出 0（v2 签名通过）。ProjectSettings 无最终差异。最新 APK 仍为 `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，77,980,241 字节，SHA-256 为 `504bc6939b4fee63201ff7d9f3639db6f761373ea107fea762594ea9305651fe`。
 
 已通过指定 PKM110 的 `adb install -r` 覆盖安装，返回 `Success`，未卸载或清除数据；读取设备实际 APK 哈希与本次构建一致。上一版入口/配色包备份为 `XanaduYonder-0.4.0-minesweeper-validation-20261028-view-colors.apk`。本轮设备证据限于安装及产物一致性，不宣称已完成新布局的真人触控验收。
+
+## 2026-10-28 第四轮反馈：底部说明删除与按钮留白
+
+删除扫雷底部「选择难度 · 每档独立续局与纪录」及初始说明、保存成功常驻文案。进入、返回、开始和续局均清除旧普通提示；真实加载/保存异常保留，重试成功后清空。`Save()` 只有在扫雷页面可见时才发布公共状态，避免后台保存清空其他页面的提示；公共存档异常仍由宿主优先显示。
+
+底栏每行增高 16 设计单位，图标/文字内容组垂直居中，常规 104 高按钮上下各留 16。横向宽度和换行阈值不变。底栏下边距从 128 改为 96，操作提示顶部距底部从 116 改为 84、高度从 40 改为 36；单行按钮上边下移 16、下边下移 32，提示下移 32。错误信息仍在原底部区域，与操作提示相隔 6 单位，不覆盖文字。棋盘顶部保持本轮之前的 294 基准。
+
+- `scripts/test-minesweeper-input.sh`：旧高度先出现 69 通过/7 失败，修改后 76 通过、0 失败，原手势及布局边界继续覆盖。
+- `scripts/test-minesweeper-ui.sh`：先在第 351 条断言观察按钮留白不均衡，修改后退出 0，**4338 条断言通过**。新增状态检查覆盖旧提示清除、离开后的 Save 不清宿主提示、宿主实际保存错误优先、错误解除后状态清空；原真实存储失败重试、全屏、小棋盘禁用和点击回归保留。
+- 失败报告为 `artifacts/validation/minesweeper-ui/footer-padding-red-report.txt`，最终报告仍为该目录 `report.txt`。已查看 `final-toolbar-normal-720x1582.png`、`final-toolbar-focus-720x1320.png` 和 `save-error-normal-720x1320.png`，确认上下留白、下移和错误信息不重叠。
+
+独立源码审查未发现阻塞问题。修改限定扫雷表现/布局、相关测试和文档，未改共享 AppController 或其他游戏；编辑器验证不替代 Android 真人视觉和触控验收。
+
+本轮构建脚本退出 0，`aapt` 确认仍为独立测试包 `com.duanyao.xanaduyonder.minesweepertest`、0.4.0/code 4、ARM64；`apksigner verify --verbose` 退出 0，v2 签名通过；ProjectSettings 无最终差异。
+
+- 最新 APK：`artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，77,979,311 字节。
+- SHA-256：`a6f954a79c9ad747e6ff1d1e52ed253220d86e1ac1f6e24b1a9da05934bd21d3`。
+- 已使用指定物理设备的 `adb install -r` 覆盖安装到 PKM110，退出 0/`Success`；设备已安装 APK 哈希与此构建一致，未卸载或清空数据。设备证据限于安装及产物一致性。
+- 前一版紧凑底栏 APK 备份为 `XanaduYonder-0.4.0-minesweeper-validation-20261028-compact-toolbar.apk`。

@@ -319,11 +319,15 @@ namespace XanaduYonder.EditorTools
                     var iconArea = InPage(game.Root, icon.rectTransform);
                     var labelArea = InPage(game.Root, label.rectTransform);
                     Require(iconArea.yMax <= labelArea.yMin, "Fullscreen symbol appears above its label like Overview");
+                    var controlArea = InPage(game.Root, control);
+                    double topPadding = iconArea.yMin - controlArea.yMin, bottomPadding = controlArea.yMax - labelArea.yMax;
+                    Require(topPadding >= 15.9 && bottomPadding >= 15.9 && Math.Abs(topPadding - bottomPadding) < .1,
+                        "Icon and label stack has balanced breathing room within the taller toolbar control");
                 }
                 Near(InPage(game.Root, Find(root, "Minesweeper viewport")).yMin, 294,
                     "Moving fullscreen removes its upper row and raises the normal board");
-                Near(InPage(game.Root, toolbar).yMin, f.Height - toolbar.rect.height - 128,
-                    "Bottom toolbar is raised by 24 design units");
+                Near(InPage(game.Root, toolbar).yMin, f.Height - toolbar.rect.height - 96,
+                    "Bottom toolbar leaves the requested lower margin for its hint and error status");
                 CheckZoomGroup(game);
                 f.Click(Find(root, "Zoom out"));
                 Near(game.Viewport.ZoomScale, .75, "Grouped minus remains independently clickable");
@@ -332,7 +336,7 @@ namespace XanaduYonder.EditorTools
                 f.Click(Find(root, "Zoom in"));
                 Near(game.Viewport.ZoomScale, 1.25, "Grouped plus remains independently clickable");
                 CheckCompactPause(game, Find(root, "Pause"));
-                f.Capture("refined-toolbar-normal");
+                f.Capture("final-toolbar-normal");
                 f.Click(enter);
                 Require(Get<bool>(game.Page, "fullscreen") && !enter.gameObject.activeSelf && exit.gameObject.activeSelf,
                     "Bottom fullscreen action swaps to exit without keeping a second active control");
@@ -342,7 +346,7 @@ namespace XanaduYonder.EditorTools
                 Near(exitArea.width, fullArea.width, "Exit keeps the fullscreen slot width");
                 Near(exitArea.height, fullArea.height, "Exit keeps the fullscreen slot height");
                 CheckCompactPause(game, Find(root, "Focus pause"));
-                f.Capture("refined-toolbar-focus");
+                f.Capture("final-toolbar-focus");
                 f.Click(exit);
                 Require(!Get<bool>(game.Page, "fullscreen") && enter.gameObject.activeSelf && !exit.gameObject.activeSelf,
                     "Bottom exit action returns to the ordinary layout");
@@ -745,7 +749,34 @@ namespace XanaduYonder.EditorTools
             using (var host = new HostFixture(f))
             {
                 var game = host.Game;
-                game.Start(0); game.PressCell(0);
+                Require(string.IsNullOrEmpty(host.Status.text), "Initial selection has no static footer instruction");
+                game.Page.Leave();
+                const string otherPageStatus = "Another game's current status";
+                Invoke(host.Shell, "SetStatus", otherPageStatus);
+                game.Page.Save();
+                Require(host.Status.text == otherPageStatus, "Saving an inactive Minesweeper page preserves the current host footer");
+                game.Page.Enter();
+                Require(string.IsNullOrEmpty(host.Status.text), "Entering Minesweeper takes ownership of and clears the ordinary host footer");
+                const string sharedSaveWarning = "Shared host storage is unavailable";
+                Set(host.Shell, "saveFailed", true); Set(host.Shell, "saveWarning", sharedSaveWarning);
+                game.Page.Save();
+                Require(game.Page.SaveError == null && host.Status.text == sharedSaveWarning,
+                    "An empty Minesweeper status cannot suppress the host's actual save error");
+                Set(host.Shell, "saveFailed", false); Set(host.Shell, "saveWarning", null);
+                game.Page.Save();
+                Require(string.IsNullOrEmpty(host.Status.text), "A visible page clears the footer after the shared save error is resolved");
+                Invoke(host.Shell, "SetStatus", "选择难度 · stale instruction from a previous view");
+                game.Page.Enter();
+                Require(string.IsNullOrEmpty(host.Status.text), "Entering Minesweeper clears a stale ordinary footer instruction");
+                Invoke(host.Shell, "SetStatus", "选择难度 · stale instruction before starting");
+                game.Start(0);
+                Require(string.IsNullOrEmpty(host.Status.text), "Starting a game clears a stale selection instruction");
+                game.Page.Back();
+                Require(string.IsNullOrEmpty(host.Status.text), "Returning to difficulty selection leaves the ordinary footer empty");
+                Invoke(host.Shell, "SetStatus", "选择难度 · stale instruction before continuing");
+                game.Page.StartGame(0, false); game.SeedReadySession(0);
+                Require(string.IsNullOrEmpty(host.Status.text), "Continuing a saved game does not retain a selection instruction");
+                game.PressCell(0);
                 var root = Get<GameObject>(game.Page, "gameRoot").transform;
                 var session = game.Session;
                 f.Click(SharedIcon(root, UiIconKind.Settings).transform as RectTransform);
@@ -831,11 +862,11 @@ namespace XanaduYonder.EditorTools
                     Directory.CreateDirectory(directory);
                     game.Page.Save();
                     Require(File.Exists(store.SavePath) && game.Page.SaveError == null, "A successful retry actually writes and clears SaveError");
-                    Require(!compact.text.Contains("扫雷进度暂未保存"), "Successful retry clears the compact error status");
-                    Require(!host.Status.text.Contains("扫雷进度暂未保存"), "Successful retry clears stale save failure from the normal host status");
+                    Require(string.IsNullOrEmpty(compact.text), "Successful retry leaves compact status empty without a replacement success instruction");
+                    Require(string.IsNullOrEmpty(host.Status.text), "Successful retry leaves normal status empty without a replacement success instruction");
                     f.Click(Find(root, "Exit fullscreen"));
-                    Require(host.Status.gameObject.activeInHierarchy && !host.Status.text.Contains("扫雷进度暂未保存"),
-                        "Returning to normal layout cannot resurrect the stale save warning");
+                    Require(host.Status.gameObject.activeInHierarchy && string.IsNullOrEmpty(host.Status.text),
+                        "Returning to normal layout keeps the cleared footer empty");
                     f.Capture("save-retry-recovered");
                 }
             }

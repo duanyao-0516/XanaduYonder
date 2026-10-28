@@ -69,8 +69,8 @@ namespace XanaduYonder.Runtime.Minesweeper
                 zoomDividers[i]=UiFactory.Panel(zoomGroup,"Zoom divider "+i,88*(i+1),28,1,32,dividerColor,false).rectTransform;
             overviewButton=LocalButton(toolbar,"Overview",MinesweeperIconKind.Overview,"总览",528,0,120,82,ToggleOverview);
             overviewLabel=overviewButton.GetComponentInChildren<Text>();
-            hintBand=UiFactory.Rect(page,"Minesweeper hint",36,1228,648,40);
-            hint=UiFactory.Label(hintBand,"",0,0,648,40,20,UiFactory.Muted,TextAnchor.MiddleCenter); Fit(hint,16,20);
+            hintBand=UiFactory.Rect(page,"Minesweeper hint",36,1236,648,36);
+            hint=UiFactory.Label(hintBand,"",0,0,648,36,20,UiFactory.Muted,TextAnchor.MiddleCenter); Fit(hint,16,20);
             statusBand=UiFactory.Rect(page,"Minesweeper compact status",36,1278,648,34);
             compactStatus=UiFactory.Label(statusBand,"",0,0,648,34,18,UiFactory.Hex("B34842"),TextAnchor.MiddleCenter); Fit(compactStatus,14,18);
             focusChrome.SetActive(false); pauseCover.SetActive(false);
@@ -135,10 +135,10 @@ namespace XanaduYonder.Runtime.Minesweeper
             normalChrome.SetActive(!fullscreen); focusChrome.SetActive(fullscreen);
             enterFullscreen.gameObject.SetActive(!fullscreen); exitFullscreen.gameObject.SetActive(fullscreen);
             float top=fullscreen?Mathf.Max(112,minimum+30):Mathf.Max(286,194+minimum+12);
-            float toolbarTop=height-controlsHeight-128;
+            float toolbarTop=height-controlsHeight-96;
             surface.anchoredPosition=new Vector2(left,-top); surface.sizeDelta=new Vector2(648,Mathf.Max(100,toolbarTop-22-top));
             toolbar.anchoredPosition=new Vector2(36,-toolbarTop);
-            hintBand.anchoredPosition=new Vector2(left,-(height-116));
+            hintBand.anchoredPosition=new Vector2(left,-(height-84));
             statusBand.anchoredPosition=new Vector2(left,-(height-42)); statusBand.gameObject.SetActive(fullscreen);
             if(viewport!=null) { viewport.SetLayout(surface.rect.width,surface.rect.height,BaseCellSize()); board.RenderView(viewport); }
         }
@@ -152,7 +152,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             zoomGroup.sizeDelta=new Vector2((float)controls.ZoomGroup.Width,(float)controls.ZoomGroup.Height);
             SetZoomBounds(zoomOut,controls.ZoomOut,controls.ZoomGroup); SetZoomBounds(zoomValue,controls.ZoomValue,controls.ZoomGroup);
             SetZoomBounds(zoomIn,controls.ZoomIn,controls.ZoomGroup); SetControlBounds(overviewButton,controls.Overview);
-            for(int i=0;i<zoomDividers.Length;i++) zoomDividers[i].anchoredPosition=new Vector2(minimumTarget*(i+1),-(minimumTarget-32)/2);
+            for(int i=0;i<zoomDividers.Length;i++) zoomDividers[i].anchoredPosition=new Vector2(minimumTarget*(i+1),-((float)controls.ZoomGroup.Height-32)/2);
             SetControlBounds(pauseButton,new MinesweeperInputRect(684-minimumTarget,0,minimumTarget,minimumTarget),28);
             SetControlBounds(focusPause,new MinesweeperInputRect(684-minimumTarget,18,minimumTarget,minimumTarget),28);
             resumeButton.GetComponent<RectTransform>().sizeDelta=new Vector2(300,minimumTarget);
@@ -170,15 +170,17 @@ namespace XanaduYonder.Runtime.Minesweeper
             rect.anchoredPosition=new Vector2((float)bounds.X,-(float)bounds.Y); rect.sizeDelta=new Vector2(w,h);
             var icon=button.GetComponentInChildren<MinesweeperIconGraphic>(true);
             var label=button.GetComponentInChildren<Text>(true);
+            const float labelHeight=32, contentGap=6;
+            float contentTop=(h-iconSize-contentGap-labelHeight)/2;
             if(icon!=null)
             {
                 icon.rectTransform.sizeDelta=new Vector2(iconSize,iconSize);
-                icon.rectTransform.anchoredPosition=new Vector2((w-iconSize)/2,-(!label.gameObject.activeSelf?(h-iconSize)/2:8));
+                icon.rectTransform.anchoredPosition=new Vector2((w-iconSize)/2,-(!label.gameObject.activeSelf?(h-iconSize)/2:contentTop));
             }
             if(label.gameObject.activeSelf)
             {
-                label.rectTransform.anchoredPosition=icon==null?new Vector2(12,0):new Vector2(0,-h*.55f);
-                label.rectTransform.sizeDelta=icon==null?new Vector2(w-24,h):new Vector2(w,h*.40f);
+                label.rectTransform.anchoredPosition=icon==null?new Vector2(12,0):new Vector2(0,-(contentTop+iconSize+contentGap));
+                label.rectTransform.sizeDelta=icon==null?new Vector2(w-24,h):new Vector2(w,labelHeight);
             }
         }
         private float PixelsPerDesignUnit()

@@ -14,7 +14,7 @@ internal static class MinesweeperControlLayoutChecks
             double minimum = MinesweeperControlLayout.TargetSize(160, 360.0 / 720);
             Near(88, minimum);
             var layout = MinesweeperControlLayout.Create(648, minimum);
-            Near(88, layout.Height); Near(648, layout.Width); Near(layout.Reveal.Width, layout.Flag.Width);
+            Near(104, layout.Height); Near(648, layout.Width); Near(layout.Reveal.Width, layout.Flag.Width);
             Verify(layout, minimum); Near(0, layout.Overview.Y); Near(0, layout.Fullscreen.X);
             Near(96, layout.Reveal.X); Near(288, layout.ZoomGroup.X); Near(552, layout.ZoomGroup.X + layout.ZoomGroup.Width);
         });
@@ -22,7 +22,7 @@ internal static class MinesweeperControlLayoutChecks
             double minimum = MinesweeperControlLayout.TargetSize(160, 320.0 / 720);
             Near(99, minimum);
             var layout = MinesweeperControlLayout.Create(648, minimum);
-            True(layout.Height > minimum * 2); True(layout.ZoomOut.Y >= minimum);
+            Near(2 * (minimum + 16) + 8, layout.Height); Near(minimum + 16 + 8, layout.ZoomOut.Y);
             Near(0, layout.Reveal.Y); Near(0, layout.Flag.Y); Near(layout.Reveal.Width, layout.Flag.Width);
             Near(0, layout.Overview.Y); Near(0, layout.Fullscreen.Y);
             Near((648 - 3 * minimum) / 2, layout.ZoomGroup.X); Verify(layout, minimum);
@@ -31,7 +31,7 @@ internal static class MinesweeperControlLayoutChecks
             double minimum = MinesweeperControlLayout.TargetSize(160, 500.0 / 1320);
             Near(117, minimum);
             var layout = MinesweeperControlLayout.Create(844.8 - 72, minimum);
-            Verify(layout, minimum); Near(2 * 117 + 8, layout.Height);
+            Verify(layout, minimum); Near(2 * (117 + 16) + 8, layout.Height);
             True(minimum * (500.0 / 1320) >= 44);
         });
         check("DPI and physical pixels produce the same dp target", () => {
@@ -68,7 +68,7 @@ internal static class MinesweeperControlLayoutChecks
             double breakpoint = 7 * 99 + 4 * 8;
             var single = MinesweeperControlLayout.Create(breakpoint, 99);
             var two = MinesweeperControlLayout.Create(breakpoint - .01, 99);
-            Near(99, single.Height); True(two.Height > 198);
+            Near(115, single.Height); Near(2 * 115 + 8, two.Height);
             Verify(single, 99); Verify(two, 99);
         });
         check("layout invariants hold across phone sizes and target scales", () => {
@@ -83,6 +83,7 @@ internal static class MinesweeperControlLayoutChecks
 
     private static void Verify(MinesweeperControlLayout layout, double minimum)
     {
+        double rowHeight = minimum + 16;
         var rects = new[] { layout.Fullscreen, layout.Reveal, layout.Flag, layout.ZoomOut, layout.ZoomValue, layout.ZoomIn, layout.Overview };
         Near(0, layout.Fullscreen.Y); Near(0, layout.Reveal.Y); Near(0, layout.Flag.Y); Near(0, layout.Overview.Y);
         True(layout.Fullscreen.X + layout.Fullscreen.Width <= layout.Reveal.X + 1e-8);
@@ -96,20 +97,23 @@ internal static class MinesweeperControlLayoutChecks
         Near(layout.ZoomValue.X + layout.ZoomValue.Width, layout.ZoomIn.X);
         Near(layout.ZoomIn.X + layout.ZoomIn.Width, layout.ZoomGroup.X + layout.ZoomGroup.Width);
         Near(minimum, layout.ZoomOut.Width); Near(minimum, layout.ZoomValue.Width); Near(minimum, layout.ZoomIn.Width);
-        Near(minimum, layout.ZoomGroup.Height);
-        if (layout.Height > minimum)
+        Near(rowHeight, layout.ZoomGroup.Height);
+        if (layout.Height > rowHeight)
         {
             Near((layout.Width - layout.ZoomGroup.Width) / 2, layout.ZoomGroup.X);
-            Near(minimum + 8, layout.ZoomGroup.Y);
+            Near(rowHeight + 8, layout.ZoomGroup.Y);
+            Near(2 * rowHeight + 8, layout.Height);
         }
         else
         {
+            Near(rowHeight, layout.Height);
             True(layout.Flag.X + layout.Flag.Width <= layout.ZoomGroup.X);
             True(layout.ZoomGroup.X + layout.ZoomGroup.Width <= layout.Overview.X);
         }
         for (int i = 0; i < rects.Length; i++)
         {
             var a = rects[i];
+            Near(rowHeight, a.Height);
             True(a.Width + 1e-8 >= minimum && a.Height + 1e-8 >= minimum);
             True(a.X >= 0 && a.Y >= 0 && a.X + a.Width <= layout.Width + 1e-8 && a.Y + a.Height <= layout.Height + 1e-8);
             for (int j = 0; j < i; j++)

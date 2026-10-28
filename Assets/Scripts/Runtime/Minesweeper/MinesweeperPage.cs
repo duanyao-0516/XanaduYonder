@@ -61,7 +61,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             visible=true; gameObject.SetActive(true); choosing=true;
             gameRoot.SetActive(false); selectionRoot.SetActive(true); fullscreenChanged?.Invoke(false);
-            RefreshSelection(); setStatus(warning??"首击安全 · 三档挑战 · 自动保存");
+            RefreshSelection(); setStatus(warning??"");
             if(!profile.TutorialSeen) ShowTutorial();
         }
         public void Leave()
@@ -95,7 +95,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             CancelInput(); ExitOverview(); CloseDialog(); session?.Leave(); feedback.Stop(); Save();
             choosing=true; gameRoot.SetActive(false); selectionRoot.SetActive(true); fullscreenChanged?.Invoke(false);
-            RefreshSelection(); setStatus(warning??"选择难度 · 每档独立续局与纪录");
+            RefreshSelection(); setStatus(warning??"");
         }
         internal void StartGame(int difficulty,bool fresh)
         {
@@ -216,9 +216,10 @@ namespace XanaduYonder.Runtime.Minesweeper
                 string error;
                 if(!store.TrySave(profile.Export(),out error))
                 { saveFailed=true; warning="扫雷进度暂未保存，请检查设备空间。"; Debug.LogWarning("Minesweeper save failed: "+error); }
-                else if(saveFailed) { saveFailed=false; warning=null; setStatus("扫雷进度已保存。"); }
+                else if(saveFailed) { saveFailed=false; warning=null; }
             }
-            if(warning!=null) setStatus(warning);
+            // Only the visible page owns the shared footer; normal play needs no status copy.
+            if(visible) setStatus(warning??"");
             if(compactStatus!=null) compactStatus.text=warning??"";
             Changed?.Invoke();
         }
