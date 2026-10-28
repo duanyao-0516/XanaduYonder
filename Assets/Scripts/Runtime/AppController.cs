@@ -686,6 +686,8 @@ namespace XanaduYonder.Runtime
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
                 activePage == Page.Lobby ? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
+            // The normal footer is hidden in Minesweeper focus mode; preserve shared save errors there.
+            if (activePage == Page.Minesweeper) minesweeperPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -718,7 +720,7 @@ namespace XanaduYonder.Runtime
             {
                 saveFailed = false;
                 saveWarning = null;
-                SetStatus("进度已保存。");
+                SetStatus(activePage == Page.Minesweeper ? "" : "进度已保存。");
             }
         }
 

@@ -28,11 +28,18 @@ namespace XanaduYonder.Runtime.Minesweeper
         private Func<bool> acceptsInput, soundEnabled, hapticsEnabled;
         private Action dismissDialog;
         private bool visible, choosing=true, fullscreen, resultDismissed, saveFailed, viewDirty;
-        private string warning, viewportSessionId;
+        private string warning, viewportSessionId, hostSaveWarning;
         private float periodicSave;
         private Vector2 lastLayoutSize;
         public event Action Changed;
         public string SaveError { get { return saveFailed?warning:null; } }
+        internal void SetHostSaveWarning(string message)
+        {
+            hostSaveWarning=message;
+            RefreshCompactStatus();
+        }
+        private void RefreshCompactStatus()
+        { if(compactStatus!=null) compactStatus.text=hostSaveWarning??warning??""; }
         public long CompletedCount
         {
             get
@@ -220,7 +227,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             }
             // Only the visible page owns the shared footer; normal play needs no status copy.
             if(visible) setStatus(warning??"");
-            if(compactStatus!=null) compactStatus.text=warning??"";
+            RefreshCompactStatus();
             Changed?.Invoke();
         }
         private void Update()

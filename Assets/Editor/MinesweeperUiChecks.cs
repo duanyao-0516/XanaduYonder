@@ -82,6 +82,7 @@ namespace XanaduYonder.EditorTools
                     CheckTerminal(fixture, false);
                     CheckTerminal(fixture, true);
                     CheckSharedHostLifecycle(fixture);
+                    CheckSharedSaveStatus(fixture);
                     CheckSaveRetryStatus(fixture);
                     CheckTutorial(fixture);
                     CheckTouchTargetLayout(fixture);
@@ -837,6 +838,71 @@ namespace XanaduYonder.EditorTools
             }
         }
 
+        private static void CheckSharedSaveStatus(Fixture f)
+        {
+            string directory = Path.Combine(output, "temporary-shared-save-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            string sharedDirectory = Path.Combine(directory, "shared");
+            File.WriteAllText(sharedDirectory, "Intentional fixture file blocks only shared storage.");
+            try
+            {
+                var sharedStore = new LocalSaveStore(sharedDirectory);
+                var gameStore = new MinesweeperSaveStore(Path.Combine(directory, "minesweeper"));
+                using (var host = new HostFixture(f, gameStore))
+                {
+                    Set(host.Shell, "store", sharedStore);
+                    Set(host.Shell, "game", new Game2048(new SeededRandom(2718)));
+                    var game = host.Game;
+                    game.Start(1);
+                    Invoke(host.Shell, "Save");
+                    string sharedWarning = Get<string>(host.Shell, "saveWarning");
+                    Require(Get<bool>(host.Shell, "saveFailed") && !string.IsNullOrEmpty(sharedWarning),
+                        "The isolated shared store actually fails while saving through the host");
+                    Require(File.Exists(gameStore.SavePath) && game.Page.SaveError == null && host.Status.text == sharedWarning,
+                        "A shared storage failure is visible even when the Minesweeper save succeeds");
+
+                    var root = Get<GameObject>(game.Page, "gameRoot").transform;
+                    var compact = Get<Text>(game.Page, "compactStatus");
+                    f.Click(Find(root, "Enter fullscreen"));
+                    Require(!host.Status.gameObject.activeInHierarchy && compact.gameObject.activeInHierarchy && compact.text == sharedWarning,
+                        "Fullscreen keeps the shared save error visible in its compact status");
+                    game.Page.Save();
+                    Require(game.Page.SaveError == null && compact.text == sharedWarning,
+                        "A successful Minesweeper save cannot clear an unresolved shared save error");
+                    f.Click(Find(root, "Exit fullscreen"));
+                    Require(host.Status.gameObject.activeInHierarchy && host.Status.text == sharedWarning,
+                        "Leaving fullscreen preserves the unresolved shared error in the normal footer");
+                    f.Click(Find(root, "Enter fullscreen"));
+                    Require(compact.gameObject.activeInHierarchy && compact.text == sharedWarning,
+                        "A fullscreen roundtrip preserves the shared save error");
+                    f.Capture("shared-save-error-focus");
+
+                    Set(host.Shell, "saveFailed", false); Set(host.Shell, "saveWarning", null);
+                    game.Page.Save();
+                    Require(string.IsNullOrEmpty(compact.text) && string.IsNullOrEmpty(host.Status.text),
+                        "Page save clears both status surfaces after the shared error has cleared");
+                    Invoke(host.Shell, "Save");
+                    Require(Get<bool>(host.Shell, "saveFailed") && compact.text == sharedWarning,
+                        "A new host save failure updates the visible compact status immediately");
+                    File.Delete(sharedDirectory);
+                    Directory.CreateDirectory(sharedDirectory);
+                    Invoke(host.Shell, "Save");
+                    Require(File.Exists(sharedStore.SavePath) && !Get<bool>(host.Shell, "saveFailed"),
+                        "The isolated shared save really recovers through AppController Save");
+                    Require(string.IsNullOrEmpty(compact.text) && string.IsNullOrEmpty(host.Status.text),
+                        "Shared save recovery clears the error without adding a lasting success instruction");
+                    f.Click(Find(root, "Exit fullscreen"));
+                    Require(host.Status.gameObject.activeInHierarchy && string.IsNullOrEmpty(host.Status.text),
+                        "Normal Ready layout stays empty after shared save recovery");
+                    f.Capture("shared-save-retry-recovered");
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+        }
+
         private static void CheckSaveRetryStatus(Fixture f)
         {
             string directory = Path.Combine(output, "temporary-save-retry-" + Guid.NewGuid().ToString("N"));
@@ -858,10 +924,25 @@ namespace XanaduYonder.EditorTools
                     Require(compact.gameObject.activeInHierarchy && compact.text.Contains("扫雷进度暂未保存"),
                         "Focus layout preserves the real storage error in its compact status");
                     f.Capture("save-error-focus");
+                    const string sharedWarning = "Shared host storage is also unavailable";
+                    Set(host.Shell, "saveFailed", true); Set(host.Shell, "saveWarning", sharedWarning);
+                    game.Page.Save();
+                    Require(game.Page.SaveError != null && host.Status.text == sharedWarning && compact.text == sharedWarning,
+                        "Shared save failure takes priority over a simultaneous Minesweeper save failure in both layouts");
+                    Set(host.Shell, "saveFailed", false); Set(host.Shell, "saveWarning", null);
+                    game.Page.Save();
+                    Require(game.Page.SaveError != null && host.Status.text == game.Page.SaveError && compact.text == game.Page.SaveError,
+                        "Clearing the shared failure reveals the still-unresolved Minesweeper error");
+                    Set(host.Shell, "saveFailed", true); Set(host.Shell, "saveWarning", sharedWarning);
+                    game.Page.Save();
                     File.Delete(directory);
                     Directory.CreateDirectory(directory);
                     game.Page.Save();
                     Require(File.Exists(store.SavePath) && game.Page.SaveError == null, "A successful retry actually writes and clears SaveError");
+                    Require(host.Status.text == sharedWarning && compact.text == sharedWarning,
+                        "Recovering the Minesweeper store preserves the unresolved shared storage error");
+                    Set(host.Shell, "saveFailed", false); Set(host.Shell, "saveWarning", null);
+                    game.Page.Save();
                     Require(string.IsNullOrEmpty(compact.text), "Successful retry leaves compact status empty without a replacement success instruction");
                     Require(string.IsNullOrEmpty(host.Status.text), "Successful retry leaves normal status empty without a replacement success instruction");
                     f.Click(Find(root, "Exit fullscreen"));
