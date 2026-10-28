@@ -6,8 +6,10 @@ namespace XanaduYonder.Runtime.Minesweeper
     public sealed class MinesweeperControlLayout
     {
         private const double PreferredGap = 8;
+        public MinesweeperInputRect Fullscreen { get; private set; }
         public MinesweeperInputRect Reveal { get; private set; }
         public MinesweeperInputRect Flag { get; private set; }
+        public MinesweeperInputRect ZoomGroup { get; private set; }
         public MinesweeperInputRect ZoomOut { get; private set; }
         public MinesweeperInputRect ZoomValue { get; private set; }
         public MinesweeperInputRect ZoomIn { get; private set; }
@@ -29,37 +31,38 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             RequirePositive(availableWidth, "availableWidth");
             RequirePositive(minimumTarget, "minimumTarget");
-            double overviewWidth = Math.Max(120, minimumTarget);
-            // Four minimum-width controls must fit on the second row; overview also retains its label width.
-            if (availableWidth < 3 * minimumTarget + overviewWidth)
-                throw new ArgumentOutOfRangeException("availableWidth", "The three zoom targets and overview do not fit.");
+            // The fallback keeps four actions on top and the zoom group below.
+            if (availableWidth < 4 * minimumTarget)
+                throw new ArgumentOutOfRangeException("availableWidth", "The four action targets do not fit.");
             var result = new MinesweeperControlLayout { Width = availableWidth, Height = minimumTarget };
-            double modeWidth = (availableWidth - overviewWidth - 3 * minimumTarget - 5 * PreferredGap) / 2;
-            if (modeWidth < minimumTarget)
+            if (availableWidth < 7 * minimumTarget + 4 * PreferredGap)
             {
-                // Preserve all six targets by moving modes above zoom and overview.
-                // Only compress horizontal gaps at the exact four-control width boundary.
-                double gap = Math.Min(PreferredGap, Math.Max(0, (availableWidth - overviewWidth - 3 * minimumTarget) / 3));
-                double zoomWidth = (availableWidth - overviewWidth - 3 * gap) / 3;
-                modeWidth = (availableWidth - PreferredGap) / 2;
-                double y = minimumTarget + PreferredGap;
+                // Compress only the top-row gaps at the exact four-target boundary.
+                double gap = Math.Min(PreferredGap, (availableWidth - 4 * minimumTarget) / 3);
+                double actionWidth = (availableWidth - 3 * gap) / 4;
                 result.Height = 2 * minimumTarget + PreferredGap;
-                result.Reveal = Rect(0, 0, modeWidth, minimumTarget);
-                result.Flag = Rect(modeWidth + PreferredGap, 0, modeWidth, minimumTarget);
-                result.ZoomOut = Rect(0, y, zoomWidth, minimumTarget);
-                result.ZoomValue = Rect(zoomWidth + gap, y, zoomWidth, minimumTarget);
-                result.ZoomIn = Rect(2 * (zoomWidth + gap), y, zoomWidth, minimumTarget);
-                result.Overview = Rect(availableWidth - overviewWidth, y, overviewWidth, minimumTarget);
+                result.Fullscreen = Rect(0, 0, actionWidth, minimumTarget);
+                result.Reveal = Rect(actionWidth + gap, 0, actionWidth, minimumTarget);
+                result.Flag = Rect(2 * (actionWidth + gap), 0, actionWidth, minimumTarget);
+                result.Overview = Rect(3 * (actionWidth + gap), 0, actionWidth, minimumTarget);
+                result.SetZoomGroup((availableWidth - 3 * minimumTarget) / 2, minimumTarget + PreferredGap, minimumTarget);
                 return result;
             }
-            result.Reveal = Rect(0, 0, modeWidth, minimumTarget);
-            result.Flag = Rect(modeWidth + PreferredGap, 0, modeWidth, minimumTarget);
-            double x = 2 * (modeWidth + PreferredGap);
-            result.ZoomOut = Rect(x, 0, minimumTarget, minimumTarget);
-            result.ZoomValue = Rect(x + minimumTarget + PreferredGap, 0, minimumTarget, minimumTarget);
-            result.ZoomIn = Rect(x + 2 * (minimumTarget + PreferredGap), 0, minimumTarget, minimumTarget);
-            result.Overview = Rect(availableWidth - overviewWidth, 0, overviewWidth, minimumTarget);
+            double width = (availableWidth - 3 * minimumTarget - 4 * PreferredGap) / 4;
+            result.Fullscreen = Rect(0, 0, width, minimumTarget);
+            result.Reveal = Rect(width + PreferredGap, 0, width, minimumTarget);
+            result.Flag = Rect(2 * (width + PreferredGap), 0, width, minimumTarget);
+            result.SetZoomGroup(3 * (width + PreferredGap), 0, minimumTarget);
+            result.Overview = Rect(availableWidth - width, 0, width, minimumTarget);
             return result;
+        }
+
+        private void SetZoomGroup(double x, double y, double segmentSize)
+        {
+            ZoomGroup = Rect(x, y, 3 * segmentSize, segmentSize);
+            ZoomOut = Rect(x, y, segmentSize, segmentSize);
+            ZoomValue = Rect(x + segmentSize, y, segmentSize, segmentSize);
+            ZoomIn = Rect(x + 2 * segmentSize, y, segmentSize, segmentSize);
         }
 
         private static MinesweeperInputRect Rect(double x, double y, double width, double height)

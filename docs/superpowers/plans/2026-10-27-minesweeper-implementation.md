@@ -110,3 +110,10 @@ Implemented steps are marked above. Completed commands, outcomes and remaining l
 - [x] 在 `MinesweeperPage.cs` 统一以宽或高大于 9 判断扩展视图能力，同时限制按钮、操作回调及恢复入口；在 `MinesweeperPage.Layout.cs` 同步禁用文字和图标，沿用 UiFactory 主题色。
 - [x] 视口背景改为 `#F0F3EC`，总览文字/图标和 `MinesweeperBoardView` 横纵范围条改为 `UiFactory.Accent`；同步规则中总览/全屏的难度范围。
 - [x] 执行 Unity 界面回归并查看实际渲染截图，再构建独立测试 APK，核对包名/签名/哈希，并覆盖安装到此前授权的 PKM110 扫雷测试应用。记录真实结果及未实测范围。
+
+## 2026-10-28 紧凑底栏修订
+
+- [x] 在 `MinesweeperControlLayout` 增加 Fullscreen 与 ZoomGroup 矩形，测试后实现七个触控区的单行/双行排列；缩放三个区域无内部间距，仍达到 44 dp。
+- [x] UI 检查先验证旧版不满足底栏全屏、单框缩放和上移要求。页面把进入/退出全屏放在底栏同一位置，共享缩放背景，暂停外观内缩但保留命中范围；调整视口顶部和底栏边距，不改全局导航。
+- [x] 验证纯输入/布局与实际 UGUI 点击、旧初级禁用、大棋盘全屏/总览/暂停、分段缩放与小屏重排；查看真实截图。
+- [x] 构建并核对独立 APK，覆盖安装 PKM110，补充验证记录和用户可查看的截图。

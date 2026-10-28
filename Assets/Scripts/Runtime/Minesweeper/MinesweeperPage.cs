@@ -257,15 +257,15 @@ namespace XanaduYonder.Runtime.Minesweeper
             zoomLabel.text=overview?"全盘":Math.Round(viewport.ZoomScale*100)+"%";
             overviewLabel.text=overview?"返回局部":"总览";
             overviewNote.gameObject.SetActive(overview);
-            zoomOut.interactable=view&&!overview&&viewport.ZoomScale>.5;
-            zoomIn.interactable=view&&!overview&&viewport.ZoomScale<2;
-            zoomValue.interactable=view&&!overview;
+            ViewButtonState(zoomOut,view&&!overview&&viewport.ZoomScale>.5,UiFactory.Ink);
+            ViewButtonState(zoomIn,view&&!overview&&viewport.ZoomScale<2,UiFactory.Ink);
+            ViewButtonState(zoomValue,view&&!overview,UiFactory.Ink);
             ViewButtonState(overviewButton,view&&SupportsExpandedView,UiFactory.Accent);
             revealButton.interactable=flagButton.interactable=CellAllowed;
             ModeColor(revealButton,session.InputMode==MinesweeperInputMode.Reveal);
             ModeColor(flagButton,session.InputMode==MinesweeperInputMode.Flag);
-            ViewButtonState(enterFullscreen,dialog==null&&!overview&&SupportsExpandedView,UiFactory.Ink);
-            ViewButtonState(exitFullscreen,dialog==null&&!overview,UiFactory.Ink);
+            ViewButtonState(enterFullscreen,dialog==null&&!overview&&SupportsExpandedView,UiFactory.Accent);
+            ViewButtonState(exitFullscreen,dialog==null&&!overview,UiFactory.Accent);
             hint.text=overview?"总览仅观察和定位 · 进行中的对局继续计时":viewport.ZoomScale<1?
                 (session.InputMode==MinesweeperInputMode.Flag?"插旗模式":"翻开模式")+" · 小格视图 · 点击倍率恢复 100%":
                 session.InputMode==MinesweeperInputMode.Flag?"点击插旗 / 拔旗 · 双指缩放和平移":"点击翻开 · 长按即标记 · 双指缩放和平移";

@@ -74,6 +74,7 @@ namespace XanaduYonder.EditorTools
                     CheckNavigationWorldAlignment(fixture);
                     CheckImmediateLongPress(fixture);
                     CheckExpandedViewAvailability(fixture);
+                    CheckToolbarRefinement(fixture);
                     CheckLegacySmallBoardFullscreen(fixture);
                     CheckSelectionAndSmallCells(fixture);
                     CheckReadyLifecycle(fixture);
@@ -293,6 +294,98 @@ namespace XanaduYonder.EditorTools
                         "View-action availability does not replace or mutate the board: " + difficulty);
                 }
             }
+        }
+
+        private static void CheckToolbarRefinement(Fixture f)
+        {
+            using (var game = new PageFixture(f))
+            {
+                game.Start(1);
+                var root = Get<GameObject>(game.Page, "gameRoot").transform;
+                var toolbar = Find(root, "Minesweeper toolbar");
+                var enter = Find(root, "Enter fullscreen");
+                var exit = Find(root, "Exit fullscreen", false);
+                var reveal = Find(root, "Reveal mode");
+                Require(enter.parent == toolbar && exit.parent == toolbar, "Fullscreen and exit share the bottom toolbar");
+                var fullArea = InPage(game.Root, enter);
+                var revealArea = InPage(game.Root, reveal);
+                Require(fullArea.xMax <= revealArea.xMin && fullArea.yMin == revealArea.yMin,
+                    "Fullscreen sits directly to the left of Reveal in the same toolbar row");
+                foreach (var control in new[] { enter, exit })
+                {
+                    var icon = control.GetComponentInChildren<MinesweeperIconGraphic>(true);
+                    var label = control.GetComponentInChildren<Text>(true);
+                    Require(label.gameObject.activeSelf && !string.IsNullOrEmpty(label.text), "Fullscreen mode control has a visible label");
+                    var iconArea = InPage(game.Root, icon.rectTransform);
+                    var labelArea = InPage(game.Root, label.rectTransform);
+                    Require(iconArea.yMax <= labelArea.yMin, "Fullscreen symbol appears above its label like Overview");
+                }
+                Near(InPage(game.Root, Find(root, "Minesweeper viewport")).yMin, 294,
+                    "Moving fullscreen removes its upper row and raises the normal board");
+                Near(InPage(game.Root, toolbar).yMin, f.Height - toolbar.rect.height - 128,
+                    "Bottom toolbar is raised by 24 design units");
+                CheckZoomGroup(game);
+                f.Click(Find(root, "Zoom out"));
+                Near(game.Viewport.ZoomScale, .75, "Grouped minus remains independently clickable");
+                f.Click(Find(root, "Zoom value"));
+                Near(game.Viewport.ZoomScale, 1, "Grouped percentage resets zoom independently");
+                f.Click(Find(root, "Zoom in"));
+                Near(game.Viewport.ZoomScale, 1.25, "Grouped plus remains independently clickable");
+                CheckCompactPause(game, Find(root, "Pause"));
+                f.Capture("refined-toolbar-normal");
+                f.Click(enter);
+                Require(Get<bool>(game.Page, "fullscreen") && !enter.gameObject.activeSelf && exit.gameObject.activeSelf,
+                    "Bottom fullscreen action swaps to exit without keeping a second active control");
+                var exitArea = InPage(game.Root, exit);
+                Near(exitArea.x, fullArea.x, "Exit keeps the fullscreen slot horizontal position");
+                Near(exitArea.y, fullArea.y, "Exit keeps the fullscreen slot vertical position");
+                Near(exitArea.width, fullArea.width, "Exit keeps the fullscreen slot width");
+                Near(exitArea.height, fullArea.height, "Exit keeps the fullscreen slot height");
+                CheckCompactPause(game, Find(root, "Focus pause"));
+                f.Capture("refined-toolbar-focus");
+                f.Click(exit);
+                Require(!Get<bool>(game.Page, "fullscreen") && enter.gameObject.activeSelf && !exit.gameObject.activeSelf,
+                    "Bottom exit action returns to the ordinary layout");
+                Near(game.Viewport.ZoomScale, 1.25, "Bottom fullscreen roundtrip preserves zoom");
+            }
+        }
+
+        private static void CheckZoomGroup(PageFixture game)
+        {
+            var root = Get<GameObject>(game.Page, "gameRoot").transform;
+            var group = Find(root, "Zoom group");
+            var minus = Find(root, "Zoom out");
+            var value = Find(root, "Zoom value");
+            var plus = Find(root, "Zoom in");
+            Require(minus.parent == group && value.parent == group && plus.parent == group,
+                "Minus, percentage and plus are children of one visible zoom frame");
+            Require(group.GetComponent<Image>() != null && !group.GetComponent<Image>().raycastTarget,
+                "Shared zoom frame cannot intercept segment clicks");
+            var groupArea = InPage(game.Root, group);
+            var minusArea = InPage(game.Root, minus); var valueArea = InPage(game.Root, value); var plusArea = InPage(game.Root, plus);
+            Near(minusArea.xMin, groupArea.xMin, "Zoom segments begin at the frame edge");
+            Near(minusArea.xMax, valueArea.xMin, "Minus and percentage touch without a gap");
+            Near(valueArea.xMax, plusArea.xMin, "Percentage and plus touch without a gap");
+            Near(plusArea.xMax, groupArea.xMax, "Zoom segments finish at the frame edge");
+            Require(Encloses(groupArea, minusArea) && Encloses(groupArea, valueArea) && Encloses(groupArea, plusArea),
+                "All independent zoom hit regions stay within the unified frame");
+        }
+
+        private static void CheckCompactPause(PageFixture game, RectTransform control)
+        {
+            var button = control.GetComponent<Button>();
+            var target = control.GetComponent<Image>();
+            Require(target != null && target.raycastTarget && target.color.a == 0,
+                "Compact pause retains a full transparent hit region");
+            var hitArea = InPage(game.Root, control);
+            var visibleArea = InPage(game.Root, button.targetGraphic.rectTransform);
+            Near(visibleArea.xMin - hitArea.xMin, 8, "Pause visible surface is inset on the left");
+            Near(hitArea.xMax - visibleArea.xMax, 8, "Pause visible surface is inset on the right");
+            Near(visibleArea.yMin - hitArea.yMin, 8, "Pause visible surface is inset on the top");
+            Near(hitArea.yMax - visibleArea.yMax, 8, "Pause visible surface is inset on the bottom");
+            var icon = control.GetComponentInChildren<MinesweeperIconGraphic>();
+            Near(icon.rectTransform.rect.width, 28, "Compact pause uses the smaller icon width");
+            Near(icon.rectTransform.rect.height, 28, "Compact pause uses the smaller icon height");
         }
 
         private static void CheckLegacySmallBoardFullscreen(Fixture f)
@@ -825,6 +918,7 @@ namespace XanaduYonder.EditorTools
                 areas.Add(area);
             }
             Require(Encloses(pageArea, viewportArea), "Touch-target reflow keeps a usable board viewport inside the page");
+            CheckZoomGroup(game);
         }
 
         private static Rect InPage(RectTransform root, RectTransform child)
@@ -847,7 +941,8 @@ namespace XanaduYonder.EditorTools
                 "Board viewport stays inside the available page");
             var controls = new List<Rect>();
             string pause = Find(root, "Pause", false).gameObject.activeInHierarchy ? "Pause" : "Focus pause";
-            foreach (string name in new[] { "Reveal mode", "Flag mode", "Zoom out", "Zoom value", "Zoom in", "Overview", pause })
+            string full = Find(root, "Enter fullscreen", false).gameObject.activeInHierarchy ? "Enter fullscreen" : "Exit fullscreen";
+            foreach (string name in new[] { full, "Reveal mode", "Flag mode", "Zoom out", "Zoom value", "Zoom in", "Overview", pause })
             {
                 var control = Find(root, name);
                 var bounds = f.Bounds(control);

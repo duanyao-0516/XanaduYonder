@@ -8,7 +8,8 @@ namespace XanaduYonder.Runtime.Minesweeper
     internal sealed partial class MinesweeperPage
     {
         private GameObject normalChrome, focusChrome, pauseCover;
-        private RectTransform toolbar, hintBand, statusBand;
+        private RectTransform toolbar, zoomGroup, hintBand, statusBand;
+        private readonly RectTransform[] zoomDividers=new RectTransform[2];
         private Text remaining,focusRemaining,difficulty,timer,focusTimer,hint,compactStatus,pauseText,overviewNote,zoomLabel,overviewLabel;
         private Button revealButton,flagButton,zoomOut,zoomValue,zoomIn,overviewButton,enterFullscreen,exitFullscreen,pauseButton,focusPause,resumeButton;
         private readonly Text[] selectionRecords=new Text[3], selectionStates=new Text[3];
@@ -34,14 +35,12 @@ namespace XanaduYonder.Runtime.Minesweeper
             difficulty=UiFactory.Label(stats,"",235,0,230,74,22,UiFactory.Accent,TextAnchor.MiddleCenter);
             timer=UiFactory.Label(stats,"00:00",470,10,125,58,26,UiFactory.Ink,TextAnchor.MiddleRight); timer.name="Minesweeper timer";
             Fit(timer,18,26);
-            pauseButton=LocalButton(stats,"Pause",MinesweeperIconKind.Pause,null,600,0,84,80,Pause);
-            enterFullscreen=LocalButton(normal,"Enter fullscreen",MinesweeperIconKind.Expand,"全屏",550,274,134,66,ToggleFullscreen);
+            pauseButton=CompactPauseButton(stats,"Pause",600,0,Pause);
             var focus=UiFactory.Rect(page,"Focus chrome",0,0,720,118); focusChrome=focus.gameObject;
             focus.anchorMin=focus.anchorMax=new Vector2(.5f,1); focus.pivot=new Vector2(.5f,1); focus.anchoredPosition=Vector2.zero;
-            exitFullscreen=LocalButton(focus,"Exit fullscreen",MinesweeperIconKind.Collapse,null,36,26,84,84,ToggleFullscreen);
-            focusRemaining=UiFactory.Label(focus,"",142,32,210,66,29,UiFactory.Ink);
-            focusTimer=UiFactory.Label(focus,"00:00",384,32,194,66,29,UiFactory.Ink,TextAnchor.MiddleRight); Fit(focusTimer,20,29);
-            focusPause=LocalButton(focus,"Focus pause",MinesweeperIconKind.Pause,null,600,26,84,84,Pause);
+            focusRemaining=UiFactory.Label(focus,"",36,22,280,66,29,UiFactory.Ink);
+            focusTimer=UiFactory.Label(focus,"00:00",384,22,194,66,29,UiFactory.Ink,TextAnchor.MiddleRight); Fit(focusTimer,20,29);
+            focusPause=CompactPauseButton(focus,"Focus pause",600,18,Pause);
             var background=UiFactory.Panel(page,"Minesweeper viewport",36,350,648,762,UiFactory.Hex("F0F3EC"));
             background.raycastTarget=true; surface=background.rectTransform; surface.gameObject.AddComponent<RectMask2D>();
             board=new MinesweeperBoardView(surface); pointer=surface.gameObject.AddComponent<MinesweeperPointer>();
@@ -54,12 +53,20 @@ namespace XanaduYonder.Runtime.Minesweeper
             UiFactory.Label(pauseContent,"盘面已遮挡，放心休息一下。",0,76,480,46,23,UiFactory.Muted,TextAnchor.MiddleCenter);
             resumeButton=UiFactory.Button(pauseContent,"继续游戏",90,142,300,76,Resume,true); resumeButton.name="Resume";
             toolbar=UiFactory.Rect(page,"Minesweeper toolbar",36,1134,648,82);
+            enterFullscreen=LocalButton(toolbar,"Enter fullscreen",MinesweeperIconKind.Expand,"全屏",0,0,88,88,ToggleFullscreen);
+            exitFullscreen=LocalButton(toolbar,"Exit fullscreen",MinesweeperIconKind.Collapse,"退出",0,0,88,88,ToggleFullscreen);
             revealButton=LocalButton(toolbar,"Reveal mode",MinesweeperIconKind.Reveal,"翻开",0,0,128,82,()=>SetMode(MinesweeperInputMode.Reveal));
             flagButton=LocalButton(toolbar,"Flag mode",MinesweeperIconKind.Flag,"插旗",128,0,128,82,()=>SetMode(MinesweeperInputMode.Flag));
-            zoomOut=LocalButton(toolbar,"Zoom out",MinesweeperIconKind.Minus,null,272,0,80,82,()=>Zoom(-1));
-            zoomValue=UiFactory.Button(toolbar,"100%",352,0,80,82,ResetZoom); zoomValue.name="Zoom value";
+            zoomGroup=UiFactory.Panel(toolbar,"Zoom group",288,0,264,88,UiFactory.Hex("E7EDE4")).rectTransform;
+            zoomGroup.gameObject.AddComponent<Mask>();
+            zoomOut=LocalButton(zoomGroup,"Zoom out",MinesweeperIconKind.Minus,null,0,0,88,88,()=>Zoom(-1));
+            zoomValue=UiFactory.Button(zoomGroup,"100%",88,0,88,88,ResetZoom); zoomValue.name="Zoom value";
             zoomLabel=zoomValue.GetComponentInChildren<Text>(); zoomLabel.fontSize=21;
-            zoomIn=LocalButton(toolbar,"Zoom in",MinesweeperIconKind.Plus,null,432,0,80,82,()=>Zoom(1));
+            zoomIn=LocalButton(zoomGroup,"Zoom in",MinesweeperIconKind.Plus,null,176,0,88,88,()=>Zoom(1));
+            foreach(var segment in new[]{zoomOut,zoomValue,zoomIn}) StyleZoomSegment(segment);
+            var dividerColor=UiFactory.Accent; dividerColor.a=.2f;
+            for(int i=0;i<zoomDividers.Length;i++)
+                zoomDividers[i]=UiFactory.Panel(zoomGroup,"Zoom divider "+i,88*(i+1),28,1,32,dividerColor,false).rectTransform;
             overviewButton=LocalButton(toolbar,"Overview",MinesweeperIconKind.Overview,"总览",528,0,120,82,ToggleOverview);
             overviewLabel=overviewButton.GetComponentInChildren<Text>();
             hintBand=UiFactory.Rect(page,"Minesweeper hint",36,1228,648,40);
@@ -126,11 +133,12 @@ namespace XanaduYonder.Runtime.Minesweeper
             float minimum=(float)MinesweeperControlLayout.TargetSize(DensityDpi(),PixelsPerDesignUnit());
             float controlsHeight=ApplyControlLayout(minimum);
             normalChrome.SetActive(!fullscreen); focusChrome.SetActive(fullscreen);
-            float top=fullscreen?Mathf.Max(128,minimum+38):Mathf.Max(350,194+minimum*2+22);
-            float toolbarTop=height-controlsHeight-104;
+            enterFullscreen.gameObject.SetActive(!fullscreen); exitFullscreen.gameObject.SetActive(fullscreen);
+            float top=fullscreen?Mathf.Max(112,minimum+30):Mathf.Max(286,194+minimum+12);
+            float toolbarTop=height-controlsHeight-128;
             surface.anchoredPosition=new Vector2(left,-top); surface.sizeDelta=new Vector2(648,Mathf.Max(100,toolbarTop-22-top));
             toolbar.anchoredPosition=new Vector2(36,-toolbarTop);
-            hintBand.anchoredPosition=new Vector2(left,-(height-92));
+            hintBand.anchoredPosition=new Vector2(left,-(height-116));
             statusBand.anchoredPosition=new Vector2(left,-(height-42)); statusBand.gameObject.SetActive(fullscreen);
             if(viewport!=null) { viewport.SetLayout(surface.rect.width,surface.rect.height,BaseCellSize()); board.RenderView(viewport); }
         }
@@ -138,33 +146,39 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             var controls=MinesweeperControlLayout.Create(Math.Max(648,root.rect.width-72),minimumTarget);
             toolbar.sizeDelta=new Vector2((float)controls.Width,(float)controls.Height);
+            SetControlBounds(enterFullscreen,controls.Fullscreen); SetControlBounds(exitFullscreen,controls.Fullscreen);
             SetControlBounds(revealButton,controls.Reveal); SetControlBounds(flagButton,controls.Flag);
-            SetControlBounds(zoomOut,controls.ZoomOut); SetControlBounds(zoomValue,controls.ZoomValue);
-            SetControlBounds(zoomIn,controls.ZoomIn); SetControlBounds(overviewButton,controls.Overview);
-            SetControlBounds(pauseButton,new MinesweeperInputRect(684-minimumTarget,0,minimumTarget,minimumTarget));
-            SetControlBounds(focusPause,new MinesweeperInputRect(684-minimumTarget,26,minimumTarget,minimumTarget));
-            SetControlBounds(exitFullscreen,new MinesweeperInputRect(36,26,minimumTarget,minimumTarget));
-            SetControlBounds(enterFullscreen,new MinesweeperInputRect(550,194+minimumTarget+12,134,minimumTarget),true);
+            zoomGroup.anchoredPosition=new Vector2((float)controls.ZoomGroup.X,-(float)controls.ZoomGroup.Y);
+            zoomGroup.sizeDelta=new Vector2((float)controls.ZoomGroup.Width,(float)controls.ZoomGroup.Height);
+            SetZoomBounds(zoomOut,controls.ZoomOut,controls.ZoomGroup); SetZoomBounds(zoomValue,controls.ZoomValue,controls.ZoomGroup);
+            SetZoomBounds(zoomIn,controls.ZoomIn,controls.ZoomGroup); SetControlBounds(overviewButton,controls.Overview);
+            for(int i=0;i<zoomDividers.Length;i++) zoomDividers[i].anchoredPosition=new Vector2(minimumTarget*(i+1),-(minimumTarget-32)/2);
+            SetControlBounds(pauseButton,new MinesweeperInputRect(684-minimumTarget,0,minimumTarget,minimumTarget),28);
+            SetControlBounds(focusPause,new MinesweeperInputRect(684-minimumTarget,18,minimumTarget,minimumTarget),28);
             resumeButton.GetComponent<RectTransform>().sizeDelta=new Vector2(300,minimumTarget);
             resumeButton.GetComponentInChildren<Text>().rectTransform.sizeDelta=new Vector2(276,minimumTarget);
             timer.rectTransform.sizeDelta=new Vector2(Mathf.Max(60,684-minimumTarget-16-470),58);
             focusTimer.rectTransform.sizeDelta=new Vector2(Mathf.Max(100,684-minimumTarget-16-384),66);
-            focusRemaining.rectTransform.anchoredPosition=new Vector2(36+minimumTarget+16,-32);
-            focusRemaining.rectTransform.sizeDelta=new Vector2(332-minimumTarget,66);
             return (float)controls.Height;
         }
-        private static void SetControlBounds(Button button,MinesweeperInputRect bounds,bool horizontal=false)
+        private static void SetZoomBounds(Button button,MinesweeperInputRect bounds,MinesweeperInputRect group)
+        { SetControlBounds(button,new MinesweeperInputRect(bounds.X-group.X,bounds.Y-group.Y,bounds.Width,bounds.Height)); }
+        private static void SetControlBounds(Button button,MinesweeperInputRect bounds,float iconSize=34)
         {
             var rect=button.GetComponent<RectTransform>();
             float w=(float)bounds.Width,h=(float)bounds.Height;
             rect.anchoredPosition=new Vector2((float)bounds.X,-(float)bounds.Y); rect.sizeDelta=new Vector2(w,h);
             var icon=button.GetComponentInChildren<MinesweeperIconGraphic>(true);
             var label=button.GetComponentInChildren<Text>(true);
-            if(icon!=null) icon.rectTransform.anchoredPosition=new Vector2(horizontal?14:(w-34)/2,-(horizontal||!label.gameObject.activeSelf?(h-34)/2:8));
+            if(icon!=null)
+            {
+                icon.rectTransform.sizeDelta=new Vector2(iconSize,iconSize);
+                icon.rectTransform.anchoredPosition=new Vector2((w-iconSize)/2,-(!label.gameObject.activeSelf?(h-iconSize)/2:8));
+            }
             if(label.gameObject.activeSelf)
             {
-                label.rectTransform.anchoredPosition=icon==null?new Vector2(12,0):horizontal?new Vector2(54,0):new Vector2(0,-h*.55f);
-                label.rectTransform.sizeDelta=icon==null?new Vector2(w-24,h):horizontal?new Vector2(w-62,h):new Vector2(w,h*.40f);
+                label.rectTransform.anchoredPosition=icon==null?new Vector2(12,0):new Vector2(0,-h*.55f);
+                label.rectTransform.sizeDelta=icon==null?new Vector2(w-24,h):new Vector2(w,h*.40f);
             }
         }
         private float PixelsPerDesignUnit()
@@ -199,6 +213,27 @@ namespace XanaduYonder.Runtime.Minesweeper
             return cachedDensityDpi>0?cachedDensityDpi:160;
         }
         private float BaseCellSize() { return Mathf.Max(72,32*(DensityDpi()/160)/PixelsPerDesignUnit()); }
+        private static Button CompactPauseButton(Transform parent,string name,float x,float y,Action action)
+        {
+            var button=LocalButton(parent,name,MinesweeperIconKind.Pause,null,x,y,88,88,action);
+            // Preserve the full hit region while reducing only the visible button.
+            button.GetComponent<Image>().color=Color.clear;
+            var face=UiFactory.Panel(button.transform,name+" surface",0,0,88,88,UiFactory.Hex("E7EDE4"));
+            UiFactory.Stretch(face.rectTransform); face.rectTransform.offsetMin=new Vector2(8,8); face.rectTransform.offsetMax=new Vector2(-8,-8);
+            face.transform.SetAsFirstSibling(); button.targetGraphic=face;
+            return button;
+        }
+        private static void StyleZoomSegment(Button button)
+        {
+            // One rounded parent draws the frame; only the pressed segment gets a tint.
+            var image=button.GetComponent<Image>(); image.sprite=null; image.type=Image.Type.Simple;
+            image.color=Color.white;
+            var colors=button.colors;
+            colors.normalColor=colors.selectedColor=colors.disabledColor=Color.clear;
+            colors.highlightedColor=new Color(1,1,1,.15f);
+            var pressed=UiFactory.Accent; pressed.a=.16f; colors.pressedColor=pressed;
+            button.colors=colors;
+        }
         private static Button LocalButton(Transform parent,string name,MinesweeperIconKind kind,string text,float x,float y,float w,float h,Action action)
         {
             var button=UiFactory.Button(parent,text??"",x,y,w,h,action); button.name=name;

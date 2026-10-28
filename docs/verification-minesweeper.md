@@ -135,3 +135,21 @@ Unity 6000.3.27f1，Android 编译目标，真实 UGUI + Camera.Render。扫雷�
 - 上一版长按/导航修订包备份为 `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation-20261028-hold-navigation.apk`。
 
 本轮设备验证限于安装成功和产物一致性；实际触感及用户对新配色的验收仍需真人体验。
+
+## 2026-10-28 第三轮反馈：底部工具栏整合
+
+全屏不再独占顶部一行。底栏依次为「全屏/退出、翻开、插旗、缩放组、总览」，全屏/退出在同一位置交替显示，沿用总览的图标在上、文字在下及主题绿。9×9 仍禁用全屏与总览。
+
+缩放三个按钮共用一个带圆角裁剪的背景，内部没有间隔，细线区分点击区域；三个按钮仍分别执行减小倍率、恢复 100%、放大倍率，禁用时文字与图标变为次要色。暂停背景每边内缩 8 单位，图标从 34 缩为 28，透明命中区保持原尺寸。普通棋盘取消顶部全屏行后上移，底栏和提示再上移 24 设计单位；共享导航位置不变。
+
+布局单行阈值为 `7 × minimumTarget + 32`；不足时上排为全屏/退出、翻开、插旗、总览，下排为居中的连续缩放组。所有操作仍满足按逻辑密度换算的 44 dp 点击目标，无重叠；不以缩小命中区域强行排一行。
+
+- `scripts/test-minesweeper-input.sh`：76 项通过，0 失败；新增分组、七控件排列和边界回归先观察旧布局内部间距失败，原输入/手势用例保留。日志在 `artifacts/logs/minesweeper-toolbar-input-{red,green}.out`。
+- `scripts/test-minesweeper-ui.sh`：4166 条断言通过。旧适配层先在第 347 条断言因全屏不在底栏失败，报告保存为 `artifacts/validation/minesweeper-ui/toolbar-red-report.txt`。新回归覆盖真实分段点击、同位置全屏/退出、视觉缩小与命中区保持、普通棋盘/底栏上移、两种屏高和窄屏重排，并继续覆盖先前的初级禁用、旧档恢复、长按、导航、暂停和终局。
+- 已查看 `refined-toolbar-normal-720x1582.png`、`refined-toolbar-focus-720x1320.png`、`focus-overview-720x1320.png` 实际渲染图，确认分组、文字、图标和背景表现。截图位于 `artifacts/validation/minesweeper-ui/`。
+
+改动限定在扫雷视图/布局及对应测试、文档，未改规则、存档 schema、共享导航或其他游戏。编辑器几何和点击检查不代替物理设备的实际触控与视觉体验验收。
+
+独立源码审查未发现阻塞问题。`scripts/build-minesweeper-validation.sh` 退出 0，`aapt` 确认独立测试包名、0.4.0/code 4 和 ARM64，`apksigner verify --verbose` 退出 0（v2 签名通过）。ProjectSettings 无最终差异。最新 APK 仍为 `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，77,980,241 字节，SHA-256 为 `504bc6939b4fee63201ff7d9f3639db6f761373ea107fea762594ea9305651fe`。
+
+已通过指定 PKM110 的 `adb install -r` 覆盖安装，返回 `Success`，未卸载或清除数据；读取设备实际 APK 哈希与本次构建一致。上一版入口/配色包备份为 `XanaduYonder-0.4.0-minesweeper-validation-20261028-view-colors.apk`。本轮设备证据限于安装及产物一致性，不宣称已完成新布局的真人触控验收。
