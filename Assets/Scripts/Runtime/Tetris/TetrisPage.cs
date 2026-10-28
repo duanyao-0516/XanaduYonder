@@ -184,7 +184,7 @@ namespace XanaduYonder.Runtime.Tetris
                 {
                     case TetrisSessionPhase.Ready: view.SetOverlay("慢慢来，先放一块", "填满一行，就向前一点。", "开始游戏", Begin, null, null, true); break;
                     case TetrisSessionPhase.Paused: view.SetOverlay("歇一会儿", "这一局为你留着。", "继续游戏", Begin, "重新开始", NewRound, true); break;
-                    case TetrisSessionPhase.Countdown: view.SetOverlay(session.CountdownNumber.ToString(), "准备继续", null, null, "保持暂停", Suspend, true); break;
+                    case TetrisSessionPhase.Countdown: view.SetOverlay("倒计时：" + session.CountdownNumber, "准备继续", null, null, "保持暂停", Suspend, true); break;
                     case TetrisSessionPhase.Ended: view.SetOverlay("这一局，很不错", "得分 " + session.Snapshot.Score + " · 消除 " + session.Snapshot.Lines + " 行", "再来一局", NewRound, "返回大厅", Back, true); break;
                     default: view.SetOverlay(null,null,null,null,null,null,false); break;
                 }
