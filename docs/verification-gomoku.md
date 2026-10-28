@@ -2,6 +2,8 @@
 
 日期：2026-10-28。开发仅在 `/Users/bytedance/.codex/worktrees/gomoku/XanaduYonder` 的 `p/duanyao.0516/feature/gomoku` 分支，从 `master` 当时的 `8d64b5f` 开始。其他工作树后续提交未合入。最新正式发布版本仍为 v0.4.0；本次不创建发布或修改正式安装。
 
+随后按用户要求完成独立 Android 模拟器验证：65 条操作／存档断言通过、36 张截图，覆盖实际 AI 应手与取消、双人胜负、进程恢复及文件故障；详见[模拟器验证记录](verification-gomoku-emulator.md)。未操作正在被其他任务使用的真机。
+
 ## 完成范围
 
 人机简单／普通／困难、执黑／执白、本地双人、换边、预选／取消／确认、四边 A–O 与 1–15 坐标、末手标记、胜利连线、悔棋、暂停、后台及离开恢复、每模式独立续局、终局只读、存档异常和重试均已接入。顶部直接复用 `UiFactory.IconButton` 的 Home / Book / Settings，坐标分别为 `(56,34)`、`(536,34)`、`(606,34)`，大小均为 58×58。无全屏入口。
@@ -62,5 +64,5 @@ scripts/test-minigame-ui.sh
 
 - `Library`、`Temp`、`Library/GomokuGradle` 均为本工作树本地路径，无指向其他工作树的链接。Unity 检查与构建串行，使用私有临时 ADB 端口。
 - 验证包名为 `com.duanyao.xanaduyonder.gomokutest`，构建方法以 try/finally 恢复包名与产品名，不改正式版号或其他游戏存档协议。
-- `adb devices -l` 当前无已连接设备，因此没有安装、启动或宣称 Android 真机验收完成。Android AI 延迟、取消响应、发热、长时运行、真实多指和系统后台行为仍需设备验证。
+- 初次构建时没有连接设备；随后用户明确真机由其他任务使用，已改用专用模拟器完成安装与运行验证。Android 真机上的 AI 延迟、发热、长时运行、多指与系统行为仍需实机验证，不把模拟器结果称为真机验收。
 - 本地提交后保留工作树继续开发，不合并、推送或发布。
