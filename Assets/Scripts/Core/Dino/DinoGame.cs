@@ -1,3 +1,5 @@
+// Portions derived from Chromium, Copyright 2024 The Chromium Authors.
+// Use of this source code is governed by the BSD-style license in docs/chromium-dino-reference/source/LICENSE.
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,20 +8,22 @@ namespace XanaduYonder.Core.Dino
 {
     public sealed class DinoGame
     {
-        private readonly List<DinoObstacle> obstacles = new List<DinoObstacle>(8);
+        private readonly List<DinoObstacle> obstacles = new List<DinoObstacle>(32);
         private readonly ReadOnlyCollection<DinoObstacle> obstacleView;
-        private uint random;
-        private bool jumpHeld, duckRequested;
-        private double playerY, playerVelocity;
-        private long nextSpawnTick = 180, nextId = 1;
+        private readonly DinoObstacleGenerator generator;
+        private bool duckRequested;
+        private double collisionTravel;
+        private DinoMotionState motion = DinoMotionState.Grounded;
 
         public DinoRules Rules { get; private set; }
-        public double PlayerY { get { return playerY; } }
-        public double PlayerVelocity { get { return playerVelocity; } }
+        public double PlayerY { get { return motion.WorldY; } }
+        public double PlayerVelocity { get { return motion.WorldVelocity; } }
         public bool Ducking { get { return duckRequested && !Jumping; } }
-        public bool Jumping { get { return playerY > 0 || playerVelocity > 0; } }
+        public bool Jumping { get { return motion.Jumping; } }
         public double Speed { get; private set; }
         public double Distance { get; private set; }
+        // Chrome counters omit the crash tick; scenery still stops at the swept contact instant.
+        public double PresentationDistance { get { return Distance + collisionTravel; } }
         public double Elapsed { get { return Tick * DinoRules.StepSeconds; } }
         public long Tick { get; private set; }
         public long Score { get; private set; }
@@ -30,85 +34,77 @@ namespace XanaduYonder.Core.Dino
         public DinoGame(DinoRules rules, uint seed)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
-            Rules = rules; random = seed == 0 ? 0x6D2B79F5u : seed;
+            Rules = rules; generator = new DinoObstacleGenerator(seed);
             obstacleView = obstacles.AsReadOnly(); Speed = rules.SpeedAt(0);
         }
 
         public bool Jump()
         {
             if (IsGameOver || Jumping || duckRequested) return false;
-            IsStarted = true; jumpHeld = true; playerVelocity = DinoRules.JumpVelocity;
+            IsStarted = true; DinoMotion.Start(ref motion, Rules.OriginalSpeedAt(Tick));
             return true;
         }
 
-        public void ReleaseJump() { if (!IsGameOver) jumpHeld = false; }
-        public void SetDuck(bool pressed) { if (!IsGameOver) duckRequested = pressed; }
+        public void ReleaseJump() { if (!IsGameOver) DinoMotion.End(ref motion); }
+        public void SetDuck(bool pressed)
+        {
+            if (IsGameOver) return;
+            if (pressed && !duckRequested) DinoMotion.SetDrop(ref motion);
+            if (!pressed) motion.SpeedDrop = false;
+            duckRequested = pressed;
+        }
 
         public void Step()
         {
-            if (!IsStarted || IsGameOver) return;
-            // Saturating counters keep all public values finite even after an impractically long session.
-            if (Tick == long.MaxValue) return;
+            if (!IsStarted || IsGameOver || Tick == long.MaxValue) return;
             long nextTick = Tick + 1;
-            double speed = Rules.SpeedAt(nextTick), dx = speed * DinoRules.StepSeconds / DinoRules.Substeps;
-            for (int sub = 0; sub < DinoRules.Substeps; sub++) {
-                double oldY = playerY;
-                DinoMotion.Advance(ref playerY, ref playerVelocity, jumpHeld, duckRequested);
-                bool collision = false;
-                for (int i = 0; i < obstacles.Count; i++) {
-                    var obstacle = obstacles[i];
-                    double nextX = obstacle.X - dx;
-                    if (DinoCollision.HitsMotion(Rules, oldY, playerY, duckRequested, obstacle, nextX)) collision = true;
-                    obstacles[i] = obstacle.At(nextX);
+            double originalSpeed = Rules.OriginalSpeedAt(Tick);
+            DinoMotionState predicted = motion;
+            DinoMotion.Advance(ref predicted);
+            double fraction = 1;
+            bool collision = false;
+            // Predict all endpoints before committing any geometry. Every object stops at the first contact.
+            for (int i = 0; i < obstacles.Count; i++) {
+                var obstacle = obstacles[i];
+                double nextX = obstacle.X - DinoRules.ObstacleStep(originalSpeed, obstacle.SpeedOffset);
+                double contact;
+                bool collisionDuck = duckRequested && !motion.Jumping;
+                if (DinoCollision.TryHitsMotion(Rules, motion.WorldY, predicted.WorldY, collisionDuck, obstacle, nextX, out contact)) {
+                    collision = true; fraction = Math.Min(fraction, contact);
                 }
-                if (collision) { IsGameOver = true; return; }
+                if (duckRequested && motion.Jumping && !predicted.Jumping
+                    && DinoCollision.Hits(Rules, 0, 0, true, obstacle.At(nextX), nextX)) collision = true;
             }
-            Tick = nextTick; Speed = speed;
-            Distance = Math.Min(double.MaxValue, Distance + speed * DinoRules.StepSeconds);
+            for (int i = 0; i < obstacles.Count; i++) {
+                var obstacle = obstacles[i];
+                obstacles[i] = obstacle.At(obstacle.X - DinoRules.ObstacleStep(originalSpeed, obstacle.SpeedOffset) * fraction);
+            }
+            if (collision) {
+                collisionTravel = originalSpeed * DinoRules.SpriteScale * fraction;
+                motion.Y += (predicted.Y - motion.Y) * fraction;
+                motion.Velocity += (predicted.Velocity - motion.Velocity) * fraction;
+                if (fraction >= 1) motion = predicted;
+                IsGameOver = true; return;
+            }
+            motion = predicted;
+            Tick = nextTick; Speed = Rules.SpeedAt(Tick);
+            Distance = Math.Min(double.MaxValue, Distance + originalSpeed * DinoRules.SpriteScale);
             Score = ScoreForDistance(Distance);
-            if (!Jumping) jumpHeld = false; // Landing never replays a held or airborne press.
-            for (int i = obstacles.Count - 1; i >= 0; i--) if (obstacles[i].X + obstacles[i].Width < -4) obstacles.RemoveAt(i);
-            if (Tick >= nextSpawnTick) Generate();
-        }
-
-        private void Generate()
-        {
-            if (Tick > long.MaxValue - DinoRules.MaximumPlanTicks - 50) { nextSpawnTick = long.MaxValue; return; }
-            DinoObstacleKind kind = DinoObstacleKind.SmallCactus;
-            int group = 1;
-            DinoPlan plan;
-            for (int attempt = 0; attempt < 12; attempt++) {
-                if (Tick >= 2700) kind = (DinoObstacleKind)(Next() % 4);
-                else if (Tick >= 1200) kind = (DinoObstacleKind)(Next() % 2);
-                group = kind < DinoObstacleKind.LowBird && Tick >= 1200 ? 1 + (int)(Next() % 3) : 1;
-                if (DinoTraversal.TryPlan(Rules, kind, group, Tick, 0, out plan) && plan.ReactionWindowSeconds + 1e-9 >= DinoRules.ReactionSeconds) {
-                    Add(kind, group, plan); return;
-                }
+            for (int i = obstacles.Count - 1; i >= 0; i--) if (obstacles[i].X + obstacles[i].Width <= 0) obstacles.RemoveAt(i);
+            if (Tick > DinoRules.ClearTicks && (obstacles.Count == 0 || ReadyForFollowing(obstacles[obstacles.Count - 1]))) {
+                if (obstacles.Count > 0) obstacles[obstacles.Count - 1] = obstacles[obstacles.Count - 1].WithFollower();
+                obstacles.Add(generator.Create(Rules, Tick, originalSpeed));
             }
-            // Rejected widths never become obstacles. A deterministic single-cactus fallback is also proved.
-            if (DinoTraversal.TryPlan(Rules, DinoObstacleKind.SmallCactus, 1, Tick, 0, out plan)
-                && plan.ReactionWindowSeconds + 1e-9 >= DinoRules.ReactionSeconds) Add(DinoObstacleKind.SmallCactus, 1, plan);
-            else nextSpawnTick = Tick + 60;
         }
 
-        private void Add(DinoObstacleKind kind, int group, DinoPlan plan)
+        private bool ReadyForFollowing(DinoObstacle obstacle)
         {
-            obstacles.Add(new DinoObstacle(nextId, kind, group, Rules.ViewportWidth + 2, plan));
-            if (nextId < long.MaxValue) nextId++;
-            // Even the latest successful input has completed and recovered before the next object spawns.
-            // Thus all presses inside each certified interval retain >= .25s to the next action interval.
-            nextSpawnTick = plan.RecoveryTick <= long.MaxValue - 15 ? plan.RecoveryTick + 15 : long.MaxValue;
-        }
-
-        private uint Next()
-        {
-            uint value = random; value ^= value << 13; value ^= value >> 17; value ^= value << 5;
-            random = value; return value;
+            return !obstacle.FollowingObstacleCreated && obstacle.X + obstacle.Width + obstacle.Gap < Rules.ViewportWidth;
         }
 
         internal static long ScoreForDistance(double distance)
         {
-            double score = Math.Floor(distance / 30);
+            double score = DinoRules.Round(Math.Ceiling(distance / DinoRules.SpriteScale) * .025);
             return score >= long.MaxValue ? long.MaxValue : score <= 0 ? 0 : (long)score;
         }
     }

@@ -141,9 +141,7 @@ namespace XanaduYonder.Runtime.Dino
                     UpdateRecord();
                     if (game.IsGameOver) EndRun();
                     else if (game.Score / 100 > milestone) { milestone = game.Score/100; sound.PlayScore(); }
-                    if (phase == Phase.Running)
-                        stateLabel.text = game.Elapsed >= 40 && game.Elapsed < 45
-                            ? "翼龙将出现\n低飞跳跃 · 中空下蹲" : "";
+                    if (phase == Phase.Running) stateLabel.text = "";
                 }
             }
             else if (phase == Phase.Countdown)
@@ -461,13 +459,13 @@ namespace XanaduYonder.Runtime.Dino
             Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
             float doneY = panel.rect.height - 32 - 74;
             float licenseY = doneY - 14 - 74;
-            PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，蹲过中空翼龙。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
+            PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
             PanelButton(panel,"素材与许可",licenseY,ShowLicense);
             PanelButton(panel,"知道了",doneY,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
         }
         private void ShowLicense()
         {
-            var panel=OpenPanel("Chromium 素材许可",Mathf.Min(840,viewport.Height-40));
+            var panel=OpenPanel("Chromium 许可",Mathf.Min(840,viewport.Height-40));
             float panelW=panel.rect.width, panelH=panel.rect.height;
             var area=UiFactory.Rect(panel,"License viewport",24,100,panelW-48,panelH-210);
             var img=area.gameObject.AddComponent<Image>();img.color=Color.clear;img.raycastTarget=true;
@@ -475,7 +473,7 @@ namespace XanaduYonder.Runtime.Dino
             var scroll=area.gameObject.AddComponent<ScrollRect>();scroll.viewport=area;scroll.horizontal=false;
             var body=UiFactory.Rect(area,"License body",0,0,area.rect.width,1000);
             var asset=Resources.Load<TextAsset>("Dino/LICENSE");
-            string text="像素与音效来源：Chromium\n固定版本 64574fa0f2daa1b48f2703a072687272000178ce\n本项目不代表 Google 官方产品。\n\n"+(asset==null?"素材许可证未能加载。":asset.text);
+            string text="像素、音效与部分游戏规则来源：Chromium\n素材版本 64574fa0f2daa1b48f2703a072687272000178ce\n规则版本 3df8d372a3f9d5c38a89d0bc496cc44c85af1feb\n本项目不代表 Google 官方产品。\n\n"+(asset==null?"许可证未能加载。":asset.text);
             var label=UiFactory.Label(body,text,0,0,body.rect.width,1000,19,UiFactory.Ink,TextAnchor.UpperLeft);
             label.supportRichText=false;Canvas.ForceUpdateCanvases();
             body.sizeDelta=new Vector2(body.rect.width,Mathf.Max(area.rect.height,label.preferredHeight+16));

@@ -52,6 +52,7 @@ namespace XanaduYonder.EditorTools
                     CheckAtlasAndFootOverlap(fixture);
                     CheckVariantsAndScroll(fixture);
                     CheckModelAndRebuild(fixture);
+                    CheckCollisionStop(fixture);
                 }
                 Report.AppendLine("LIMITS: production UGUI geometry and source atlas pixels; no Android input or screenshot rasterization.");
                 Report.AppendLine("DINO_GROUND_CHECKS_PASS: " + assertions + " assertions");
@@ -151,6 +152,24 @@ namespace XanaduYonder.EditorTools
             Require(game.Tick == tick && game.Score == score && game.Distance == distance && game.PlayerY == y &&
                 game.Obstacles[0].X == obstacle.X && game.Obstacles[0].Y == obstacle.Y, "Rendering, terrain variation and rebuilding never change model state");
             Report.AppendLine("PASS real player / obstacle baselines, unchanged model state and paused-tree reconstruction");
+        }
+
+        private static void CheckCollisionStop(Fixture fixture)
+        {
+            var game = fixture.Game;
+            for (int i = 0; i < 1500 && !game.IsGameOver; i++) game.Step();
+            Require(game.IsGameOver && game.PresentationDistance > game.Distance,
+                "Real collision stops partway through a motion frame while score distance retains completed ticks");
+            fixture.Track.Render(game, 0);
+            float scale = Get<float>(fixture.Track, "scale");
+            double expected = -(game.PresentationDistance % (600 * DinoRules.SpriteScale)) * scale;
+            Near(Ground(fixture.Track)[0].rectTransform.anchoredPosition.x, expected,
+                "Ground freezes at the same fractional collision position as player and obstacles");
+            var position = Ground(fixture.Track)[0].rectTransform.anchoredPosition;
+            for (int i = 0; i < 30; i++) { game.Step(); fixture.Track.Render(game, .016f); }
+            Require(Ground(fixture.Track)[0].rectTransform.anchoredPosition == position,
+                "Terminal collision position remains frozen even when given render time");
+            Report.AppendLine("PASS real collision contact scroll and terminal ground freeze");
         }
 
         private static bool Dark(Color pixel) { return pixel.a > .9f && pixel.r < .6f; }

@@ -1,3 +1,5 @@
+// Portions derived from Chromium, Copyright 2024 The Chromium Authors.
+// Use of this source code is governed by the BSD-style license in docs/chromium-dino-reference/source/LICENSE.
 using System;
 
 namespace XanaduYonder.Core.Dino
@@ -11,110 +13,122 @@ namespace XanaduYonder.Core.Dino
 
     internal static class DinoCollision
     {
-        // Pixel-space silhouette parts, with bottom-left coordinates. Legs cover both run frames;
-        // wing coverage is the union of both animation frames. Transparent sprite corners are excluded.
+        // Chromium trex.ts / offline_sprite_definitions.ts inner boxes. offline.ts translates
+        // these by the outer box's (1, 1) inset before testing. Keep that translation when
+        // converting its top-left canvas coordinates into this model's bottom-left coordinates.
         private static readonly DinoRect[] Standing = {
-            new DinoRect(12, 0, 7, 12), new DinoRect(22, 2, 6, 10),
-            new DinoRect(9, 10, 25, 23), new DinoRect(1, 21, 12, 7), new DinoRect(21, 30, 22, 16)
+            Inner(22, 0, 17, 16, 47), Inner(1, 18, 30, 9, 47), Inner(10, 35, 14, 8, 47),
+            Inner(1, 24, 29, 5, 47), Inner(5, 30, 21, 4, 47), Inner(9, 34, 15, 4, 47)
         };
-        private static readonly DinoRect[] Duck = {
-            new DinoRect(16, 0, 9, 9), new DinoRect(29, 5, 8, 7), new DinoRect(11, 6, 32, 15),
-            new DinoRect(3, 17, 12, 7), new DinoRect(40, 12, 18, 14)
-        };
+        // Duck frames use the full 47px canvas, including transparent space above the body.
+        private static readonly DinoRect[] Duck = { Inner(1, 18, 55, 25, 47) };
         private static readonly DinoRect[] Small = {
-            new DinoRect(6, 0, 5, 35), new DinoRect(1, 10, 5, 17), new DinoRect(11, 14, 5, 15)
+            Inner(0, 7, 5, 27, 35), Inner(4, 0, 6, 34, 35), Inner(10, 4, 7, 14, 35)
         };
         private static readonly DinoRect[] Large = {
-            new DinoRect(9, 0, 7, 50), new DinoRect(1, 15, 8, 23), new DinoRect(16, 20, 8, 22)
-        };
-        // The atlas's two/three-plant slices have distinct silhouettes. Their cells are not copies
-        // of the single sprite: the second double has a raised arm, and the middle triple is offset.
-        private static readonly DinoRect[] SmallDoubleSecond = {
-            new DinoRect(6, 0, 5, 35), new DinoRect(1, 19, 4, 10),
-            new DinoRect(3, 17, 5, 5), new DinoRect(11, 14, 5, 15)
-        };
-        private static readonly DinoRect[] LargeDoubleSecond = {
-            new DinoRect(9, 0, 7, 50), new DinoRect(1, 27, 5, 16),
-            new DinoRect(4, 24, 7, 6), new DinoRect(16, 20, 8, 22)
-        };
-        private static readonly DinoRect[] LargeTripleMiddle = {
-            new DinoRect(6, 2, 5, 44), new DinoRect(0, 18, 4, 14), new DinoRect(3, 15, 5, 17),
-            new DinoRect(13, 33, 4, 8), new DinoRect(10, 28, 5, 5),
-            new DinoRect(19, 2, 3, 27), new DinoRect(14, 14, 10, 10)
+            Inner(0, 12, 7, 38, 50), Inner(8, 0, 7, 49, 50), Inner(13, 10, 10, 38, 50)
         };
         private static readonly DinoRect[] Bird = {
-            new DinoRect(10, 10, 26, 14), new DinoRect(33, 12, 11, 11), new DinoRect(14, 4, 12, 32)
+            Inner(15, 15, 16, 5, 40), Inner(18, 21, 24, 6, 40), Inner(2, 14, 4, 3, 40),
+            Inner(6, 10, 4, 7, 40), Inner(10, 8, 6, 9, 40)
         };
+        private static readonly DinoRect[][] SmallGroups = { Small, Group(Small, 34), Group(Small, 51) };
+        private static readonly DinoRect[][] LargeGroups = { Large, Group(Large, 50), Group(Large, 75) };
+
+        private static DinoRect Inner(double x, double y, double width, double height, double canvasHeight)
+        { return new DinoRect(x + 1, canvasHeight - 1 - y - height, width, height); }
+
+        private static DinoRect[] Group(DinoRect[] single, double canvasWidth)
+        {
+            // obstacle.ts expands the central box and moves the final box. It does not tile
+            // single-cactus hitboxes, even though the atlas depicts several distinct plants.
+            var result = (DinoRect[])single.Clone();
+            result[1].Width = canvasWidth * DinoRules.SpriteScale - result[0].Width - result[2].Width;
+            result[2].X = (canvasWidth + 1) * DinoRules.SpriteScale - result[2].Width;
+            return result;
+        }
+
+        internal static DinoRect[] ObstacleParts(DinoObstacleKind kind, int group)
+        {
+            if (kind == DinoObstacleKind.SmallCactus) return SmallGroups[group - 1];
+            if (kind == DinoObstacleKind.LargeCactus) return LargeGroups[group - 1];
+            return Bird;
+        }
 
         internal static bool Hits(DinoRules rules, double oldY, double newY, bool duck, DinoObstacle obstacle, double newX)
         {
-            DinoRect[] player = duck ? Duck : Standing;
-            double stride = obstacle.Kind == DinoObstacleKind.SmallCactus ? 17 * DinoRules.SpriteScale : 25 * DinoRules.SpriteScale;
-            for (int g = 0; g < obstacle.GroupSize; g++) {
-                DinoRect[] parts = ObstacleParts(obstacle.Kind, obstacle.GroupSize, g);
-                for (int i = 0; i < parts.Length; i++) {
-                    DinoRect b = parts[i];
-                    for (int j = 0; j < player.Length; j++) {
-                        DinoRect p = player[j];
-                        if (SweptRect(rules.PlayerX + p.X, oldY + p.Y, p.Width, p.Height, newY - oldY,
-                            obstacle.X + g * stride + b.X, obstacle.Y + b.Y, b.Width, b.Height, newX - obstacle.X)) return true;
-                    }
-                }
-            }
-            return false;
+            double fraction;
+            return TryHits(rules, oldY, newY, duck, obstacle, newX, out fraction);
         }
 
-        internal static DinoRect[] ObstacleParts(DinoObstacleKind kind, int group, int plant)
+        private static bool TryHits(DinoRules rules, double oldY, double newY, bool duck, DinoObstacle obstacle, double newX, out double earliestFraction)
         {
-            if (kind == DinoObstacleKind.SmallCactus) return group == 2 && plant == 1 ? SmallDoubleSecond : Small;
-            if (kind == DinoObstacleKind.LargeCactus) {
-                if (group == 2 && plant == 1) return LargeDoubleSecond;
-                if (group == 3 && plant == 1) return LargeTripleMiddle;
-                return Large;
+            earliestFraction = 1;
+            double scale = DinoRules.SpriteScale, dy = newY - oldY, dx = newX - obstacle.X;
+            double outerEnter = 0, outerExit = 1;
+            // The original outer gate always uses standing width 44, including ducking. It is
+            // a simultaneous broadphase condition, not a clip of each fine box to that outer
+            // rectangle: some official fine boxes intentionally extend beyond those bounds.
+            if (!RectInterval(rules.PlayerX + scale, oldY + scale, 42 * scale, 45 * scale, dy,
+                obstacle.X + scale, obstacle.Y + scale, obstacle.Width - 2 * scale, obstacle.Height - 2 * scale, dx,
+                ref outerEnter, ref outerExit)) return false;
+
+            DinoRect[] player = duck ? Duck : Standing;
+            DinoRect[] parts = ObstacleParts(obstacle.Kind, obstacle.GroupSize);
+            bool hit = false;
+            for (int i = 0; i < parts.Length; i++) for (int j = 0; j < player.Length; j++) {
+                DinoRect b = parts[i], p = player[j];
+                double enter = outerEnter, exit = outerExit;
+                if (!RectInterval(rules.PlayerX + p.X, oldY + p.Y, p.Width, p.Height, dy,
+                    obstacle.X + b.X, obstacle.Y + b.Y, b.Width, b.Height, dx, ref enter, ref exit)) continue;
+                if (!hit || enter < earliestFraction) earliestFraction = enter;
+                hit = true;
             }
-            return Bird;
+            return hit;
         }
 
         internal static bool HitsMotion(DinoRules rules, double oldY, double newY, bool duckRequested, DinoObstacle obstacle, double newX)
         {
-            // An airborne duck request changes acceleration, not the airborne silhouette.
-            // If this segment lands, sweep the standing body first, then check the new duck pose.
-            bool groundedDuck = duckRequested && oldY == 0 && newY == 0;
-            if (Hits(rules, oldY, newY, groundedDuck, obstacle, newX)) return true;
-            return duckRequested && oldY > 0 && newY == 0 && Hits(rules, 0, 0, true, obstacle.At(newX), newX);
+            double fraction;
+            return TryHitsMotion(rules, oldY, newY, duckRequested, obstacle, newX, out fraction);
         }
 
-        // Relative swept AABB. Each physical substep is a linear segment, so this tests every instant
-        // on it, including a thin obstacle crossed between endpoints or during downward acceleration.
+        internal static bool TryHitsMotion(DinoRules rules, double oldY, double newY, bool duckRequested, DinoObstacle obstacle, double newX, out double earliestFraction)
+        {
+            // Air duck requests change motion, while the silhouette remains standing. On a
+            // landing segment that silhouette is swept first; the new duck pose starts at t=1.
+            bool groundedDuck = duckRequested && oldY == 0 && newY == 0;
+            if (TryHits(rules, oldY, newY, groundedDuck, obstacle, newX, out earliestFraction)) return true;
+            if (duckRequested && oldY > 0 && newY == 0 && Hits(rules, 0, 0, true, obstacle.At(newX), newX)) {
+                earliestFraction = 1;
+                return true;
+            }
+            return false;
+        }
+
+        // Each motion update is a linear segment. Require a nonempty interval of positive-area
+        // overlap, so an edge graze or endpoint-only touch does not kill the runner.
         internal static bool SweptRect(double ax, double ay, double aw, double ah, double playerDy,
             double bx, double by, double bw, double bh, double obstacleDx)
         {
             double enter = 0, exit = 1;
+            return RectInterval(ax, ay, aw, ah, playerDy, bx, by, bw, bh, obstacleDx, ref enter, ref exit);
+        }
+
+        private static bool RectInterval(double ax, double ay, double aw, double ah, double playerDy,
+            double bx, double by, double bw, double bh, double obstacleDx, ref double enter, ref double exit)
+        {
             return Axis(ax, ax + aw, bx, bx + bw, obstacleDx, ref enter, ref exit)
                 && Axis(ay, ay + ah, by, by + bh, -playerDy, ref enter, ref exit);
         }
 
         private static bool Axis(double amin, double amax, double bmin, double bmax, double delta, ref double enter, ref double exit)
         {
-            if (Math.Abs(delta) < 1e-12) return bmax >= amin && bmin <= amax;
+            if (delta == 0) return bmax > amin && bmin < amax;
             double first = (amin - bmax) / delta, last = (amax - bmin) / delta;
             if (first > last) { double swap = first; first = last; last = swap; }
             enter = Math.Max(enter, first); exit = Math.Min(exit, last);
-            return enter <= exit;
-        }
-    }
-
-    internal static class DinoMotion
-    {
-        internal static void Advance(ref double y, ref double velocity, bool held, bool duck)
-        {
-            if (y <= 0 && velocity <= 0) { y = 0; velocity = 0; return; }
-            if (duck) velocity = Math.Min(velocity, -220);
-            else if (!held && y >= DinoRules.MinimumJumpHeight && velocity > DinoRules.ReleasedVelocity) velocity = DinoRules.ReleasedVelocity;
-            double dt = DinoRules.StepSeconds / DinoRules.Substeps;
-            velocity -= DinoRules.Gravity * (duck ? 2.8 : 1) * dt;
-            y += velocity * dt;
-            if (y <= 0) { y = 0; velocity = 0; }
+            return enter < exit;
         }
     }
 }

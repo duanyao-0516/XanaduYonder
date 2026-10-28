@@ -2,6 +2,8 @@
 
 抓取日期：2026-10-28。此次仅归档官方配置与解释调用链，没有修改本项目游戏运行参数、碰撞或资源。
 
+后续用户已批准并实施整体对齐；本页保留抓取时 `bd7acb6` 的历史参数对照。最新运行规则见 [Dino 玩法与接入](dino-game.md)，本次验证见 [验证记录](verification-dino.md)。
+
 ## 来源与复现
 
 官方 Gitiles 的 `main` 在抓取时解析为 **`3df8d372a3f9d5c38a89d0bc496cc44c85af1feb`**，提交时间为 2026-10-28 04:03:16 UTC。随后所有文件均以这个 SHA 下载，避免移动分支产生混合版本。[固定提交](https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb)

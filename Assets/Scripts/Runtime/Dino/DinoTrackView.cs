@@ -30,13 +30,12 @@ namespace XanaduYonder.Runtime.Dino
         private static readonly Color DayBackground = Color.white;
         private static readonly Color NightBackground = Color.black;
         private static readonly Color DayForeground = new Color32(83, 83, 83, 255);
-        private static readonly Color NightForeground = new Color32(218, 218, 218, 255);
-        private static readonly int TintProperty = Shader.PropertyToID("_Color");
+        private static readonly Color NightForeground = new Color32(172, 172, 172, 255);
 
         private RectTransform root;
         private RectTransform groundRoot;
         private Image background;
-        private Texture2D atlas;
+        private Texture2D atlas, nightAtlas;
         private Material daySpriteMaterial, nightSpriteMaterial;
         private RawImage player;
         private DinoCelebrationHat celebrationHat;
@@ -93,8 +92,7 @@ namespace XanaduYonder.Runtime.Dino
             if (shader == null) throw new InvalidOperationException("Dino requires Unity's UI/Default shader.");
             daySpriteMaterial = new Material(shader) { name = "Dino day sprites" };
             nightSpriteMaterial = new Material(shader) { name = "Dino night sprites" };
-            float nightGain = 218f / 83f;
-            nightSpriteMaterial.SetColor(TintProperty, new Color(nightGain, nightGain, nightGain, 1));
+            nightAtlas = CreateNightAtlas(atlas);
 
             root = CreateRect(parent, "Dino Track");
             root.gameObject.AddComponent<RectMask2D>();
@@ -177,8 +175,8 @@ namespace XanaduYonder.Runtime.Dino
             var targetNight = ((game.Tick / 1800) & 1) != 0 ? 1f : 0f;
             nightAmount = Mathf.MoveTowards(nightAmount, targetNight, delta / DayNightSeconds);
             ApplyPalette();
-            RenderSky(game.Distance);
-            RenderGround(game.Distance);
+            RenderSky(game.PresentationDistance);
+            RenderGround(game.PresentationDistance);
             RenderObstacles(game);
             RenderPlayer(game);
         }
@@ -192,14 +190,43 @@ namespace XanaduYonder.Runtime.Dino
             bool nextBright = nightAmount >= .5f;
             if (brightSprites == nextBright) return;
             brightSprites = nextBright;
-            // Rounded UGUI masks cache stencil copies of a base material. Switch immutable
-            // materials so the cached copy receives the correct palette in both directions.
-            var material = brightSprites ? nightSpriteMaterial : daySpriteMaterial;
-            player.material = moon.material = material;
-            foreach (var sprite in clouds) sprite.material = material;
-            foreach (var sprite in stars) sprite.material = material;
-            foreach (var sprite in obstacles) sprite.material = material;
-            foreach (var sprite in ground) sprite.material = material;
+            ApplySpritePalette(player);
+            ApplySpritePalette(moon);
+            foreach (var sprite in clouds) ApplySpritePalette(sprite);
+            foreach (var sprite in stars) ApplySpritePalette(sprite);
+            foreach (var sprite in obstacles) ApplySpritePalette(sprite);
+            foreach (var sprite in ground) ApplySpritePalette(sprite);
+        }
+
+        private static Texture2D CreateNightAtlas(Texture2D source)
+        {
+            // Chrome inverts RGB rather than multiplying it: #535353 becomes #ACACAC,
+            // and the opaque white outline becomes black. GetPixels32 returns a copy;
+            // the original atlas and every alpha byte remain unchanged.
+            var pixels = source.GetPixels32();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i].r = (byte)(255 - pixels[i].r);
+                pixels[i].g = (byte)(255 - pixels[i].g);
+                pixels[i].b = (byte)(255 - pixels[i].b);
+            }
+            var texture = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false)
+            {
+                name = "Dino inverted night atlas",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return texture;
+        }
+
+        private void ApplySpritePalette(RawImage image)
+        {
+            // Rounded UGUI masks cache stencil copies of a base material. Keep both
+            // materials immutable and submit the matching atlas through RawImage.
+            image.material = brightSprites ? nightSpriteMaterial : daySpriteMaterial;
+            image.texture = brightSprites ? nightAtlas : atlas;
         }
 
         private void RenderSky(double distance)
@@ -259,10 +286,10 @@ namespace XanaduYonder.Runtime.Dino
 
         private void RenderPlayer(DinoGame game)
         {
-            var ducking = game.Ducking && !game.Jumping && !game.IsGameOver;
+            var ducking = game.Ducking && !game.Jumping;
             int frame;
-            if (game.IsGameOver) frame = 220;
-            else if (ducking) frame = game.IsStarted && ((long)(animationClock * 8) & 1) != 0 ? 323 : 264;
+            if (ducking) frame = game.IsStarted && ((long)(animationClock * 8) & 1) != 0 ? 323 : 264;
+            else if (game.IsGameOver) frame = 220;
             else if (!game.IsStarted) frame = animationClock % 3.7 > 3.53 ? 44 : 0;
             else if (game.Jumping) frame = 0;
             else frame = ((long)(animationClock * 12) & 1) == 0 ? 88 : 132;
@@ -341,8 +368,7 @@ namespace XanaduYonder.Runtime.Dino
         private RawImage CreateSprite(Transform parent, string name)
         {
             var image = CreateRect(parent, name).gameObject.AddComponent<RawImage>();
-            image.texture = atlas;
-            image.material = brightSprites ? nightSpriteMaterial : daySpriteMaterial;
+            ApplySpritePalette(image);
             image.raycastTarget = false;
             return image;
         }
@@ -364,9 +390,10 @@ namespace XanaduYonder.Runtime.Dino
             if (root != null) Destroy(root.gameObject);
             if (daySpriteMaterial != null) Destroy(daySpriteMaterial);
             if (nightSpriteMaterial != null) Destroy(nightSpriteMaterial);
+            if (nightAtlas != null) Destroy(nightAtlas);
             root = null;
             daySpriteMaterial = nightSpriteMaterial = null;
-            atlas = null;
+            atlas = nightAtlas = null;
         }
     }
 }

@@ -1,346 +1,97 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using XanaduYonder.Core.Dino;
 
 internal static class Program
 {
-    private static int passed;
-    private static int failed;
-    private static readonly double[] Widths = { 320, 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2, 4096 };
-
+    private static int passed, failed;
     private static int Main()
     {
-        Run("invalid viewports and null rules are rejected", delegate {
-            foreach (double width in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity, -1, 0, 100, double.MaxValue })
+        Run("Chrome normal speed and pre-acceleration distance", ChromeReferenceTests.Speed);
+        Run("Chrome rounded jump, release and speed-drop traces", ChromeReferenceTests.JumpTrace);
+        Run("Chrome clear time, spawn offset and score", ChromeReferenceTests.ClearTimeAndScore);
+        Run("Chrome horizon sampling and actual spacing", ChromeReferenceTests.Generation);
+        Run("each obstacle creates at most one follower", ChromeReferenceTests.OneFollowerPerObstacle);
+        Run("Chrome high-speed launch and analytical travel", ChromeReferenceTests.SpeedDependentLaunchAndTravel);
+        Run("diagnostic replay never changes production generation", ChromeReferenceTests.DiagnosticReplay);
+        Run("whole-frame earliest collision commits all geometry", ChromeReferenceTests.CollisionCommit);
+        Run("zero-height airborne landing preserves standing sweep", ChromeReferenceTests.ZeroHeightAirDuckLanding);
+        Run("official collision regressions", CollisionRegressionTests.Run);
+        Run("atlas geometry contract", AtlasGeometry.Check);
+        Run("invalid viewport inputs are rejected", delegate {
+            foreach (double width in new[] { double.NaN, double.PositiveInfinity, -1, 0, 100, double.MaxValue })
                 Throws<ArgumentOutOfRangeException>(delegate { new DinoRules(width); });
             Throws<ArgumentNullException>(delegate { new DinoGame(null, 1); });
         });
-        Run("collision parts follow opaque atlas silhouettes rather than transparent corners", AtlasGeometry.Check);
-        Run("dimensions preserve sprite scale and horizontal inset", delegate {
-            foreach (double width in Widths) {
-                var cold = Stopwatch.StartNew();
-                var r = new DinoRules(width);
-                cold.Stop(); Console.WriteLine("Cold rules width=" + width + ": " + cold.ElapsedMilliseconds + " ms");
-                Near(r.PlayerWidth / 44, 1.35, "standing width");
-                Near(r.PlayerHeight / 47, 1.35, "standing height");
-                Near(r.DuckWidth / 59, 1.35, "duck width");
-                Near(r.DuckHeight / 25, 1.35, "duck height");
-                Assert(r.PlayerX >= width * .1 && r.PlayerX <= width * .15, "inset");
-                Assert(r.MaxSpeed > 0 && r.MaxSpeed <= 1440, "bounded high-speed peak");
-            }
+        Run("ready, input ownership and airborne press semantics", delegate {
+            var g = New(); for (int i = 0; i < 100; i++) g.Step();
+            Assert(!g.IsStarted && g.Tick == 0 && g.Distance == 0, "ready frozen");
+            g.SetDuck(true); Assert(!g.Jump() && g.Ducking, "duck owns posture");
+            g.SetDuck(false); Assert(g.Jump() && g.Jumping, "jump starts immediately");
+            for (int i = 0; i < 100; i++) { if (g.Jumping) Assert(!g.Jump(), "air press never queues"); g.Step(); }
+            Assert(!g.Jumping && g.PlayerY == 0 && g.PlayerVelocity == 0, "held press never repeats");
         });
-        Run("every supported viewport uses four times its established speed ceiling", delegate {
-            double[] previousCaps = { 60, 189.25, 267.25, 276.5, 360, 360, 360, 360 };
-            for (int i = 0; i < Widths.Length; i++)
-                Near(new DinoRules(Widths[i]).MaxSpeed, previousCaps[i] * 4, "actual peak at width " + Widths[i]);
-            Near(DinoRules.ReactionSeconds, .15, "the high-speed mode states its shorter response floor");
-            Near(DinoRules.InputBudgetSeconds, .1, "display and input budget is retained");
-            Near(DinoRules.RecoverySeconds, .25, "between-action recovery is retained");
+        Run("pause by not stepping retains motion and input", delegate {
+            var a = New(); var b = New(); a.Jump(); b.Jump();
+            for (int i = 0; i < 8; i++) { a.Step(); b.Step(); }
+            a.ReleaseJump(); b.ReleaseJump();
+            for (int i = 0; i < 1000; i++) Assert(a.PlayerY >= 0, "read leaves state unchanged");
+            for (int i = 0; i < 100; i++) { a.Step(); b.Step(); Same(a, b); }
         });
-        Run("shared acceleration doubles without raising the initial speed", delegate {
-            foreach (double width in new[] { 656 / 1.2, 1451 / 1.2 }) {
-                var rules = new DinoRules(width);
-                Near(rules.SpeedAt(0), 180, "initial speed");
-                Near(rules.SpeedAt(300), 300, "five-second speed");
-                Near(rules.SpeedAt(600), 420, "ten-second speed");
-                Near(rules.SpeedAt(900), 540, "fifteen-second speed");
-            }
-        });
-        Run("wide track reaches the fourfold peak at fifty-two and a half seconds", delegate {
-            var rules = new DinoRules(1451 / 1.2);
-            Near(rules.SpeedAt(3149), 1439.6, "the last accelerating tick");
-            Near(rules.SpeedAt(3150), 1440, "52.5-second peak");
-            Near(rules.SpeedAt(18000), 1440, "the peak remains bounded");
-            var game = new DinoGame(rules, 17); game.Jump();
-            for (int tick = 0; tick < 3150; tick++) { Drive(game); game.Step(); }
-            Assert(!game.IsGameOver && game.Tick == 3150, "the real obstacle sequence reaches full speed");
-            Near(game.Speed, 1440, "real simulation uses the fourfold peak");
-        });
-        Run("portrait reaches its fourfold viewport peak on the correct fixed step", delegate {
-            var rules = new DinoRules(656 / 1.2);
-            Near((rules.MaxSpeed - 180) / 24, 37.0416666666667, "nominal ramp duration");
-            Near(rules.SpeedAt(2222), 1068.8, "last portrait accelerating tick");
-            Near(rules.SpeedAt(2223), 1069, "37.05-second fixed-step peak");
-            Near(rules.SpeedAt(3600), 1069, "portrait remains at its peak");
-        });
-        Run("traversal distance exactly matches accelerated fixed steps across speed caps", delegate {
-            var wide = new DinoRules(1451 / 1.2);
-            Near(wide.Travel(0, 900), 5403, "fifteen-second acceleration distance");
-            Near(wide.Travel(0, 1800), 16206, "thirty-second acceleration distance");
-            Near(wide.Travel(0, 3150), 42535.5, "distance when the peak is reached");
-            Near(wide.Travel(0, 3600), 53335.5, "sixty-second distance includes capped travel");
-            foreach (double width in Widths) {
-                var rules = new DinoRules(width);
-                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .4));
-                foreach (long start in new[] { 0L, 10L, 500L, Math.Max(0, capTick - 3), capTick, capTick + 3, 5400L, long.MaxValue - 2048 }) {
-                    foreach (int length in new[] { 1, 7, 120, 2048 }) {
-                        double sum = 0;
-                        for (int step = 1; step <= length; step++) sum += rules.SpeedAt(start + step) * DinoRules.StepSeconds;
-                        Near(rules.Travel(start, start + length), sum, "exact travel width=" + width + " start=" + start + " length=" + length);
-                    }
-                }
-                Near(rules.Travel(long.MaxValue, long.MaxValue), 0, "terminal empty interval");
-                Near(rules.Travel(8, 7), 0, "reversed interval");
-                Near(rules.SpeedAt(long.MaxValue), rules.MaxSpeed, "terminal tick has finite capped speed");
-            }
-        });
-        Run("single-cactus fallback remains visible and passable through the entire speed ramp", delegate {
-            foreach (double width in Widths) {
-                var rules = new DinoRules(width);
-                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .4));
-                for (long spawn = 0; spawn <= capTick + 60; spawn++) {
-                    DinoPlan plan;
-                    Assert(DinoTraversal.TryPlan(rules, DinoObstacleKind.SmallCactus, 1, spawn, 0, out plan), "physical fallback width=" + width + " tick=" + spawn);
-                    Assert(plan.ReactionWindowSeconds + 1e-8 >= .15, "visible fallback response floor width=" + width + " tick=" + spawn);
-                    long firstVisiblePress = Math.Max(plan.EarliestActionTick, plan.FullVisibleTick + 6);
-                    Assert(plan.LatestActionTick - firstVisiblePress >= 6, "at least 100ms of valid timing remains after visibility and input budget");
-                }
-            }
-        });
-        Run("ready freezes time and first press starts immediately", delegate {
-            var g = New();
-            for (int i = 0; i < 120; i++) g.Step();
-            Assert(g.Tick == 0 && g.Elapsed == 0 && g.Score == 0 && !g.IsStarted, "ready is inert");
-            Assert(g.Jump() && g.IsStarted && g.Jumping && g.PlayerVelocity > 0, "press starts jump");
-            g.Step(); Assert(g.PlayerY > 0 && g.Distance > 0, "next fixed step moves");
-        });
-        Run("released jump is shorter and lower than held jump", delegate {
-            double shortHeight, longHeight; int shortSteps, longSteps;
-            Flight(true, false, out shortHeight, out shortSteps);
-            Flight(false, false, out longHeight, out longSteps);
-            Assert(shortHeight >= 55 && shortHeight + 20 < longHeight, "meaningful minimum and hold height");
-            Assert(shortSteps + 5 < longSteps && longHeight < 180, "hold duration");
-            double upperBound = new DinoRules(600).MaximumJumpHeight;
-            Assert(longHeight <= upperBound && upperBound - longHeight < 5, "render headroom conservatively bounds a real held jump");
-        });
-        Run("airborne presses and held input never queue another jump", delegate {
-            var g = New(); g.Jump();
-            for (int i = 0; i < 100; i++) { if (g.Jumping) Assert(!g.Jump(), "airborne ignored"); g.Step(); }
-            Assert(!g.Jumping && g.PlayerY == 0 && g.PlayerVelocity == 0, "stays grounded without another press");
-        });
-        Run("duck blocks jump and release restores standing", delegate {
-            var g = New(); g.SetDuck(true);
-            Assert(!g.Jump() && g.Ducking && !g.IsStarted, "duck owns posture");
-            g.SetDuck(false); Assert(g.Jump(), "release permits jump");
-        });
-        Run("air duck accelerates descent and persists on landing", delegate {
-            var g = New(); g.Jump(); for (int i = 0; i < 10; i++) g.Step();
-            double y = g.PlayerY; g.SetDuck(true); g.Step();
-            Assert(g.PlayerVelocity < 0 && g.PlayerY < y, "immediate downward priority");
-            for (int i = 0; i < 60; i++) g.Step();
-            Assert(!g.Jumping && g.Ducking && !g.Jump(), "lands crouched");
-            g.SetDuck(false); Assert(!g.Ducking && g.Jump(), "new input releases posture");
-        });
-        Run("no stepping preserves paused long and short jump intent", delegate {
-            foreach (bool released in new[] { false, true }) {
-                var a = New(); var b = New(); a.Jump(); b.Jump();
-                for (int i = 0; i < 8; i++) { a.Step(); b.Step(); }
-                if (released) { a.ReleaseJump(); b.ReleaseJump(); }
-                for (int i = 0; i < 1000; i++) { double unused = a.PlayerY + a.Elapsed; Assert(unused >= 0, "read only"); }
-                for (int i = 0; i < 100; i++) { a.Step(); b.Step(); Same(a, b); }
-            }
-        });
-        Run("opening remains safe for three seconds", delegate {
-            var g = New(); g.Jump();
-            for (int i = 0; i < 179; i++) { g.Step(); Assert(g.Obstacles.Count == 0, "no early spawn"); }
-            Assert(!g.IsGameOver, "safe opening");
-            g.Step(); Assert(g.Obstacles.Count == 1, "first obstacle begins at right edge");
-            Assert(g.Obstacles[0].X >= g.Rules.ViewportWidth, "enters from outside");
-        });
-        Run("collision freezes score time geometry and all commands", delegate {
+        Run("crash freezes all public commands and geometry", delegate {
             var g = New(); g.Jump(); for (int i = 0; i < 1000 && !g.IsGameOver; i++) g.Step();
-            Assert(g.IsGameOver, "no-input runner loses");
-            long score = g.Score; double elapsed = g.Elapsed, y = g.PlayerY, x = g.Obstacles[0].X, distance = g.Distance;
-            for (int i = 0; i < 100; i++) { Assert(!g.Jump(), "terminal press ignored"); g.ReleaseJump(); g.SetDuck(true); g.Step(); }
-            Assert(g.Score == score && g.Elapsed == elapsed && g.Distance == distance && g.PlayerY == y && g.Obstacles[0].X == x, "terminal immutable");
+            Assert(g.IsGameOver, "without input the first obstacle hits");
+            long tick = g.Tick, score = g.Score; double distance = g.Distance, y = g.PlayerY, x = g.Obstacles[0].X;
+            for (int i = 0; i < 100; i++) { Assert(!g.Jump(), "terminal input"); g.ReleaseJump(); g.SetDuck(true); g.Step(); }
+            Assert(g.Tick == tick && g.Score == score && g.Distance == distance && g.PlayerY == y && g.Obstacles[0].X == x, "terminal immutable");
         });
-        Run("distance score floors and saturates without wraparound", delegate {
-            Assert(DinoGame.ScoreForDistance(29.999) == 0 && DinoGame.ScoreForDistance(30) == 1, "score boundary");
-            Assert(DinoGame.ScoreForDistance(double.MaxValue) == long.MaxValue, "saturation");
-            Assert(DinoGame.ScoreForDistance(3000000) == 100000, "over five digits");
-            var g = New(); g.Jump(); for (int i = 0; i < 170; i++) g.Step();
-            Assert(g.Score == (long)Math.Floor(g.Distance / 30), "production score uses traveled distance");
+        Run("obstacle view stays read-only and stable", delegate {
+            var g = New(); var view = g.Obstacles; g.Jump(); for (int i = 0; i < 182; i++) g.Step();
+            Assert(ReferenceEquals(view, g.Obstacles) && view.Count == 1, "stable view");
+            var list = view as IList<DinoObstacle>; Assert(list == null || list.IsReadOnly, "immutable ownership");
         });
-        Run("obstacle view is stable and callers cannot mutate ownership", delegate {
-            var g = New(); var view = g.Obstacles; g.Jump(); for (int i = 0; i < 181; i++) g.Step();
-            Assert(object.ReferenceEquals(view, g.Obstacles) && view.Count == 1, "one read-only wrapper");
-            var mutable = view as IList<DinoObstacle>;
-            Assert(mutable == null || mutable.IsReadOnly, "not mutable list");
-        });
-        Run("simulation including a generated obstacle allocates no per-frame objects", delegate {
+        Run("motion and first generation allocate no frame objects", delegate {
             var warm = New(); warm.Jump(); for (int i = 0; i < 220; i++) warm.Step();
-            var g = New(); g.Jump();
-            long before = GC.GetAllocatedBytesForCurrentThread();
+            var g = New(); g.Jump(); long before = GC.GetAllocatedBytesForCurrentThread();
             for (int i = 0; i < 220; i++) g.Step();
-            long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            Assert(bytes == 0, "allocated " + bytes + " bytes across stepping and generation");
+            Assert(GC.GetAllocatedBytesForCurrentThread() == before, "per-frame allocation");
         });
-        Run("supported viewport bounds remain playable and finite", delegate {
-            foreach (double width in new[] { 320.0, 4096.0 }) {
-                var g = New(width); g.Jump(); bool observed = false;
-                for (int i = 0; i < 3600; i++) { observed |= g.Obstacles.Count > 0; Drive(g); g.Step(); }
-                Assert(observed && !g.IsGameOver && g.Elapsed == 60 && !double.IsInfinity(g.Distance), "supported viewport " + width);
-            }
-        });
-        Run("same seed and actions replay despite extra reads", delegate {
-            var a = New(600, 42); var b = New(600, 42); a.Jump(); b.Jump();
-            for (int i = 0; i < 18000; i++) {
-                Drive(a); Drive(b);
-                for (int read = 0; read < 3; read++) { var obs = b.Obstacles; double ignored = b.Distance + b.PlayerY; Assert(ignored >= 0 && obs.Count < 32, "read"); }
-                a.Step(); b.Step(); Same(a, b);
-            }
-            Assert(!a.IsGameOver && a.Elapsed >= 300, "replay reaches late phase");
-        });
-        Run("render rates execute identical fixed input ticks", delegate {
-            var a = Render(30); var b = Render(60); var c = Render(120);
-            Same(a, b); Same(b, c); Assert(a.Tick == 7200 && !a.IsGameOver, "120 seconds at all rates");
-        });
-        Run("low speed rejects physically impossible wide combinations", delegate {
-            var r = new DinoRules(1200); DinoPlan plan;
-            Assert(!DinoTraversal.TryPlan(r, DinoObstacleKind.LargeCactus, 3, 0, 80, out plan), "large triple cannot fit flight at 80 units/s");
-            Assert(DinoTraversal.TryPlan(r, DinoObstacleKind.LargeCactus, 3, 0, 360, out plan), "same geometry is possible at sufficient crossing speed");
-            Assert(!DinoTraversal.TryPlan(r, DinoObstacleKind.SmallCactus, 4, 0, 180, out plan), "four cacti disallowed");
-        });
-        Run("swept collision detects crossing between endpoint samples", delegate {
-            Assert(DinoCollision.SweptRect(0, 0, 10, 10, 0, 25, 0, 2, 10, -40), "thin obstacle crossed in one interval");
-            Assert(!DinoCollision.SweptRect(0, 20, 10, 10, 0, 25, 0, 2, 10, -40), "vertical separation");
-        });
-        Run("observed full visibility agrees with certificates and a one-tick late press loses", delegate {
-            foreach (double width in Widths) {
-                var g = New(width); g.Jump(); long visible = -1, latest = -1;
-                for (int i = 0; i < 1200 && !g.IsGameOver; i++) {
-                    if (g.Obstacles.Count > 0) {
-                        var o = g.Obstacles[0]; latest = o.LatestActionTick;
-                        if (visible < 0 && o.X + o.Width <= width) { visible = g.Tick; Assert(visible == o.FullVisibleTick, "actual full visibility tick"); }
-                        if (g.Tick == latest + 1) Assert(g.Jump(), "late press still physically allowed");
-                    }
-                    g.Step();
-                }
-                Assert(visible >= 0 && g.IsGameOver, "one tick beyond certified latest must collide");
-                Assert((latest - visible) / 60.0 - .1 + 1e-8 >= .15, "independent observed high-speed response budget");
-            }
-        });
-        Run("first small cactus admits a real released short jump", delegate {
-            foreach (double width in Widths) {
-                bool passedObstacle = false;
-                // Search player input timing, not the planner's held-jump answer.
-                for (int lead = 0; lead < 35 && !passedObstacle; lead++) {
-                    var g = New(width); g.Jump(); long action = -1;
-                    for (int i = 0; i < 900 && !g.IsGameOver; i++) {
-                        if (g.Obstacles.Count > 0) {
-                            var o = g.Obstacles[0];
-                            if (action < 0) action = o.LatestActionTick - lead;
-                            if (g.Tick == action) { Assert(g.Jump(), "short press"); g.ReleaseJump(); }
-                            if (o.X + o.Width < g.Rules.PlayerX) { passedObstacle = true; break; }
-                        }
-                        g.Step();
-                    }
-                }
-                Assert(passedObstacle, "short jump must clear small cactus at width " + width);
-            }
-        });
-        Run("standing body is swept before an air-duck landing changes silhouette", delegate {
-            var r = new DinoRules(600);
-            var obstacle = new DinoObstacle(0, DinoObstacleKind.MidBird, 1, r.PlayerX + 20, default(DinoPlan));
-            Assert(DinoCollision.Hits(r, 2, 0, false, obstacle, obstacle.X), "upright descent hits mid bird");
-            Assert(!DinoCollision.Hits(r, 2, 0, true, obstacle, obstacle.X), "duck-only sweep would miss that collision");
-            Assert(DinoCollision.HitsMotion(r, 2, 0, true, obstacle, obstacle.X), "landing must sweep standing before crouching");
-        });
-        Run("large triple uses its shorter middle plant silhouette", delegate {
-            var r = new DinoRules(600);
-            var obstacle = new DinoObstacle(0, DinoObstacleKind.LargeCactus, 3, r.PlayerX - 26 * DinoRules.SpriteScale, default(DinoPlan));
-            Assert(!DinoCollision.Hits(r, 46 * DinoRules.SpriteScale, 46 * DinoRules.SpriteScale, false, obstacle, obstacle.X),
-                "actual atlas has no opaque overlap above the short middle plant");
-        });
-        foreach (double w in Widths) {
-            double width = w;
-            Run("fair action windows and real sequence replay at width " + width, delegate { VerifyRuns(width); });
-        }
-        Run("rule initialization and generation have a bounded work budget", delegate {
-            var clock = Stopwatch.StartNew();
-            foreach (double width in Widths) { var g = New(width, 5); g.Jump(); for (int i = 0; i < 10800; i++) { Drive(g); g.Step(); } }
-            clock.Stop(); Console.WriteLine(Widths.Length + " rule initializations + " + (Widths.Length * 180) + " simulated seconds: " + clock.ElapsedMilliseconds + " ms");
-            Assert(clock.ElapsedMilliseconds < 15000, "bounded planner work");
-        });
-        Console.WriteLine("Dino checks: " + passed + " passed, " + failed + " failed.");
-        return failed == 0 ? 0 : 1;
+        Run("terminal tick freezes motion, generation and counters without overflow", ChromeReferenceTests.TerminalTickFreezesStep);
+        Run("widest horizon has no per-frame allocations through all speed gates", ChromeReferenceTests.WideHorizonDoesNotAllocate);
+        Run("same seed and fixed input ticks replay across render rates", delegate { Same(Render(30), Render(60)); Same(Render(60), Render(120)); });
+        Console.WriteLine("Dino tests: " + passed + " passed, " + failed + " failed"); return failed == 0 ? 0 : 1;
     }
-
-    private static void VerifyRuns(double width)
-    {
-        int groups = 0, low = 0, mid = 0, count = 0; double minWindow = double.MaxValue;
-        var rules = new DinoRules(width);
-        foreach (uint seed in new uint[] { 0, 1, 17, 42, 1729, 123456 }) {
-            var g = new DinoGame(rules, seed); g.Jump(); long seen = 0, previousRecovery = 0; bool peakObstacle = false;
-            long capTick = (long)Math.Ceiling((rules.MaxSpeed - 180) / .4);
-            for (int i = 0; i < 14400; i++) {
-                foreach (var o in g.Obstacles) if (o.Id > seen) {
-                    seen = o.Id; count++; peakObstacle |= o.SpawnTick >= capTick;
-                    Assert(o.GroupSize >= 1 && o.GroupSize <= 3, "at most three");
-                    Assert(o.SpawnTick >= 180, "three second opening");
-                    if (o.GroupSize > 1) { groups++; Assert(o.SpawnTick >= 1200, "combos after 20 seconds"); }
-                    if (o.Kind == DinoObstacleKind.LowBird) { low++; Assert(o.SpawnTick >= 2700, "low bird after 45 seconds"); }
-                    if (o.Kind == DinoObstacleKind.MidBird) { mid++; Assert(o.SpawnTick >= 2700, "mid bird after 45 seconds"); }
-                    Assert(o.ReactionWindowSeconds + 1e-8 >= .15, "actual high-speed window after input budget");
-                    long firstVisiblePress = Math.Max(o.EarliestActionTick, o.FullVisibleTick + 6);
-                    Assert(o.LatestActionTick - firstVisiblePress >= 6, "visible actions retain a real timing interval");
-                    Assert(o.EarliestActionTick <= o.RecommendedActionTick && o.RecommendedActionTick <= o.LatestActionTick, "certified interval");
-                    Assert(o.EarliestActionTick - previousRecovery >= 15, "all valid actions have recovery gap");
-                    previousRecovery = o.RecoveryTick; minWindow = Math.Min(minWindow, o.ReactionWindowSeconds);
-                }
-                Drive(g, (int)(seed % 3)); g.Step();
-                Assert(!g.IsGameOver, "certified actions must physically clear actual production collisions, seed=" + seed + ", tick=" + g.Tick);
-                Assert(g.Speed <= rules.MaxSpeed + 1e-8 && g.Speed <= 1440 && !double.IsNaN(g.PlayerY), "finite capped state");
-            }
-            Near(g.Speed, rules.MaxSpeed, "late run stays at the viewport cap");
-            Assert(peakObstacle, "generation continues at full speed rather than silently stopping");
-        }
-        Assert(count > 100 && groups > 0 && low > 0 && mid > 0, "late content exercised: " + count + "/" + groups + "/" + low + "/" + mid);
-        Console.WriteLine("width=" + width + " cap=" + rules.MaxSpeed.ToString("F3") + " obstacles=" + count + " groups=" + groups + " low=" + low + " mid=" + mid + " minEffectiveWindow=" + minWindow.ToString("F3"));
-    }
-
-    private static void Drive(DinoGame g, int policy = 0)
-    {
-        bool duck = false;
-        foreach (var o in g.Obstacles) {
-            if (o.Kind == DinoObstacleKind.MidBird && g.Tick >= ActionTick(o, policy) && g.Tick < o.RecoveryTick) duck = true;
-        }
-        g.SetDuck(duck);
-        foreach (var o in g.Obstacles)
-            if (o.Kind != DinoObstacleKind.MidBird && g.Tick == ActionTick(o, policy)) Assert(g.Jump(), "scheduled press grounded");
-    }
-    private static long ActionTick(DinoObstacle o, int policy)
-    { return policy == 1 ? o.EarliestActionTick : policy == 2 ? o.LatestActionTick : o.RecommendedActionTick; }
-
     private static DinoGame Render(int hz)
     {
-        var g = New(600, 7); g.Jump(); double accumulator = 0;
-        for (int frame = 0; frame < hz * 120; frame++) {
-            accumulator += 1.0 / hz;
-            while (accumulator + 1e-12 >= DinoRules.StepSeconds) { Drive(g); g.Step(); accumulator -= DinoRules.StepSeconds; }
+        var g = New(); g.Jump(); double remainder = 0;
+        var plans = new Dictionary<long, DinoPlan>();
+        for (int i = 0; i < hz * 100; i++) {
+            remainder += 1.0 / hz;
+            while (remainder + 1e-12 >= DinoRules.StepSeconds) {
+                bool duck = false;
+                foreach (var obstacle in g.Obstacles) {
+                    DinoPlan plan;
+                    if (!plans.TryGetValue(obstacle.Id, out plan)) {
+                        Assert(DinoTraversal.TryPlan(g.Rules, obstacle, g.Tick, out plan), "render-rate diagnostic action");
+                        plans.Add(obstacle.Id, plan);
+                    }
+                    if (plan.Action == DinoAction.Duck && g.Tick >= plan.RecommendedActionTick && g.Tick < plan.RecoveryTick) duck = true;
+                }
+                g.SetDuck(duck);
+                foreach (var obstacle in g.Obstacles) {
+                    var plan = plans[obstacle.Id];
+                    if (plan.Action == DinoAction.Jump && g.Tick >= plan.RecommendedActionTick && g.Tick <= plan.LatestActionTick && !g.Jumping) g.Jump();
+                }
+                g.Step(); remainder -= DinoRules.StepSeconds;
+            }
         }
+        Assert(!g.IsGameOver && g.Tick == 6000, "complete live 100-second replay at " + hz + " Hz");
         return g;
     }
-    private static void Flight(bool release, bool duck, out double peak, out int steps)
-    {
-        var g = New(); g.Jump(); if (release) g.ReleaseJump(); if (duck) g.SetDuck(true);
-        peak = 0; steps = 0;
-        do { g.Step(); peak = Math.Max(peak, g.PlayerY); steps++; } while (g.Jumping && steps < 180);
-        Assert(steps < 180, "eventually lands");
-    }
-    private static DinoGame New(double width = 600, uint seed = 17) { return new DinoGame(new DinoRules(width), seed); }
-    private static void Same(DinoGame a, DinoGame b)
-    {
-        Assert(a.Tick == b.Tick && a.Score == b.Score && a.IsGameOver == b.IsGameOver && a.Obstacles.Count == b.Obstacles.Count, "state metadata");
-        Near(a.Distance, b.Distance, "distance"); Near(a.PlayerY, b.PlayerY, "player y"); Near(a.PlayerVelocity, b.PlayerVelocity, "velocity");
-        for (int i = 0; i < a.Obstacles.Count; i++) {
-            var x = a.Obstacles[i]; var y = b.Obstacles[i];
-            Assert(x.Id == y.Id && x.Kind == y.Kind && x.GroupSize == y.GroupSize && x.RecommendedActionTick == y.RecommendedActionTick, "same random stream"); Near(x.X, y.X, "obstacle x");
-        }
-    }
+    private static DinoGame New() { return new DinoGame(new DinoRules(810), 17); }
+    private static void Same(DinoGame a, DinoGame b) { Assert(a.Tick == b.Tick && a.Score == b.Score && a.IsGameOver == b.IsGameOver && a.Obstacles.Count == b.Obstacles.Count, "state metadata"); Near(a.PlayerY, b.PlayerY, "y"); Near(a.Distance, b.Distance, "distance"); Near(a.PlayerVelocity, b.PlayerVelocity, "velocity"); for (int i = 0; i < a.Obstacles.Count; i++) { Assert(a.Obstacles[i].Kind == b.Obstacles[i].Kind && a.Obstacles[i].GroupSize == b.Obstacles[i].GroupSize, "seeded kind"); Near(a.Obstacles[i].X, b.Obstacles[i].X, "x"); } }
     private static void Run(string name, Action body) { try { body(); passed++; Console.WriteLine("PASS " + name); } catch (Exception ex) { failed++; Console.Error.WriteLine("FAIL " + name + ": " + ex.Message); } }
-    private static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
-    private static void Near(double a, double b, string message) { Assert(Math.Abs(a - b) < 1e-7, message + ": " + a + " != " + b); }
+    private static void Assert(bool value, string message) { ChromeReferenceTests.Assert(value, message); }
+    private static void Near(double a, double b, string message) { ChromeReferenceTests.Near(a, b, message); }
     private static void Throws<T>(Action body) where T : Exception { try { body(); } catch (T) { return; } throw new Exception("Expected " + typeof(T).Name); }
 }

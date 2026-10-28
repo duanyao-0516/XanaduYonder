@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -14,7 +15,7 @@ using Object = UnityEngine.Object;
 
 namespace XanaduYonder.EditorTools
 {
-    // Renders the production page; only the viewport and sample records are controlled fixtures.
+    // Renders the production page; viewport, sample records and replay seed are controlled fixtures.
     // No device state, user save, player settings, or running gameplay is written by this check.
     [InitializeOnLoad]
     public static class DinoVisualChecks
@@ -61,10 +62,10 @@ namespace XanaduYonder.EditorTools
                     if (size.x < size.y) { fixture.Selection(); fixture.Capture("selection"); }
                     fixture.Ready();
                     fixture.CheckTrackGeometry();
-                    fixture.Capture("ready", false, size.x == 1515 ? 0 : -1);
+                    fixture.Capture("ready", false, size.x == 1515 || size.x == 720 && size.y == 1320 ? 0 : -1);
                     if (size.x == 720 && size.y == 1320)
                     {
-                        fixture.Night(); fixture.Capture("night", true);
+                        fixture.Night(); fixture.Capture("night", true, 1);
                         fixture.Ready();
                         fixture.Open("ShowHelp"); fixture.Capture("help");
                         fixture.Open("ShowSettings"); fixture.Capture("settings");
@@ -86,6 +87,11 @@ namespace XanaduYonder.EditorTools
                 using (var fixture = new Fixture(720, 960))
                 {
                     fixture.Selection(); fixture.CaptureShortSelection();
+                }
+                foreach (var size in new[] { new Vector2Int(720, 1320), new Vector2Int(1515, 720) })
+                using (var fixture = new Fixture(size.x, size.y))
+                {
+                    fixture.Ready(); fixture.CheckDuckCrash();
                 }
                 using (var fixture = new Fixture(720, 720, new DateTime(2026, 5, 31)))
                 {
@@ -161,6 +167,7 @@ namespace XanaduYonder.EditorTools
             private readonly string directory;
             private RawImage palettePlayer;
             private int initialDayPixels;
+            private readonly Dictionary<long, DinoPlan> replayPlans = new Dictionary<long, DinoPlan>();
 
             internal Fixture(int width, int height, DateTime? localDate = null)
             {
@@ -207,6 +214,10 @@ namespace XanaduYonder.EditorTools
             {
                 ConfigureViewport(); Set(page, "landscape", width > height);
                 Invoke(page, "StartNewGame"); Set(page, "unlockAt", -1f);
+                var game = new DinoGame(Get<DinoGame>(page, "game").Rules, 17);
+                Set(page, "game", game);
+                Get<DinoTrackView>(page, "track").Render(game, 0);
+                replayPlans.Clear();
                 Require(page.CurrentPhase == "Ready", "Requested visual viewport reaches Ready: " + width + "x" + height);
             }
 
@@ -242,6 +253,32 @@ namespace XanaduYonder.EditorTools
             }
 
             internal void Open(string method) { Invoke(page, method); }
+
+            internal void CheckDuckCrash()
+            {
+                var game = Get<DinoGame>(page, "game");
+                var track = Get<DinoTrackView>(page, "track");
+                Invoke(page, "JumpDown", -101);
+                for (int i = 0; i < 1800 && !game.IsGameOver; i++)
+                {
+                    if (!game.Jumping) game.SetDuck(true);
+                    game.Step();
+                    track.Render(game, (float)DinoRules.StepSeconds);
+                }
+                Require(game.IsGameOver && game.Ducking, "Generated obstacle produces a real grounded duck collision");
+                Capture("duck-crash");
+                var player = Get<RawImage>(track, "player");
+                float scale = Get<float>(track, "scale");
+                Require(Math.Abs(player.rectTransform.rect.width / scale - game.Rules.DuckWidth) < .01f &&
+                    Math.Abs(player.uvRect.width * 2446 - 118) < .01f,
+                    "Collision presentation retains the actual duck silhouette at first contact");
+                var position = player.rectTransform.anchoredPosition;
+                var uv = player.uvRect;
+                for (int i = 0; i < 60; i++) track.Render(game, (float)DinoRules.StepSeconds);
+                Require(player.rectTransform.anchoredPosition == position && player.uvRect == uv,
+                    "Collision presentation keeps the contact position and duck animation frame frozen");
+                Report.AppendLine("PASS actual duck crash pose and frozen frame " + width + "x" + height);
+            }
 
             internal void Night()
             {
@@ -346,11 +383,24 @@ namespace XanaduYonder.EditorTools
                 {
                     bool duck = false;
                     foreach (var obstacle in game.Obstacles)
-                        if (obstacle.Kind == DinoObstacleKind.MidBird && game.Tick >= obstacle.RecommendedActionTick && game.Tick < obstacle.RecoveryTick) duck = true;
+                    {
+                        DinoPlan plan;
+                        if (!replayPlans.TryGetValue(obstacle.Id, out plan))
+                        {
+                            Require(DinoTraversal.TryPlan(game.Rules, obstacle, game.Tick, out plan),
+                                "Visual replay finds an input for the real generated obstacle " + obstacle.Id);
+                            replayPlans.Add(obstacle.Id, plan);
+                        }
+                        if (plan.Action == DinoAction.Duck && game.Tick >= plan.RecommendedActionTick && game.Tick < plan.RecoveryTick) duck = true;
+                    }
                     game.SetDuck(duck);
                     foreach (var obstacle in game.Obstacles)
-                        if (obstacle.Kind != DinoObstacleKind.MidBird && game.Tick == obstacle.RecommendedActionTick)
-                            Require(game.Jump(), "Certified jump is available during visual replay");
+                    {
+                        var plan = replayPlans[obstacle.Id];
+                        if (plan.Action == DinoAction.Jump && game.Tick >= plan.RecommendedActionTick &&
+                            game.Tick <= plan.LatestActionTick && !game.Jumping)
+                            Require(game.Jump(), "Diagnostic jump is available during visual replay");
+                    }
                     game.Step();
                     if (game.IsGameOver) throw new InvalidOperationException("Real generated obstacle collision during day-night replay at " + game.Elapsed);
                     track.Render(game, (float)DinoRules.StepSeconds);
@@ -436,10 +486,7 @@ namespace XanaduYonder.EditorTools
                 // Test the material submitted through MaskableGraphic, not only its mutable base material.
                 var material = player.materialForRendering;
                 Require(material != null && material.HasProperty("_Color"), "Masked sprite has a render tint: " + label);
-                float expectedGain = night ? 218f / 83f : 1f;
                 var tint = material.GetColor("_Color");
-                Require(Math.Abs(tint.r - expectedGain) < .01f && Math.Abs(tint.g - expectedGain) < .01f &&
-                    Math.Abs(tint.b - expectedGain) < .01f, "Cached stencil material receives the current palette: " + label);
 
                 var corners = new Vector3[4]; player.rectTransform.GetWorldCorners(corners);
                 var min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
@@ -448,21 +495,24 @@ namespace XanaduYonder.EditorTools
                 int right = Mathf.Clamp(Mathf.FloorToInt(max.x), 0, width - 1);
                 int bottom = Mathf.Clamp(Mathf.CeilToInt(min.y), 0, height - 1);
                 int top = Mathf.Clamp(Mathf.FloorToInt(max.y), 0, height - 1);
-                float expectedBody = (night ? 218f : 83f) / 255f;
-                int bodyPixels = 0;
+                float expectedBody = (night ? 172f : 83f) / 255f;
+                int bodyPixels = 0, whitePixels = 0;
                 for (int y = bottom; y <= top; y++)
                 for (int x = left; x <= right; x++)
                 {
                     var pixel = image.GetPixel(x, y);
-                    // The source's white outline and the black/white sky are outside this grey range.
+                    if (pixel.r > .95f && pixel.g > .95f && pixel.b > .95f) whitePixels++;
                     if (Math.Abs(pixel.r - expectedBody) < .025f && Math.Abs(pixel.g - expectedBody) < .025f &&
                         Math.Abs(pixel.b - expectedBody) < .025f) bodyPixels++;
                 }
+                if (night) Require(whitePixels == 0,
+                    "Original white sprite pixels invert to black without a night halo: " + label + " (white=" + whitePixels + ")");
                 Require(bodyPixels >= 100, "Actual dinosaur body pixels use the current palette: " + label + " (" + bodyPixels + ")");
                 if (!night && initialDayPixels == 0) initialDayPixels = bodyPixels;
                 else if (!night) Require(bodyPixels >= initialDayPixels * .8f,
                     "Returning to day restores the rendered dinosaur body, including cached stencil state");
-                Report.AppendLine("PASS sprite pixels " + label + ": body=" + bodyPixels + ", render tint=" + tint.r.ToString("F3"));
+                Report.AppendLine("PASS sprite pixels " + label + ": body=" + bodyPixels + ", white=" + whitePixels +
+                    ", render tint=" + tint.r.ToString("F3"));
             }
 
             private void CheckRoundedPixels(Texture2D image)

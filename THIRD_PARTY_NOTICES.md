@@ -9,7 +9,7 @@ The project's original code is licensed under MIT. Third-party software and asse
 - Bundled runtime assets: `Assets/Resources/Dino/Sprites.png` is the unchanged 2× sprite sheet; `Audio/Jump.ogg`, `Audio/Hit.ogg` and `Audio/Score.ogg` are unchanged copies of `button-press.mp3`, `hit.mp3` and `score-reached.mp3`. The original audio files contain Ogg/Vorbis data despite their upstream `.mp3` extension; only names and extensions changed, with no re-encoding. The 1× sprite sheet is retained as a design reference and is not bundled as a Dino runtime resource.
 - License: Chromium BSD-style license, Copyright 2015 The Chromium Authors. Its complete notice, conditions and disclaimer are reproduced in [LICENSE.chromium](docs/superpowers/specs/assets/chrome-dino/LICENSE.chromium) and bundled unchanged in [Assets/Resources/Dino/LICENSE.txt](Assets/Resources/Dino/LICENSE.txt). The game exposes the complete text through Dino → 玩法说明 → 素材与许可.
 - Exact upstream paths and hashes are recorded in [source-manifest.json](docs/superpowers/specs/assets/chrome-dino/source-manifest.json); runtime mappings, hashes and import settings are documented in [the Dino asset record](docs/dino-assets.md).
-- These assets retain their upstream terms and are not relicensed by the project's MIT license. This project does not claim Google endorsement. The Unity gameplay runtime is an independent C# implementation.
+- These assets retain their upstream terms and are not relicensed by the project's MIT license. This project does not claim Google endorsement.
 
 ## Chromium Dino source reference archive
 
@@ -17,6 +17,12 @@ The project's original code is licensed under MIT. Third-party software and asse
 - The original TypeScript game files and `neterror.css` are archived under `docs/chromium-dino-reference/source/` for configuration and behavior research. They are documentation references and are not compiled into the Unity player.
 - Original copyright headers and the complete BSD-style [LICENSE](docs/chromium-dino-reference/source/LICENSE) are retained unchanged. These files retain their upstream terms and are not relicensed under MIT.
 - Exact upstream paths, decoded byte counts and SHA-256 hashes are recorded in [manifest.json](docs/chromium-dino-reference/manifest.json). Extracted parameters and unit conversions are documented in [the configuration reference](docs/dino-chromium-config.md).
+
+## Chromium Dino rule adaptations
+
+- Dino's C# speed, jump, obstacle-generation and collision-box logic under `Assets/Scripts/Core/Dino/` adapts the pinned Chromium normal-mode rules listed above. The original Chromium copyright notices and BSD-style terms apply to the adapted portions; the full unchanged license is bundled in `Assets/Resources/Dino/LICENSE.txt` and displayed through Dino → 玩法说明 → 素材与许可.
+- Unity integration, touch ownership, responsive layout, persistence, continuous collision stopping and holiday decorations are project code. Fixed 60 Hz simulation deliberately makes acceleration independent of the display refresh rate; the source reference archive records the original callback-based behavior.
+- These adapted portions are not relicensed under the project's MIT license.
 
 ## Offline idiom dictionary
 
@@ -38,7 +44,7 @@ Unity Editor, player runtime, UGUI, IDE integration and testing packages retain 
 
 `com.unity.nuget.newtonsoft-json` 3.2.2 packages Newtonsoft.Json 13.0.2 (MIT, James Newton-King). The package's included LICENSE/Third Party Notices apply. The standalone persistence tests reference the matching NuGet version.
 
-The Unity gameplay runtime, UI layout and synthesized sound generation are original. Reference source archives retain their upstream authorship and licenses. No implementation or artwork from another 2048 game is included.
+Except for the explicitly attributed adaptations above, the Unity gameplay runtime, UI layout and synthesized sound generation are original. Reference source archives retain their upstream authorship and licenses. No implementation or artwork from another 2048 game is included.
 
 ## User-supplied jump assets
 

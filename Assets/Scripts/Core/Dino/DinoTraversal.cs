@@ -2,76 +2,64 @@ using System;
 
 namespace XanaduYonder.Core.Dino
 {
-    /// <summary>Bounded exact-input search using the same motion and swept collision as the live game.</summary>
+    /// <summary>Editor diagnostics only. Production obstacle generation never invokes or depends on this search.</summary>
     internal static class DinoTraversal
     {
-        internal static bool TryPlan(DinoRules rules, DinoObstacleKind kind, int group, long spawnTick, double constantSpeed, out DinoPlan plan)
+        internal static bool TryPlan(DinoRules rules, DinoObstacle obstacle, long observationTick, out DinoPlan plan)
         {
-            plan = default(DinoPlan);
-            if (group < 1 || group > 3 || (kind >= DinoObstacleKind.LowBird && group != 1)
-                || kind < DinoObstacleKind.SmallCactus || kind > DinoObstacleKind.MidBird) return false;
-            var obstacle = new DinoObstacle(0, kind, group, rules.ViewportWidth + 2, plan);
-            long visible = -1, groundHit = -1, passed = -1;
+            plan = new DinoPlan { SpawnTick = obstacle.SpawnTick, EarliestActionTick = -1, LatestActionTick = -1, RecommendedActionTick = -1 };
+            long groundHit = -1, passed = -1;
             double x = obstacle.X;
-            // One horizon scan finds full visibility and the first actual standing collision;
-            // distance/front-edge division is insufficient for the multi-part silhouettes.
-            for (int n = 1; n <= DinoRules.MaximumPlanTicks; n++) {
-                long tick = spawnTick + n;
-                double dx = Speed(rules, tick, constantSpeed) * DinoRules.StepSeconds;
-                double nextX = x - dx;
-                if (visible < 0 && nextX + obstacle.Width <= rules.ViewportWidth) visible = tick;
+            for (int n = 1; n <= DinoRules.MaximumPlanTicks && observationTick <= long.MaxValue - n; n++) {
+                long tick = observationTick + n;
+                double nextX = x - DinoRules.ObstacleStep(rules.OriginalSpeedAt(tick - 1), obstacle.SpeedOffset);
                 if (groundHit < 0 && DinoCollision.Hits(rules, 0, 0, false, obstacle.At(x), nextX)) groundHit = tick;
                 x = nextX;
                 if (x + obstacle.Width < rules.PlayerX) { passed = tick; break; }
             }
-            if (visible < 0 || groundHit < 0 || passed < 0) return false;
-
-            if (kind == DinoObstacleKind.MidBird) {
-                // Duck is immediate, but its wider silhouette is checked for the complete pass.
-                if (!Simulate(rules, obstacle, spawnTick, groundHit - 1, passed, constantSpeed, true, out passed)) return false;
-                plan = new DinoPlan { SpawnTick = spawnTick, FullVisibleTick = visible, EarliestActionTick = visible,
-                    LatestActionTick = groundHit - 1, RecommendedActionTick = (visible + groundHit - 1) / 2, RecoveryTick = passed };
-                return true;
+            if (passed < 0) return false;
+            plan.RecoveryTick = passed;
+            if (groundHit < 0) { plan.Action = DinoAction.None; return true; }
+            if (obstacle.Kind == DinoObstacleKind.MidBird) {
+                long recovery;
+                if (Simulate(rules, obstacle, observationTick, observationTick, passed, true, out recovery)) {
+                    plan.Action = DinoAction.Duck;
+                    plan.EarliestActionTick = observationTick; plan.LatestActionTick = groundHit - 1;
+                    plan.RecommendedActionTick = groundHit - 1; plan.RecoveryTick = recovery;
+                    return true;
+                }
             }
-
-            long first = -1, last = -1, recovery = 0;
-            // A held flight lasts < 48 ticks. Search at most 49 candidate input ticks; never enumerate
-            // the entire viewport. Choose one contiguous success interval so every contained press works.
-            long lower = Math.Max(spawnTick, groundHit - 48);
-            for (long action = lower; action < groundHit; action++) {
-                long finished;
-                bool clears = Simulate(rules, obstacle, spawnTick, action, passed, constantSpeed, false, out finished);
-                if (clears) { if (first < 0) first = action; last = action; recovery = Math.Max(recovery, finished); }
-                else if (first >= 0) break;
+            long first = -1, last = -1, finalRecovery = 0;
+            for (long action = Math.Max(observationTick, groundHit - 60); action < groundHit; action++) {
+                long recovery;
+                if (Simulate(rules, obstacle, observationTick, action, passed, false, out recovery)) {
+                    if (first < 0) first = action;
+                    last = action; finalRecovery = Math.Max(finalRecovery, recovery);
+                } else if (first >= 0) break;
             }
-            if (first < 0 || last - first < 6) return false; // At least 100ms of valid press timing, not a single lucky tick.
-            plan = new DinoPlan { SpawnTick = spawnTick, FullVisibleTick = visible, EarliestActionTick = first,
-                LatestActionTick = last, RecommendedActionTick = (first + last) / 2, RecoveryTick = recovery };
+            if (first < 0) return false;
+            plan.Action = DinoAction.Jump; plan.EarliestActionTick = first; plan.LatestActionTick = last;
+            plan.RecommendedActionTick = first; plan.RecoveryTick = finalRecovery;
             return true;
         }
 
-        private static bool Simulate(DinoRules rules, DinoObstacle template, long spawnTick, long actionTick, long passedTick,
-            double constantSpeed, bool duck, out long recovery)
+        private static bool Simulate(DinoRules rules, DinoObstacle template, long observed, long action, long passed, bool duck, out long recovery)
         {
-            recovery = actionTick;
-            double traveled = constantSpeed > 0 ? (actionTick - spawnTick) * constantSpeed * DinoRules.StepSeconds : rules.Travel(spawnTick, actionTick);
-            double x = template.X - traveled, y = 0, velocity = duck ? 0 : DinoRules.JumpVelocity;
-            long end = Math.Max(passedTick + 1, actionTick + 49);
-            for (long tick = actionTick + 1; tick <= end; tick++) {
-                double dx = Speed(rules, tick, constantSpeed) * DinoRules.StepSeconds / DinoRules.Substeps;
-                for (int sub = 0; sub < DinoRules.Substeps; sub++) {
-                    double oldY = y;
-                    DinoMotion.Advance(ref y, ref velocity, true, duck);
-                    double nextX = x - dx;
-                    if (DinoCollision.HitsMotion(rules, oldY, y, duck, template.At(x), nextX)) return false;
-                    x = nextX;
-                }
-                if (y == 0 && velocity == 0 && x + template.Width < rules.PlayerX) { recovery = tick; return true; }
+            recovery = action;
+            double x = template.X;
+            for (long tick = observed; tick < action; tick++) x -= DinoRules.ObstacleStep(rules.OriginalSpeedAt(tick), template.SpeedOffset);
+            DinoMotionState state = DinoMotionState.Grounded;
+            if (!duck) DinoMotion.Start(ref state, rules.OriginalSpeedAt(action));
+            long end = Math.Max(passed, action + 60);
+            for (long tick = action; tick < end; tick++) {
+                double previousY = state.WorldY;
+                DinoMotion.Advance(ref state);
+                double nextX = x - DinoRules.ObstacleStep(rules.OriginalSpeedAt(tick), template.SpeedOffset);
+                if (DinoCollision.HitsMotion(rules, previousY, state.WorldY, duck, template.At(x), nextX)) return false;
+                x = nextX;
+                if (!state.Jumping && x + template.Width < rules.PlayerX) { recovery = tick + 1; return true; }
             }
             return false;
         }
-
-        private static double Speed(DinoRules rules, long tick, double constantSpeed)
-        { return constantSpeed > 0 ? constantSpeed : rules.SpeedAt(tick); }
     }
 }

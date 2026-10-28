@@ -178,3 +178,42 @@ Unity Editor 启动期间仍出现既有 QuickSearch `SearchDatabase.EnumerateAl
 2026-10-28 11:42在OPPO PKM110（`3B6F4NE8A66ZXTRL`）执行保留数据的 `adb install -r`，返回 `Success`；包 `com.duanyao.xanaduyonder.dinotest`，0.4.0/code4。安装前后Dino存档字节一致：竖屏269、横屏414、横屏偏好。没有卸载、清数据、修改手机日期或操作其他设备。
 
 此次已核对安装和存档；未在手机上代替用户完成高速真人触控、音效或日夜／节日的真机视觉验收。给用户看的黑夜与节日图片是生产Unity受控视口渲染，非当天手机日期触发的截图。
+
+## 2026-10-28 Chrome 规则整体对齐与碰撞修复
+
+用户明确批准采用 Chrome 原版速度、加速度、跳跃和间距，修复白边及碰撞并覆盖安装 OPPO。本轮仅在既有 Dino 工作树执行，基线 `0b6e0d7`，没有合并或改动其他工作树。设计与执行范围见 `superpowers/plans/2026-10-28-dino-chrome-alignment.md`。
+
+### 实现与证据
+
+- 采用固定归档 Chromium `3df8d372a3f9d5c38a89d0bc496cc44c85af1feb` 普通移动端规则，统一 60 Hz；不继承浏览器 120 次回调时加速翻倍的差异。速度、跳跃、间距、组数、速度门槛、两档翼龙高度和偏移、计分均进行原图单位→世界单位换算。固定时间类型阶段、四倍上限、恢复窗口及生产轨迹筛选被原版规则取代。
+- 官方外框内缩、细分框、仙人掌整组伸展与严格边界，配合连续扫掠。全部对象停在最早接触比例；`PresentationDistance` 用于地面和天空的部分帧位移，计分距离仍只统计完成的固定步。下蹲碰撞保持蹲姿。
+- 夜间生成独立的 RGB 反色图集，保留 Alpha 和 point/clamp，随视图释放；原 PNG 和 meta 字节不变。原白边夜间映射为黑色，身体 83→172，节日帽独立保留彩色。圆角、外层 UI、30 秒昼夜节奏和存档协议不变。
+- BSD 原始许可继续打包，新增 C# 移植部分署名、第三方声明及游戏内规则来源说明。
+
+真实失败先行：旧夜景在恐龙区域检出 1005 个白色像素，新版横竖屏夜景为 0；日间恢复、第二次入夜同时通过。地面旧终止位置约 -964.0759、新接触应为 -970.4566 的回归先失败，接入部分帧距离后通过。下蹲结束原先强制站姿的真实模型／渲染检查先失败，修复后通过。核心原版轨迹与速度、首次生成时机、官方碰撞和可见实体间隙均先在旧实现失败。
+
+独立审查发现的后继重复生成和宽屏列表扩容均已补回归修复：原版 `followingObstacleCreated` 状态防止较快后继先出屏后重复生成；列表预分配 32，在允许最大宽度 4096、两个种子各 20,000 步检查中运行帧分配为 0。审查未留下阻塞问题。
+
+| 检查 | 本轮实际结果 |
+| --- | --- |
+| `scripts/test-dino.sh` | 20 组通过、0 失败，包含 7 组官方碰撞回归；独立原版逐帧跳跃／释放／快速下落、13,000 tick 障碍生成对照、最早碰撞、终态冻结与 long.MaxValue。30／60／120 Hz 均完成相同 100 秒真实障碍回放且状态一致。 |
+| `scripts/test-dino-session.sh` | 2,125 条断言通过。 |
+| `scripts/test-dino-persistence.sh` | 20 项通过，Dino 与其他游戏存档隔离保持。 |
+| `scripts/test-dino-presentation.sh` | 8 组／90 条断言通过，节日及农历生日边界保持。 |
+| `scripts/test-dino-page.sh` | 19 个场景／412 条断言通过，方向、返回、暂停、控件、弹窗和帽子生命周期保持。 |
+| `scripts/test-dino-ground.sh` | 59 条断言通过，新增真实碰撞的部分帧地面停止及终态冻结。 |
+| `scripts/test-dino-visual.sh` | 1,073 条断言通过；真实昼夜回放、横竖屏白边、日间恢复、下蹲撞停，以及四类帽子的日夜像素。 |
+| 官方参考与源码完整性 | 17 份来源文件及参数重新提取校验通过，原始运行图集／meta 无修改，`git diff --check` 通过。 |
+
+本轮图像归档在 `artifacts/validation/dino-chrome-alignment/`，失败及构建日志在 `artifacts/logs/dino-chrome-alignment/`。图片为生产 Unity UGUI、受控视口／日期和示例纪录，非手机系统日期自然触发；未修改手机日期。独立诊断回放只用于测试，不参与生产生成，也不保证任意随机长序列自动通关。官方细框仍是轮廓近似，不能表述为逐像素碰撞。
+
+### APK、OPPO 安装及真机检查
+
+- `scripts/build-dino.sh` 成功，退出码 0，日志 `Build Finished, Result: Success.`；Android IL2CPP 产物生成后 `ProjectSettings` 无差异。最后一次 UI 检查后生产代码仅把障碍列表预分配 8 改为 32，该修改已通过核心 GC 回归并在最终 Android 构建中重新编译。
+- APK：`artifacts/builds/XanaduYonder-0.4.0-dino-validation.apk`；SHA-256 `43492ef9e077c6195b7f0c47757b90d6f94e3af607ca2519c253e4cdb79b3270`。`aapt` 核实测试包 `com.duanyao.xanaduyonder.dinotest`、版本 `0.4.0`／code `4`、应用名 `Xanadu Dino测试`。
+- 2026-10-28 12:52:52 在 OPPO PKM110（序列号 `3B6F4NE8A66ZXTRL`）覆盖安装，`adb install -r` 返回 `Success`。未卸载、清数据或操作其他设备。
+- 安装前、安装后、交互检查结束后的 `dino-v1.json` 三份文件逐字节一致：竖屏纪录 544、横屏纪录 539、横屏偏好。对应文件在本轮归档目录 `oppo-before-install.json`、`oppo-after-install.json`、`oppo-after-checks.json`。
+- 真机冷启动返回 `Status: ok`，随后实际检查大厅双纪录、横竖屏准备页与跳跃、暂停菜单、结束本局并切换方向、竖屏系统返回确认后回到方向选择。最终恢复横屏准备页。`oppo-landscape-jump.png`、`oppo-portrait-jump.png`、`oppo-portrait-back.png` 和 `oppo-final.png` 为此次 APK 的真实手机截图。
+- 当前应用 PID 的 `Unity:E`／`AndroidRuntime:E` 日志为空，保存在 `artifacts/logs/dino-chrome-alignment/oppo-errors.log`。
+
+本次实机只覆盖上述基本输入与流程，没有用手机持续跑满整个加速周期、测量硬件触控延迟／音效／温升，也没有在手机上自然触发全部节日。长时规则一致性由确定性模型回放验证；黑夜、四类帽子和生日横幅由真实 Unity 受控渲染验证。
