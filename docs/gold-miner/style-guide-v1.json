@@ -1,0 +1,35 @@
+{
+  "source_path": "artifacts/gold-miner-ui-v1/style-guide.json",
+  "source_sha256": "bd6dfdd9f6df3f0e9a8af5bffcd74b47737923f6ae1822be48dd97ee38ed2fec",
+  "snapshot_status": "artwork design reference; gameplay and technical docs define runtime behavior",
+  "content": {
+    "version": 1,
+    "project": "Xanadu Gold Miner",
+    "scope": "Production artwork and UI design delivery; Unity gameplay integration is a later task.",
+    "style": "Warm hand-painted 2D side-view cartoon, crisp dark brown outlines, restrained cel shading, rounded friendly forms. Match reference screenshots.",
+    "palette": {
+      "ivory": "#F4EBD3",
+      "forest": "#123C30",
+      "gold": "#F7BE42",
+      "earth": "#A66025",
+      "rock": "#6A6561",
+      "diamond": "#57D5ED",
+      "p1": "#E99A22",
+      "p2": "#238F8A"
+    },
+    "light": "Upper left, consistent soft highlights; no cast background shadows in transparent sprites.",
+    "characters": "One elderly white-moustached miner design, yellow hardhat and brown boots/gloves. P1 orange clothes, P2 teal clothes. Same body proportions. Brown mole-like animal, small feet, rounded nose, no costume.",
+    "production": {
+      "sprites": "Genuine RGBA transparency, no labels, no checkered pattern baked into artwork, no dynamic text or numbers.",
+      "backgrounds": "No miners, ropes, hooks, collectable ore, animals, UI or lettering baked into gameplay backgrounds.",
+      "text": "Runtime Chinese text and values are separate from artwork.",
+      "animation": "Separate moving parts or consistent pose strips; state sprites must not be described as rigged animations.",
+      "ui": "Reuse panels and buttons, pressed/disabled states may be applied by code."
+    },
+    "references": [
+      "01-mode-select.png",
+      "02-solo.png",
+      "03-coop.png"
+    ]
+  }
+}

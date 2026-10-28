@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "status": "implementation specification; no audio generated or auditioned in this documentation change",
+  "owner": "GoldMinerAudio",
+  "reference_implementation": "Assets/Scripts/Runtime/GameFeedback.cs:98-115",
+  "sample_rate_hz": 22050,
+  "channels": 1,
+  "sample_amplitude": 0.5,
+  "source_volume": 0.2,
+  "source_spatial_blend": 0,
+  "source_play_on_awake": false,
+  "source_loop": false,
+  "envelope": "Per note/glide: sin(pi * sample_index / sample_count); amplitude is zero at start; terminate with zero sample to avoid clicks. Linear frequency glide integrates phase sample by sample. Sequence notes concatenate their separately enveloped samples. Explosion is 0.55*sine + 0.45*seeded uniform noise before envelope.",
+  "clip_sample_count": "ceil(duration_seconds * 22050); sequence note lengths rounded with final total corrected to this count",
+  "gain_semantics": "AudioSource.volume 0.2 × per-cue PlayOneShot volumeScale gain × samples peak 0.5; no second arbitrary master multiplier",
+  "voice_limit": 4,
+  "priority": "victory/failure > explosion > countdown > collectible/purchase > launch/unavailable; at capacity drop lowest-priority oldest sound only",
+  "shared_sound_setting": "data.SoundEnabled via injected getter; shell sound-off callback calls StopAll immediately",
+  "lifecycle": "StopAll on pause/focus loss/page exit; discard past events and do not replay on resume. Destroy generated AudioClip objects and AudioSource objects on disposal. Generate/cache only on Gold Miner entry.",
+  "original_mp3": "12 original research MP3 are optional future audition candidates; not imported or required by v1. No audition claim. No BGM or continuous motor loop in v1.",
+  "cues": [
+    {
+      "id": "hook_launch",
+      "event": "Swinging → Extending（成功接收出钩命令时）",
+      "wave": "sine_glide",
+      "frequencies_hz": [
+        440,
+        660
+      ],
+      "duration_seconds": 0.08,
+      "gain": 0.45
+    },
+    {
+      "id": "gold_collect",
+      "event": "金块/神秘袋金币/普通动物奖励正式入账一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        660,
+        880,
+        1175
+      ],
+      "note_seconds": 0.05,
+      "duration_seconds": 0.15,
+      "gain": 0.6
+    },
+    {
+      "id": "diamond_collect",
+      "event": "钻石/携钻动物正式入账一次；替代gold_collect不叠播",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        880,
+        1175,
+        1568
+      ],
+      "note_seconds": 0.06,
+      "duration_seconds": 0.18,
+      "gain": 0.6
+    },
+    {
+      "id": "rock_collect",
+      "event": "石头正式入账一次；只在收回后播放",
+      "wave": "sine_glide",
+      "frequencies_hz": [
+        180,
+        100
+      ],
+      "duration_seconds": 0.1,
+      "gain": 0.35
+    },
+    {
+      "id": "explosion",
+      "event": "炸药成功消耗并销毁钩上负载一次",
+      "wave": "sine_glide_plus_seeded_noise",
+      "frequencies_hz": [
+        90,
+        45
+      ],
+      "noise_mix": 0.45,
+      "noise_seed": 2048,
+      "noise_algorithm": "Local xorshift32 shifts 13,17,5; map uint to [-1,1] with 2*(u/4294967295.0)-1. Never consume gameplay RNG.",
+      "duration_seconds": 0.2,
+      "gain": 0.6
+    },
+    {
+      "id": "countdown",
+      "event": "剩余整数秒进入5、4、3、2、1，各一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        880
+      ],
+      "note_seconds": 0.06,
+      "duration_seconds": 0.06,
+      "gain": 0.4
+    },
+    {
+      "id": "victory",
+      "event": "本关结算进入成功状态一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        523.25,
+        659.25,
+        783.99,
+        1046.5
+      ],
+      "note_seconds": 0.09,
+      "duration_seconds": 0.36,
+      "gain": 0.65
+    },
+    {
+      "id": "failure",
+      "event": "本关结算进入失败状态一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        392,
+        293.66,
+        196
+      ],
+      "note_seconds": 0.11,
+      "duration_seconds": 0.33,
+      "gain": 0.5
+    },
+    {
+      "id": "purchase",
+      "event": "扣款与库存/增益修改均成功提交后一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        660,
+        880
+      ],
+      "note_seconds": 0.06,
+      "duration_seconds": 0.12,
+      "gain": 0.45
+    },
+    {
+      "id": "unavailable",
+      "event": "主动触发但余额不足等提示；最多每0.2秒一次",
+      "wave": "sine_notes",
+      "frequencies_hz": [
+        120
+      ],
+      "note_seconds": 0.05,
+      "duration_seconds": 0.05,
+      "gain": 0.25
+    }
+  ]
+}

@@ -99,6 +99,23 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidGoldMinerValidation()
+        {
+            RunOrFail(() =>
+            {
+                // Capture before Prepare, including its branding, graphics, quality and editor changes.
+                // Dispose runs before RunOrFail can exit the batch process on a failed build.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    GoldMinerAssetImporter.Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".goldminertest");
+                    PlayerSettings.productName = "Xanadu 矿工测试";
+                    BuildApk("-gold-miner-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()

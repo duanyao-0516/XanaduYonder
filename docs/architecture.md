@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前 v0.4.0 接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙和数独。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
+当前开发源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和黄金矿工。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版仍为 v0.4.0（未包含黄金矿工），发布情况见[版本记录](releases/v0.4.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -10,6 +10,7 @@
 | 成语接龙 | `Core/Idiom` / `IdiomPage`、虚拟列表 | `idiom-learning-v1.json` | 四组对局、草稿、最佳数量、生词本、个人学习与跨局近期回复 |
 | 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 | 合成大西瓜 | `Core/Watermelon` / `WatermelonPage`、`WatermelonPhysicsWorld` | `watermelon-v1.json` | 对局、物体运动状态、最高分、主题 |
+| 黄金矿工 | `Core/GoldMiner` / `GoldMinerSession`、`GoldMinerPage`、`GoldMinerSceneView` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、本关检查点、随机状态与历史纪录 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)与[数独模块](sudoku-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -83,6 +84,14 @@
 `WatermelonSaveCodec` 只接受 schemaVersion 1、gameId `watermelon`、固定字段、精确类型和合法完整快照，限制 128 KiB、深度 8。保存球的位置、速度、旋转、角速度、接触历史和年龄，以及当前/下一颗、RNG、下一个 ID、冷却、危险计时、终局、主题、最高分和目标确认状态。`WatermelonSaveStore` 仅操作 `watermelon-v1.json/.bak/.tmp`，原子替换时只备份有效主档。恢复不默认填补缺失字段；新对局保留主题与最高分。
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
+
+## 黄金矿工的独立边界
+
+`GoldMinerGame` 用 60 Hz 固定步模拟，按相对扫掠首次接触分配矿物，所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
+
+`GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
+
+输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
 
 ## 验证层次
 

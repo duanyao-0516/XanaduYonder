@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-当前版本为 **v0.4.0**，接入六款可离线游玩的游戏，按大厅顺序排列：
+最新正式版本为 **v0.4.0**。当前开发源码接入七款可离线游玩的游戏（黄金矿工尚未正式发布），按大厅顺序排列：
 
 - **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开，记录最高分和最高数字。
 - **02 · 跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
@@ -14,6 +14,7 @@
 - **04 · 合成大西瓜**：Unity 原生 Physics2D 下落碰撞与同级合并，水果 / 表情 / 校徽三主题，拖动瞄准后松手投球、下一颗预览、合成图鉴、最高分和自动续局。
 - **05 · 成语接龙**：同字/同音双模式、人机与本地双人对战、左右对话、免费提示与三次提示小结、可点击释义、生词本与个人学习记录。
 - **06 · 数独**：标准 9×9、四档各 500 关、铅笔候选、快速输入、完整撤回、三错失败、每局三次提示、按难度独立续局与书本玩法入口。
+- **07 · 黄金矿工**：单人竖屏与双人横屏合作，各 10 关；移动小鼹鼠、携钻动物、五种商店补给、两模式独立续局与检查点重试。
 
 大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
@@ -51,6 +52,14 @@ scripts/test-sudoku-profile.sh
 scripts/test-sudoku-selection.sh
 scripts/test-watermelon.sh
 scripts/test-watermelon-persistence.sh
+scripts/test-gold-miner.sh
+scripts/test-gold-miner-input.sh
+scripts/test-gold-miner-persistence.sh
+scripts/test-gold-miner-levels.sh
+scripts/test-gold-miner-catalog.sh
+scripts/test-gold-miner-campaign.sh
+scripts/test-gold-miner-assets.sh
+scripts/test-gold-miner-ui.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
@@ -99,6 +108,19 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.4.0.apk`，构建日志在 `artif
 ## 与 DawnYew 的关系
 
 XanaduYonder 是独立项目，与 [DawnYew](https://github.com/duanyao-0516/DawnYew) 没有运行时、账本或存档依赖。猜拳继续作为聚会工具保留在 DawnYew，其他个人小游戏在本项目开发。
+
+## 07 · 黄金矿工
+
+黄金矿工已接入当前开发源码，采用一张固定高度大厅卡片。进入后选择单人竖屏或双人横屏合作，左右半屏分别在按下时出钩；到时会等已出发的钩子完成本次动作。通关后可购买炸药、力量药水、幸运四叶草、石头收藏书和钻石油。各模式有独立的 10 关挑战、进度和历史纪录。
+
+240 张矿图均附生产 Core 的成功输入见证，运行时只选取已验证矿图。`gold-miner-v1.json` 独立保存完整钩子、动物、随机状态、商店和本关开局检查点；失败重试恢复同一矿场与补给。编辑器支持单人 Space，P1 S/W、P2 ↓/↑ 分别出钩/炸药，Escape 暂停。
+
+运行 `scripts/build-gold-miner-validation.sh` 生成 `artifacts/builds/XanaduYonder-0.4.0-gold-miner-validation.apk`；包名为 `com.duanyao.xanaduyonder.goldminertest`，与正式应用及其他工作树测试包隔离。该包为开发验收用途，不创建新版本或 Release；实际执行记录见[黄金矿工验证](docs/verification-gold-miner.md)。
+
+- [玩法与首版数值](docs/superpowers/specs/2026-10-27-gold-miner-design.md)：10 关挑战、矿物/动物、商店、关卡变体与失败重试。
+- [技术契约与验收矩阵](docs/gold-miner-technical.md)：横竖屏、双指、生命周期、两模式存档与事务。
+- [资源与音效接入](docs/gold-miner-assets.md)：44 张生产 PNG、切片/导入参数、动画、音效和资源预算。
+- [分步实施计划](docs/superpowers/plans/2026-10-27-gold-miner.md)：文件归属、任务依赖、测试入口、隔离验证包及交付条件。
 
 ## 开发约定
 

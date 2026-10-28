@@ -72,6 +72,28 @@ mkdir -p artifacts/logs
 
 使用同样命令将 `-executeMethod` 替换成 `XanaduYonder.EditorTools.PersistenceChecks.Run`，可以在 Unity 运行真实存档验证。批处理前关闭此项目的交互编辑器，避免同一工程被两个进程占用。
 
+## 黄金矿工独立验证
+
+在黄金矿工的隔离工作树运行以下入口；Unity UI 检查和构建必须串行，避免同一工程被两个编辑器占用。
+
+```bash
+scripts/test-gold-miner.sh
+scripts/test-gold-miner-input.sh
+scripts/test-gold-miner-persistence.sh
+scripts/test-gold-miner-levels.sh
+scripts/test-gold-miner-catalog.sh
+scripts/test-gold-miner-campaign.sh
+scripts/test-gold-miner-assets.sh
+scripts/test-gold-miner-ui.sh
+scripts/build-gold-miner-validation.sh
+```
+
+前六项直接编译同一份生产 C#；目录检查遍历 240 张地图和 2000 组种子，Levels 检查用生产模拟重放全部成功见证。UI 脚本启动真正的 Unity Play Mode，使用隔离临时目录与实际 UGUI 命中，报告/截图在 `artifacts/gold-miner-development/ui/`。它不会读写正式玩家存档。资源导入入口为 `XanaduYonder.EditorTools.GoldMinerAssetImporter.Prepare`。
+
+APK 为 `artifacts/builds/XanaduYonder-0.4.0-gold-miner-validation.apk`，日志在 `artifacts/logs/build-gold-miner-validation.log`。显式选择 `adb devices -l` 的物理设备，安装及启动 `com.duanyao.xanaduyonder.goldminertest/com.unity3d.player.UnityPlayerActivity`；不要使用普通安装脚本覆盖正式包。测试包与正式版、其他工作树的测试包各有独立数据目录。
+
+`scripts/prepare-gold-miner-touch.sh` 只在本机编译 Android 原生多指验收驱动，输出 `artifacts/gold-miner-development/device-tools/gold-miner-touch.jar`；不自动连接或操作设备。手工选择设备后可用 `adb -s SERIAL shell CLASSPATH=/data/local/tmp/gold-miner-touch.jar app_process / NativeTouch dual X1 Y1 X2 Y2 HOLD_MS` 验证真正的 Android MotionEvent 双指链路。实际设备、构建和验证范围见[黄金矿工验证](verification-gold-miner.md)。
+
 ## 合成大西瓜独立验证
 
 04 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。水果、表情、前 10 级校徽和音效来自用户授权的固定版本仓库，第 11 级中山大学校徽来自学校官网；完整路径、哈希及来源说明见[素材清单](watermelon-assets.md)。
