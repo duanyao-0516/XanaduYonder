@@ -87,3 +87,20 @@ Unity 记录位于 `artifacts/validation/snake-ui/report.txt`、`artifacts/valid
 - 关卡通过静态几何检查和规则驱动解锁验证；尚未进行每关多随机种子的人工试玩与难度调优，也没有宣称任意长蛇/食物序列必可解。
 - Unity 日志中既存 QuickSearch 编辑器索引异常与测试失败原因分别记录；应用脚本的编译及检查结果以各自报告为准。
 - 未提交、推送、合并或发布；没有覆盖正式安装包，也未操作其他任务的模拟器。
+
+## 合并主线补记（2026-10-28）
+
+贪吃蛇实现已提交为 `2a8d955`，本轮合并目标为 `origin/master` 的 `0f6e4fd`。该主线已有 12 款游戏和 0.5.0 源码版本；贪吃蛇保留原有游戏顺序，追加为第 13 款（index 12）。已发布的 v0.5.0 仍是前 10 款，新增源码不代表已经重新发布。
+
+本文前述测试、截图、APK 哈希及 OPPO 安装启动均属于合并前证据；其中第 8 款、0.4.0、旧基线和当时未提交的描述保留历史含义，不改写成已经验证 13 款的结果。既有 APK 不作为本次合并产物。
+
+本轮保留 master 的全部 12 款游戏及宿主导航、前后台和保存接线，补入贪吃蛇。合并后重新验证：
+
+- `scripts/test-snake.sh`：37 项通过。
+- `scripts/test-snake-persistence.sh`：194 项断言通过。
+- `python3 docs/snake/validate_levels.py --self-test`：12 张地图和 23 项拒绝用例通过。
+- `scripts/test-snake-ui.sh`：Unity 退出码 0，`SNAKE_UI_CHECKS_PASS: 6918 assertions`，覆盖 720×1320、720×1582、13 款大厅顺序及编号、实际下拉点击、倒计时和生命周期。
+- `scripts/test-minigame-ui.sh`：Unity 退出码 0，`MINIGAME_UI_CHECKS_PASS: 247 assertions`，两种屏幕尺寸通过。
+- 743 个 Unity 资源 GUID 无重复；相对 `origin/master` 的差异空白检查通过。全量合并差异的空白提示来自 master 已有第三方文件，原样保留。
+
+本轮没有重新构建 Android APK、安装设备或发布版本；上述 Unity 回归不替代合并后的 Android 真机验收。

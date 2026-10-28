@@ -1,0 +1,1395 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "sokoban-campaign-v1",
+  "validator": "production-csharp-SokobanGame",
+  "catalogSha256": "60ff2a7b26f9d21016ae5c604facfb6b64ce0d7761dfa4208d09ad3354636f64",
+  "levelCount": 108,
+  "totalMoves": 4596,
+  "totalPushes": 1203,
+  "levels": [
+    {
+      "levelId": "tutorial-001",
+      "mapSha256": "e73d910e964242fbb0362c2c07c0e19c6abdd0f352ca9b8ef6800b42d75eb2e5",
+      "moves": 8,
+      "pushes": 3,
+      "finalPlayer": 43,
+      "finalBoxes": [
+        11,
+        44
+      ]
+    },
+    {
+      "levelId": "tutorial-002",
+      "mapSha256": "5d23163fa535d18f36cac26f1162ae91190573bfa7b00a182c88ffb5ccb88212",
+      "moves": 17,
+      "pushes": 5,
+      "finalPlayer": 13,
+      "finalBoxes": [
+        14
+      ]
+    },
+    {
+      "levelId": "tutorial-003",
+      "mapSha256": "c5e50639d2d8fb868091ea155572e883b86e55dfb259943d7b7f864b265759bf",
+      "moves": 6,
+      "pushes": 3,
+      "finalPlayer": 10,
+      "finalBoxes": [
+        11
+      ]
+    },
+    {
+      "levelId": "tutorial-004",
+      "mapSha256": "be868e6f617f7cb3b8ac17607fc7fe271cca25dbbc02ca68fd22b6f3dc055f3f",
+      "moves": 19,
+      "pushes": 4,
+      "finalPlayer": 24,
+      "finalBoxes": [
+        10,
+        17
+      ]
+    },
+    {
+      "levelId": "tutorial-005",
+      "mapSha256": "51ede26abdcfb2e1f5f2e0047e21d0708b4b2abd2b9312a1d89fbd285dfa3b00",
+      "moves": 7,
+      "pushes": 5,
+      "finalPlayer": 12,
+      "finalBoxes": [
+        13
+      ]
+    },
+    {
+      "levelId": "tutorial-006",
+      "mapSha256": "a6cfc2d24ba2d18d7bbadf6be1b8830aebfc188ac4316640a3ce5015a7ece2d5",
+      "moves": 14,
+      "pushes": 3,
+      "finalPlayer": 18,
+      "finalBoxes": [
+        10,
+        12
+      ]
+    },
+    {
+      "levelId": "tutorial-007",
+      "mapSha256": "126b577c2a5d7c7f6f5b107559db7b20cf136ddb0c30b56841a1b3fa27c6df0e",
+      "moves": 10,
+      "pushes": 4,
+      "finalPlayer": 21,
+      "finalBoxes": [
+        13
+      ]
+    },
+    {
+      "levelId": "tutorial-008",
+      "mapSha256": "b333730573b7f608f91116fc35929d35bb292b0308f9faf07662686f98f11c9b",
+      "moves": 29,
+      "pushes": 14,
+      "finalPlayer": 35,
+      "finalBoxes": [
+        11,
+        27
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0000",
+      "mapSha256": "8149add2a62831a5f5b4c5d65825c6e418561081c8b610cf3bea1253ed10fd4c",
+      "moves": 35,
+      "pushes": 13,
+      "finalPlayer": 46,
+      "finalBoxes": [
+        17,
+        23,
+        28,
+        36
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0001",
+      "mapSha256": "e00e2380a510333fcad6f9e78e23a73695b0add480509e806c52a1be1edcbb32",
+      "moves": 56,
+      "pushes": 14,
+      "finalPlayer": 26,
+      "finalBoxes": [
+        13,
+        18,
+        24,
+        25
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0002",
+      "mapSha256": "f91d89b9c6533a4aa4c5eb74a0a9d12cc0781ad838c793a9c2438ae5f2b4fb82",
+      "moves": 41,
+      "pushes": 11,
+      "finalPlayer": 77,
+      "finalBoxes": [
+        15,
+        25,
+        56,
+        87
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0003",
+      "mapSha256": "87a189d88f9c186e0c3ad097682c2ad2fc85ffdfad98fd241252441d57b7089e",
+      "moves": 54,
+      "pushes": 10,
+      "finalPlayer": 64,
+      "finalBoxes": [
+        14,
+        17,
+        21,
+        54
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0004",
+      "mapSha256": "9307821ad351787b60af11f2994e9d40af248ac5e212187222b0d3949ef56a80",
+      "moves": 46,
+      "pushes": 11,
+      "finalPlayer": 65,
+      "finalBoxes": [
+        16,
+        26,
+        53,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0005",
+      "mapSha256": "5bb153005fb7fb79278f85e659625f65f3e0d0e79006872430cc2c04df945dde",
+      "moves": 49,
+      "pushes": 15,
+      "finalPlayer": 63,
+      "finalBoxes": [
+        13,
+        23,
+        42,
+        62
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0006",
+      "mapSha256": "5cfbf616f38b5fb0708883ec16647e92cf585d63fc4a0779c25704bdab2544c0",
+      "moves": 57,
+      "pushes": 16,
+      "finalPlayer": 73,
+      "finalBoxes": [
+        15,
+        44,
+        74,
+        81
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0007",
+      "mapSha256": "a203b44bbdad7960d4efba4f968cc22fd155df2312d30df1b5636f11d0c663d1",
+      "moves": 53,
+      "pushes": 9,
+      "finalPlayer": 67,
+      "finalBoxes": [
+        38,
+        47,
+        57,
+        68
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0008",
+      "mapSha256": "be5114269c965521ed2a73c61662b5b7575d0db5991d85d7aaca0797c1806ca0",
+      "moves": 47,
+      "pushes": 10,
+      "finalPlayer": 55,
+      "finalBoxes": [
+        56,
+        57,
+        66,
+        68
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0009",
+      "mapSha256": "5b6bd584e5f6287cb5d230f26628d6e10d6c3b1f8c461a4fe4cf2e17565279e3",
+      "moves": 26,
+      "pushes": 7,
+      "finalPlayer": 37,
+      "finalBoxes": [
+        25,
+        34,
+        38,
+        43
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0010",
+      "mapSha256": "7810637fc360a5dfbd6f7698be011b60686fb7bd3586264fb6373e26e13d3647",
+      "moves": 43,
+      "pushes": 9,
+      "finalPlayer": 85,
+      "finalBoxes": [
+        51,
+        62,
+        68,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0011",
+      "mapSha256": "cd308fee9970fd19c2547e21b3139a500bd7211321f02c255ca49a9f4a1ad930",
+      "moves": 55,
+      "pushes": 13,
+      "finalPlayer": 85,
+      "finalBoxes": [
+        38,
+        44,
+        58,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0012",
+      "mapSha256": "abca4915480234ddf73c6df06e005aa89472e878aa5fa865f61e38e388a3e985",
+      "moves": 24,
+      "pushes": 7,
+      "finalPlayer": 65,
+      "finalBoxes": [
+        38,
+        46,
+        64,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0013",
+      "mapSha256": "c35a405fe36245348f1fc2c828f61ce7fe711b643b982a31862d4d3c04f29014",
+      "moves": 44,
+      "pushes": 11,
+      "finalPlayer": 82,
+      "finalBoxes": [
+        52,
+        66,
+        81,
+        85
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0014",
+      "mapSha256": "0ced1723c3a40aefc550f012df231a9bb5df1b742ceca11a4d52825ee0dc420d",
+      "moves": 21,
+      "pushes": 4,
+      "finalPlayer": 87,
+      "finalBoxes": [
+        34,
+        81,
+        85,
+        86
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0015",
+      "mapSha256": "85054bd54e8df9fb78f81fcc25b222bb3aa2c4c5c863e114a9c3a5fcab1d93e9",
+      "moves": 56,
+      "pushes": 12,
+      "finalPlayer": 84,
+      "finalBoxes": [
+        24,
+        35,
+        45,
+        83
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0016",
+      "mapSha256": "7a004cdbfb220cbd6ef7703630b7c1722905e78f01d6b01853be68e96f5d24dc",
+      "moves": 23,
+      "pushes": 11,
+      "finalPlayer": 74,
+      "finalBoxes": [
+        68,
+        81,
+        84,
+        86
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0017",
+      "mapSha256": "fc5b9284eaeaf20288e8601a3d19ac9269ef833c6e0d02c593212128f187e10b",
+      "moves": 45,
+      "pushes": 12,
+      "finalPlayer": 63,
+      "finalBoxes": [
+        43,
+        52,
+        65,
+        73
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0018",
+      "mapSha256": "c919b2f3617da81722e5929fb5cebc98286f8e91dc0559f2f2b654276f53f074",
+      "moves": 28,
+      "pushes": 7,
+      "finalPlayer": 43,
+      "finalBoxes": [
+        11,
+        15,
+        38,
+        42
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0019",
+      "mapSha256": "9b32084e040350ed80c4bfd43230426149ff94889df86b69dd210f482aa84673",
+      "moves": 40,
+      "pushes": 9,
+      "finalPlayer": 61,
+      "finalBoxes": [
+        22,
+        33,
+        45,
+        71
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0020",
+      "mapSha256": "09821a55e08708789520a74d812ec0e0ea5580ae0a5738fe05c85220a017e851",
+      "moves": 46,
+      "pushes": 12,
+      "finalPlayer": 86,
+      "finalBoxes": [
+        14,
+        25,
+        37,
+        85
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0022",
+      "mapSha256": "acc30af94dac87d14df9f41d375a55e19a1d9a9dadf849e748c81ede3fb29448",
+      "moves": 52,
+      "pushes": 18,
+      "finalPlayer": 27,
+      "finalBoxes": [
+        14,
+        15,
+        28,
+        38
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0023",
+      "mapSha256": "046d2bb5b7a5ddc9ab4cd3ea52870ec0f55eb7a567dc4e7ae6991f2b315d05b3",
+      "moves": 45,
+      "pushes": 12,
+      "finalPlayer": 52,
+      "finalBoxes": [
+        35,
+        43,
+        45,
+        51
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0024",
+      "mapSha256": "955bf3f6b3f198f15fefc9777974f84161822f2bffa41573a66ad0c002f20ed5",
+      "moves": 26,
+      "pushes": 5,
+      "finalPlayer": 55,
+      "finalBoxes": [
+        44,
+        45,
+        46,
+        53
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0025",
+      "mapSha256": "1729a673a522c0b80c40e15a4bfeebcc777ebc046a83b4b4b9ffe5ac8ba38d27",
+      "moves": 36,
+      "pushes": 13,
+      "finalPlayer": 47,
+      "finalBoxes": [
+        11,
+        21,
+        37,
+        56
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0026",
+      "mapSha256": "adc367d17309142b42361ff5f642f598045e9a3deff28d07b9f7256594ccb398",
+      "moves": 47,
+      "pushes": 7,
+      "finalPlayer": 37,
+      "finalBoxes": [
+        15,
+        36,
+        47,
+        57
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0027",
+      "mapSha256": "fdacbb321cc057e3154d7f4f3beec5cb0066b3910ec709476aff7b265b6b0a40",
+      "moves": 70,
+      "pushes": 13,
+      "finalPlayer": 82,
+      "finalBoxes": [
+        37,
+        42,
+        52,
+        83
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0028",
+      "mapSha256": "099f187482c12ea3b2b393473bfb90fa1213a039a779fcf73fb2bc6272697293",
+      "moves": 24,
+      "pushes": 7,
+      "finalPlayer": 77,
+      "finalBoxes": [
+        46,
+        56,
+        64,
+        78
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0029",
+      "mapSha256": "3b103a86190e53f7ad98646689fc882fa6818cfdf49b890e528287cf79163039",
+      "moves": 33,
+      "pushes": 12,
+      "finalPlayer": 53,
+      "finalBoxes": [
+        16,
+        31,
+        34,
+        43
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0030",
+      "mapSha256": "283a778efd94c87893454bfd0f6ff976c42bbdb01f26f8053705a52aa463f121",
+      "moves": 34,
+      "pushes": 8,
+      "finalPlayer": 84,
+      "finalBoxes": [
+        55,
+        56,
+        66,
+        83
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0031",
+      "mapSha256": "7a7cf1c5a0257734b1314deb9652a9d56df7c32ee6195e7fedb9dcfa00efba48",
+      "moves": 22,
+      "pushes": 10,
+      "finalPlayer": 83,
+      "finalBoxes": [
+        36,
+        67,
+        75,
+        82
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0032",
+      "mapSha256": "476b38ee61726bf5554f624f36a217acc47083842d8f3278bf48b43bfcd8b440",
+      "moves": 42,
+      "pushes": 14,
+      "finalPlayer": 53,
+      "finalBoxes": [
+        31,
+        43,
+        62,
+        72
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0033",
+      "mapSha256": "cfffeea0ff42e89d25b88e1baa669388163d00291b4a586d4fe9721f653121e4",
+      "moves": 32,
+      "pushes": 8,
+      "finalPlayer": 25,
+      "finalBoxes": [
+        24,
+        35,
+        36,
+        55
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0034",
+      "mapSha256": "bef5fd9daf73d57c8207e5f7a20db8837ad0e6cd5798ede1e1c6c75875634376",
+      "moves": 61,
+      "pushes": 20,
+      "finalPlayer": 64,
+      "finalBoxes": [
+        32,
+        54,
+        72,
+        83
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0035",
+      "mapSha256": "8b667f799becd3dce91bcd5779f1e8ba9921399b19af2492ce971a07012c32b9",
+      "moves": 37,
+      "pushes": 9,
+      "finalPlayer": 42,
+      "finalBoxes": [
+        15,
+        27,
+        32,
+        36
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0036",
+      "mapSha256": "a8a2fc7b84b2dd4d1d7935a38790a9a573e108a7cb6ff9c84f995a719baa6255",
+      "moves": 27,
+      "pushes": 8,
+      "finalPlayer": 33,
+      "finalBoxes": [
+        23,
+        24,
+        41,
+        51
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0037",
+      "mapSha256": "1dce8dadeaf2d04a9769db82c6d6351b86e4ce9a7cf384f5d15402348ec18aa4",
+      "moves": 53,
+      "pushes": 13,
+      "finalPlayer": 52,
+      "finalBoxes": [
+        42,
+        43,
+        46,
+        67
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0038",
+      "mapSha256": "095fce57699eb892623d2f6d65c3d8c136ae69f3702c3c09229d3a677d26590c",
+      "moves": 80,
+      "pushes": 12,
+      "finalPlayer": 67,
+      "finalBoxes": [
+        47,
+        54,
+        57,
+        68
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0039",
+      "mapSha256": "c3b3411d4cbee6ca041df843c8865fb3465804e60003b790196b72dff0aa3fff",
+      "moves": 44,
+      "pushes": 8,
+      "finalPlayer": 67,
+      "finalBoxes": [
+        46,
+        53,
+        54,
+        66
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0040",
+      "mapSha256": "3b55cf3f531ce9d9265f911ccafc4b1040f6ede17278977c2533632f7638f8b1",
+      "moves": 42,
+      "pushes": 13,
+      "finalPlayer": 73,
+      "finalBoxes": [
+        47,
+        53,
+        63,
+        72
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0041",
+      "mapSha256": "dca07fda35d334017aca60a84acf9338c27a14632cc9c24572be7afd16370f14",
+      "moves": 26,
+      "pushes": 10,
+      "finalPlayer": 85,
+      "finalBoxes": [
+        13,
+        67,
+        75,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0042",
+      "mapSha256": "46c2bb495bcef16ca70be3af5ad5e6844ade073c10770922c7cb531dec1fbee4",
+      "moves": 38,
+      "pushes": 11,
+      "finalPlayer": 84,
+      "finalBoxes": [
+        24,
+        26,
+        75,
+        83
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0043",
+      "mapSha256": "a8b9ee5f41e1b618b53781e6b41faeacc18c38e15bba6e59cdda115ca3cb1e73",
+      "moves": 43,
+      "pushes": 15,
+      "finalPlayer": 23,
+      "finalBoxes": [
+        11,
+        13,
+        26,
+        32
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0044",
+      "mapSha256": "eb9f14f72ca771d30d40d25ada1f9609110a2cba9fd05b4aa45fe0662f6a2841",
+      "moves": 59,
+      "pushes": 13,
+      "finalPlayer": 65,
+      "finalBoxes": [
+        17,
+        64,
+        75,
+        77
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0045",
+      "mapSha256": "abb5ea958f1fd8069dfbb20a73baa7719003143817ff9706cfcfce8d94c39bc4",
+      "moves": 38,
+      "pushes": 7,
+      "finalPlayer": 66,
+      "finalBoxes": [
+        43,
+        55,
+        56,
+        63
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0047",
+      "mapSha256": "cb3fc5cf3f9812933f13cb5793401658500bf6695376068629334aa2013bd7f5",
+      "moves": 58,
+      "pushes": 17,
+      "finalPlayer": 66,
+      "finalBoxes": [
+        12,
+        56,
+        67,
+        81
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0048",
+      "mapSha256": "56c34e98b00da2b0ccef94499d6fa3d622b3544b44689647b45c39ec5e341a2b",
+      "moves": 44,
+      "pushes": 15,
+      "finalPlayer": 44,
+      "finalBoxes": [
+        17,
+        18,
+        34,
+        43
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0049",
+      "mapSha256": "9c8759ec61459105f60b01afce8cc9f40d363b7b0875ec1d2702f5b603650ed9",
+      "moves": 25,
+      "pushes": 4,
+      "finalPlayer": 72,
+      "finalBoxes": [
+        55,
+        62,
+        63,
+        73
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0050",
+      "mapSha256": "0cb160ec931174f7fe930a60e4f9c080f38de825f37727b398c1f5e4d001b214",
+      "moves": 81,
+      "pushes": 16,
+      "finalPlayer": 63,
+      "finalBoxes": [
+        33,
+        35,
+        52,
+        64
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0051",
+      "mapSha256": "d0e73f4a7ce585ab1418d91b9dab14bd6a612f707f2e1ac07dc41544073d4a84",
+      "moves": 28,
+      "pushes": 11,
+      "finalPlayer": 76,
+      "finalBoxes": [
+        47,
+        48,
+        56,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0052",
+      "mapSha256": "a35a9e4dc3967c95dc81286985bb852da2969adc1dc8a007503d223c3d71798f",
+      "moves": 46,
+      "pushes": 11,
+      "finalPlayer": 76,
+      "finalBoxes": [
+        21,
+        33,
+        43,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0053",
+      "mapSha256": "012b4de92d4afbc88ad414a5cfd063b1d34914964429de0b1cc2ff8738979d03",
+      "moves": 41,
+      "pushes": 13,
+      "finalPlayer": 45,
+      "finalBoxes": [
+        24,
+        33,
+        34,
+        55
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0054",
+      "mapSha256": "7202f6e8ce53e8f374191cc4219dd2026774d0afc5dc29f983d544dc0cb98aca",
+      "moves": 89,
+      "pushes": 22,
+      "finalPlayer": 84,
+      "finalBoxes": [
+        64,
+        74,
+        85,
+        86
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0055",
+      "mapSha256": "76738e3927a829da552f03bcc317c1cfc09c53031559c59a4702cc8f6bcc394e",
+      "moves": 35,
+      "pushes": 11,
+      "finalPlayer": 71,
+      "finalBoxes": [
+        23,
+        25,
+        73,
+        81
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0056",
+      "mapSha256": "724232fc27653c72d0392cf9fa1388d7758b4d4959a4d9c89726b4a25121d5ac",
+      "moves": 30,
+      "pushes": 8,
+      "finalPlayer": 53,
+      "finalBoxes": [
+        11,
+        42,
+        44,
+        63
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0057",
+      "mapSha256": "4baddcc1bbb828a250d9e190b370d1defc61dbf838b252949d09c9e164224e64",
+      "moves": 44,
+      "pushes": 11,
+      "finalPlayer": 26,
+      "finalBoxes": [
+        16,
+        17,
+        25,
+        34
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0058",
+      "mapSha256": "616a550a5e4765cf00e85a6f27458a59e5e9abf50c8ebf7a15a014515c3d316c",
+      "moves": 50,
+      "pushes": 17,
+      "finalPlayer": 85,
+      "finalBoxes": [
+        28,
+        53,
+        84,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0059",
+      "mapSha256": "65c1e6c089832572f25d079799d6500c119e816f3a77b6ed4a39b25d585612da",
+      "moves": 30,
+      "pushes": 6,
+      "finalPlayer": 57,
+      "finalBoxes": [
+        67,
+        71,
+        73,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0060",
+      "mapSha256": "d4306894003c7e89fa9e7bdfe4ff362969b0a5a621df1344f54cc233affdf4f0",
+      "moves": 43,
+      "pushes": 10,
+      "finalPlayer": 47,
+      "finalBoxes": [
+        35,
+        43,
+        46,
+        58
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0061",
+      "mapSha256": "4b9f4dbf8049be798017b720ac62904bb0408fa3c7ba9b2e583d3b1a1df0b0c4",
+      "moves": 44,
+      "pushes": 12,
+      "finalPlayer": 48,
+      "finalBoxes": [
+        13,
+        17,
+        37,
+        58
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0062",
+      "mapSha256": "90b6917f25b91454edca6970a5d317e1764b6afa986f4e68cf1e5a0b024e486f",
+      "moves": 29,
+      "pushes": 8,
+      "finalPlayer": 67,
+      "finalBoxes": [
+        16,
+        23,
+        46,
+        57
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0063",
+      "mapSha256": "a3f4cd5dd60e9fd3866fb4ca66b0470a4799291d92446752f709f9338930e4b5",
+      "moves": 37,
+      "pushes": 9,
+      "finalPlayer": 73,
+      "finalBoxes": [
+        33,
+        42,
+        44,
+        72
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0064",
+      "mapSha256": "7d226aafaeb3ad2fe1dd44ce51e9c57860c8ad3e6b45d77fe4b7497f3447785d",
+      "moves": 15,
+      "pushes": 9,
+      "finalPlayer": 72,
+      "finalBoxes": [
+        23,
+        51,
+        64,
+        73
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0066",
+      "mapSha256": "ffc3e931218128517afc191d99c8b7402255887e0cfacdc495df7cb07a7f22dc",
+      "moves": 39,
+      "pushes": 12,
+      "finalPlayer": 62,
+      "finalBoxes": [
+        23,
+        27,
+        51,
+        52
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0067",
+      "mapSha256": "858988f77dc16ce20c1c786d9a238c0479129a7c92760295b8e33eb99ab3e34e",
+      "moves": 38,
+      "pushes": 15,
+      "finalPlayer": 23,
+      "finalBoxes": [
+        12,
+        13,
+        21,
+        62
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0068",
+      "mapSha256": "670cc574afe02801f97ecac2788e4b04d706b14d13e1530c171df6d793182b59",
+      "moves": 53,
+      "pushes": 12,
+      "finalPlayer": 74,
+      "finalBoxes": [
+        37,
+        65,
+        73,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0069",
+      "mapSha256": "3a679d233c834e1f5cb45d015a6140337ea244b0df45beb66ba9da6b8eaaefef",
+      "moves": 18,
+      "pushes": 4,
+      "finalPlayer": 28,
+      "finalBoxes": [
+        21,
+        23,
+        27,
+        38
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0070",
+      "mapSha256": "5c72a08e64186ac3410bf3d1c4d8df6ea1e924530a54d8c0c6e21882cb43158c",
+      "moves": 31,
+      "pushes": 17,
+      "finalPlayer": 48,
+      "finalBoxes": [
+        28,
+        38,
+        55,
+        85
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0071",
+      "mapSha256": "e0556834b020f039facb2b289398d0608f9e3286309e4045ebc5ec05e031540c",
+      "moves": 121,
+      "pushes": 19,
+      "finalPlayer": 62,
+      "finalBoxes": [
+        37,
+        48,
+        63,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0072",
+      "mapSha256": "7bf94737bddade5e72dac7e3fc3472e8c4dc5b5ebd392f4ca8cb7b823981ba34",
+      "moves": 75,
+      "pushes": 18,
+      "finalPlayer": 62,
+      "finalBoxes": [
+        32,
+        38,
+        63,
+        64
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0073",
+      "mapSha256": "ddead3aa63c0a04fe87a5e14602504e219374b3cf6ba51c078fc838d68352708",
+      "moves": 39,
+      "pushes": 15,
+      "finalPlayer": 55,
+      "finalBoxes": [
+        42,
+        52,
+        65,
+        73
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0074",
+      "mapSha256": "480f653dd32c358ee19bc7178db399498ca50d5d96b616ee0c02cec8868323b8",
+      "moves": 39,
+      "pushes": 11,
+      "finalPlayer": 57,
+      "finalBoxes": [
+        35,
+        37,
+        38,
+        58
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0075",
+      "mapSha256": "32ee4d32215aef16318c26153e80e26177620ce27ed0f353f460febb458032dc",
+      "moves": 28,
+      "pushes": 12,
+      "finalPlayer": 77,
+      "finalBoxes": [
+        27,
+        35,
+        87,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0076",
+      "mapSha256": "67060c72a9e9d2e460d8a71b8de80bf032bb67522ecb4b493e8b36fb91555562",
+      "moves": 30,
+      "pushes": 6,
+      "finalPlayer": 74,
+      "finalBoxes": [
+        63,
+        66,
+        73,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0077",
+      "mapSha256": "007fd92b0e36fa5c3779835faa772f25804125718f4561245a20e82dd229f186",
+      "moves": 50,
+      "pushes": 10,
+      "finalPlayer": 47,
+      "finalBoxes": [
+        11,
+        38,
+        46,
+        57
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0079",
+      "mapSha256": "8ecc145a13906c3dddb95b0184cbf3f189945c116dbbfe6f423cd07302f7696b",
+      "moves": 32,
+      "pushes": 11,
+      "finalPlayer": 38,
+      "finalBoxes": [
+        37,
+        48,
+        77,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0080",
+      "mapSha256": "7850ee7f307f2bb25646158121131c9230a628510a06cd38aea079b362c3011b",
+      "moves": 43,
+      "pushes": 17,
+      "finalPlayer": 37,
+      "finalBoxes": [
+        16,
+        38,
+        43,
+        58
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0081",
+      "mapSha256": "e0ce0a45a42ecd0bb3ff1551e18cb034527f5448baa04b85af95a40e9dd23655",
+      "moves": 58,
+      "pushes": 20,
+      "finalPlayer": 38,
+      "finalBoxes": [
+        13,
+        27,
+        48,
+        68
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0082",
+      "mapSha256": "3a8280df08139dee61fad69253fad99851c935be712634685f66d93493f63d04",
+      "moves": 42,
+      "pushes": 11,
+      "finalPlayer": 74,
+      "finalBoxes": [
+        13,
+        43,
+        66,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0083",
+      "mapSha256": "ffeee2e6e258b2145ba9dad3b9af8889b860027285a00e2e1c03a524404e9f80",
+      "moves": 42,
+      "pushes": 9,
+      "finalPlayer": 44,
+      "finalBoxes": [
+        24,
+        37,
+        38,
+        45
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0084",
+      "mapSha256": "dbba0d346ec4680b327824720f07021fc66d35da8c51f620cf4d044a8faa648e",
+      "moves": 47,
+      "pushes": 5,
+      "finalPlayer": 72,
+      "finalBoxes": [
+        43,
+        51,
+        63,
+        71
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0085",
+      "mapSha256": "4a8a63c15fb7708398c3c6cff7514dd4df27bf2468fd705f9c5e2008efef88c6",
+      "moves": 54,
+      "pushes": 14,
+      "finalPlayer": 78,
+      "finalBoxes": [
+        27,
+        28,
+        35,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0086",
+      "mapSha256": "4e8cf9f6fec559f66a8f20a80741f176f43331c28a5cfec5ec06e234973ee934",
+      "moves": 52,
+      "pushes": 12,
+      "finalPlayer": 73,
+      "finalBoxes": [
+        13,
+        24,
+        83,
+        86
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0087",
+      "mapSha256": "03088b49546a3f11db5d719eb619dcb9aa68d4b4b54f2f0abfcf449f0cfd5050",
+      "moves": 29,
+      "pushes": 10,
+      "finalPlayer": 48,
+      "finalBoxes": [
+        38,
+        47,
+        54,
+        64
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0088",
+      "mapSha256": "aec1d9fbac689e9be7f04ae2ba0aae20ae900c34e4dc64af7880a6aedd382214",
+      "moves": 125,
+      "pushes": 11,
+      "finalPlayer": 85,
+      "finalBoxes": [
+        18,
+        25,
+        54,
+        86
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0089",
+      "mapSha256": "266ec44704c6405f10ba77ea8dcfe37d1691136f67a149169de86ef465a58b9e",
+      "moves": 45,
+      "pushes": 14,
+      "finalPlayer": 78,
+      "finalBoxes": [
+        35,
+        57,
+        87,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0090",
+      "mapSha256": "853542598a3e128cd640dd7607ba16ebe1a6602788651cc7b7482759a33a399b",
+      "moves": 41,
+      "pushes": 11,
+      "finalPlayer": 75,
+      "finalBoxes": [
+        22,
+        65,
+        67,
+        84
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0091",
+      "mapSha256": "1c4425fbe80bad98e86f48d7a67456723a43991fd13738b5deac25a3807bffa4",
+      "moves": 71,
+      "pushes": 21,
+      "finalPlayer": 87,
+      "finalBoxes": [
+        72,
+        77,
+        84,
+        88
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0092",
+      "mapSha256": "c9d89a1cb2c2fbedbbe9dfa86888755b4964dfc246c61ddbc93cdf85f928eedc",
+      "moves": 43,
+      "pushes": 10,
+      "finalPlayer": 64,
+      "finalBoxes": [
+        38,
+        43,
+        54,
+        56
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0093",
+      "mapSha256": "3e427fddd90acbe563d9499a00192dacc26a7f313eb7965f1549b0db5d64b32b",
+      "moves": 47,
+      "pushes": 11,
+      "finalPlayer": 63,
+      "finalBoxes": [
+        48,
+        52,
+        64,
+        66
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0094",
+      "mapSha256": "885191e1f923da76fee037652353f752f17a5cca258804109ee060caf6b55488",
+      "moves": 22,
+      "pushes": 7,
+      "finalPlayer": 43,
+      "finalBoxes": [
+        44,
+        52,
+        54,
+        61
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0095",
+      "mapSha256": "271eb3d11ca50d841916c30dc0919bf27b1f752b66503781cefe9e8b09f545f1",
+      "moves": 51,
+      "pushes": 13,
+      "finalPlayer": 75,
+      "finalBoxes": [
+        38,
+        55,
+        76,
+        77
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0096",
+      "mapSha256": "78f6b2cb53f3fce73538c6f2ff495fcb4eca1d88062afc9142666a1a57aa4cb0",
+      "moves": 44,
+      "pushes": 13,
+      "finalPlayer": 82,
+      "finalBoxes": [
+        41,
+        64,
+        74,
+        81
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0097",
+      "mapSha256": "0cdafa309a31fdb7a91801d52fcd3da34a0612d53407481a792bdc2e0ce3baf6",
+      "moves": 54,
+      "pushes": 11,
+      "finalPlayer": 75,
+      "finalBoxes": [
+        24,
+        34,
+        55,
+        85
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0098",
+      "mapSha256": "9de2a77579b2effabad2ed72d2f414e11245e4145aacfab6162f39fae4daa309",
+      "moves": 27,
+      "pushes": 12,
+      "finalPlayer": 36,
+      "finalBoxes": [
+        25,
+        37,
+        42,
+        55
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0099",
+      "mapSha256": "da8a9c926625b088c6e2b7e369879c63893cdfc08f9bc530659d7c6100d4d194",
+      "moves": 34,
+      "pushes": 9,
+      "finalPlayer": 64,
+      "finalBoxes": [
+        16,
+        55,
+        65,
+        67
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0100",
+      "mapSha256": "5ad135b261afa03f73b0820cfe95aaa159bf9c9d3dad3b2dbc7439321da10d8f",
+      "moves": 46,
+      "pushes": 9,
+      "finalPlayer": 75,
+      "finalBoxes": [
+        38,
+        45,
+        68,
+        74
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0101",
+      "mapSha256": "95f31846a2ccb7a47a8b327b84a15f5b9a8569ef715229e47f161aec68759839",
+      "moves": 86,
+      "pushes": 21,
+      "finalPlayer": 74,
+      "finalBoxes": [
+        11,
+        51,
+        61,
+        75
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0102",
+      "mapSha256": "88fde870b880d1614a22e7d3bb5a5945184c20ac6dd0ed77fb6978b806007f0e",
+      "moves": 64,
+      "pushes": 19,
+      "finalPlayer": 76,
+      "finalBoxes": [
+        58,
+        66,
+        75,
+        78
+      ]
+    },
+    {
+      "levelId": "boxoban-unfiltered-test-000-0103",
+      "mapSha256": "1c0847d3e7bd5f1fe1c027e2c339b2871d4920fc81eb86807ffddd0cf37b93f8",
+      "moves": 57,
+      "pushes": 11,
+      "finalPlayer": 64,
+      "finalBoxes": [
+        15,
+        23,
+        34,
+        74
+      ]
+    }
+  ]
+}

@@ -229,22 +229,22 @@ namespace XanaduYonder.EditorTools
             {
                 var content = (RectTransform)lobby.transform.Find("Lobby list viewport/Lobby list content");
                 Require(content != null, "Real host lobby retains scrolling content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Snake" };
+                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban", "Snake" };
                 float previous = float.PositiveInfinity;
                 for (int i = 0; i < names.Length; i++)
                 {
                     var card = content.Find(names[i] + " game card") as RectTransform;
                     Require(card != null, "Host has game card " + names[i]);
-                    Require(card.anchoredPosition.y < previous, "Host preserves original seven cards then appends Snake");
+                    Require(card.anchoredPosition.y < previous, "Host preserves the twelve master cards then appends Snake");
                     Require(Math.Abs(card.rect.height - 350) < .1f, "Card height remains 350 for " + names[i]);
                     Require(card.GetComponentInChildren<Text>().text.StartsWith((i + 1).ToString("00")), "Visible ordinal matches " + names[i]);
                     previous = card.anchoredPosition.y;
                 }
                 int count = 0;
                 foreach (Transform child in content) if (child.name.EndsWith(" game card", StringComparison.Ordinal)) count++;
-                Require(count == 8, "Lobby contains exactly eight playable game cards");
+                Require(count == 13, "Lobby contains exactly thirteen playable game cards");
                 content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - ((RectTransform)content.parent).rect.height));
-                f.Capture("lobby-eighth-game");
+                f.Capture("lobby-thirteenth-game");
             }
             finally { Object.DestroyImmediate(lobby); Object.DestroyImmediate(inert); }
         }

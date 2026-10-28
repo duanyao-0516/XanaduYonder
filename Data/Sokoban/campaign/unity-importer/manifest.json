@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "unityVersion": "6000.3.27f1",
+  "purpose": "Canonical post-import Unity PNG metadata; preserve GUIDs, sprite IDs, internal IDs and all importer fields byte-for-byte.",
+  "files": [
+    {
+      "path": "Sprites/crate-goal.png.meta",
+      "sha256": "f8f96dec7eb30e01a49bdfca38fe5960b49f7b7329107211d84126c7c32825e0"
+    },
+    {
+      "path": "Sprites/crate.png.meta",
+      "sha256": "649b7d1787c96d9fee34a0225dc9d632e83bdff28ebd2687cef45b583b193a00"
+    },
+    {
+      "path": "Sprites/player-down.png.meta",
+      "sha256": "46a5fb4915327f46535230ca3b22ec62c8b3e804b1d4885123bef53ee660a5b0"
+    },
+    {
+      "path": "Sprites/player-left.png.meta",
+      "sha256": "d9d8859ef761f31e06b5005a14158b61f4a82675108961e6405706849d6c126b"
+    },
+    {
+      "path": "Sprites/player-right.png.meta",
+      "sha256": "6c9153300ec2f89b07745aedf80c6499608ba85beb6027531860223f86027ddc"
+    },
+    {
+      "path": "Sprites/player-up.png.meta",
+      "sha256": "4dd02d3ec8ac58c827e2409218c26cf479c5205b4472bacf7c50e6e90879b60f"
+    },
+    {
+      "path": "Sprites/wall.png.meta",
+      "sha256": "e893b13b7041b97c5a2c8e610c82a8a8d493d8093520a25932d1e80761d4368a"
+    }
+  ]
+}

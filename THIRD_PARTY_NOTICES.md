@@ -2,6 +2,36 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## Sokoban archived design and content sources
+
+- Kenney Sokoban: [official page](https://kenney.nl/assets/sokoban), [author's OpenGameArt upload](https://opengameart.org/content/sokoban-100-tiles). CC0, Kenney Vleugels. Original PNG sizes, spritesheets, tilesheets, vector files and license are retained in `ThirdParty/Sokoban/kenney-sokoban/`. The UI prototype references these local images.
+- Kenney Interface Sounds: [official page](https://kenney.nl/assets/interface-sounds), [author's upload](https://opengameart.org/content/interface-sounds). 100 OGG files, CC0, Kenney Vleugels; retained with the original license in `ThirdParty/Sokoban/kenney-interface-sounds/`. Not played by the UI prototype.
+- Both asset folders contain `source-manifest.json` with download URLs, archive SHA-256 and hashes of retained files. The original archives contain promotional links that are not imported; retained resource bytes are unchanged.
+- [Google DeepMind Boxoban levels](https://github.com/google-deepmind/boxoban-levels), commit `78011d8c86ad423bfb2e1005012393b4c3c24409`, Apache-2.0: `unfiltered/test/000.txt` is archived unchanged in `Data/Sokoban/boxoban/`, with both upstream license files and README including the requested author citation. No upstream game implementation is copied. Derived candidate lists and solution witnesses are explicitly marked as local verification outputs in `Data/Sokoban/verification/`.
+- These full source archives remain outside `Assets/`. The player now bundles the selected resources and verified campaign described in the Sokoban production sections below; the complete source archives are not bundled. The two prototype maps are original layouts retained as tutorials 001 and 008. Microban is researched but not imported.
+
+## Chromium Dino runtime and design reference assets
+
+- Source: [Chromium](https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/), revision `64574fa0f2daa1b48f2703a072687272000178ce`, retrieved on 2026-10-27.
+- The two original sprite sheets and three sound files under `docs/superpowers/specs/assets/chrome-dino/` remain the source references. The layout illustration uses excerpts from the unmodified sprite sheet.
+- Bundled runtime assets: `Assets/Resources/Dino/Sprites.png` is the unchanged 2× sprite sheet; `Audio/Jump.ogg`, `Audio/Hit.ogg` and `Audio/Score.ogg` are unchanged copies of `button-press.mp3`, `hit.mp3` and `score-reached.mp3`. The original audio files contain Ogg/Vorbis data despite their upstream `.mp3` extension; only names and extensions changed, with no re-encoding. The 1× sprite sheet is retained as a design reference and is not bundled as a Dino runtime resource.
+- License: Chromium BSD-style license, Copyright 2015 The Chromium Authors. Its complete notice, conditions and disclaimer are reproduced in [LICENSE.chromium](docs/superpowers/specs/assets/chrome-dino/LICENSE.chromium) and bundled unchanged in [Assets/Resources/Dino/LICENSE.txt](Assets/Resources/Dino/LICENSE.txt). The game exposes the complete text through Dino → 玩法说明 → 素材与许可.
+- Exact upstream paths and hashes are recorded in [source-manifest.json](docs/superpowers/specs/assets/chrome-dino/source-manifest.json); runtime mappings, hashes and import settings are documented in [the Dino asset record](docs/dino-assets.md).
+- These assets retain their upstream terms and are not relicensed by the project's MIT license. This project does not claim Google endorsement.
+
+## Chromium Dino source reference archive
+
+- Source: [Chromium revision 3df8d372a3f9d5c38a89d0bc496cc44c85af1feb](https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/), retrieved on 2026-10-28.
+- The original TypeScript game files and `neterror.css` are archived under `docs/chromium-dino-reference/source/` for configuration and behavior research. They are documentation references and are not compiled into the Unity player.
+- Original copyright headers and the complete BSD-style [LICENSE](docs/chromium-dino-reference/source/LICENSE) are retained unchanged. These files retain their upstream terms and are not relicensed under MIT.
+- Exact upstream paths, decoded byte counts and SHA-256 hashes are recorded in [manifest.json](docs/chromium-dino-reference/manifest.json). Extracted parameters and unit conversions are documented in [the configuration reference](docs/dino-chromium-config.md).
+
+## Chromium Dino rule adaptations
+
+- Dino's C# speed, jump, obstacle-generation and collision-box logic under `Assets/Scripts/Core/Dino/` adapts the pinned Chromium normal-mode rules listed above. The original Chromium copyright notices and BSD-style terms apply to the adapted portions; the full unchanged license is bundled in `Assets/Resources/Dino/LICENSE.txt` and displayed through Dino → 玩法说明 → 素材与许可.
+- Unity integration, touch ownership, responsive layout, persistence, continuous collision stopping and holiday decorations are project code. Fixed 60 Hz simulation deliberately makes acceleration independent of the display refresh rate; the source reference archive records the original callback-based behavior.
+- These adapted portions are not relicensed under the project's MIT license.
+
 ## Offline idiom dictionary
 
 - `hefengbao/jingmo-data`, commit `dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72`, files `api/chinese_idiom_v5_1.json` through `_5.json`: MIT, Copyright 2024 贺丰宝. The independent data repository's license applies; no GPL-licensed jingmo app code is imported.
@@ -22,7 +52,7 @@ Unity Editor, player runtime, UGUI, IDE integration and testing packages retain 
 
 `com.unity.nuget.newtonsoft-json` 3.2.2 packages Newtonsoft.Json 13.0.2 (MIT, James Newton-King). The package's included LICENSE/Third Party Notices apply. The standalone persistence tests reference the matching NuGet version.
 
-All gameplay code, UI layout and synthesized sound generation in this repository are original. No implementation or artwork from another 2048 game is included.
+The 2048 gameplay, UI layout and synthesized sound generation are original. No implementation or artwork from another 2048 game is included. Other games and source reference archives retain the specific provenance, authorship and licenses recorded in this document.
 
 ## User-supplied jump assets
 
@@ -43,6 +73,42 @@ All gameplay code, UI layout and synthesized sound generation in this repository
 ## Project owner app logo
 
 `Assets/Branding/XY_logo.png` is the unchanged `XY_logo.png` supplied by the project owner on 2026-10-26 for the app icon and launch branding. It is used as supplied; Unity produces the platform-specific icon sizes. The repository's code license does not independently grant rights to the project's visual identity.
+
+## Zuma-Deluxe-HD code and original Zuma content
+
+- Fixed upstream: [GalaxyShad/Zuma-Deluxe-HD at 28001e0e5061341d502116586626150027242cce](https://github.com/GalaxyShad/Zuma-Deluxe-HD/tree/28001e0e5061341d502116586626150027242cce). The HD presentation credits GalaxyShad and s4lat; the original game and content credit PopCap.
+- The C# rules, source layout/cut rectangles and offline importer are derived from the MIT-licensed source. Its complete copyright and permission notice is reproduced below.
+- Upstream expressly excludes `content` assets from the code license: original Zuma images, fonts, sound effects and module music belong to **PopCap Games / Electronic Arts**. These are **not MIT assets**. The project owner authorized this local implementation using the original assets. A separate public redistribution grant has not been supplied or established; this notice is not one. Public distribution of a package containing these resources requires the corresponding rights.
+- Included image categories: the four original PNG atlases (`menu`, `frog`, `gameobjects`, `gameinterface`), 18 JPG map backgrounds, the eight referenced PNG overlays, 18 original map thumbnails decoded to RGB PNG and nine PNG bitmap font atlases. The original decoded pixel regions and top-left cut coordinates are retained exactly, without resampling or replacement artwork. Twenty-nine images retain their source file bytes. Twenty-eight non-block-aligned images receive only right/bottom padding to multiples of four so Unity actually serializes ETC2 rather than falling back to RGB/RGBA: ten alpha textures use transparent padding; eighteen JPEG thumbnails become lossless RGB PNG with replicated edge rows. This avoids a second lossy JPEG encode. Per-file manifest fields record original dimensions, pixel hashes, alpha mode and padding extents; source file hashes remain recorded separately. Font metrics are converted to JSON from the matching TXT files. The unused `cancun10` outline blocks are omitted; `cancun12` has 154 kerning keys but 153 values, so the unpaired last key is discarded instead of performing the upstream out-of-bounds read.
+- Included audio categories: all 38 original sound effects and eight musical segments decoded from `content/music/zuma.mo3`. Twenty-seven effect OGG files are unchanged. The eleven effects encoded by Xiphophorus libVorbis I 20010615 (Vorbis 1.0 RC1) cannot be decoded by Unity 6000.3.27f1 FSBTool; the importer decodes those exact originals to 16-bit PCM WAV using oggdec/libvorbis, preserving channel count, sample rate and sample count. Their original OGG hashes and decoded PCM hashes are recorded in `audioConversions`; Unity performs the subsequent Vorbis compression, with no replacement sound or additional lossy intermediary. Original order IDs `0,24,28,32,34,36,38,39` select subsongs, not time offsets. Load-screen and main-menu segments split into their actual intro and repeat portions (restart orders 26 and 30); music metadata records source hash, decoder version and sample-accurate loop extent.
+- `Assets/Resources/Zuma/manifest.json` records every shipped file hash, source-relative path/hash, source commit, stable map IDs, original source rectangles and the two source rectangles whose unavailable bottom pixels need clipping. `scripts/import-zuma-assets.py --source <checkout>` reproduces the whitelist; `--validate` checks the delivered resources. No desktop executable, BASS, SDL, Expat, MO3 runtime decoder, unused maps, reference screenshots or generated concept images are bundled.
+- Offline conversion uses libopenmpt (OpenMPT Project Developers and Contributors, BSD-3-Clause) and oggenc/oggdec/libvorbis (Xiph.Org, BSD-style licenses). These are developer tools only and are not distributed in the application. Converted audio retains the original music's rights.
+
+### Upstream source license
+
+```text
+MIT License
+
+Copyright (c) 2023 GalaxyShad
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Authorized watermelon game assets (06 · 合成大西瓜)
 
@@ -65,3 +131,17 @@ All gameplay code, UI layout and synthesized sound generation in this repository
 - License: Unlicense, reproduced in `ThirdParty/Sudoku/LICENSE.txt`.
 - Bundled file: `Assets/Resources/Sudoku/puzzles.txt`, a selection of 2,000 standard 9×9 puzzles with locally computed answers and difficulty labels. Import provenance and verification are documented in `docs/sudoku-content.md`.
 - Only puzzle data is reused. The Sudoku rules, solver, hint explanations, interface and persistence code are original. No Sudoku Exchange web application code, QQWing or HoDoKu code is bundled.
+
+## Sokoban graphics and feedback audio (推箱子)
+
+- Graphics: [Kenney Sokoban](https://kenney.nl/assets/sokoban), by Kenney Vleugels, CC0. The archived source and its unchanged license are in `ThirdParty/Sokoban/kenney-sokoban/`. Archive SHA-256: `d8cc8af649a5e21d87a9f30a8a616fe2c0e94e68c80cdfe0df8ca72ec0f208ac`.
+- Included unchanged in `Assets/Resources/Sokoban/Sprites/`: wall `block_06`, normal crate `crate_02`, occupied-goal crate `crate_05`, and four outlined player directions `player_05`, `player_08`, `player_17`, `player_20`, all from the source's `PNG/Default size/` directory. Only these seven PNGs are bundled.
+- Audio: [Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds), by Kenney, CC0. The archived source and its unchanged license are in `ThirdParty/Sokoban/kenney-interface-sounds/`. Archive SHA-256: `f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232`.
+- Included unchanged in `Assets/Resources/Sokoban/Audio/`: `tick_001.ogg` as `move.ogg`, `click_001.ogg` as `push.ogg`, `confirmation_001.ogg` as `goal.ogg`, and `confirmation_002.ogg` as `complete.ogg`. These four clips are 0.023–0.539 seconds long. Both original Kenney licenses are included in the released `Licenses/` directory.
+
+## Google DeepMind Boxoban level data
+
+- Source: [google-deepmind/boxoban-levels](https://github.com/google-deepmind/boxoban-levels), fixed commit `78011d8c86ad423bfb2e1005012393b4c3c24409`, source file `unfiltered/test/000.txt`. The complete original 1,000-level file and both original license files are archived in `Data/Sokoban/boxoban/`.
+- License: Apache-2.0. The selected 100 maps in `Assets/Resources/Sokoban/campaign.json` retain their exact source rows and source IDs. Their derived solution witnesses and the original eight tutorial maps are identified separately in the release manifest. The source dataset labels are not presented as a human difficulty grade.
+- Both original Apache license texts and the unchanged upstream README with its complete author/BibTeX citation are included in `Assets/Resources/Sokoban/Licenses/`. The canonical attribution is “An investigation of Model-free planning: boxoban levels,” Arthur Guez and coauthors, 2018; the upstream citation includes all authors.
+- Only level data is reused. The game rules, UI, persistence and verification tooling are original. Third-party media and Boxoban data retain their own licenses and are not relicensed by the repository's MIT license. Per-file hashes, map hashes, exact selected-source mappings and production-rule replay evidence are in `Assets/Resources/Sokoban/manifest.json`, `verification-report.json` and `Data/Sokoban/campaign/README.md`.

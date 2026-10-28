@@ -1,0 +1,652 @@
+{
+  "schema_version": 1,
+  "source_levels_structurally_valid": 1000,
+  "requested_candidates": 100,
+  "verified_candidates": 100,
+  "attempted_levels": 104,
+  "limits_per_level": {
+    "max_discovered_states": 35000,
+    "max_seconds": 1.5
+  },
+  "search": "Breadth-first over box pushes, canonical reachable player regions, static reverse-pull dead-square pruning",
+  "selection": "First successful levels in original source order within per-level budgets",
+  "duration_seconds": 25.157,
+  "limitations": [
+    "Search and replay are offline Python tooling, not Unity production rules",
+    "No global player-step optimality claim",
+    "No human difficulty or progression grading",
+    "Unsearched and budget-exceeded maps have no independent solution proof here",
+    "A time-based budget can make the selected subset vary across machines; checked-in witnesses are deterministic to replay",
+    "No Unity, Android, animation, input, persistence or runtime acceptance performed"
+  ],
+  "attempts": [
+    {
+      "source_id": 0,
+      "status": "solved",
+      "expanded": 9099,
+      "discovered": 10060
+    },
+    {
+      "source_id": 1,
+      "status": "solved",
+      "expanded": 1880,
+      "discovered": 1938
+    },
+    {
+      "source_id": 2,
+      "status": "solved",
+      "expanded": 7203,
+      "discovered": 9306
+    },
+    {
+      "source_id": 3,
+      "status": "solved",
+      "expanded": 3407,
+      "discovered": 4250
+    },
+    {
+      "source_id": 4,
+      "status": "solved",
+      "expanded": 7148,
+      "discovered": 7407
+    },
+    {
+      "source_id": 5,
+      "status": "solved",
+      "expanded": 1209,
+      "discovered": 1366
+    },
+    {
+      "source_id": 6,
+      "status": "solved",
+      "expanded": 512,
+      "discovered": 513
+    },
+    {
+      "source_id": 7,
+      "status": "solved",
+      "expanded": 4193,
+      "discovered": 5235
+    },
+    {
+      "source_id": 8,
+      "status": "solved",
+      "expanded": 9486,
+      "discovered": 10554
+    },
+    {
+      "source_id": 9,
+      "status": "solved",
+      "expanded": 3132,
+      "discovered": 3845
+    },
+    {
+      "source_id": 10,
+      "status": "solved",
+      "expanded": 153,
+      "discovered": 188
+    },
+    {
+      "source_id": 11,
+      "status": "solved",
+      "expanded": 7784,
+      "discovered": 8058
+    },
+    {
+      "source_id": 12,
+      "status": "solved",
+      "expanded": 2622,
+      "discovered": 4737
+    },
+    {
+      "source_id": 13,
+      "status": "solved",
+      "expanded": 1484,
+      "discovered": 1809
+    },
+    {
+      "source_id": 14,
+      "status": "solved",
+      "expanded": 43,
+      "discovered": 57
+    },
+    {
+      "source_id": 15,
+      "status": "solved",
+      "expanded": 1929,
+      "discovered": 2321
+    },
+    {
+      "source_id": 16,
+      "status": "solved",
+      "expanded": 119,
+      "discovered": 149
+    },
+    {
+      "source_id": 17,
+      "status": "solved",
+      "expanded": 3683,
+      "discovered": 4570
+    },
+    {
+      "source_id": 18,
+      "status": "solved",
+      "expanded": 4031,
+      "discovered": 8213
+    },
+    {
+      "source_id": 19,
+      "status": "solved",
+      "expanded": 3698,
+      "discovered": 4771
+    },
+    {
+      "source_id": 20,
+      "status": "solved",
+      "expanded": 2592,
+      "discovered": 2818
+    },
+    {
+      "source_id": 21,
+      "status": "budget_exceeded",
+      "limit": "seconds",
+      "expanded": 18073,
+      "discovered": 20749
+    },
+    {
+      "source_id": 22,
+      "status": "solved",
+      "expanded": 15341,
+      "discovered": 16078
+    },
+    {
+      "source_id": 23,
+      "status": "solved",
+      "expanded": 1715,
+      "discovered": 2195
+    },
+    {
+      "source_id": 24,
+      "status": "solved",
+      "expanded": 472,
+      "discovered": 755
+    },
+    {
+      "source_id": 25,
+      "status": "solved",
+      "expanded": 1296,
+      "discovered": 1570
+    },
+    {
+      "source_id": 26,
+      "status": "solved",
+      "expanded": 365,
+      "discovered": 457
+    },
+    {
+      "source_id": 27,
+      "status": "solved",
+      "expanded": 6111,
+      "discovered": 6642
+    },
+    {
+      "source_id": 28,
+      "status": "solved",
+      "expanded": 146,
+      "discovered": 197
+    },
+    {
+      "source_id": 29,
+      "status": "solved",
+      "expanded": 8671,
+      "discovered": 10220
+    },
+    {
+      "source_id": 30,
+      "status": "solved",
+      "expanded": 1362,
+      "discovered": 1661
+    },
+    {
+      "source_id": 31,
+      "status": "solved",
+      "expanded": 952,
+      "discovered": 1124
+    },
+    {
+      "source_id": 32,
+      "status": "solved",
+      "expanded": 17243,
+      "discovered": 18210
+    },
+    {
+      "source_id": 33,
+      "status": "solved",
+      "expanded": 632,
+      "discovered": 799
+    },
+    {
+      "source_id": 34,
+      "status": "solved",
+      "expanded": 26093,
+      "discovered": 27393
+    },
+    {
+      "source_id": 35,
+      "status": "solved",
+      "expanded": 268,
+      "discovered": 335
+    },
+    {
+      "source_id": 36,
+      "status": "solved",
+      "expanded": 397,
+      "discovered": 521
+    },
+    {
+      "source_id": 37,
+      "status": "solved",
+      "expanded": 4314,
+      "discovered": 4669
+    },
+    {
+      "source_id": 38,
+      "status": "solved",
+      "expanded": 13375,
+      "discovered": 14276
+    },
+    {
+      "source_id": 39,
+      "status": "solved",
+      "expanded": 1184,
+      "discovered": 1685
+    },
+    {
+      "source_id": 40,
+      "status": "solved",
+      "expanded": 2379,
+      "discovered": 2654
+    },
+    {
+      "source_id": 41,
+      "status": "solved",
+      "expanded": 126,
+      "discovered": 134
+    },
+    {
+      "source_id": 42,
+      "status": "solved",
+      "expanded": 12260,
+      "discovered": 13468
+    },
+    {
+      "source_id": 43,
+      "status": "solved",
+      "expanded": 2776,
+      "discovered": 2929
+    },
+    {
+      "source_id": 44,
+      "status": "solved",
+      "expanded": 2760,
+      "discovered": 2925
+    },
+    {
+      "source_id": 45,
+      "status": "solved",
+      "expanded": 2925,
+      "discovered": 4054
+    },
+    {
+      "source_id": 46,
+      "status": "budget_exceeded",
+      "limit": "seconds",
+      "expanded": 14177,
+      "discovered": 25831
+    },
+    {
+      "source_id": 47,
+      "status": "solved",
+      "expanded": 29259,
+      "discovered": 30578
+    },
+    {
+      "source_id": 48,
+      "status": "solved",
+      "expanded": 6255,
+      "discovered": 7134
+    },
+    {
+      "source_id": 49,
+      "status": "solved",
+      "expanded": 213,
+      "discovered": 370
+    },
+    {
+      "source_id": 50,
+      "status": "solved",
+      "expanded": 8816,
+      "discovered": 9062
+    },
+    {
+      "source_id": 51,
+      "status": "solved",
+      "expanded": 193,
+      "discovered": 247
+    },
+    {
+      "source_id": 52,
+      "status": "solved",
+      "expanded": 992,
+      "discovered": 1057
+    },
+    {
+      "source_id": 53,
+      "status": "solved",
+      "expanded": 990,
+      "discovered": 1001
+    },
+    {
+      "source_id": 54,
+      "status": "solved",
+      "expanded": 8448,
+      "discovered": 8468
+    },
+    {
+      "source_id": 55,
+      "status": "solved",
+      "expanded": 2030,
+      "discovered": 2778
+    },
+    {
+      "source_id": 56,
+      "status": "solved",
+      "expanded": 1381,
+      "discovered": 1677
+    },
+    {
+      "source_id": 57,
+      "status": "solved",
+      "expanded": 2667,
+      "discovered": 2975
+    },
+    {
+      "source_id": 58,
+      "status": "solved",
+      "expanded": 5121,
+      "discovered": 5277
+    },
+    {
+      "source_id": 59,
+      "status": "solved",
+      "expanded": 1231,
+      "discovered": 1614
+    },
+    {
+      "source_id": 60,
+      "status": "solved",
+      "expanded": 2452,
+      "discovered": 3168
+    },
+    {
+      "source_id": 61,
+      "status": "solved",
+      "expanded": 3283,
+      "discovered": 3439
+    },
+    {
+      "source_id": 62,
+      "status": "solved",
+      "expanded": 1257,
+      "discovered": 2291
+    },
+    {
+      "source_id": 63,
+      "status": "solved",
+      "expanded": 4245,
+      "discovered": 5094
+    },
+    {
+      "source_id": 64,
+      "status": "solved",
+      "expanded": 1142,
+      "discovered": 1579
+    },
+    {
+      "source_id": 65,
+      "status": "budget_exceeded",
+      "limit": "seconds",
+      "expanded": 25775,
+      "discovered": 26684
+    },
+    {
+      "source_id": 66,
+      "status": "solved",
+      "expanded": 1894,
+      "discovered": 2223
+    },
+    {
+      "source_id": 67,
+      "status": "solved",
+      "expanded": 2141,
+      "discovered": 2260
+    },
+    {
+      "source_id": 68,
+      "status": "solved",
+      "expanded": 11041,
+      "discovered": 11412
+    },
+    {
+      "source_id": 69,
+      "status": "solved",
+      "expanded": 55,
+      "discovered": 85
+    },
+    {
+      "source_id": 70,
+      "status": "solved",
+      "expanded": 1018,
+      "discovered": 1117
+    },
+    {
+      "source_id": 71,
+      "status": "solved",
+      "expanded": 1901,
+      "discovered": 1993
+    },
+    {
+      "source_id": 72,
+      "status": "solved",
+      "expanded": 7847,
+      "discovered": 8697
+    },
+    {
+      "source_id": 73,
+      "status": "solved",
+      "expanded": 3624,
+      "discovered": 4034
+    },
+    {
+      "source_id": 74,
+      "status": "solved",
+      "expanded": 6678,
+      "discovered": 7056
+    },
+    {
+      "source_id": 75,
+      "status": "solved",
+      "expanded": 755,
+      "discovered": 952
+    },
+    {
+      "source_id": 76,
+      "status": "solved",
+      "expanded": 985,
+      "discovered": 1440
+    },
+    {
+      "source_id": 77,
+      "status": "solved",
+      "expanded": 8130,
+      "discovered": 10491
+    },
+    {
+      "source_id": 78,
+      "status": "budget_exceeded",
+      "limit": "seconds",
+      "expanded": 17881,
+      "discovered": 25159
+    },
+    {
+      "source_id": 79,
+      "status": "solved",
+      "expanded": 186,
+      "discovered": 212
+    },
+    {
+      "source_id": 80,
+      "status": "solved",
+      "expanded": 3851,
+      "discovered": 4404
+    },
+    {
+      "source_id": 81,
+      "status": "solved",
+      "expanded": 1042,
+      "discovered": 1085
+    },
+    {
+      "source_id": 82,
+      "status": "solved",
+      "expanded": 5814,
+      "discovered": 6456
+    },
+    {
+      "source_id": 83,
+      "status": "solved",
+      "expanded": 171,
+      "discovered": 199
+    },
+    {
+      "source_id": 84,
+      "status": "solved",
+      "expanded": 281,
+      "discovered": 385
+    },
+    {
+      "source_id": 85,
+      "status": "solved",
+      "expanded": 1668,
+      "discovered": 1720
+    },
+    {
+      "source_id": 86,
+      "status": "solved",
+      "expanded": 8039,
+      "discovered": 9324
+    },
+    {
+      "source_id": 87,
+      "status": "solved",
+      "expanded": 6992,
+      "discovered": 7940
+    },
+    {
+      "source_id": 88,
+      "status": "solved",
+      "expanded": 6955,
+      "discovered": 8900
+    },
+    {
+      "source_id": 89,
+      "status": "solved",
+      "expanded": 1183,
+      "discovered": 1438
+    },
+    {
+      "source_id": 90,
+      "status": "solved",
+      "expanded": 4798,
+      "discovered": 5202
+    },
+    {
+      "source_id": 91,
+      "status": "solved",
+      "expanded": 12666,
+      "discovered": 12780
+    },
+    {
+      "source_id": 92,
+      "status": "solved",
+      "expanded": 1416,
+      "discovered": 1740
+    },
+    {
+      "source_id": 93,
+      "status": "solved",
+      "expanded": 6624,
+      "discovered": 8176
+    },
+    {
+      "source_id": 94,
+      "status": "solved",
+      "expanded": 1100,
+      "discovered": 1623
+    },
+    {
+      "source_id": 95,
+      "status": "solved",
+      "expanded": 14571,
+      "discovered": 15332
+    },
+    {
+      "source_id": 96,
+      "status": "solved",
+      "expanded": 9795,
+      "discovered": 10777
+    },
+    {
+      "source_id": 97,
+      "status": "solved",
+      "expanded": 5888,
+      "discovered": 6851
+    },
+    {
+      "source_id": 98,
+      "status": "solved",
+      "expanded": 374,
+      "discovered": 422
+    },
+    {
+      "source_id": 99,
+      "status": "solved",
+      "expanded": 4102,
+      "discovered": 4989
+    },
+    {
+      "source_id": 100,
+      "status": "solved",
+      "expanded": 3914,
+      "discovered": 4556
+    },
+    {
+      "source_id": 101,
+      "status": "solved",
+      "expanded": 1926,
+      "discovered": 1985
+    },
+    {
+      "source_id": 102,
+      "status": "solved",
+      "expanded": 1946,
+      "discovered": 1984
+    },
+    {
+      "source_id": 103,
+      "status": "solved",
+      "expanded": 11941,
+      "discovered": 13656
+    }
+  ]
+}
