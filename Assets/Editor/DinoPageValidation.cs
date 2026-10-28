@@ -59,6 +59,8 @@ namespace XanaduYonder.EditorTools
                 Check("airborne taps do not queue but airborne holds repeat", AirborneHeldJump);
                 Check("pointer cancellation and suspension discard held repeat", CancelHeldJump);
                 Check("cancel orientation waits for two stable portrait frames", CancelDirection);
+                Check("entry immediately presents the actual direction selection", EntryWithoutPlaceholder);
+                Check("orientation changes retain the previous page until ready", DirectionWithoutPlaceholder);
                 Check("safe resize keeps the same game and permits countdown", SafeResize);
                 Check("background resize is applied on return and preserves the paused picture", BackgroundResize);
                 Check("unsafe resize preserves progress and refuses continuation", UnsafeResize);
@@ -209,6 +211,37 @@ namespace XanaduYonder.EditorTools
             Require(f.Page.CurrentPhase == "Turning", "One stable portrait frame is insufficient");
             Invoke(f.Page, "Update");
             Require(f.Page.CurrentPhase == "Selecting" && f.HomeCalls == 0 && f.Game == null, "Second stable frame returns to selection without stale start");
+        }
+
+        private static void EntryWithoutPlaceholder(Fixture f)
+        {
+            f.SelectionAt(720, 1320);
+            f.Page.Enter();
+            var content = Get<RectTransform>(f.Page, "content");
+            Require(content.Find("Portrait choice") != null && content.Find("Landscape choice") != null && content.Find("Dino start") != null,
+                "Entry frame already contains the real selection cards and start action");
+            Require(!ContainsText(content, "正在调整画面"), "No temporary adjustment page is rendered at entry");
+            Require(f.Game == null, "Entry never starts a run while selecting orientation");
+            Invoke(f.Page, "Update"); Invoke(f.Page, "Update");
+            Require(f.Page.CurrentPhase == "Selecting", "Direction confirmation still completes normally");
+        }
+
+        private static void DirectionWithoutPlaceholder(Fixture f)
+        {
+            f.SelectionAt(720, 1320);
+            var before = Get<RectTransform>(f.Page, "content");
+            f.BeginTurn(true, "Game");
+            Require(ReferenceEquals(before, Get<RectTransform>(f.Page, "content")) && before.gameObject.activeSelf,
+                "The current page remains visible while Android changes orientation");
+            Require(!ContainsText(before, "正在调整画面"), "No intermediate adjustment text replaces the current page");
+            Require(!before.GetComponent<CanvasGroup>().interactable, "Old page actions are disabled during the transition");
+            f.FakeViewport(1515, 720, true); f.CacheViewport();
+            Invoke(f.Page, "Update");
+            Require(f.Page.CurrentPhase == "Turning" && before.gameObject.activeSelf,
+                "One stable frame retains the visible old page instead of an empty screen");
+            Invoke(f.Page, "Update");
+            Require(f.Page.CurrentPhase == "Ready" && !before.gameObject.activeSelf && f.Game != null,
+                "Ready layout replaces the old page after direction stability is confirmed");
         }
 
         private static void SafeResize(Fixture f)

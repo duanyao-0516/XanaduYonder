@@ -107,6 +107,8 @@ Zuma 的纯规则由 `ZumaGame` 拥有，`ZumaPage` 调度导航、输入、运�
 
 Zuma 失焦/后台时取消触摸、冻结模拟并同步保存，回前台显示暂停。有效发射、换球、导航及每 2 秒运行周期保存；失败保留 dirty 内存并重试。新测试入口为 `scripts/test-zuma.sh`、`scripts/test-zuma-input.sh`、`scripts/test-zuma-persistence.sh` 和 `python3 scripts/test-zuma-assets.py`。
 
+小游戏切换避免额外加载画面：Dino直接显示正式方向卡，旋转期间保留旧页并冻结交互；Zuma通过PresentationReady在目标完整画面就绪后交接宿主Canvas，退出保留旧图直到返回竖屏。宿主等待时关闭触摸及键盘交互，退出时取消缓存的按钮按压。Zuma只在自身进入/退出请求方向，非活动状态不修改其他游戏的方向。`scripts/test-zuma-navigation.sh`覆盖画面交接、取消、加载错误、方向归属及残留输入。
+
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
 
 当前旸了个旸采用 schema 2；移出/撤回/洗牌默认上限为 2/3/1，设置支持 0..99，已有对局保持开局上限及剩余次数，复活每局一次。无尽按消除张数累计计分，换波不补道具或复活。几何仍支持旧布局 0..2，新挑战与无尽只生成 3..14 并排除上一布局。布局、会话和难度分别通过 `scripts/test-sheep-layouts.sh`、`scripts/test-sheep-session.sh`、`scripts/test-sheep-difficulty.sh` 验证；难度评估不读取生成解法，模拟完成率不代表真人胜率。

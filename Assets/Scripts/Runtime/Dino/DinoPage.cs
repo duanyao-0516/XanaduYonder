@@ -85,15 +85,14 @@ namespace XanaduYonder.Runtime.Dino
             stableFrames = 0; turnStarted = Time.unscaledTime;
             requestOrientation(targetLandscape);
             viewport.Refresh();
-            BuildTurning();
-        }
-
-        private void BuildTurning()
-        {
-            ClearContent();
-            Label("正在调整画面…", 24, viewport.Height * .4f, viewport.Width-48, 64, 32, TextAnchor.MiddleCenter);
-            Button("取消", viewport.Width*.5f-100, viewport.Height*.6f, 200, 72,
-                () => BeginTurn(false, destination == Destination.Selection ? Destination.Lobby : Destination.Selection));
+            // Show the actual selection immediately on entry; keep the current picture during
+            // a real rotation. Never replace either with a transient adjustment page.
+            if (content == null || (next == Destination.Selection && !viewport.Landscape)) BuildSelection();
+            var interaction = content.GetComponent<CanvasGroup>();
+            if (interaction == null) interaction = content.gameObject.AddComponent<CanvasGroup>();
+            // Disable old controls without tinting the retained picture for a few frames.
+            foreach (var control in content.GetComponentsInChildren<Selectable>()) control.transition = Selectable.Transition.None;
+            interaction.interactable = false;
         }
 
         private void Update()
@@ -110,7 +109,6 @@ namespace XanaduYonder.Runtime.Dino
             pendingLayoutChange = false;
             if (phase == Phase.Turning)
             {
-                if (changed) BuildTurning();
                 stableFrames = viewport.Landscape == turningLandscape && !changed ? stableFrames+1 : 0;
                 if (stableFrames >= 2) FinishTurn();
                 else if (Time.unscaledTime-turnStarted > 3) ShowOrientationFailure();

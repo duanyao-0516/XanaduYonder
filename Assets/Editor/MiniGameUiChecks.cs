@@ -68,6 +68,7 @@ namespace XanaduYonder.EditorTools
                 using (var fixture = new Fixture(height))
                 {
                     CheckLobby(fixture);
+                    CheckZumaHostInput(fixture);
                     CheckJump(fixture);
                     CheckSudoku(fixture);
                     CheckIcons(fixture);
@@ -89,6 +90,34 @@ namespace XanaduYonder.EditorTools
                 Debug.Log(report.ToString());
                 EditorApplication.Exit(exit);
             }
+        }
+
+        private static void CheckZumaHostInput(Fixture f)
+        {
+            var inert = new GameObject("Inert Zuma host input shell"); inert.SetActive(false);
+            var shell = inert.AddComponent<AppController>();
+            var canvas = new GameObject("Retained lobby canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+            try
+            {
+                Set(shell, "canvasRoot", (RectTransform)canvas.transform);
+                int actions = 0;
+                var button = UiFactory.Button(canvas.transform, "Enter another game", 0, 0, 240, 80, () => actions++);
+                var transition = button.transition;
+                var gate = typeof(AppController).GetMethod("SetZumaHostInput", Private);
+                Require(gate != null, "Zuma transition gates all host input, not only raycasting");
+                gate.Invoke(shell, new object[] { false });
+                Require(canvas.activeSelf && !canvas.GetComponent<GraphicRaycaster>().enabled && !button.IsInteractable(),
+                    "Retained lobby remains visible but rejects touch and keyboard submission");
+                Require(button.transition == Selectable.Transition.None, "Input gating does not flash disabled button tints");
+                button.OnSubmit(new BaseEventData(EventSystem.current));
+                Require(actions == 0, "Keyboard Submit cannot enter another game while Zuma rotates");
+                gate.Invoke(shell, new object[] { true });
+                Require(button.IsInteractable() && canvas.GetComponent<GraphicRaycaster>().enabled && button.transition == transition,
+                    "Returning from Zuma restores original host input and visual transitions");
+                button.OnSubmit(new BaseEventData(EventSystem.current));
+                Require(actions == 1, "Restored lobby accepts normal keyboard submission");
+            }
+            finally { Object.DestroyImmediate(canvas); Object.DestroyImmediate(inert); }
         }
 
         private static void CheckLobby(Fixture f)

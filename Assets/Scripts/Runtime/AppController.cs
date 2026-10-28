@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -28,6 +29,7 @@ namespace XanaduYonder.Runtime
         private SaveData data;
         private LocalSaveStore store;
         private RectTransform canvasRoot;
+        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> zumaHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
         private RectTransform frame;
         private GameObject lobbyPage;
         private GameObject gamePage;
@@ -369,6 +371,7 @@ namespace XanaduYonder.Runtime
             zumaPage = host.AddComponent<ZumaPage>();
             zumaPage.Initialize(FinishZumaExit, () => data.SoundEnabled, () => data.HapticsEnabled,
                 SetZumaSetting, feedback);
+            zumaPage.PresentationReady += () => { if (activePage == Page.Zuma) canvasRoot.gameObject.SetActive(false); };
         }
 
         private void EnterZuma()
@@ -385,15 +388,41 @@ namespace XanaduYonder.Runtime
             watermelonPage?.Leave();
             Save();
             activePage = Page.Zuma;
-            canvasRoot.gameObject.SetActive(false);
+            // Keep the lobby visible while Android rotates; the complete Zuma page hides it.
+            SetZumaHostInput(false);
             zumaPage.Enter();
         }
 
         private void FinishZumaExit()
         {
             activePage = Page.Lobby;
+            SetZumaHostInput(true);
             canvasRoot.gameObject.SetActive(true);
             ShowLobby();
+        }
+
+        private void SetZumaHostInput(bool enabled)
+        {
+            var interaction = canvasRoot.GetComponent<CanvasGroup>();
+            if (interaction == null) interaction = canvasRoot.gameObject.AddComponent<CanvasGroup>();
+            if (!enabled)
+            {
+                zumaHostTransitions.Clear();
+                foreach (var control in canvasRoot.GetComponentsInChildren<Selectable>())
+                {
+                    zumaHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
+                    control.transition = Selectable.Transition.None;
+                }
+                interaction.interactable = false;
+                if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            }
+            else
+            {
+                interaction.interactable = true;
+                foreach (var entry in zumaHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
+                zumaHostTransitions.Clear();
+            }
+            canvasRoot.GetComponent<GraphicRaycaster>().enabled = enabled;
         }
 
         private bool SetZumaSetting(bool soundSetting, bool enabled)

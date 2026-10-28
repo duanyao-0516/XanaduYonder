@@ -10,6 +10,7 @@ namespace XanaduYonder.Runtime.Zuma
     internal sealed class ZumaPage : MonoBehaviour
     {
         private Action returnLobby;
+        private Action<ScreenOrientation> requestOrientation = value => Screen.orientation = value;
         private Func<bool> sound,haptics;
         private Func<bool,bool,bool> setSetting;
         private GameFeedback feedback;
@@ -24,7 +25,7 @@ namespace XanaduYonder.Runtime.Zuma
         private ZumaSaveStore store;
         private ZumaLoadStatus loadStatus;
         private readonly ZumaAimGesture gesture=new ZumaAimGesture();
-        private bool visible,transition,foreground=true,running,dirty;
+        private bool visible,transition,leaving,foreground=true,running,dirty;
         private long lastSavedRevision=-1;
         private int profileRevision,lastSavedProfileRevision=-1,navigationToken;
         private double nextSave,nextRetry,orientationClock;
@@ -33,6 +34,8 @@ namespace XanaduYonder.Runtime.Zuma
         private Action dialogBack;
         public bool IsVisible { get { return visible; } }
         public string SaveError { get { return saveError??navigationError; } }
+        // The host keeps its previous page visible until a complete Zuma page can replace it.
+        public event Action PresentationReady;
         private bool AcceptsInput { get { return visible&&!transition&&foreground&&running&&game!=null&&view!=null&&!view.HasDialog; } }
 
         private bool AcceptsSelectionInput { get { return visible&&!transition&&foreground&&game==null&&view!=null&&!view.HasDialog; } }
@@ -45,13 +48,13 @@ namespace XanaduYonder.Runtime.Zuma
         public void Enter()
         {
             if(visible||transition)return;
-            visible=true;transition=true;running=false;
+            visible=true;transition=true;leaving=false;running=false;
             var token=++navigationToken;
             StartCoroutine(EnterRoutine(token));
         }
         private IEnumerator EnterRoutine(int token)
         {
-            Screen.orientation=ScreenOrientation.LandscapeLeft;
+            requestOrientation(ScreenOrientation.LandscapeLeft);
             var ready=false;
             yield return WaitForDirection(true,token,value=>ready=value);
             if(token!=navigationToken)yield break;
@@ -65,8 +68,13 @@ namespace XanaduYonder.Runtime.Zuma
                 if(data==null)LoadData();
                 transition=false;
                 navigationError=null;
-                if(data==null){ShowLoadError();yield break;}
-                ShowLoadedPage();
+                if(data==null)ShowLoadError();else ShowLoadedPage();
+                // Loading the actual page can initiate Exit on failure. Never publish that stale canvas.
+                if(token==navigationToken&&visible&&!transition)
+                {
+                    canvasObject.SetActive(true);
+                    PresentationReady?.Invoke();
+                }
             }
             catch(Exception ex)
             {
@@ -96,6 +104,7 @@ namespace XanaduYonder.Runtime.Zuma
         private void BuildCanvas()
         {
             canvasObject=new GameObject("Zuma landscape UI",typeof(RectTransform),typeof(Canvas),typeof(GraphicRaycaster));
+            canvasObject.SetActive(false);
             canvasObject.transform.SetParent(transform,false);
             var canvas=canvasObject.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=10;
             var background=UiFactory.Panel(canvasObject.transform,"Letterbox",0,0,1280,720,new Color(.025f,.022f,.016f),false);
@@ -315,7 +324,8 @@ namespace XanaduYonder.Runtime.Zuma
         }
         public void HandleBack()
         {
-            if(!visible||transition)return;
+            if(!visible)return;
+            if(transition){Exit();return;}
             CancelAim();
             if(view!=null&&view.HasDialog){dialogBack?.Invoke();return;}
             if(game!=null)ShowPause();else Exit();
@@ -332,7 +342,7 @@ namespace XanaduYonder.Runtime.Zuma
             if(!active)Suspend();
             else if(visible&&!transition&&game!=null)ShowPause();
             else if(visible&&!transition)audioPlayer?.Suspend(false);
-            else if(!visible&&!transition)Screen.orientation=ScreenOrientation.Portrait;
+            // Only Enter/Exit owns orientation; an inactive page must not rotate another game.
         }
         private void OnViewportChanged()
         {
@@ -387,17 +397,29 @@ namespace XanaduYonder.Runtime.Zuma
         }
         public void Exit()
         {
-            if(!visible)return;
-            ++navigationToken;transition=true;Suspend();StartCoroutine(ExitRoutine(navigationToken));
+            if(!visible||leaving)return;
+            ++navigationToken;transition=leaving=true;Suspend();StartCoroutine(ExitRoutine(navigationToken));
         }
         private IEnumerator ExitRoutine(int token)
         {
-            ReleasePresentation();game=null;
-            Screen.orientation=ScreenOrientation.Portrait;
+            // Retain the paused picture while Android rotates. Disable its buttons without hiding it.
+            if(canvasObject!=null)
+            {
+                canvasObject.GetComponent<GraphicRaycaster>().enabled=false;
+                // Raycast disable does not revoke an EventSystem pointerPress already captured.
+                foreach(var button in canvasObject.GetComponentsInChildren<ZumaSkinButton>(true))button.enabled=false;
+                foreach(var control in canvasObject.GetComponentsInChildren<Selectable>(true))
+                {
+                    control.transition=Selectable.Transition.None;
+                    control.interactable=false;
+                }
+            }
+            requestOrientation(ScreenOrientation.Portrait);
             var ready=false;yield return WaitForDirection(false,token,value=>ready=value);
             if(token!=navigationToken)yield break;
             if(!ready)navigationError=navigationError??"屏幕方向暂未恢复，已安全返回大厅。";
-            visible=transition=false;returnLobby();
+            ReleasePresentation();game=null;
+            visible=transition=leaving=false;returnLobby();
         }
         private void ReleasePresentation()
         {
