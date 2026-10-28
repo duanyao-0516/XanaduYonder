@@ -152,6 +152,28 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidHappyBallValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".happyballtest");
+                    PlayerSettings.productName = "Xanadu 球球测试";
+                    BuildApk("-happy-ball-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         private static void BuildApk(string suffix, BuildOptions options)
         {
             if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))

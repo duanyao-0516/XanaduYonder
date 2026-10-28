@@ -51,11 +51,15 @@ scripts/test-minesweeper-session.sh
 scripts/test-minesweeper-input.sh
 scripts/test-minesweeper-persistence.sh
 scripts/test-minesweeper-ui.sh
+scripts/test-happy-ball.sh
+scripts/test-happy-ball-input.sh
+scripts/test-happy-ball-persistence.sh
+scripts/test-happy-ball-ui.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查追加扫雷后的七款大厅顺序，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查八款大厅顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -167,6 +171,23 @@ gh auth status
 首次登录在 GitHub 完成设备授权与必要的二次验证；复用现有 SSH 密钥，不生成或上传新密钥。登录后检查 `gh auth status` 显示系统钥匙串存储，不在仓库、脚本或环境文件中保存令牌。参见 [GitHub CLI 登录文档](https://cli.github.com/manual/gh_auth_login)。
 
 发布前先验证 APK、签名、校验文件及实际目标分支，将代码和对应标签推到远端。通过 `gh release create --draft --verify-tag --notes-file` 创建草稿并上传指定的 APK 与校验文件；回读附件确认文件长度和 SHA-256 后，再用 `gh release edit --draft=false --latest` 发布。版本号、附件路径和说明文件均应使用本次版本的真实值，不覆盖已有版本附件。
+
+## 欢乐球球独立验证
+
+欢乐球球保留源码版本 0.4.0/versionCode 4，通过 `scripts/happy-ball-unity-environment.sh` 使用本工作树独立 `Library/HappyBallGradle` 和临时 ADB 端口，不修改全局环境。UI 检查与构建必须串行执行，测试使用临时存档目录。
+
+```bash
+scripts/test-happy-ball.sh
+scripts/test-happy-ball-input.sh
+scripts/test-happy-ball-persistence.sh
+scripts/test-happy-ball-ui.sh
+scripts/test-minigame-ui.sh
+scripts/build-happy-ball-validation.sh
+```
+
+APK 为 `artifacts/builds/XanaduYonder-0.4.0-happy-ball-validation.apk`，包名 `com.duanyao.xanaduyonder.happyballtest`、名称“Xanadu 球球测试”，使用调试签名，独立于正式应用。图形报告/长短屏截图位于 `artifacts/validation/happy-ball-ui/`，构建日志为 `artifacts/logs/build-happy-ball-validation.log`。包名和产品名在构建结束后恢复。
+
+有已授权设备时，使用 Unity 配套 `adb -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.4.0-happy-ball-validation.apk` 安装，并显式启动测试包；不要用启动正式包名的通用安装脚本。真机需验证左右转向、释放停止、多指取消、越过竖板的时机、连续红板的重击例外、分裂动效、音效触感、后台/锁屏暂停、读档及长局性能。实际完成范围见[验证记录](verification-happy-ball.md)。
 
 ## 项目与缓存
 

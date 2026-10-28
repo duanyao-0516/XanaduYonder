@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和扫雷；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
+当前工作树接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷和欢乐球球；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -11,6 +11,7 @@
 | 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 | 合成大西瓜 | `Core/Watermelon` / `WatermelonPage`、`WatermelonPhysicsWorld` | `watermelon-v1.json` | 对局、物体运动状态、最高分、主题 |
 | 扫雷 | `Core/Minesweeper` / `MinesweeperSession`、`MinesweeperPage`、`MinesweeperBoardView` | `minesweeper-v1.json` | 三档独立对局、模式、正常视口、累计胜负和最佳毫秒数 |
+| 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)与[数独模块](sudoku-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -85,6 +86,16 @@
 `WatermelonSaveCodec` 只接受 schemaVersion 1、gameId `watermelon`、固定字段、精确类型和合法完整快照，限制 128 KiB、深度 8。保存球的位置、速度、旋转、角速度、接触历史和年龄，以及当前/下一颗、RNG、下一个 ID、冷却、危险计时、终局、主题、最高分和目标确认状态。`WatermelonSaveStore` 仅操作 `watermelon-v1.json/.bak/.tmp`，原子替换时只备份有效主档。恢复不默认填补缺失字段；新对局保留主题与最高分。
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
+
+## 欢乐球球的独立边界
+
+`HappyBallGame` 在纯 C# 中独占球的高度/速度、塔角度、层状态、连续下落、一次重击、分数和 RNG；固定步为 1/120 秒，球与有厚度的扇形横板/黑竖板进行连续扫掠判定。黑色侧碰撤回本步转角并按原角度重新计算竖直运动，红色只有向下重击横板时可以砸穿。状态从 `Armed` 到 `Spent` 再恢复 `Normal`，碰撞规则不依赖拖尾颜色或动画是否结束。
+
+`HappyBallGenerator` 使用有界结构化生成，每层有 1～3 个缺口，位置与宽度变化，支持多段红黑区域；缺口随深度总体收窄并保留至少三个球直径的通过空间。完整入场带避免紧邻出口的即时红面，实际模型的多入口重放用于离线验证，不在每次生成时穷举路线。危险红面在第 6 层后出现，竖板在第 16 层后逐步加入，高度从约 0.85～1.05 递增到 1.25～1.50，层距为 2.4。活动窗口与已通过层保留量有上限，累计下降后平移局部原点。有限重放验证不代表真人难度或触控手感已经验收。
+
+`HappyBallPage` 负责连续输入、固定步推进、明确暂停/继续和独立存档；`HappyBallTouchInput` 的整帧 reducer 取消多指/丢失触点/失焦输入，并清空尚未消费的转角。`HappyBallSceneView` 使用独立 layer 30、相机、RenderTexture 和共享核心尺寸生成网格；表现不使用 Unity 3D Physics。普通穿层和重击接触分别触发脱离，已有碎层恢复后不重播；碎块固定脱离时的旋转，8 组/16 块对象池只负责视觉。页面隐藏时停相机、回收动效，销毁时释放网格、材质、纹理与程序音效。
+
+`happy-ball-v1.json` 保存 schema 1、`gameId=happy-ball`、核心规则版本、完整层扇区/竖板、球/塔/重击状态、RNG、最高分、HasStarted 和 ResultRecorded。当前规则版本为 2；版本 1 先按旧层距 1.65 和旧竖板上限 0.5 校验，再按当前层重新定位球和层高度，保留球速、塔角、随机状态及已有竖板。旧 Spent 连击标记仅补记尚未入账的重击分一次；已入账的状态不重复加分。构造模型和真实 Decode 共用迁移，之后保存版本 2。分数字段为非负十进制字符串；严格拒绝缺失/未知/重复字段、null、错误类型、非法 JSON 扩展、非有限数和不一致快照，上限 256 KiB/深度 12。真实文件写入采用临时文件 flush 后替换，只有有效主档才能更新备份；恢复优先主档再备份，失败提示可重试。进入游戏与恢复前台都保持暂停，不保存旧触点或碎片动画。其余游戏及公共设置文件不变。实际测试、截图与设备边界见[欢乐球球验证](verification-happy-ball.md)。
 
 ## 验证层次
 
