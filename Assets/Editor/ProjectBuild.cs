@@ -14,7 +14,7 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.4.0";
+        public const string Version = "0.5.0";
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()
@@ -67,6 +67,28 @@ namespace XanaduYonder.EditorTools
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".sheeptest");
                     PlayerSettings.productName = "Xanadu 旸测试";
                     BuildApk("-sheep-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidDinoValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".dinotest");
+                    PlayerSettings.productName = "Xanadu Dino测试";
+                    BuildApk("-dino-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -143,6 +165,69 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        // User preview stays side-by-side with the installed app, without the Development runtime.
+        // BuildAndroid remains the explicit diagnostic build; no runtime errors are hidden here.
+        public static void BuildZumaPreview()
+        {
+            RunOrFail(() =>
+            {
+                var identifier = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var product = PlayerSettings.productName;
+                var development = EditorUserBuildSettings.development;
+                var allowDebugging = EditorUserBuildSettings.allowDebugging;
+                var connectProfiler = EditorUserBuildSettings.connectProfiler;
+                var buildAppBundle = EditorUserBuildSettings.buildAppBundle;
+                var exportGradleProject = EditorUserBuildSettings.exportAsGoogleAndroidProject;
+                var customKeystore = PlayerSettings.Android.useCustomKeystore;
+                try
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    // A non-Development build can still use the local debug signing identity.
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".zumapreview");
+                    PlayerSettings.productName = "Xanadu Zuma Preview";
+                    BuildApk("-zuma-preview.apk", BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, identifier);
+                    PlayerSettings.productName = product;
+                    EditorUserBuildSettings.development = development;
+                    EditorUserBuildSettings.allowDebugging = allowDebugging;
+                    EditorUserBuildSettings.connectProfiler = connectProfiler;
+                    EditorUserBuildSettings.buildAppBundle = buildAppBundle;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = exportGradleProject;
+                    PlayerSettings.Android.useCustomKeystore = customKeystore;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidGomokuValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".gomokutest");
+                    PlayerSettings.productName = "Xanadu 五子棋测试";
+                    BuildApk("-gomoku-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()
@@ -169,6 +254,28 @@ namespace XanaduYonder.EditorTools
                     EditorUserBuildSettings.allowDebugging = allowDebugging;
                     EditorUserBuildSettings.connectProfiler = connectProfiler;
                     PlayerSettings.Android.useCustomKeystore = customKeystore;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidHappyBallValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".happyballtest");
+                    PlayerSettings.productName = "Xanadu 球球测试";
+                    BuildApk("-happy-ball-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
                     AssetDatabase.SaveAssets();
                 }
             });
@@ -232,11 +339,12 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            // Startup remains portrait; the Zuma page requests fixed landscape only while active.
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.bundleVersionCode = 4;
+            PlayerSettings.Android.bundleVersionCode = 5;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
