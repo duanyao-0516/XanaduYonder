@@ -1,5 +1,7 @@
 # 五子棋实现与验证记录
 
+> 历史阶段记录：下文的八款大厅、未合入其他工作树、不推送和未操作真机均指初次实现／模拟器验证时点。后续 OPPO 安装及十款游戏 master 整合与交付，见[完整开发记录](gomoku-development-record.md)。旧 APK 的散列和设备证据仍对应原功能版本。
+
 日期：2026-10-28。开发仅在 `/Users/bytedance/.codex/worktrees/gomoku/XanaduYonder` 的 `p/duanyao.0516/feature/gomoku` 分支，从 `master` 当时的 `8d64b5f` 开始。其他工作树后续提交未合入。最新正式发布版本仍为 v0.4.0；本次不创建发布或修改正式安装。
 
 随后按用户要求完成独立 Android 模拟器验证：65 条操作／存档断言通过、36 张截图，覆盖实际 AI 应手与取消、双人胜负、进程恢复及文件故障；详见[模拟器验证记录](verification-gomoku-emulator.md)。未操作正在被其他任务使用的真机。

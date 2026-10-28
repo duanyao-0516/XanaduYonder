@@ -55,7 +55,7 @@ scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查追加扫雷和五子棋后的八款大厅顺序，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含扫雷、Zuma、Dino、五子棋的十款大厅顺序，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -184,6 +184,8 @@ Unity 6 Personal 允许关闭或定制 Unity 启动标识，见[官方发行说�
 
 
 ## 五子棋独立验证
+
+完整设计决策、算法边界、开发问题与后续维护约定见[五子棋开发知识与维护记录](gomoku-development-record.md)。
 
 在五子棋工作树内运行以下命令；同一工作树的 Unity 界面测试和 APK 构建应串行执行：
 

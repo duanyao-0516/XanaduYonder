@@ -77,6 +77,28 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidDinoValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".dinotest");
+                    PlayerSettings.productName = "Xanadu Dino测试";
+                    BuildApk("-dino-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         public static void BuildAndroidWatermelonValidation()
         {
             RunOrFail(() =>
@@ -116,6 +138,47 @@ namespace XanaduYonder.EditorTools
                 {
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
                     PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        // User preview stays side-by-side with the installed app, without the Development runtime.
+        // BuildAndroid remains the explicit diagnostic build; no runtime errors are hidden here.
+        public static void BuildZumaPreview()
+        {
+            RunOrFail(() =>
+            {
+                var identifier = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var product = PlayerSettings.productName;
+                var development = EditorUserBuildSettings.development;
+                var allowDebugging = EditorUserBuildSettings.allowDebugging;
+                var connectProfiler = EditorUserBuildSettings.connectProfiler;
+                var buildAppBundle = EditorUserBuildSettings.buildAppBundle;
+                var exportGradleProject = EditorUserBuildSettings.exportAsGoogleAndroidProject;
+                var customKeystore = PlayerSettings.Android.useCustomKeystore;
+                try
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    // A non-Development build can still use the local debug signing identity.
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".zumapreview");
+                    PlayerSettings.productName = "Xanadu Zuma Preview";
+                    BuildApk("-zuma-preview.apk", BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, identifier);
+                    PlayerSettings.productName = product;
+                    EditorUserBuildSettings.development = development;
+                    EditorUserBuildSettings.allowDebugging = allowDebugging;
+                    EditorUserBuildSettings.connectProfiler = connectProfiler;
+                    EditorUserBuildSettings.buildAppBundle = buildAppBundle;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = exportGradleProject;
+                    PlayerSettings.Android.useCustomKeystore = customKeystore;
                     AssetDatabase.SaveAssets();
                 }
             });
@@ -232,7 +295,8 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            // Startup remains portrait; the Zuma page requests fixed landscape only while active.
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });

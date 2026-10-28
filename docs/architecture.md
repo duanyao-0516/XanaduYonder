@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独和扫雷；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档。本页描述源码中的模块契约，最新正式发行版为 v0.4.0，发布情况见[版本记录](releases/v0.4.0.md)。
+当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma 和 Dino，共九款游戏；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[版本记录](releases/v0.4.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -11,8 +11,12 @@
 | 数独 | `Core/Sudoku` / `SudokuSession`、`SudokuProfile`、`SudokuPage`、`SudokuBoardView` | `sudoku-v2.json` | 每难度一局、撤回、计时、提示、模式、全局通关记录 |
 | 合成大西瓜 | `Core/Watermelon` / `WatermelonPage`、`WatermelonPhysicsWorld` | `watermelon-v1.json` | 对局、物体运动状态、最高分、主题 |
 | 扫雷 | `Core/Minesweeper` / `MinesweeperSession`、`MinesweeperPage`、`MinesweeperBoardView` | `minesweeper-v1.json` | 三档独立对局、模式、正常视口、累计胜负和最佳毫秒数 |
+| Zuma | `Core/Zuma` / `ZumaPage`、`ZumaView` | `zuma-v1.json` | 18×4 最佳成绩、完整对局、结果提交/确认标记 |
+| Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
 
-[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)与[数独模块](sudoku-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
+[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
+
+Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-10-27-zuma-design.md)、[完整开发记录](zuma-development-record.md)和[验证记录](verification-zuma.md)，保持以下旧存档协议不变。独立横屏画布采用 1280×720 设计尺寸，退出后恢复大厅方向；原竖屏布局常量保持不变。
 
 ## 职责
 
@@ -23,6 +27,7 @@
 - `SwipeGesture` 保存一次触摸的所有权。只有从棋盘开始、超过阈值、由原手指正常结束的操作可以提交。UGUI 会把取消触摸派发为 pointerUp，适配层因此还会核对 `TouchPhase.Canceled`。
 - `GameFeedback` 合成短音效，并通过 Android 系统触感接口反馈合并；开关由公共存档保存，不申请网络服务。
 - `JsonSaveCodec` 使用 Unity 官方 Newtonsoft JSON 包的实际解析器，逐项校验 token 类型；`LocalSaveStore` 负责临时文件、原子替换和备份恢复。
+- Dino由独立安全区根节点承载横／竖屏布局，公共竖屏框架不承载其横屏场景。`AppController` 负责方向请求、路由和公共设置数据；`DinoPage` 自己展示设置、暂停和结算，使用注入的委托读写共用开关，不向公共 UI 基类添加Dino业务分支。
 
 ## 2048 规则
 
@@ -86,11 +91,29 @@
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
 
+## Dino的独立边界
+
+`DinoGame` 是跑酷状态的唯一来源，拥有角色运动、障碍、确定性随机状态、距离分和碰撞终局。`DinoRules`、`DinoMotion` 与 `DinoCollision` 不引用 Unity；横屏和竖屏统一使用 Chrome 普通移动端模式的固定 60 Hz 规则。初速按实际视野缩放，每固定步增加 0.001 原图速度，最高均为 13 原图像素／步；世界单位换算、跳跃和障碍间距见[玩法说明](dino-game.md#共享规则与视野约束)。`DinoTraversal` 仅用于编辑器诊断，不参与生产生成。官方细分碰撞框配合连续扫掠使所有对象停在首次接触比例；地面独立累计与仙人掌相同的取整位移，计分距离保留原版未取整行程。
+
+`DinoPage` 负责方向选择、页面状态和固定步时钟。`DinoViewport` 将实际安全区映射到独立 UI 根节点，保持横竖屏角色尺寸基准并把横屏额外宽度用于前方视野。`DinoActionOwners` 仲裁 Jump／Duck 的独立 owner，`DinoTouchControl` 处理原手指松开、滑出与取消。页面在持有跳跃输入且落地时尝试下一跳，下蹲优先；松开或清理 owner 后不排队续跳。生命周期暂停冻结模型动作意图后清理真实输入；继续前倒数三秒，暂停及倒数不推进分数或障碍。`DinoTrackView` 只显示模型并管理像素、背景和昼夜，`DinoAudio` 独占短音效音源并读取共用开关。
+
+每次从大厅进入先选择方向，成功进入准备页才提交方向偏好；重开沿用本局方向，返回大厅前恢复竖屏。Dino的同进程后台局面仅保存在内存，离开或进程重启后重新开局。`DinoSaveCodec` 严格校验 `dino-v1.json` 的 schema 1、`gameId: "dino"`、两项非负 64 位十进制字符串纪录和限定方向，限制 4 KiB／深度 4；缺字段、null、错误类型、溢出、重复键和未知版本均拒绝。`DinoSaveStore` 仅访问该文件及 `.bak/.tmp`，flush 临时文件后原子替换，只以合法主档更新备份。新纪录按一秒节流写盘，暂停、碰撞、离开和退出立即补写；写失败保留可玩状态并显示未保存提示。
+
+图集、音效与完整上游许可位于 `Assets/Resources/Dino/`，来源见[素材记录](dino-assets.md)。独立构建使用 `scripts/build-dino.sh` 和 `com.duanyao.xanaduyonder.dinotest`，不覆盖正式应用或其他小游戏测试包。
+
 ## 验证层次
+
+Zuma 的纯规则由 `ZumaGame` 拥有，`ZumaPage` 调度导航、输入、运行与保存。`ZumaLevelCache` 保存纯路径数据，独立于可释放的视觉资源，使退出后仍能校验和重试保存。`ZumaSaveStore` 独占 `zuma-v1.json/.bak/.tmp`，未知版本及无法可靠识别的超限文件受写保护。成绩提交和结果确认分别持久化，声音/触感只通过宿主回调写入原公共设置。
+
+Zuma 失焦/后台时取消触摸、冻结模拟并同步保存，回前台显示暂停。有效发射、换球、导航及每 2 秒运行周期保存；失败保留 dirty 内存并重试。新测试入口为 `scripts/test-zuma.sh`、`scripts/test-zuma-input.sh`、`scripts/test-zuma-persistence.sh` 和 `python3 scripts/test-zuma-assets.py`。
+
+小游戏切换避免额外加载画面：Dino直接显示正式方向卡，旋转期间保留旧页并冻结交互；Zuma通过PresentationReady在目标完整画面就绪后交接宿主Canvas，退出保留旧图直到返回竖屏。宿主等待时关闭触摸及键盘交互，退出时取消缓存的按钮按压。Zuma只在自身进入/退出请求方向，非活动状态不修改其他游戏的方向。`scripts/test-zuma-navigation.sh`覆盖画面交接、取消、加载错误、方向归属及残留输入。
 
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
 
 当前旸了个旸采用 schema 2；移出/撤回/洗牌默认上限为 2/3/1，设置支持 0..99，已有对局保持开局上限及剩余次数，复活每局一次。无尽按消除张数累计计分，换波不补道具或复活。几何仍支持旧布局 0..2，新挑战与无尽只生成 3..14 并排除上一布局。布局、会话和难度分别通过 `scripts/test-sheep-layouts.sh`、`scripts/test-sheep-session.sh`、`scripts/test-sheep-difficulty.sh` 验证；难度评估不读取生成解法，模拟完成率不代表真人胜率。
+
+Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test-dino-session.sh` 检查输入 owner 和时钟，`scripts/test-dino-persistence.sh` 检查真实 JSON 解析与临时目录读写。这些入口分别验证规则、输入辅助模型和文件协议；实际 UGUI 事件分发、方向切换、音频、布局及 Android 生命周期仍需 Unity／设备集成检查，测试脚本或 APK 的存在不代表对应检查已经通过。
 
 ## 数独的独立边界
 
@@ -103,11 +126,11 @@
 `sudoku-v2.json` 按难度保留最多一场未完成对局及全局完成记录；仅在新版主档和备份均不存在时迁移 `sudoku-v1.json`，保留旧文件，已有新版存档时不回退到旧版进度。数独存档单独校验所有 JSON token、候选、合法动作历史、累计错误/提示、关卡 ID 和终局一致性，以临时文件 flush 后原子替换主档。其他游戏的协议未改动。测试入口分别检查规则、真实文件持久化、会话生命周期、四档存档迁移、关卡选择策略和完整题库证明，Android 验证范围记录在[初版数独验证](verification-sudoku.md)及[本次修订验证](verification-sudoku-refinement.md)。
 
 
-## 08 五子棋的独立边界
+## 10 五子棋的独立边界
 
 `Core/Gomoku/GomokuGame` 拥有 225 格棋盘和落子历史，四向连续五子或更多即胜，无禁手；无胜者且棋盘满为和棋。历史重放拒绝越界、重复和终局后的继续落子。对外棋盘、历史和胜利连线均防御性复制。坐标 A–O 从左向右，1–15 从下向上，H8 为中心。
 
-`GomokuAi` 是原创离线 C# 搜索：全盘即时胜负扫描，邻域候选和棋形排序，迭代加深 Negamax / alpha-beta、定长置换表；困难加入有界连续冲四证明。简单、普通、困难分别采用 100 / 450 / 1200ms 目标预算，深度上限 2 / 4 / 8。预算耗尽返回已完成深度的结果或合法兜底点，取消则抛出取消异常。分支裁剪和有限搜索不保证最优或必胜，时间目标不等于所有设备上的精确耗时。
+`GomokuAi` 是原创离线 C# 搜索：全盘即时胜负扫描，邻域候选和棋形排序，迭代加深 Negamax / alpha-beta、定长置换表；困难加入有界连续冲四证明。简单、普通、困难分别采用 100 / 450 / 1200ms 目标预算，迭代深度目标 2 / 4 / 8，强制防守叶延伸另受 24 层及共享预算限制。预算耗尽返回已完成深度的结果或合法兜底点，取消则抛出取消异常。分支裁剪和有限搜索不保证最优或必胜，时间目标不等于所有设备上的精确耗时。
 
 `GomokuSession` 拥有预选、确认、回合、暂停及撤销策略。人机撤回上次人类落子及其后的电脑回复，人类执白时保留电脑开局；双人由页面取得对方确认后撤回一手。AI 请求绑定会话对象、SessionId、revision 和 generation；同一请求只可接受一次。页面在后台线程仅传入纯规则副本，主线程接受结果。弹窗、设置、悔棋、换模式、新局、离开、失焦或禁用都会撤销请求，且不阻塞主线程等待搜索线程。
 
