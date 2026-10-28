@@ -69,11 +69,11 @@ namespace XanaduYonder.EditorTools
                 typeof(AppController).GetField("canvasRoot",Flags).SetValue(shell,frame);
                 Invoke(shell,"BuildLobby");
                 var cards = frame.GetComponentsInChildren<RectTransform>(true).Where(r=>r.name.EndsWith(" game card")).ToArray();
-                Require(cards.Length==14,"Lobby contains 14 independent game cards");
+                Require(cards.Length==15,"Lobby contains 15 independent game cards");
                 Require(cards.Last().name=="Tetris game card","Tetris appended after current master games");
-                Require(cards.Last().GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("14")),"Card number follows dynamic cardCount");
+                Require(cards.Last().GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("15")),"Card number follows dynamic cardCount");
                 Require(cards.Last().GetComponentsInChildren<TetrisPage>(true).Length==0,"Lobby preview creates no live session");
-                Require(frame.GetComponentsInChildren<ScrollRect>(true).Single().content.rect.height>14*374,"Lobby content grows for new card");
+                Require(frame.GetComponentsInChildren<ScrollRect>(true).Single().content.rect.height>15*374,"Lobby content grows for new card");
                 typeof(AppController).GetField("tetrisPreview",Flags).SetValue(shell,new TetrisLoadResult{Status=TetrisLoadStatus.UnsupportedVersion,CanWrite=false});
                 Invoke(shell,"RefreshTetrisRecord");
                 Require(((Text)Get(shell,"lobbyTetrisRecordText")).text.Contains("存档暂不可用"),"Lobby preserves unreadable record semantics");

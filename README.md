@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-当前开发源码接入 **十四款游戏**，新增俄罗斯方块；版本字段仍为 **0.6.0**，本次没有升版或创建 Release。已发布的 v0.6.0 安装包包含十三款游戏，发布范围见[v0.6.0 发布记录](docs/releases/v0.6.0.md)。俄罗斯方块的本轮验证进度单独记录在[验证记录](docs/verification-tetris.md)。
+当前开发源码接入 **十五款游戏**，数字华容道与俄罗斯方块均为正式 v0.6.0 之后新增；版本字段仍为 **0.6.0**，本次没有升版或创建 Release。已发布的 v0.6.0 安装包包含前十三款游戏，发布范围见[v0.6.0 发布记录](docs/releases/v0.6.0.md)。俄罗斯方块的验证范围单独记录在[验证记录](docs/verification-tetris.md)。
 
 - **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开，记录最高分和最高数字。
 - **02 · 跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
@@ -27,7 +27,9 @@
 
 **13 · 黄金矿工**：单人竖屏与双人横屏合作，各 10 关；移动鼹鼠、携钻动物、商店补给、独立续局与检查点重试。采用完整矿工六帧动画、麻绳与九类完整抓持图。开发经验与规范见[简要复盘](docs/gold-miner-development-notes.md)。
 
-**14 · 俄罗斯方块**：独立竖屏无尽模式，七袋随机、双向 SRS 旋转、Next 3、每块一次 Hold 和 Ghost 落点；60 Hz 规则步，休闲起步并温和提速。普通消行计分，软降每格 1 分、硬降每格 2 分，不加算 T-spin、连击、B2B 或全清奖励。完整局面独立保存到 `tetris-v1.json`，暂停、离页和恢复前台均需明确继续。设计沿革与现行契约见[玩法与界面方案](docs/tetris-research.md)，生产 UGUI 图集见[Unity 页面](docs/prototypes/tetris/unity.html)；原始浏览器原型保留为历史参考，截图不替代设备验收。
+源码另接入 **14 · 数字华容道**：3×3／4×4／5×5 自由拼图与三章共 18 题解锁闯关，点击相邻数字或将单块滑向空格。首次有效移动开始计时，弹窗、离页及后台暂停；撤回增加一步并标记练习，练习通关仍能解锁但不计个人纪录。三种自由尺寸各保留一局，闯关另保留一局，使用独立 `sliding-puzzle-v1.json` 保存进度、完整当前移动历史及最少步数／最快用时两个成绩元组。玩法与契约见[数字华容道玩法与接入](docs/sliding-puzzle-game.md)；问题根因、UI 规范、存档与计时经验见[开发复盘与维护规范](docs/sliding-puzzle-development-guide.md)，实际执行范围见[验证记录](docs/verification-sliding-puzzle.md)。
+
+**15 · 俄罗斯方块**：独立竖屏无尽模式，七袋随机、双向 SRS 旋转、Next 3、每块一次 Hold 和 Ghost 落点；60 Hz 规则步，休闲起步并温和提速。普通消行计分，软降每格 1 分、硬降每格 2 分，不加算 T-spin、连击、B2B 或全清奖励。完整局面独立保存到 `tetris-v1.json`，暂停、离页和恢复前台均需明确继续。设计沿革与现行契约见[玩法与界面方案](docs/tetris-research.md)，生产 UGUI 图集见[Unity 页面](docs/prototypes/tetris/unity.html)；原始浏览器原型保留为历史参考，截图不替代设备验收。
 
 大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。除 Dino 外各款游戏独立保存对局；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
@@ -95,6 +97,10 @@ scripts/test-sokoban-content.sh
 scripts/test-sokoban-persistence.sh
 scripts/test-sokoban-input.sh
 scripts/test-sokoban-ui.sh
+scripts/test-sliding-puzzle.sh
+scripts/test-sliding-puzzle-persistence.sh
+scripts/test-sliding-puzzle-ui.sh
+
 scripts/test-tetris.sh
 scripts/test-tetris-input.sh
 scripts/test-tetris-persistence.sh

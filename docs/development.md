@@ -278,3 +278,19 @@ scripts/build-gomoku-validation.sh
 
 
 当前发布入口为 [v0.6.0](releases/v0.6.0.md)，含十三款游戏。黄金矿工开发问题、知识与维护规范简述见[开发复盘](gold-miner-development-notes.md)。按用户本次要求，合并后直接进行正式构建与发布，不追加测试或设备试玩。
+
+
+## 数字华容道独立验证与开发复盘
+
+[开发复盘与维护规范](sliding-puzzle-development-guide.md)整理 UI 参数、实际问题根因、计时与生命周期、历史重放和文件事务，以及后续接入检查表；规则与存档字段见[玩法说明](sliding-puzzle-game.md)，实际执行结果见[验证记录](verification-sliding-puzzle.md)。
+
+从当前隔离工作树执行：
+
+```bash
+scripts/test-sliding-puzzle.sh
+scripts/test-sliding-puzzle-persistence.sh
+scripts/test-sliding-puzzle-ui.sh
+scripts/build-sliding-puzzle-validation.sh
+```
+
+后两项启动 Unity，必须串行执行；环境脚本隔离本树 Gradle 缓存和 ADB 服务，UI 夹具使用内存 profile 或独立临时目录。UI 检查需要图形渲染，不加 `-nographics`。验证包使用 `com.duanyao.xanaduyonder.slidingpuzzletest`；输出文件名从 `ProjectBuild.Version` 读取，当前为 `artifacts/builds/XanaduYonder-0.6.0-sliding-puzzle-validation.apk`，旧版 APK 不作为新构建成功的依据。设备安装需指定实际 ADB 服务端口和设备序列号，不覆盖正式包或其他小游戏测试包。

@@ -20,6 +20,7 @@ using XanaduYonder.Runtime.Sokoban;
 using XanaduYonder.Runtime.GoldMiner;
 using XanaduYonder.Runtime.Tetris;
 using XanaduYonder.Core.Tetris;
+using XanaduYonder.Runtime.SlidingPuzzle;
 
 namespace XanaduYonder.Runtime
 {
@@ -68,6 +69,8 @@ namespace XanaduYonder.Runtime
         private long happyBallBest;
         private GomokuPage gomokuPage;
         private Text lobbyGomokuRecordText;
+        private SlidingPuzzlePage slidingPuzzlePage;
+        private Text lobbySlidingPuzzleRecordText;
         private SokobanPage sokobanPage;
         private Text lobbySokobanRecordText;
         private GoldMinerPage goldMinerPage;
@@ -77,7 +80,7 @@ namespace XanaduYonder.Runtime
         private TetrisLoadResult tetrisPreview;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, Tetris }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -109,6 +112,7 @@ namespace XanaduYonder.Runtime
             BuildZuma();
             BuildGomoku();
             BuildSokoban();
+            BuildSlidingPuzzle();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -289,6 +293,13 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(goldCard.transform, "看准时机，把宝藏带回家。", 32, 170, 548, 40, 25, UiFactory.Ink);
             UiFactory.Label(goldCard.transform, "单人竖屏 / 双人横屏合作 · 10 关挑战", 32, 216, 548, 38, 21, UiFactory.Accent);
             UiFactory.Button(goldCard.transform, "选择单人 / 双人  →", 32, 270, 544, 62, EnterGoldMiner, true);
+            var slidingCard = AddLobbyCard(content, "SlidingPuzzle", cardCount++, UiFactory.Hex("DFE8DC"));
+            UiFactory.Label(slidingCard.transform, cardCount.ToString("00") + "   /   数字归位", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(slidingCard.transform, "数字华容道", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(slidingCard.transform, "留一格空白，理顺每一步。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            lobbySlidingPuzzleRecordText = UiFactory.Label(slidingCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(slidingCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSlidingPuzzle, true);
+
             var tetrisCard = AddLobbyCard(content, "Tetris", cardCount++, UiFactory.Hex("E3E9DF"));
             UiFactory.Label(tetrisCard.transform, cardCount.ToString("00") + "   /   方块慢落", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(tetrisCard.transform, "俄罗斯方块", 28, 74, 450, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -312,6 +323,7 @@ namespace XanaduYonder.Runtime
         private void EnterGoldMiner()
         {
             tetrisPage?.Leave();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -360,6 +372,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -429,6 +442,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -453,6 +467,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -509,6 +524,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             if (activePage == Page.Zuma) return;
@@ -679,6 +695,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             happyBallPage?.Leave(); gomokuPage?.Leave(); dinoPage?.Leave();
             StopAnimation(); CloseModal(); minesweeperPage.Leave(); sudokuPage.Leave();
             jumpPage.Leave(); sheepPage.Leave(); idiomPage?.Leave(); watermelonPage?.Leave();
@@ -687,6 +704,44 @@ namespace XanaduYonder.Runtime
             if (status != null) status.gameObject.SetActive(false);
             sokobanPage.Enter();
             SetStatus("");
+        }
+
+        private void BuildSlidingPuzzle(SlidingPuzzleProfile initialProfile = null, SlidingPuzzleSaveStore initialStore = null)
+        {
+            var safeFrame = frame.GetComponent<SafeDesignFrame>();
+            bool previous = safeFrame.WidthOnly;
+            try
+            {
+                safeFrame.WidthOnly = true;
+                var root = UiFactory.Rect(frame, "SlidingPuzzle page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                slidingPuzzlePage = root.gameObject.AddComponent<SlidingPuzzlePage>();
+                slidingPuzzlePage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                    () => activePage == Page.SlidingPuzzle && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, initialProfile, initialStore);
+                slidingPuzzlePage.Changed += RefreshSlidingPuzzleRecord;
+                slidingPuzzlePage.Leave();
+            }
+            finally { safeFrame.WidthOnly = previous; }
+        }
+
+        private void RefreshSlidingPuzzleRecord()
+        {
+            if (slidingPuzzlePage != null && lobbySlidingPuzzleRecordText != null)
+                lobbySlidingPuzzleRecordText.text = "自由拼图 / 解锁闯关 · 已完成 " + slidingPuzzlePage.CompletedCount + "/18 关";
+        }
+
+        private void EnterSlidingPuzzle()
+        {
+            tetrisPage?.Leave();
+            LeaveGoldMiner();
+            sokobanPage?.Leave(); happyBallPage?.Leave(); gomokuPage?.Leave(); dinoPage?.Leave();
+            StopAnimation(); CloseModal(); minesweeperPage?.Leave(); sudokuPage?.Leave();
+            jumpPage?.Leave(); sheepPage?.Leave(); idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
+            activePage = Page.SlidingPuzzle; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            slidingPuzzlePage.Enter(); SetStatus("");
         }
 
         private void BuildMinesweeper()
@@ -706,6 +761,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             gomokuPage?.Leave(); dinoPage?.Leave();
             StopAnimation(); CloseModal();
@@ -731,6 +787,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterTetris()
         {
+            slidingPuzzlePage?.Leave();
             LeaveGoldMiner(); sokobanPage?.Leave(); happyBallPage?.Leave(); gomokuPage?.Leave(); dinoPage?.Leave();
             StopAnimation(); CloseModal(); minesweeperPage.Leave(); sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
             idiomPage?.Leave(); watermelonPage?.Leave();
@@ -806,6 +863,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             dinoPage?.Leave();
@@ -821,6 +879,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -837,6 +896,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -853,6 +913,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -876,6 +937,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -933,6 +995,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             gomokuPage?.Leave();
@@ -965,6 +1028,7 @@ namespace XanaduYonder.Runtime
         {
             tetrisPage?.Leave();
             LeaveGoldMiner();
+            slidingPuzzlePage?.Leave();
             sokobanPage?.Leave();
             happyBallPage?.Leave();
             if (activePage == Page.Zuma && zumaPage.IsVisible) { zumaPage.Exit(); return; }
@@ -1013,6 +1077,7 @@ namespace XanaduYonder.Runtime
         private void CheckEndState()
         {
             if (activePage == Page.Tetris) return;
+            if (activePage == Page.SlidingPuzzle) { slidingPuzzlePage?.CheckEndState(); return; }
             if (activePage == Page.Sokoban) { sokobanPage?.CheckEndState(); return; }
             if (activePage == Page.HappyBall) { happyBallPage?.CheckEndState(); return; }
             if (activePage == Page.Dino) return;
@@ -1151,6 +1216,7 @@ namespace XanaduYonder.Runtime
             RefreshDinoRecord();
             RefreshMinesweeperRecord();
             RefreshSokobanRecord();
+            RefreshSlidingPuzzleRecord();
             RefreshHappyBallRecord();
             RefreshTetrisRecord();
             RefreshGomokuRecord();
@@ -1158,15 +1224,16 @@ namespace XanaduYonder.Runtime
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Tetris ? tetrisPage?.SaveError : activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.HappyBall ? happyBallPage?.SaveError : activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Zuma ? zumaPage?.SaveError : activePage == Page.Gomoku ? gomokuPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.SlidingPuzzle ? slidingPuzzlePage?.SaveError : activePage == Page.Tetris ? tetrisPage?.SaveError : activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.HappyBall ? happyBallPage?.SaveError : activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Zuma ? zumaPage?.SaveError : activePage == Page.Gomoku ? gomokuPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? tetrisPage?.SaveError ?? goldMinerPage?.SaveError ?? sokobanPage?.SaveError ?? happyBallPage?.SaveError ?? dinoPage?.SaveError ?? zumaPage?.SaveError ?? gomokuPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? slidingPuzzlePage?.SaveError ?? tetrisPage?.SaveError ?? goldMinerPage?.SaveError ?? sokobanPage?.SaveError ?? happyBallPage?.SaveError ?? dinoPage?.SaveError ?? zumaPage?.SaveError ?? gomokuPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
             // The normal footer is hidden in Minesweeper focus mode; preserve shared save errors there.
             if (activePage == Page.Minesweeper) minesweeperPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (activePage == Page.Tetris) tetrisPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (activePage == Page.HappyBall) happyBallPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (activePage == Page.Sokoban) sokobanPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
+            if (activePage == Page.SlidingPuzzle) slidingPuzzlePage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -1191,6 +1258,7 @@ namespace XanaduYonder.Runtime
             gomokuPage?.Save();
             sokobanPage?.Save();
             goldMinerPage?.Save();
+            slidingPuzzlePage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             Update2048Records();
@@ -1225,6 +1293,7 @@ namespace XanaduYonder.Runtime
             zumaPage?.Suspend();
             gomokuPage?.Suspend();
             sokobanPage?.Suspend();
+            slidingPuzzlePage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -1247,6 +1316,7 @@ namespace XanaduYonder.Runtime
                 else if (activePage == Page.Sudoku) sudokuPage.Back();
                 else if (activePage == Page.Minesweeper) minesweeperPage.Back();
                 else if (activePage == Page.Sokoban) sokobanPage.Back();
+                else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.Back();
                 else if (activePage == Page.HappyBall) happyBallPage.Back();
                 else if (activePage == Page.Tetris) tetrisPage.Back();
                 else if (activePage == Page.Gomoku) gomokuPage.Back();
@@ -1265,11 +1335,12 @@ namespace XanaduYonder.Runtime
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
-            if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.Tetris)) CloseModal();
+            if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             happyBallPage?.SetForeground(!paused && focused);
             minesweeperPage?.SetForeground(!paused && focused);
             sokobanPage?.SetForeground(!paused && focused);
+            slidingPuzzlePage?.SetForeground(!paused && focused);
             gomokuPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
@@ -1281,11 +1352,12 @@ namespace XanaduYonder.Runtime
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
-            if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.Tetris)) CloseModal();
+            if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             happyBallPage?.SetForeground(!paused && focused);
             minesweeperPage?.SetForeground(!paused && focused);
             sokobanPage?.SetForeground(!paused && focused);
+            slidingPuzzlePage?.SetForeground(!paused && focused);
             gomokuPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (!value)

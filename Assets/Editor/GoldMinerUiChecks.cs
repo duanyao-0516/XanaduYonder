@@ -367,7 +367,7 @@ namespace XanaduYonder.EditorTools
             public void CheckLobby()
             {
                 var content = (RectTransform)Lobby.transform.Find("Lobby list viewport/Lobby list content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Gold Miner" };
+                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban", "Gold Miner", "SlidingPuzzle", "Tetris" };
                 for (int i = 0; i < names.Length; i++)
                 {
                     var card = (RectTransform)content.Find(names[i] + " game card");
@@ -381,7 +381,7 @@ namespace XanaduYonder.EditorTools
                 Require(goldCard.Find("Gold Miner prize").GetComponent<Image>().sprite != null, "Celebrating miner displays his gold prize");
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - viewport.rect.height));
-                Require(content.rect.height > viewport.rect.height, "Seven cards scroll without shrinking");
+                Require(content.rect.height > viewport.rect.height, "All fifteen cards scroll without shrinking");
                 Capture("00-lobby-gold-card");
             }
 

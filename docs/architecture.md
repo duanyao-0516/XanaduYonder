@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前开发源码接入十四款游戏，新增俄罗斯方块；版本字段仍为 0.6.0，本次未升版或发布。已发布 v0.6.0 的范围仍为十三款游戏，见[版本记录](releases/v0.6.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。
+当前开发源码接入十五款游戏，数字华容道与俄罗斯方块均为正式 v0.6.0 之后新增；版本字段仍为 0.6.0，本次未升版或发布。已发布 v0.6.0 的范围仍为十三款游戏，见[版本记录](releases/v0.6.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -15,11 +15,12 @@
 | Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
 | 五子棋 | `Core/Gomoku` / `GomokuSession`、`GomokuPage`、`GomokuBoardView` | `gomoku-v1.json` | 人机／双人各一局、完整棋谱与新局偏好；预选和 AI 任务不落盘 |
 | 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
-| 推箱子 | `Core/Sokoban`、`SokobanPage` | `sokoban-v1.json` | 关卡进度、推箱局面与撤回记录 |
+| 推箱子 | `Core/Sokoban` / `SokobanSession`、`SokobanProfile`、`SokobanPage` | `sokoban-v1.json` | 关卡进度、当前对局、完整动作历史、最少步数和最少推动元组 |
 | 黄金矿工 | `Core/GoldMiner`、`GoldMinerSession`、`GoldMinerPage` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、检查点与纪录 |
+| 数字华容道 | `Core/SlidingPuzzle` / `SlidingPuzzleSession`、`SlidingPuzzleProfile`、`SlidingPuzzlePage` | `sliding-puzzle-v1.json` | 三个自由槽与一个闯关槽、完整当前移动历史、撤回计数、计时、连续解锁进度和两项成绩元组 |
 | 俄罗斯方块 | `Core/Tetris`、`TetrisSession`、`TetrisPage`、`TetrisView` | `tetris-v1.json` | 完整棋盘/活动块、七袋/RNG、Next/Hold、规则计时、分数与最高分、结果标记；`game: null` 表示未开始 |
 
-[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
+[跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
 Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-10-27-zuma-design.md)、[完整开发记录](zuma-development-record.md)和[验证记录](verification-zuma.md)，保持以下旧存档协议不变。独立横屏画布采用 1280×720 设计尺寸，退出后恢复大厅方向；原竖屏布局常量保持不变。
 
@@ -133,6 +134,16 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 `GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
 
 输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
+
+## 数字华容道的独立边界
+
+`SlidingPuzzleGame` 在纯 C# 中独占 3／4／5 阶排列、单块相邻交换、计步、当前未撤回的移动历史和撤回计数。每次合法移动加一步；撤回恢复上次盘面，也加一步并永久标记本局为练习。终局不再接受移动或撤回。`SlidingPuzzleGenerator` 以固定算法从终局合法打乱，输出可解且未完成的自由题；打乱次数不作为难度。`SlidingPuzzleCatalog` 嵌入三个章节各六题，内容版本为 `1`，第一章最优步数由独立 BFS 证明为 2／4／6／8／12／16，后两章只提供合法解法见证。
+
+`SlidingPuzzleSession` 拥有计时和活动／前台／弹窗门禁，首次有效移动后才累计可交互时间。`SlidingPuzzleProfile` 管理三个自由尺寸槽和一个闯关槽；完成关卡按连续前缀保存，完成当前题才解锁下一题，练习通关同样解锁。未使用撤回的胜局按自由尺寸或固定题分别维护最少步数与最快用时两个真实元组，同值分别以用时或步数判定；`ResultRecorded` 防止切页、保存或恢复时重复结算。
+
+`SlidingPuzzlePage` 负责自由／选关／对局／弹窗呈现及宿主生命周期接线。`SlidingPuzzlePointer` 在同一 pointer-up 路径仲裁单指点击和向空格滑动，多指、取消、后台、重排和弹窗都会取消旧输入。`SlidingPuzzleBoardView` 只绘制与动画，不改变规则状态；数字块样式不因已经归位而变成不可移动。页面延续公共纸色、字体、Home／Book／Settings 与声音、触感设置。
+
+`SlidingPuzzleSaveCodec` 和 `SlidingPuzzleSaveStore` 独占 `sliding-puzzle-v1.json/.bak/.tmp`，校验 schema 1、`saveKind=sliding-puzzle`、内容版本、严格 JSON 字段和类型、全部槽位的完整历史重放、关卡身份、计时、连续解锁与成绩一致性。文件上限 2 MiB、深度 12，每局累计操作安全上限 100,000；达到上限保留历史并提示重玩或换题。写入先刷盘临时文件再原子替换，仅有效主档更新备份，损坏文件归档；失败保留内存对局并显示未保存提示。规则与真实存储测试入口为 `scripts/test-sliding-puzzle.sh` 和 `scripts/test-sliding-puzzle-persistence.sh`；Unity UI 与设备执行结果应另行记录。完整契约见[数字华容道玩法与接入](sliding-puzzle-game.md)，问题复盘与维护检查表见[开发指南](sliding-puzzle-development-guide.md)。
 
 ## 俄罗斯方块的独立边界
 
