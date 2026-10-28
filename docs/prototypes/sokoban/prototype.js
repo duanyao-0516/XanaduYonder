@@ -15,14 +15,18 @@
   const toast=document.querySelector('.board-toast'),announcer=document.getElementById('announcer');
   const entry=document.getElementById('entry-page'),game=document.getElementById('game-page');
   const current=()=>levels.find(level=>level.levelId===levelId)||fallbackLevels[0];
-  const number=level=>level.chapter==='tutorial'?level.order:levels.findIndex(item=>item.levelId===level.levelId)+1;
-  const label=level=>`${String(number(level)).padStart(2,'0')} ${level.title}`;
+  const number=level=>level.chapter==='tutorial'?level.order:levels.filter(item=>item.chapter!=='tutorial').findIndex(item=>item.levelId===level.levelId)+1;
+  const label=level=>level.chapter==='tutorial'?`${String(number(level)).padStart(2,'0')} ${level.title}`:`第 ${number(level)} 关`;
   const filled=()=>[...boxes].filter(position=>goals.has(position)).length;
   const solved=()=>filled()===goals.size&&goals.size>0;
   const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const setLabel=(name,value)=>document.querySelectorAll(`[data-label="${name}"]`).forEach(node=>{node.textContent=value;});
   function chapters(){return [...new Set(levels.map(level=>level.chapter))];}
-  function chapterName(id){const index=chapters().indexOf(id);return id==='tutorial'?'入门教学':`仓库${['一','二','三','四','五'][index-1]||index}`;}
+  function chapterName(id){
+    if(id==='tutorial')return '入门教学';
+    const group=levels.filter(level=>level.chapter===id);
+    return `第 ${number(group[0])}–${number(group[group.length-1])} 关`;
+  }
   // Equivalent SVG paths use the existing UiIconGraphic.cs mesh coordinates.
   function installIcons() {
     const points = a => a.map(p=>p.join(',')).join(' ');
@@ -95,12 +99,17 @@
   function chapterTabs(selected,attribute){
     return chapters().map(id=>`<button role="tab" data-${attribute}="${escape(id)}" aria-selected="${id===selected}">${escape(chapterName(id))}</button>`).join('');
   }
+  function numberButton(level){
+    const active=hasStarted&&!solved()&&level.levelId===levelId,record=completed.get(level.levelId);
+    const description=label(level)+(active?'，继续当前进度':'')+(record?`，已完成，纪录 ${record.moves} 步`:'');
+    return `<button class="number-level${active?' is-active':''}${record?' is-complete':''}" data-start="${escape(level.levelId)}" aria-label="${escape(description)}"${active?' aria-current="true"':''} title="${escape(description)}">${String(number(level)).padStart(2,'0')}</button>`;
+  }
   function renderEntry(){
     const active=hasStarted&&!solved(),level=current(),hasNext=levels.findIndex(item=>item.levelId===levelId)<levels.length-1;
     setLabel('continue-eyebrow',active?'继续上次的搬运':solved()?'这一关已全部归位':'从第一只箱子开始');
     setLabel('continue-title',active?label(level):solved()?label(level):'先来一次轻松的搬运');
     setLabel('continue-stats',active?`${moves} 步 · ${pushes} 次推动 · ${filled()}/${goals.size} 归位`:solved()?`${moves} 步完成 · 已记入本次演示纪录`:'8 关教学 · 不计时，随时撤回');
-    const action=active?'继续游戏':solved()?(hasNext?'挑战下一关':'再玩这一关'):'从第 1 关开始';
+    const action=active?'继续游戏':solved()?(hasNext?'挑战下一关':'再玩这一关'):'开始入门教学';
     setLabel('continue-action',action);
     document.querySelector('[data-action=continue]').setAttribute('aria-label',active?`继续 ${label(level)}，${moves} 步`:action);
     appendTiles(document.querySelector('.mini-board'),true);
@@ -109,7 +118,9 @@
     if(!chapters().includes(chapter))chapter=chapters()[0];
     document.getElementById('entry-chapters').innerHTML=chapterTabs(chapter,'chapter');
     const selected=levels.filter(item=>item.chapter===chapter);setLabel('chapter-title',chapterName(chapter));setLabel('chapter-count',`${selected.length} 关`);
-    document.getElementById('entry-level-grid').innerHTML=selected.map(item=>{
+    const grid=document.getElementById('entry-level-grid');grid.classList.toggle('is-number-grid',chapter!=='tutorial');
+    grid.innerHTML=selected.map(item=>{
+      if(item.chapter!=='tutorial')return numberButton(item);
       const activeCard=hasStarted&&!solved()&&item.levelId===levelId,done=completed.get(item.levelId);
       return `<button class="level-card${activeCard?' is-active':''}${done?' is-complete':''}" data-start="${escape(item.levelId)}" aria-label="${escape(label(item))}${done?'，已完成':''}${activeCard?'，继续当前进度':''}"><span class="level-number">${String(number(item)).padStart(2,'0')}</span>${done?'<span class="completed-check" aria-hidden="true">✓</span>':''}<span class="level-name">${escape(item.title)}</span><span class="level-state">${activeCard?'进行中':done?`${done.moves} 步完成`:''}</span></button>`;
     }).join('');
@@ -119,7 +130,8 @@
   }
   function renderLevelModal(){
     const selected=levels.filter(level=>level.chapter===modalChapter);
-    showModal('选择关卡',`<div class="chapter-tabs modal-chapters" role="tablist" aria-label="选关章节">${chapterTabs(modalChapter,'modal-chapter')}</div><div class="modal-level-list">${selected.map(level=>{
+    showModal('选择关卡',`<div class="chapter-tabs modal-chapters" role="tablist" aria-label="选关章节">${chapterTabs(modalChapter,'modal-chapter')}</div><div class="modal-level-list${modalChapter!=='tutorial'?' is-number-grid':''}">${selected.map(level=>{
+      if(level.chapter!=='tutorial')return numberButton(level);
       const record=completed.get(level.levelId),active=level.levelId===levelId;
       return `<button class="level-option${active?' is-active':''}" data-start="${escape(level.levelId)}"><span><strong>${escape(label(level))}</strong>${record?`<small>纪录 ${record.moves} 步 · ${record.pushes} 次推动</small>`:active?`<small>当前关 · ${moves} 步 · ${filled()}/${goals.size} 归位</small>`:''}</span>${record?'<span class="completed-label">✓ 已完成</span>':''}</button>`;
     }).join('')}</div><div class="modal-links"><button data-action="entry">查看关卡入口</button><span>${completed.size} / ${levels.length} 已完成</span></div>`,'levels');
