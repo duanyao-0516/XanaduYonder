@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Compare this workstation desktop Chrome version tag with the pinned main snapshot; not evidence of the OPPO Chrome version.",
+  "tag": "refs/tags/156.0.8078.48",
+  "referenceRevision": "3df8d372a3f9d5c38a89d0bc496cc44c85af1feb",
+  "status": "resolved",
+  "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+  "commitTime": "Mon Oct 19 21:50:55 2026",
+  "files": [
+    {
+      "file": "offline.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/d0c02bfad08ec92a6ffcf989e53cd995e6381a4c/components/neterror/resources/dino_game/offline.ts",
+      "tagSha256": "3d6e251e07c7ff8a5d981c2cc736a2a2fa3dd3c4bf1b7e58546f83255e4af2ad",
+      "referenceSha256": "3d6e251e07c7ff8a5d981c2cc736a2a2fa3dd3c4bf1b7e58546f83255e4af2ad",
+      "identicalBytes": true
+    },
+    {
+      "file": "trex.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/d0c02bfad08ec92a6ffcf989e53cd995e6381a4c/components/neterror/resources/dino_game/trex.ts",
+      "tagSha256": "bc40b980ebc151ac0c6c88a0aae45a9e459af4e212c6cb15d91a1e87cd86417d",
+      "referenceSha256": "bc40b980ebc151ac0c6c88a0aae45a9e459af4e212c6cb15d91a1e87cd86417d",
+      "identicalBytes": true
+    },
+    {
+      "file": "obstacle.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/d0c02bfad08ec92a6ffcf989e53cd995e6381a4c/components/neterror/resources/dino_game/obstacle.ts",
+      "tagSha256": "18215a0292cbb56a293775440687ffb83a3bbb7ce4da69b41a0d20c05ac9e350",
+      "referenceSha256": "18215a0292cbb56a293775440687ffb83a3bbb7ce4da69b41a0d20c05ac9e350",
+      "identicalBytes": true
+    },
+    {
+      "file": "offline_sprite_definitions.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/d0c02bfad08ec92a6ffcf989e53cd995e6381a4c/components/neterror/resources/dino_game/offline_sprite_definitions.ts",
+      "tagSha256": "d17f339d17bfbdffb1130529bbbe48ab1024ec6344a5d21f41a93351502a3f48",
+      "referenceSha256": "d17f339d17bfbdffb1130529bbbe48ab1024ec6344a5d21f41a93351502a3f48",
+      "identicalBytes": true
+    }
+  ],
+  "allFourFilesIdentical": true
+}
