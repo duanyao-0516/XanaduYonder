@@ -19,7 +19,7 @@
 
 大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。各款游戏独立保存对局；2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
-**最新正式版本为 v0.4.0**，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.4.0)。本版新增数独和合成大西瓜，并更新成语接龙、旸了个旸及大厅和游戏界面。沿用已有发布签名，支持覆盖升级；2048、跳一跳和公共设置保持兼容，旸了个旸与成语接龙改用独立新存档，旧版对应记录不迁移、原文件保留。详情与验证范围见[v0.4.0 发布记录](docs/releases/v0.4.0.md)。正式版与开发测试 APK 分开构建。项目使用原创代码和自制或明确授权的素材，来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+**最新正式版本为 v0.4.0**，可[下载 Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.4.0)。本版新增数独和合成大西瓜，并更新成语接龙、旸了个旸及大厅和游戏界面。沿用已有发布签名，支持覆盖升级；2048、跳一跳和公共设置保持兼容，旸了个旸与成语接龙改用独立新存档，旧版对应记录不迁移、原文件保留。详情与验证范围见[v0.4.0 发布记录](docs/releases/v0.4.0.md)。正式版与开发测试 APK 分开构建。项目使用原创代码，素材来源及权利说明见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 ## 开发与运行
 
@@ -92,7 +92,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 游戏使用独立 Unity `PhysicsScene2D`，规则与存档由可独立测试的 C# 模块负责。`watermelon-v1.json` 保存棋盘中的物体位置与运动状态、当前及下一颗、随机序列、得分、最高分和主题，另有损坏恢复备份；不修改已有游戏的存档。大厅仍使用固定卡片高度与滚动列表。
 
-素材经用户授权，从 [idootop/watermelon](https://github.com/idootop/watermelon) 的固定版本导入。只使用 33 张图片与 4 个音效，游戏逻辑为原创 C#，没有复制其 AGPL-3.0 Dart 源码。文件来源、主题顺序及 SHA-256 见[素材清单](docs/watermelon-assets.md)。
+其中 32 张图片与 4 个音效经用户授权，从 [idootop/watermelon](https://github.com/idootop/watermelon) 的固定版本导入；第 11 级中山大学校徽按用户要求从学校官网原样导入，共 33 张图片与 4 个音效。游戏逻辑为原创 C#，没有复制参考项目的 AGPL-3.0 Dart 源码。文件来源、主题顺序及 SHA-256 见[素材清单](docs/watermelon-assets.md)。
 
 独立验证包使用 `scripts/build-watermelon-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.4.0-watermelon-validation.apk`，包标识为 `com.duanyao.xanaduyonder.watermelontest`，与正式应用及其他工作树的测试包隔离。此前独立分支的核心、存档和 Unity Play Mode 检查均通过，并已在 Android 16 真机与独立模拟器运行验证；具体范围与限制见[验证记录](docs/verification-watermelon.md)，命令见[开发说明](docs/development.md#合成大西瓜独立验证)。已随 v0.4.0 正式发布。
 

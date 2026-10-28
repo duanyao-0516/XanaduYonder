@@ -8,7 +8,7 @@ namespace XanaduYonder.Runtime.Watermelon
     {
         public static readonly string[] ThemeNames = { "水果", "表情", "校徽" };
         private static readonly string[] Folders = { "Fruit", "Emoji", "Campus" };
-        public static readonly string[] CampusNames = { "中国海洋", "湖南", "山东", "华东师范", "电子科大", "四川", "复旦", "上海交大", "浙江", "北京", "清华" };
+        public static readonly string[] CampusNames = { "湖南", "山东", "华东师范", "电子科大", "四川", "复旦", "上海交大", "浙江", "北京", "清华", "中山" };
         private readonly Texture2D[,] textures = new Texture2D[3, 11];
         private readonly Texture2D circleTexture;
         private readonly Sprite circle;
