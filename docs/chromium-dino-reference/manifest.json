@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "origin": "https://chromium.googlesource.com/chromium/src",
+  "requestedRef": "3df8d372a3f9d5c38a89d0bc496cc44c85af1feb",
+  "revision": "3df8d372a3f9d5c38a89d0bc496cc44c85af1feb",
+  "commitTime": "Wed Oct 28 04:03:16 2026",
+  "fetchedAtUtc": "2026-10-28T04:18:19.183983+00:00",
+  "decoding": "Gitiles ?format=TEXT base64 decoded to original file bytes",
+  "files": [
+    {
+      "localPath": "source/offline.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/offline.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/offline.ts",
+      "bytes": 55293,
+      "sha256": "3d6e251e07c7ff8a5d981c2cc736a2a2fa3dd3c4bf1b7e58546f83255e4af2ad"
+    },
+    {
+      "localPath": "source/trex.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/trex.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/trex.ts",
+      "bytes": 16318,
+      "sha256": "bc40b980ebc151ac0c6c88a0aae45a9e459af4e212c6cb15d91a1e87cd86417d"
+    },
+    {
+      "localPath": "source/obstacle.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/obstacle.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/obstacle.ts",
+      "bytes": 7046,
+      "sha256": "18215a0292cbb56a293775440687ffb83a3bbb7ce4da69b41a0d20c05ac9e350"
+    },
+    {
+      "localPath": "source/offline_sprite_definitions.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/offline_sprite_definitions.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/offline_sprite_definitions.ts",
+      "bytes": 6069,
+      "sha256": "d17f339d17bfbdffb1130529bbbe48ab1024ec6344a5d21f41a93351502a3f48"
+    },
+    {
+      "localPath": "source/game_config.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/game_config.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/game_config.ts",
+      "bytes": 1437,
+      "sha256": "f9a1b31165f04f22240d56440b5e2e4a0c326e1bcaeeca5e5c5079e8fd7d3534"
+    },
+    {
+      "localPath": "source/constants.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/constants.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/constants.ts",
+      "bytes": 697,
+      "sha256": "2c6b09f9a6cad4f781ad81b1da9cc7036594d607c67d756bdfc2b66a076768a2"
+    },
+    {
+      "localPath": "source/night_mode.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/night_mode.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/night_mode.ts",
+      "bytes": 5152,
+      "sha256": "e1a00e8b3be455b7e24b91a72349042619f1bb100324db137bf39955e4e65626"
+    },
+    {
+      "localPath": "source/horizon.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/horizon.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/horizon.ts",
+      "bytes": 12224,
+      "sha256": "a5dcd3e56145c6fd39bd2c2626ae433c7be768d941b5c44e1b8dd00edfa99d22"
+    },
+    {
+      "localPath": "source/horizon_line.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/horizon_line.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/horizon_line.ts",
+      "bytes": 3767,
+      "sha256": "6c58d26133698c988b6bc1037c9e6830152fa3f817e91d1f51dbfb066c046366"
+    },
+    {
+      "localPath": "source/utils.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/utils.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/utils.ts",
+      "bytes": 457,
+      "sha256": "281b92309b765537564c135e29519d04cfef750c2b40c4517ec294bb808b9bd3"
+    },
+    {
+      "localPath": "source/game_state_provider.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/game_state_provider.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/game_state_provider.ts",
+      "bytes": 367,
+      "sha256": "54232d9ba0d64068453c2eec01c3e540ddfdf05fb17e6721dc8e23841acabacf"
+    },
+    {
+      "localPath": "source/image_sprite_provider.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/image_sprite_provider.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/image_sprite_provider.ts",
+      "bytes": 593,
+      "sha256": "b366a15eacd6d77781a7c83d6440b22306a60977fbadb58be6e48245f54d661e"
+    },
+    {
+      "localPath": "source/dimensions.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/dimensions.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/dimensions.ts",
+      "bytes": 211,
+      "sha256": "c6187ac40dea448515e594a3312fda872704f9f7055dccc38f5e6ca9c6615abe"
+    },
+    {
+      "localPath": "source/sprite_position.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/sprite_position.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/sprite_position.ts",
+      "bytes": 206,
+      "sha256": "780e68b8bee6dd0b23d404975c5ea63f2a887fb861a9a9fa6d65c292cbce68ab"
+    },
+    {
+      "localPath": "source/distance_meter.ts",
+      "upstreamPath": "components/neterror/resources/dino_game/distance_meter.ts",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/dino_game/distance_meter.ts",
+      "bytes": 11443,
+      "sha256": "f23707226c7300a439c29bb16de98510c3a981bd3fc144b14a79ef90c3751bc8"
+    },
+    {
+      "localPath": "source/neterror.css",
+      "upstreamPath": "components/neterror/resources/neterror.css",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/components/neterror/resources/neterror.css",
+      "bytes": 13706,
+      "sha256": "5bc5a3ff05525c777fae04a72e86b5f5b0fbd9b1acb13e0865def970932a9559"
+    },
+    {
+      "localPath": "source/LICENSE",
+      "upstreamPath": "LICENSE",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/3df8d372a3f9d5c38a89d0bc496cc44c85af1feb/LICENSE",
+      "bytes": 1536,
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+    }
+  ]
+}

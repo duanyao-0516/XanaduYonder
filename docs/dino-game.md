@@ -111,7 +111,7 @@ Jump 和 Duck 各自只有一个 owner。跳跃按钮、跑道、空格和 ↑ �
 
 图集和三个音效来自 Chromium 固定修订 `64574fa0f2daa1b48f2703a072687272000178ce`，运行时位于 `Assets/Resources/Dino/`。2× 图集使用 Point 采样、关闭 mipmap；音频保留原始 Ogg/Vorbis 字节，以 `.ogg` 扩展名导入。原始参考文件仍保留在设计资料目录。
 
-完整版权声明、许可条件和免责声明随资源打包为 `Dino/LICENSE.txt`。游戏内路径为「玩法说明 → 素材与许可」，两种方向都可从顶部书本图标打开玩法说明。文件映射与哈希见[素材记录](dino-assets.md)，许可说明见[第三方声明](../THIRD_PARTY_NOTICES.md#chromium-dino-runtime-and-design-reference-assets)。未复制 Chromium 游戏实现代码，游戏名称与说明不表示 Google 官方背书。
+完整版权声明、许可条件和免责声明随资源打包为 `Dino/LICENSE.txt`。游戏内路径为「玩法说明 → 素材与许可」，两种方向都可从顶部书本图标打开玩法说明。文件映射与哈希见[素材记录](dino-assets.md)，许可说明见[第三方声明](../THIRD_PARTY_NOTICES.md#chromium-dino-runtime-and-design-reference-assets)。Unity 运行时为独立 C# 实现；官方源码单独归档于 `docs/chromium-dino-reference/` 用作[配置参考](dino-chromium-config.md)。游戏名称与说明不表示 Google 官方背书。
 
 ## 检查与独立构建
 

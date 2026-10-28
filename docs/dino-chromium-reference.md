@@ -1,6 +1,6 @@
 # Chromium Dino 加速实现核对
 
-核对日期：2026-10-28。使用 Chromium 官方源码，只读对照；本项目没有引入其游戏实现代码。
+核对日期：2026-10-28。使用 Chromium 官方源码，只读对照；Unity 运行时仍为独立 C# 实现。后续已将固定版本的官方源码、参数 JSON 和可重复抓取脚本保存为[完整配置参考](dino-chromium-config.md)，以下保留首轮调研和调速历史。
 
 ## 来源与完整性
 
@@ -15,7 +15,7 @@
 | main / 固定修订 `offline.ts` | `3d6e251e07c7ff8a5d981c2cc736a2a2fa3dd3c4bf1b7e58546f83255e4af2ad` |
 | main `constants.ts` | `2c6b09f9a6cad4f781ad81b1da9cc7036594d607c67d756bdfc2b66a076768a2` |
 
-原始下载仅留在本工作树忽略目录 `artifacts/analysis/chromium-acceleration/`。下述行号按解码后的源码计算。
+首轮下载留在本工作树忽略目录 `artifacts/analysis/chromium-acceleration/`；后续正式归档位于 `docs/chromium-dino-reference/`。下述行号按解码后的源码计算。
 
 ## 参数与实际更新路径
 

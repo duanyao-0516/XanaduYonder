@@ -1,6 +1,6 @@
 # Dino 素材来源与导入记录
 
-素材来源为 Chromium 固定修订 `64574fa0f2daa1b48f2703a072687272000178ce`，本地原始文件及来源清单位于 `docs/superpowers/specs/assets/chrome-dino/`。该目录仍保留设计参考原件；运行时副本位于独立的 `Assets/Resources/Dino/`。此次仅复制下列图像、音频及许可，没有复制 Chromium 游戏 JavaScript。
+素材来源为 Chromium 固定修订 `64574fa0f2daa1b48f2703a072687272000178ce`，本地原始文件及来源清单位于 `docs/superpowers/specs/assets/chrome-dino/`。该目录仍保留设计参考原件；运行时副本位于独立的 `Assets/Resources/Dino/`。2026-10-27 的素材引入仅复制下列图像、音频及许可；2026-10-28 另将官方源码归档为文档参考，见[配置抓取记录](dino-chromium-config.md)，不参与 Unity 运行时编译。
 
 完整许可来自该修订的 [Chromium LICENSE](https://chromium.googlesource.com/chromium/src/+/64574fa0f2daa1b48f2703a072687272000178ce/LICENSE)，原始字节复制到 `Assets/Resources/Dino/LICENSE.txt`，Unity 可通过 `Resources.Load<TextAsset>("Dino/LICENSE")` 读取并展示。
 
