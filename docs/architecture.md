@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma 和 Dino，共九款游戏；最新已发布的 v0.4.0 仍包含前六款。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[版本记录](releases/v0.4.0.md)。
+当前 0.5.0 源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma、Dino 和五子棋，共十款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[v0.5.0 版本记录](releases/v0.5.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -13,6 +13,7 @@
 | 扫雷 | `Core/Minesweeper` / `MinesweeperSession`、`MinesweeperPage`、`MinesweeperBoardView` | `minesweeper-v1.json` | 三档独立对局、模式、正常视口、累计胜负和最佳毫秒数 |
 | Zuma | `Core/Zuma` / `ZumaPage`、`ZumaView` | `zuma-v1.json` | 18×4 最佳成绩、完整对局、结果提交/确认标记 |
 | Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
+| 五子棋 | `Core/Gomoku` / `GomokuSession`、`GomokuPage`、`GomokuBoardView` | `gomoku-v1.json` | 人机／双人各一局、完整棋谱与新局偏好；预选和 AI 任务不落盘 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 

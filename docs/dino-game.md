@@ -132,7 +132,7 @@ scripts/build-dino.sh
 
 四个独立 C# 入口分别覆盖生产规则／碰撞、动作 owner／时钟、真实存档读写和庆祝日期。它们不替代 Unity 的实际 UGUI 输入、方向与安全区布局、资源播放或 Android 生命周期验证。
 
-构建脚本使用当前工作树的工程目录，生成 `artifacts/builds/XanaduYonder-0.4.0-dino-validation.apk`，日志为 `artifacts/logs/build-dino.log`。包标识为 `com.duanyao.xanaduyonder.dinotest`，构建入口临时设置测试包身份后恢复；正式版本号与正式发布包身份不因该入口改变。
+构建脚本使用当前工作树的工程目录，生成 `artifacts/builds/XanaduYonder-0.5.0-dino-validation.apk`，日志为 `artifacts/logs/build-dino.log`。包标识为 `com.duanyao.xanaduyonder.dinotest`，构建入口临时设置测试包身份后恢复；正式版本号与正式发布包身份不因该入口改变。
 
 不要在另一个工作树执行构建来替代本树验证，也不要将测试包安装到其他任务正在使用的设备。安装时明确指定空闲设备序列号和上述测试 APK；此包与正式应用、其他小游戏独立测试包拥有不同的应用数据。实际执行结果应分别记录源码审查、独立测试、Unity 编译、APK 构建及设备回归层次。
 
