@@ -62,16 +62,20 @@ internal static class Program
             r = g.ProcessFrame(Frame(500, true, true, true, C(2, 36, 36, B)), Flag); None(r);
             r = g.ProcessFrame(Frame(510, true, true, true, C(2, 36, 36, E)), Flag); True(r.FlagMode);
         });
-        Check("400 ms previews then UP flags, 399 ms still taps", () => {
-            var g = G(); F(g, 0, C(1, 36, 36, B)); var r = F(g, 400, C(1, 36, 36, S)); None(r); Equal(0, r.PreviewCellIndex);
-            r = F(g, 420, C(1, 36, 36, E)); Equal(MinesweeperGestureAction.ToggleFlag, r.Action); Equal(-1, r.PreviewCellIndex);
+        Check("400 ms commits immediately once while 399 ms remains pending", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); None(F(g, 399, C(1, 36, 36, S)));
+            var r = F(g, 400, C(1, 36, 36, S)); Equal(MinesweeperGestureAction.ToggleFlag, r.Action);
+            Equal(0, r.CellIndex); Equal(-1, r.PreviewCellIndex); False(r.GestureCompleted);
+            None(F(g, 900, C(1, 36, 36, S)));
+            r = F(g, 1000, C(1, 36, 36, E)); None(r); True(r.GestureCompleted);
+            F(g, 1100, C(2, 36, 36, B)); Equal(MinesweeperGestureAction.ShortPress, F(g, 1200, C(2, 36, 36, E)).Action);
         });
         Check("long hold with no intermediate frames flags", () => {
             var g = G(); F(g, 0, C(1, 36, 36, B)); Equal(MinesweeperGestureAction.ToggleFlag, F(g, 400, C(1, 36, 36, E)).Action);
         });
         Check("long hold opened cell does not fall through to short press", () => {
             var g = G(); g.ProcessFrame(Frame(0, true, true, false, C(1, 36, 36, B)), NoFlag);
-            var r = g.ProcessFrame(Frame(400, true, true, false, C(1, 36, 36, S)), NoFlag); Equal(-1, r.PreviewCellIndex);
+            var r = g.ProcessFrame(Frame(400, true, true, false, C(1, 36, 36, S)), NoFlag); None(r); Equal(-1, r.PreviewCellIndex);
             None(g.ProcessFrame(Frame(410, true, true, false, C(1, 36, 36, E)), NoFlag));
         });
         Check("right mouse release flags and opened target is inert", () => {
@@ -98,10 +102,10 @@ internal static class Program
             F(g, 0, C(1, 300, 300, B)); True(F(g, 20, C(1, 320, 300, M)).ViewChanged); Near(15 - 20.0 / 72, v.CenterColumn);
             F(g, 30, C(1, 340, 300, E)); Near(15 - 40.0 / 72, v.CenterColumn);
         });
-        Check("second pointer cancels hold preview", () => {
-            var g = G(); F(g, 0, C(1, 36, 36, B)); Equal(0, F(g, 400, C(1, 36, 36, S)).PreviewCellIndex);
-            var r = F(g, 410, C(1, 36, 36, S), C(2, 120, 36, B)); Equal(-1, r.PreviewCellIndex); None(r);
-            None(F(g, 420, C(1, 36, 36, E), C(2, 120, 36, E)));
+        Check("second pointer before threshold prevents later hold commit", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); None(F(g, 399, C(1, 36, 36, S)));
+            None(F(g, 400, C(1, 36, 36, S), C(2, 120, 36, B)));
+            None(F(g, 500, C(1, 36, 36, E), C(2, 120, 36, E)));
         });
         Check("UP plus second DOWN is order-independent and never clicks", () => {
             for (int order = 0; order < 2; order++) {
@@ -199,7 +203,7 @@ internal static class Program
         });
         Check("overview long hold stays overview without preview", () => {
             var v = V(); v.EnterOverview(); var g = new MinesweeperGesture(v);
-            F(g, 0, C(1, 300, 300, B)); Equal(-1, F(g, 400, C(1, 300, 300, S)).PreviewCellIndex);
+            F(g, 0, C(1, 300, 300, B)); var r = F(g, 400, C(1, 300, 300, S)); None(r); Equal(-1, r.PreviewCellIndex);
             None(F(g, 420, C(1, 300, 300, E))); True(v.IsOverview);
         });
         Check("overview drag and two pointers never transform or locate", () => {
@@ -230,8 +234,8 @@ internal static class Program
             var v = V(); v.RestoreNormal(1, 2, 2); v.Pan(0, 0); Near(2, v.CenterColumn);
             v.Transform(P(100, 100), P(100, 100), 1); Near(2, v.CenterRow);
         });
-        Check("final UP outside cancels an armed hold with no MOVE", () => {
-            var g = G(); F(g, 0, C(1, 36, 36, B)); F(g, 400, C(1, 36, 36, S));
+        Check("final UP outside after hold commit does not emit a second action", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); Equal(MinesweeperGestureAction.ToggleFlag, F(g, 400, C(1, 36, 36, S)).Action);
             None(F(g, 410, C(1, -1, 36, E))); False(g.IsLocked);
         });
         Check("view transformation is invariant to contact iteration order", () => {
@@ -272,6 +276,91 @@ internal static class Program
         Check("input frame owns an immutable contact snapshot", () => {
             var contacts = new[] { C(1, 36, 36, B) }; var frame = Frame(0, true, true, false, contacts);
             contacts[0] = C(1, 100, 100, E); Equal(B, frame.Contacts[0].Phase); Near(36, frame.Contacts[0].Position.X);
+        });
+        Check("first observed frame beyond threshold commits without waiting for UP", () => {
+            var g = G(); F(g, 100, C(1, 36, 36, B));
+            Equal(MinesweeperGestureAction.ToggleFlag, F(g, 537, C(1, 38, 36, M)).Action);
+            None(F(g, 900, C(1, 38, 36, E)));
+        });
+        Check("hold toggles covered and flagged cells once in either input mode", () => {
+            foreach (bool mode in new[] { false, true }) foreach (bool initialFlag in new[] { false, true }) {
+                var g = G(); bool flagged = initialFlag; int committed = 0;
+                g.ProcessFrame(Frame(0, true, true, mode, C(1, 36, 36, B)), Flag);
+                foreach (long time in new long[] { 400, 401, 1000, 2000 }) {
+                    var r = g.ProcessFrame(Frame(time, true, true, mode, C(1, 36, 36, S)), Flag);
+                    if (r.Action == MinesweeperGestureAction.ToggleFlag) { flagged = !flagged; committed++; }
+                    else None(r);
+                    Equal(mode, r.FlagMode); Equal(-1, r.PreviewCellIndex);
+                    if (time == 400) { Equal(1, committed); Equal(!initialFlag, flagged); }
+                }
+                None(g.ProcessFrame(Frame(2100, true, true, mode, C(1, 36, 36, E)), Flag));
+                Equal(1, committed); Equal(!initialFlag, flagged);
+            }
+        });
+        Check("long right-button hold waits for release and marks once", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B, true));
+            var r = F(g, 400, C(1, 36, 36, S, true)); None(r); Equal(-1, r.PreviewCellIndex);
+            None(F(g, 1000, C(1, 36, 36, S, true)));
+            Equal(MinesweeperGestureAction.ToggleFlag, F(g, 1200, C(1, 36, 36, E, true)).Action);
+            None(F(g, 1300));
+        });
+        Check("same-frame second DOWN wins over threshold in either iteration order", () => {
+            foreach (bool ending in new[] { false, true }) for (int order = 0; order < 2; order++) {
+                var g = G(); F(g, 0, C(1, 36, 36, B));
+                var first = C(1, 36, 36, ending ? E : S); var second = C(2, 120, 36, B);
+                None(order == 0 ? F(g, 400, first, second) : F(g, 400, second, first));
+                if (ending) None(F(g, 500, C(2, 120, 36, E)));
+                else None(F(g, 500, C(1, 36, 36, E), C(2, 120, 36, E)));
+            }
+        });
+        Check("CANCELED or a missing contact at threshold prevents marking", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); None(F(g, 400, C(1, 36, 36, X)));
+            F(g, 500, C(2, 36, 36, B)); None(F(g, 900)); None(F(g, 1000, C(2, 36, 36, E)));
+        });
+        Check("movement and cell departure before threshold permanently prevent marking", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); None(F(g, 399, C(1, 49, 36, M)));
+            None(F(g, 400, C(1, 36, 36, M))); None(F(g, 500, C(1, 36, 36, E)));
+            g = G(); F(g, 600, C(2, 71, 36, B)); None(F(g, 999, C(2, 73, 36, M)));
+            None(F(g, 1000, C(2, 71, 36, M))); None(F(g, 1100, C(2, 71, 36, E)));
+        });
+        Check("outside or lifecycle cancellation before threshold keeps release gate", () => {
+            var g = G(); F(g, 0, C(1, 36, 36, B)); None(F(g, 399, C(1, -1, 36, M)));
+            None(F(g, 400, C(1, 36, 36, S))); True(g.IsLocked); None(F(g, 500, C(1, 36, 36, E)));
+            F(g, 600, C(2, 36, 36, B)); g.Cancel(); None(F(g, 1000, C(2, 36, 36, S)));
+            True(g.IsLocked); None(F(g, 1100, C(2, 36, 36, E)));
+        });
+        Check("cancellation after immediate marking preserves the committed action", () => {
+            var g = G(); bool flagged = false;
+            F(g, 0, C(1, 36, 36, B)); var r = F(g, 400, C(1, 36, 36, S));
+            Equal(MinesweeperGestureAction.ToggleFlag, r.Action); flagged = !flagged;
+            g.Cancel(); None(F(g, 500, C(1, 36, 36, S))); True(g.IsLocked);
+            None(F(g, 600, C(1, 36, 36, X))); True(flagged); False(g.IsLocked);
+        });
+        Check("a committed hold can become a single pan without another cell action", () => {
+            var v = V(); v.RestoreNormal(1, 15, 8); var g = new MinesweeperGesture(v);
+            F(g, 0, C(1, 300, 300, B)); Equal(MinesweeperGestureAction.ToggleFlag, F(g, 400, C(1, 300, 300, S)).Action);
+            var r = F(g, 500, C(1, 320, 300, M)); None(r); True(r.ViewChanged); Near(15 - 20.0 / 72, v.CenterColumn);
+            None(F(g, 600, C(1, 340, 300, E))); Near(15 - 40.0 / 72, v.CenterColumn);
+        });
+        Check("a committed hold can join a pair and remaining-pointer pan only", () => {
+            var v = V(); v.RestoreNormal(1, 15, 8); var g = new MinesweeperGesture(v);
+            F(g, 0, C(1, 200, 300, B)); Equal(MinesweeperGestureAction.ToggleFlag, F(g, 400, C(1, 200, 300, S)).Action);
+            None(F(g, 500, C(1, 200, 300, S), C(2, 300, 300, B)));
+            var r = F(g, 600, C(1, 200, 300, S), C(2, 320, 300, M)); None(r); True(r.ViewChanged); Near(1.2, v.ZoomScale);
+            None(F(g, 700, C(1, 200, 300, E), C(2, 320, 300, S)));
+            r = F(g, 800, C(2, 340, 300, M)); None(r); True(r.ViewChanged);
+            None(F(g, 900, C(2, 340, 300, E)));
+        });
+        Check("terminal and paused hold frames cannot emit flags", () => {
+            var g = G(); g.ProcessFrame(Frame(0, true, false, false, C(1, 36, 36, B)), Flag);
+            None(g.ProcessFrame(Frame(400, true, false, false, C(1, 36, 36, S)), Flag));
+            None(g.ProcessFrame(Frame(500, true, false, false, C(1, 36, 36, E)), Flag));
+            F(g, 600, C(2, 36, 36, B)); None(g.ProcessFrame(Frame(1000, false, false, false, C(2, 36, 36, S)), Flag));
+            None(F(g, 1100, C(2, 36, 36, E)));
+        });
+        Check("small-board whitespace has no action at the hold threshold", () => {
+            var v = new MinesweeperViewport(9, 9, 648, 760); v.RestoreNormal(.5, 4.5, 4.5); var g = new MinesweeperGesture(v);
+            F(g, 0, C(1, 100, 100, B)); None(F(g, 400, C(1, 100, 100, S))); None(F(g, 500, C(1, 100, 100, E)));
         });
         MinesweeperControlLayoutChecks.Run(Check);
         Console.WriteLine("Minesweeper input checks: " + passed + " passed, " + failed + " failed.");

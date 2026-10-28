@@ -55,8 +55,8 @@ namespace XanaduYonder.Runtime.Minesweeper
                 return Result(frame, MinesweeperGestureAction.None, -1, -1, false, completed);
             }
 
-            // Validate the complete snapshot before processing UP. This makes UP + second DOWN
-            // and UP + canceled/third/outside contact independent of array iteration order.
+            // Validate the complete snapshot before a hold or UP can commit. Multi-contact
+            // joins and canceled/third/outside contacts always win over the hold threshold.
             if (!Validate(frame))
             {
                 completed |= state != GestureState.Idle;
@@ -105,6 +105,17 @@ namespace XanaduYonder.Runtime.Minesweeper
                         if (!initialOverview) viewport.Pan(contact.Position.X - downPosition.X, contact.Position.Y - downPosition.Y);
                     }
                     held |= frame.TimeMilliseconds - downMilliseconds >= HoldMilliseconds;
+                    if (clickEligible && held && !secondaryButton && !initialOverview)
+                    {
+                        // Consume cell eligibility before delivering the action. A held finger may
+                        // still pan or join a pair, but cannot toggle again or reveal on release.
+                        clickEligible = false;
+                        if (frame.CellAllowed && canToggleFlag(initialCell))
+                        {
+                            action = MinesweeperGestureAction.ToggleFlag;
+                            actionCell = initialCell;
+                        }
+                    }
                     if (contact.Phase == MinesweeperInputPhase.Ended && clickEligible)
                     {
                         if (initialOverview)
@@ -114,16 +125,14 @@ namespace XanaduYonder.Runtime.Minesweeper
                         }
                         else if (frame.CellAllowed)
                         {
-                            if (held || secondaryButton)
+                            if (secondaryButton)
                             {
                                 if (canToggleFlag(initialCell)) action = MinesweeperGestureAction.ToggleFlag;
                             }
-                            else action = MinesweeperGestureAction.ShortPress;
+                            else if (!held) action = MinesweeperGestureAction.ShortPress;
                         }
                         if (action != MinesweeperGestureAction.None) actionCell = initialCell;
                     }
-                    else if (clickEligible && held && !initialOverview && frame.CellAllowed && canToggleFlag(initialCell))
-                        previewCell = initialCell;
                 }
                 else if (state == GestureState.PanOnly && !initialOverview)
                     viewport.Pan(contact.Position.X - lastSinglePosition.X, contact.Position.Y - lastSinglePosition.Y);

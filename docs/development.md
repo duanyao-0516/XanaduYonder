@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。开发分支的 07 扫雷支持点击翻开、长按后松手标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。开发分支的 07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -119,7 +119,7 @@ scripts/test-minigame-ui.sh
 scripts/build-minesweeper-validation.sh
 ```
 
-前四项使用 .NET 10、C# 7.3，直接编译生产规则、Session/Profile、整帧输入、Viewport/ControlLayout 与 Codec/Store。输入检查包括 400 ms 长按预览、最终 UP 位置、同帧多指仲裁、全抬释放门禁、0.5..2 连续缩放、总览返回和 44 dp 按钮布局换算；持久化检查使用真实 Newtonsoft.Json 13.0.2 与临时目录，覆盖完整快照、字段/token、备份及文件异常。
+前四项使用 .NET 10、C# 7.3，直接编译生产规则、Session/Profile、整帧输入、Viewport/ControlLayout 与 Codec/Store。输入检查包括 400 ms 长按即时提交与一次反馈、最终 UP 位置、同帧多指仲裁、全抬释放门禁、0.5..2 连续缩放、总览返回和 44 dp 按钮布局换算；持久化检查使用真实 Newtonsoft.Json 13.0.2 与临时目录，覆盖完整快照、字段/token、备份及文件异常。
 
 `test-minesweeper-ui.sh` 启动生产 UGUI 页面，注入内存 Profile 或明确的临时 Store，不读取或清空日常 `Application.persistentDataPath`。日志为 `artifacts/logs/minesweeper-ui-checks.log`，截图与报告位于 `artifacts/validation/minesweeper-ui/`。它需要图形渲染，不加 `-nographics`。两个 UI 检查与 Android 构建必须顺序执行；运行前关闭当前树的交互 Unity 编辑器。编辑器合成触点和尺寸换算不能代替真机多指、取消、物理 dp 与生命周期检查。
 

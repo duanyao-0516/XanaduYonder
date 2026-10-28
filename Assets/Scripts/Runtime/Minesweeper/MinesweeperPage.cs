@@ -147,9 +147,11 @@ namespace XanaduYonder.Runtime.Minesweeper
                 var move=session.Execute(result.GameId,result.CellIndex,marking);
                 if(move.Changed)
                 {
+                    // A hold must acknowledge completion before a synchronous disk flush can delay it.
+                    if(marking) feedback.Play(move.State,true,soundEnabled(),hapticsEnabled(),commonFeedback);
                     Save(); Refresh(); board.Animate(move.ChangedIndices);
                     CheckEndState();
-                    feedback.Play(move.State,marking,soundEnabled(),hapticsEnabled(),commonFeedback);
+                    if(!marking) feedback.Play(move.State,false,soundEnabled(),hapticsEnabled(),commonFeedback);
                 }
                 else if(result.Action==MinesweeperGestureAction.ShortPress&&before.IsRevealed(result.CellIndex)&&before.AdjacentMines(result.CellIndex)>0)
                 { board.FlashNeighbors(result.CellIndex); hint.text=marking?"插旗模式 · 已开数字仅显示邻域":"周围旗数还不匹配"; }
@@ -262,7 +264,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             enterFullscreen.interactable=exitFullscreen.interactable=dialog==null&&!overview;
             hint.text=overview?"总览仅观察和定位 · 进行中的对局继续计时":viewport.ZoomScale<1?
                 (session.InputMode==MinesweeperInputMode.Flag?"插旗模式":"翻开模式")+" · 小格视图 · 点击倍率恢复 100%":
-                session.InputMode==MinesweeperInputMode.Flag?"点击插旗 / 拔旗 · 双指缩放和平移":"点击翻开 · 长按后松手标记 · 双指缩放和平移";
+                session.InputMode==MinesweeperInputMode.Flag?"点击插旗 / 拔旗 · 双指缩放和平移":"点击翻开 · 长按即标记 · 双指缩放和平移";
             if(!overview&&session.Game.RemainingMarkers<0) hint.text="标记数超过总雷数 · 旗帜仅代表你的判断";
         }
         internal static string FormatTime(long ms,bool precision)

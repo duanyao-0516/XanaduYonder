@@ -95,7 +95,7 @@ scripts/build-minesweeper-validation.sh
 Expected: nonempty `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`, package `com.duanyao.xanaduyonder.minesweepertest`, version 0.4.0/code 4. Keep build logs and screenshots under ignored artifacts.
 
 - [ ] Inspect connected physical devices; where available, install/launch only this test package and verify taps, hold/release, true multitouch, focus/overview/back, background/lock and persistence. Record exactly which scenarios were exercised; no synthetic input claim substitutes for physical multitouch.
-  Device detected; isolated install waited while PKM110 was locked, then exited 1 without a detailed error. User unlock/confirmation and a retry are pending. Device scenarios remain unverified.
+  Initial automated install waited while PKM110 was locked, then exited 1 without a detailed error. On 2026-10-28 the user confirmed manual installation/testing; the installed APK hash matched our initial build. User feedback revisions and their validation are recorded in verification-minesweeper.md. Scenarios not individually confirmed remain unverified.
 - [x] Run independent spec compliance review, fix findings, then code-quality review and fix findings. Re-run the directly affected checks after fixes.
 - [x] Update user-facing gameplay/development/verification docs with actual commands, outcomes and remaining device limitations. Check `.meta`, diff whitespace, branch/worktree isolation and no unintended ProjectSettings changes. Commit scoped changes; do not merge/publish without an explicit request.
 

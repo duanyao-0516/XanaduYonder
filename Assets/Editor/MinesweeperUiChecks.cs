@@ -11,8 +11,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Core.Minesweeper;
+using XanaduYonder.Core.Sudoku;
 using XanaduYonder.Runtime;
 using XanaduYonder.Runtime.Minesweeper;
+using XanaduYonder.Runtime.Sudoku;
 using Object = UnityEngine.Object;
 
 namespace XanaduYonder.EditorTools
@@ -69,6 +71,8 @@ namespace XanaduYonder.EditorTools
                 foreach (int height in new[] { 1320, 1582 })
                 using (var fixture = new Fixture(height))
                 {
+                    CheckNavigationWorldAlignment(fixture);
+                    CheckImmediateLongPress(fixture);
                     CheckSelectionAndSmallCells(fixture);
                     CheckReadyLifecycle(fixture);
                     CheckFocusOverviewAndPause(fixture);
@@ -95,6 +99,140 @@ namespace XanaduYonder.EditorTools
                 Debug.Log(report.ToString());
                 EditorApplication.Exit(exit);
             }
+        }
+
+        private static void CheckNavigationWorldAlignment(Fixture f)
+        {
+            var referenceRoot = f.Page(); referenceRoot.name = "Production Sudoku navigation reference";
+            var reference = referenceRoot.gameObject.AddComponent<SudokuPage>();
+            var catalog = SudokuCatalog.Parse(Resources.Load<TextAsset>("Sudoku/puzzles").text);
+            var profile = new SudokuProfile();
+            Set(reference, "root", referenceRoot); Set(reference, "catalog", catalog); Set(reference, "profile", profile);
+            Set(reference, "session", new SudokuSession(profile.CreateGame(catalog.Get(0, 1)), false));
+            Set(reference, "returnLobby", (Action)(() => { })); Set(reference, "openSettings", (Action)(() => { }));
+            Set(reference, "acceptsInput", (Func<bool>)(() => true)); Set(reference, "setStatus", (Action<string>)(_ => { }));
+            Invoke(reference, "BuildGame"); Invoke(reference, "BuildSelection");
+            try
+            {
+                using (var game = new PageFixture(f))
+                {
+                    var referenceSelection = Get<GameObject>(reference, "selectionRoot");
+                    var referenceGame = Get<GameObject>(reference, "gameRoot");
+                    foreach (float width in new[] { 720f, 844.8f })
+                    {
+                        referenceRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                        game.Root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                        referenceGame.SetActive(false); referenceSelection.SetActive(true);
+                        CompareNavigation(f, Get<GameObject>(game.Page, "selectionRoot").transform, referenceSelection.transform,
+                            new[] { UiIconKind.Home, UiIconKind.Book, UiIconKind.Settings }, "selection width " + width);
+                        // Screenshot the actual reference hierarchy and the real Minesweeper
+                        // hierarchy separately. Neither fixture opens a player save store.
+                        if (width == 720)
+                        {
+                            game.Root.gameObject.SetActive(false); f.Capture("navigation-reference-selection");
+                            referenceRoot.gameObject.SetActive(false); game.Root.gameObject.SetActive(true);
+                            f.Capture("navigation-minesweeper-selection"); referenceRoot.gameObject.SetActive(true);
+                        }
+                        game.Page.StartGame(0, true);
+                        referenceSelection.SetActive(false); referenceGame.SetActive(true);
+                        CompareNavigation(f, Get<GameObject>(game.Page, "gameRoot").transform, referenceGame.transform,
+                            new[] { UiIconKind.Back, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings }, "game width " + width);
+                        Invoke(game.Page, "ToggleFullscreen"); game.Page.Back();
+                        CompareNavigation(f, Get<GameObject>(game.Page, "gameRoot").transform, referenceGame.transform,
+                            new[] { UiIconKind.Back, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings }, "game after focus width " + width);
+                        if (width == 720)
+                        {
+                            game.Root.gameObject.SetActive(false); f.Capture("navigation-reference-game");
+                            referenceRoot.gameObject.SetActive(false); game.Root.gameObject.SetActive(true);
+                            f.Capture("navigation-minesweeper-game"); referenceRoot.gameObject.SetActive(true);
+                        }
+                        game.Page.Back();
+                        referenceGame.SetActive(false); referenceSelection.SetActive(true);
+                        CompareNavigation(f, Get<GameObject>(game.Page, "selectionRoot").transform, referenceSelection.transform,
+                            new[] { UiIconKind.Home, UiIconKind.Book, UiIconKind.Settings }, "selection after game width " + width);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(referenceRoot.gameObject); }
+        }
+
+        private static void CompareNavigation(Fixture f, Transform actual, Transform reference, UiIconKind[] kinds, string scenario)
+        {
+            foreach (var kind in kinds)
+            {
+                var actualRect = SharedIcon(actual, kind).GetComponent<RectTransform>();
+                var referenceRect = SharedIcon(reference, kind).GetComponent<RectTransform>();
+                var actualBounds = f.Bounds(actualRect); var expectedBounds = f.Bounds(referenceRect);
+                Near(actualBounds.xMin, expectedBounds.xMin, "Rendered navigation left aligns with production Sudoku: " + scenario + " " + kind);
+                Near(actualBounds.yMin, expectedBounds.yMin, "Rendered navigation bottom aligns with production Sudoku: " + scenario + " " + kind);
+                Near(actualBounds.xMax, expectedBounds.xMax, "Rendered navigation right aligns with production Sudoku: " + scenario + " " + kind);
+                Near(actualBounds.yMax, expectedBounds.yMax, "Rendered navigation top aligns with production Sudoku: " + scenario + " " + kind);
+                report.AppendLine("NAV " + scenario + " " + kind + ": Minesweeper=" + actualBounds + " Sudoku=" + expectedBounds);
+            }
+        }
+
+        private static void CheckImmediateLongPress(Fixture f)
+        {
+            string directory = Path.Combine(output, "temporary-hold-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var store = new MinesweeperSaveStore(directory);
+                using (var game = new PageFixture(f, store: store))
+                {
+                    game.Start(0);
+                    var diskFlagsAtFeedback = new List<bool>();
+                    Set(game.Page, "hapticsEnabled", (Func<bool>)(() => {
+                        // Observe the real feedback call without vibrating hardware. Reading
+                        // the isolated store here proves its ordering against synchronous Save.
+                        var atFeedback = store.Load(out var feedbackWarning);
+                        Require(atFeedback != null && feedbackWarning == null && atFeedback.Slots[0] != null,
+                            "Threshold feedback observes a valid isolated save");
+                        diskFlagsAtFeedback.Add(atFeedback.Slots[0].Board.IsFlagged(0));
+                        return false;
+                    }));
+                    var pointer = Get<MinesweeperPointer>(game.Page, "pointer");
+                    var position = game.Viewport.BoardToViewport(new MinesweeperInputPosition(.5, .5));
+                    var surface = Find(Get<GameObject>(game.Page, "gameRoot").transform, "Minesweeper viewport");
+                    f.RequireTopHit(surface, new Vector2((float)position.X, (float)position.Y));
+                    long start = (long)(Time.realtimeSinceStartupAsDouble * 1000) + 5000;
+                    HoldFrame(game, pointer, start, new MinesweeperInputContact[0]);
+                    for (int round = 0; round < 2; round++)
+                    {
+                        bool previousFlag = round == 1;
+                        long began = start + 1 + round * 1000;
+                        HoldFrame(game, pointer, began, new[] { new MinesweeperInputContact(17, position.X, position.Y, MinesweeperInputPhase.Began) });
+                        HoldFrame(game, pointer, began + 399, new[] { new MinesweeperInputContact(17, position.X, position.Y, MinesweeperInputPhase.Stationary) });
+                        Require(game.Session.Game.GetSnapshot().IsFlagged(0) == previousFlag, "399 ms stationary does not commit a long press");
+                        Require(diskFlagsAtFeedback.Count == round, "Before the threshold there is no flag feedback");
+                        HoldFrame(game, pointer, began + 400, new[] { new MinesweeperInputContact(17, position.X, position.Y, MinesweeperInputPhase.Stationary) });
+                        Require(game.Session.Game.GetSnapshot().IsFlagged(0) != previousFlag, "400 ms stationary immediately toggles the flag through the production pointer/page");
+                        Require(diskFlagsAtFeedback.Count == round + 1 && diskFlagsAtFeedback[round] == previousFlag,
+                            "Threshold feedback starts once before the synchronous flag save");
+                        var saved = store.Load(out var warning);
+                        Require(saved != null && warning == null && saved.Slots[0].Board.IsFlagged(0) != previousFlag,
+                            "The threshold-time flag change is on disk before pointer release");
+                        HoldFrame(game, pointer, began + 650, new[] { new MinesweeperInputContact(17, position.X, position.Y, MinesweeperInputPhase.Stationary) });
+                        Require(game.Session.Game.GetSnapshot().IsFlagged(0) != previousFlag, "Continuing to hold does not repeat the threshold action");
+                        Require(diskFlagsAtFeedback.Count == round + 1, "Continuing to hold does not repeat flag feedback");
+                        HoldFrame(game, pointer, began + 800, new[] { new MinesweeperInputContact(17, position.X, position.Y, MinesweeperInputPhase.Ended) });
+                        HoldFrame(game, pointer, began + 801, new MinesweeperInputContact[0]);
+                        Require(game.Session.Game.GetSnapshot().IsFlagged(0) != previousFlag && !game.Session.Game.GetSnapshot().Generated,
+                            "Release after a committed long press neither toggles again nor reveals");
+                        Require(diskFlagsAtFeedback.Count == round + 1, "Release after a committed long press does not repeat flag feedback");
+                        Require(game.Profile.GetSlot(0).Board.IsFlagged(0) != previousFlag && game.Session.ElapsedMilliseconds == 0,
+                            "Long press remains saved and does not start a Ready timer");
+                        Get<MinesweeperBoardView>(game.Page, "board").Tick(.2f);
+                        f.Capture(round == 0 ? "hold-threshold-flagged" : "hold-threshold-unflagged");
+                    }
+                }
+            }
+            finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+        }
+
+        private static void HoldFrame(PageFixture game, MinesweeperPointer pointer, long time, MinesweeperInputContact[] contacts)
+        {
+            pointer.ProcessFrame(new MinesweeperInputFrame(time, game.Session.SessionId, game.Session.CanView,
+                game.Session.CanInteract, game.Session.InputMode == MinesweeperInputMode.Flag, contacts));
         }
 
         private static void CheckSelectionAndSmallCells(Fixture f)
