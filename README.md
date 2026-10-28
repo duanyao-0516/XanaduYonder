@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-当前开发源码接入 **十五款游戏**，数字华容道与俄罗斯方块均为正式 v0.6.0 之后新增；版本字段仍为 **0.6.0**，本次没有升版或创建 Release。已发布的 v0.6.0 安装包包含前十三款游戏，发布范围见[v0.6.0 发布记录](docs/releases/v0.6.0.md)。俄罗斯方块的验证范围单独记录在[验证记录](docs/verification-tetris.md)。
+当前开发源码接入 **十六款游戏**，数字华容道、俄罗斯方块与 Flappy Bird 均为正式 v0.6.0 之后新增；版本字段仍为 **0.6.0**，本次没有升版或创建 Release。已发布的 v0.6.0 安装包包含前十三款游戏，发布范围见[v0.6.0 发布记录](docs/releases/v0.6.0.md)。俄罗斯方块的验证范围单独记录在[验证记录](docs/verification-tetris.md)。
 
 - **01 · 2048**：4×4 滑动棋盘、合并动画、胜利后继续与失败重开，记录最高分和最高数字。
 - **02 · 跳一跳**：斜俯视正交 3D 场景、按住蓄力松手起跳、随机平台、中心连击、落地和坠落动画。
@@ -31,7 +31,9 @@
 
 **15 · 俄罗斯方块**：独立竖屏无尽模式，七袋随机、双向 SRS 旋转、Next 3、每块一次 Hold 和 Ghost 落点；60 Hz 规则步，休闲起步并温和提速。普通消行计分，软降每格 1 分、硬降每格 2 分，不加算 T-spin、连击、B2B 或全清奖励。完整局面独立保存到 `tetris-v1.json`，暂停、离页和恢复前台均需明确继续。设计沿革与现行契约见[玩法与界面方案](docs/tetris-research.md)，生产 UGUI 图集见[Unity 页面](docs/prototypes/tetris/unity.html)；原始浏览器原型保留为历史参考，截图不替代设备验收。
 
-大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。除 Dino 外各款游戏独立保存对局；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
+源码另接入 **16 · Flappy Bird**：独立竖屏页面、固定 3:5 游戏区域、轻点拍翼、管道计分、暂停与三秒恢复倒数。橙色小鸟与绿色管道沿用已确认素材，失败可重开；最高纪录单独保存，保存失败保留内存纪录并提供重试。UI 示例、实现截图与验证范围见 [Flappy Bird 验证记录](docs/verification-flappy-bird.md)。
+
+大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。除 Dino 和 Flappy Bird 外各款游戏独立保存对局；Flappy Bird 的 `flappy-bird-v1.json` 只保存最高纪录，主动离开或进程重启后从准备页开始；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
 **v0.6.0** 的[Android 安装包与校验文件](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.6.0)包含全部十三款游戏，沿用既有正式签名。原有存档协议保持独立；本次按用户要求停止追加检验，合并后的整套回归不作为已完成项目，具体边界见[v0.6.0 发布记录](docs/releases/v0.6.0.md)。素材与第三方代码来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -45,6 +47,10 @@
 
 ```bash
 scripts/check-environment.sh
+scripts/test-flappy-bird.sh
+scripts/test-flappy-bird-session.sh
+scripts/test-flappy-bird-persistence.sh
+scripts/test-flappy-bird-ui.sh
 scripts/test-core.sh
 scripts/test-input.sh
 scripts/test-persistence.sh

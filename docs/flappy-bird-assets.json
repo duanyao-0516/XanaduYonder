@@ -1,0 +1,47 @@
+{
+  "retrievedAt": "2026-10-28",
+  "author": "Peleila",
+  "attribution": "By Peleila",
+  "sourcePage": "https://opengameart.org/content/flappy-bird",
+  "sourceFile": "https://opengameart.org/sites/default/files/default.png",
+  "selectedLicense": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "localFile": "Assets/ArtSources/FlappyBird/Peleila.png",
+  "width": 794,
+  "height": 1123,
+  "sha256": "6468487709449dda2e31f1e49731a0ce4a4166c5f2e3a4d640b02ba97741279d",
+  "modifications": "Original PNG unchanged. Unity TextureImporter slices four sub-sprites; SpriteAtlas packs their pixels with four-pixel padding, no rotation, no scaling.",
+  "note": "The author page lists multiple license options including CC0. This project selects CC0 and keeps attribution. Animation frame order is not documented by the author.",
+  "spriteRectsTopLeft": {
+    "birdRest": [
+      0,
+      0,
+      124,
+      112
+    ],
+    "birdWing": [
+      128,
+      0,
+      124,
+      112
+    ],
+    "pipeCap": [
+      528,
+      51,
+      97,
+      36
+    ],
+    "ground": [
+      514,
+      594,
+      124,
+      47
+    ]
+  },
+  "runtimeNote": "Only BirdRest/BirdWing/PipeCap/Ground are packables. Original atlas is outside Resources. Sky/clouds/hills are original UGUI geometry; audio is synthesized locally.",
+  "runtimeAtlas": "Assets/Resources/FlappyBird/Atlas.spriteatlas",
+  "runtimeAtlasSize": [
+    256,
+    256
+  ]
+}
