@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>推箱子 · 布局预览 — XanaduYonder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="preview">
+  <header class="preview-header">
+    <div><p class="eyebrow">XANADU YONDER / GAME STUDY</p><h1>把每一只箱子，推到刚好的位置。</h1><p class="intro">推箱子 · 手机竖屏 UI 方案预览</p></div>
+    <span class="prototype-tag">交互原型 · 不保存进度</span>
+  </header>
+  <section class="preview-controls" aria-label="预览控制">
+    <div class="segmented"><button data-level="compact" aria-pressed="true">紧凑关卡 · 8 × 8</button><button data-level="tall" aria-pressed="false">高地图 · 8 × 13</button></div>
+    <p>两侧共享同一盘面，可用方向键、WASD 或屏内方向盘试玩。</p>
+  </section>
+  <div class="mobile-tabs" aria-label="选择预览布局"><button data-preview="standard" aria-pressed="true">标准页面</button><button data-preview="focus" aria-pressed="false">专注模式</button></div>
+  <section class="comparison" data-preview="standard">
+    <article class="variant" data-variant="standard">
+      <div class="variant-title"><h2>页面内大棋盘</h2><span>建议默认</span></div>
+      <div class="phone standard">
+        <div class="safe-top"><span>9:41</span><span aria-label="信号与电量">●●● ▰</span></div>
+        <nav class="nav" aria-label="标准页面导航"><button class="icon-button" data-action="back" aria-label="返回关卡选择">‹</button><span class="nav-brand">旸 · 小游戏</span><button class="icon-button" data-action="help" aria-label="玩法说明">?</button><button class="icon-button" data-action="settings" aria-label="设置">⚙</button></nav>
+        <header class="game-heading"><p class="eyebrow">慢一点，也没关系</p><h2>推箱子</h2><button class="level-link" data-action="levels"><span data-label="level">教学 01 · 第一次搬运</span><span>⌄</span></button></header>
+        <div class="stats"><div><span>步数</span><strong data-stat="moves">0</strong></div><div><span>推动</span><strong data-stat="pushes">0</strong></div><div><span>已归位</span><strong data-stat="goals">0 / 2</strong></div></div>
+        <div class="board-area"><div class="board" role="img" aria-label="推箱子演示棋盘"></div></div>
+        <div class="message" data-label="message" aria-live="polite">把木箱推到绿色标记上</div>
+        <div class="toolbar"><button data-action="undo"><span>↶</span>撤回</button><button data-action="restart"><span>⟳</span>重来</button><button data-action="focus"><span>⛶</span>专注</button></div>
+        <div class="bottom-controls"><p>只能推，不能拉。<br><span>走错了，随时撤回。</span></p><div class="dpad" aria-label="移动方向"><button data-move="up" aria-label="向上移动">↑</button><button data-move="left" aria-label="向左移动">←</button><span class="pad-center" aria-hidden="true">·</span><button data-move="right" aria-label="向右移动">→</button><button data-move="down" aria-label="向下移动">↓</button></div></div>
+        <div class="safe-bottom"><span></span></div>
+      </div>
+      <p class="variant-caption">关卡、进度和操作一眼可见。棋盘占满内容宽度。</p>
+    </article>
+    <article class="variant" data-variant="focus">
+      <div class="variant-title"><h2>全屏专注模式</h2><span class="optional">可选布局</span></div>
+      <div class="phone focus">
+        <div class="safe-top"><span>9:41</span><span aria-label="信号与电量">●●● ▰</span></div>
+        <nav class="focus-nav" aria-label="专注页面导航"><button class="exit-button" data-action="standard">‹ 退出专注</button><button class="icon-button" data-action="help" aria-label="玩法说明">?</button><button class="icon-button" data-action="settings" aria-label="设置">⚙</button></nav>
+        <div class="compact-stats"><button data-action="levels" data-label="short-level">教学 01</button><span><b data-stat="moves">0</b> 步</span><span><b data-stat="pushes">0</b> 推</span><span><b data-stat="goals">0 / 2</b> 归位</span></div>
+        <div class="board-area"><div class="board" role="img" aria-label="同一盘面的专注布局"></div></div>
+        <div class="message" data-label="message" aria-live="polite">把木箱推到绿色标记上</div>
+        <div class="toolbar"><button data-action="undo"><span>↶</span>撤回</button><button data-action="restart"><span>⟳</span>重来</button><button data-action="levels"><span>▦</span>选关</button></div>
+        <div class="bottom-controls"><p>留出更多空间，<br><span>看清下一步。</span></p><div class="dpad" aria-label="移动方向"><button data-move="up" aria-label="向上移动">↑</button><button data-move="left" aria-label="向左移动">←</button><span class="pad-center" aria-hidden="true">·</span><button data-move="right" aria-label="向右移动">→</button><button data-move="down" aria-label="向下移动">↓</button></div></div>
+        <div class="safe-bottom"><span></span></div>
+      </div>
+      <p class="variant-caption">精简标题，增加棋盘高度。方向盘与撤回始终保留。</p>
+    </article>
+  </section>
+  <div class="insight"><span class="insight-mark">↗</span><p id="comparison-note">方形关卡在两种布局中大小相同：限制来自屏幕宽度。切换「高地图」可以看到专注模式的收益。</p></div>
+  <footer>布局与两关演示为本项目原创 · 游戏美术：Kenney，CC0 · 此预览不代表 Unity 或 Android 验收完成</footer>
+</main>
+<dialog id="modal"><button id="close-modal" class="modal-close" aria-label="关闭弹层">×</button><div id="modal-content"></div></dialog>
+<script src="prototype.js"></script>
+</body>
+</html>
