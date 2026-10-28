@@ -86,7 +86,17 @@
 
 核心和存储分别运行独立 C# 检查，碰撞行为由 `scripts/test-watermelon-physics.sh` 在 Unity Play Mode 内验证；[Android 验证记录](verification-watermelon.md) 分开记录真机、模拟器和未人工验收项。
 
-## 验证层次
+## 推箱子的独立边界
+
+`SokobanLevel` 和 `SokobanCatalog` 校验固定关卡、来源及解法；`SokobanGame` 是四向移动、单箱推动、归位、完整动作历史与撤回的唯一规则所有者。静态目标与动态人箱分离，阻挡不计步。`SokobanSession` 管理尝试身份与输入门禁；`SokobanProfile` 按关卡去重完成记录，并保存最少步数和最少推动对应的两个真实成绩元组。
+
+`SokobanPage` 使用原型测量后的安全区布局：统一导航和标题、单行信息、可伸缩棋盘、集中操作区。`SokobanViewport` 只处理适配、相对倍率和归一化地图中心；`SokobanInput` 仲裁人物滑动、缩放、平移和方向盘，不修改地形。适配倍率下单指滑动最多走一步，放大后拖动只移动视口；多指、弹窗、离页和后台取消未提交输入。AppController 只负责第八张大厅卡、共享设置及生命周期。
+
+`SokobanSaveCodec` 与 `SokobanSaveStore` 独立保存 `sokoban-v1.json`。严格校验 JSON 类型、必要字段、版本、有限视口数值及动作重放后的盘面一致性，限制 2 MiB、深度 12、50,000 步；临时文件刷盘后原子替换，只有合法主档可更新备份。内容版本变更时重新开始尝试并保留仍可对应的完成记录。损坏文件归档，写入失败不阻断内存游玩，并持续显示未保存提示。
+
+入包内容从已归档许可资源导入，8 关原创与 100 关 Boxoban 都通过生产规则重放；运行时不联网、不自动求解。源池和开发工具放在 Resources 之外，发布资源仅包含精选素材和关卡。详见[方案](superpowers/specs/2026-10-28-sokoban-design.md)与[验证记录](verification-sokoban.md)。
+
+## 验证层次（各游戏）
 
 `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` 编译同一份生产 C# 源码；持久化测试在真实临时目录执行，使用与 Unity 包对应的 Newtonsoft.Json 13.0.2。Unity 内还执行同一组存档检查。跳一跳另有 `scripts/test-jump.sh` 和 `scripts/test-jump-persistence.sh`；旸了个旸另有 `scripts/test-sheep.sh` 和 `scripts/test-sheep-persistence.sh`，覆盖同一份生产规则与存档代码。测试中的生成解法通过真实 `SheepGame.Pick` 重放，检查遮挡与卡槽容量约束，而不只检查牌数是否为 3 的倍数。Android 真机验证负责触摸分发、滚动、图形、IL2CPP、文件系统和应用生命周期的最终集成；源码审查和独立测试不代表设备验收已完成。
 

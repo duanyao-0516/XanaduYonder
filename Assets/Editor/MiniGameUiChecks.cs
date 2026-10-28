@@ -115,7 +115,7 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = Get<Text>(shell, "lobbySudokuRecordText").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = (RectTransform)lobby.transform.Find("Lobby list viewport/Lobby list content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper" };
+                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Sokoban" };
                 float last = float.PositiveInfinity;
                 for (int i = 0; i < names.Length; i++)
                 {

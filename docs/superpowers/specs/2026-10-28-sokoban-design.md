@@ -1,6 +1,6 @@
 # 推箱子：素材、关卡与手机界面方案
 
-日期：2026-10-28。状态：**设计评审稿，附浏览器 UI 原型；尚未接入 Unity、构建 APK 或完成真机验收。**
+日期：2026-10-28。状态：**用户已确认原型；Unity 实现、108 关、规则与存档已接入，自动验证通过。Android 构建和真机边界见[实现验证记录](../../verification-sokoban.md)。** 以下“本轮交付”保留最初方案评审阶段的范围，实际实现状态以验证记录为准。
 
 开发基线：创建时 `master` 与 `origin/master` 均为 `8d64b5f72c0f45c3c16e29844ee010608ab81b9e`。独立工作树 `/Users/bytedance/.codex/worktrees/sokoban/XanaduYonder`，分支 `p/duanyao.0516/feature/sokoban`。原目录的数独分支及未提交文档未复制、未修改。
 

@@ -1,0 +1,2688 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "sokoban-campaign-v1",
+  "levels": [
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-001",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 1,
+      "title": "初次搬运",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-001"
+      },
+      "rows": [
+        "########",
+        "#  .   #",
+        "#  $   #",
+        "#  @   #",
+        "#      #",
+        "# $ .  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "ULLDDDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-002",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 2,
+      "title": "转过墙角",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-002"
+      },
+      "rows": [
+        "########",
+        "#     .#",
+        "#  ##  #",
+        "#  $   #",
+        "#  @   #",
+        "#      #",
+        "########"
+      ],
+      "solution": "LURRDRUUDLLLUURRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-003",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 3,
+      "title": "绕行就位",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-003"
+      },
+      "rows": [
+        "########",
+        "#  .   #",
+        "#  #   #",
+        "# $    #",
+        "#  ##  #",
+        "# @    #",
+        "########"
+      ],
+      "solution": "UUULUR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-004",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 4,
+      "title": "目标仍在",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-004"
+      },
+      "rows": [
+        "#######",
+        "#  .  #",
+        "#  *  #",
+        "#  $  #",
+        "#  @  #",
+        "#     #",
+        "#######"
+      ],
+      "solution": "RUULULLDDRULURDDDRU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-005",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 5,
+      "title": "留出退路",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-005"
+      },
+      "rows": [
+        "########",
+        "#    . #",
+        "#   #  #",
+        "# $    #",
+        "# @ #  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "UULURRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-006",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 6,
+      "title": "先后顺序",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-006"
+      },
+      "rows": [
+        "########",
+        "# . .  #",
+        "# $$#  #",
+        "#   #  #",
+        "# @    #",
+        "########"
+      ],
+      "solution": "URUDLLUURRDDLU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-007",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 7,
+      "title": "试走与撤回",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-007"
+      },
+      "rows": [
+        "########",
+        "#    . #",
+        "#  #   #",
+        "# @$   #",
+        "#   #  #",
+        "#      #",
+        "########"
+      ],
+      "solution": "RRLDDRRUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "tutorial-008",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "tutorial",
+      "order": 8,
+      "title": "长仓库",
+      "source": {
+        "collection": "xanadu-original",
+        "sourceId": "tutorial-008"
+      },
+      "rows": [
+        "########",
+        "#  .   #",
+        "#      #",
+        "#  .   #",
+        "#      #",
+        "#      #",
+        "#      #",
+        "#      #",
+        "#  $   #",
+        "#      #",
+        "#  $   #",
+        "#  @   #",
+        "########"
+      ],
+      "solution": "LUURUUUUUUULDDDDDDDDDRUUUUUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0000",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 9,
+      "title": "仓库 1 · 01",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "0"
+      },
+      "rows": [
+        "##########",
+        "###    . #",
+        "## .   $.#",
+        "##    .$ #",
+        "#####    #",
+        "####   ###",
+        "##### $###",
+        "#####$ ###",
+        "#####@####",
+        "##########"
+      ],
+      "solution": "UUURUUURLDDRUULDDDLUURULLRDDDDDRUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0001",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 10,
+      "title": "仓库 1 · 02",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "1"
+      },
+      "rows": [
+        "##########",
+        "###.#   .#",
+        "# $ .. $ #",
+        "#@$    $##",
+        "######  ##",
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "URLDRRURRURRRDLULLDDRDRUUDLLUURRLLDLLDRRUURRDLLRRDDLURUL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0002",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 11,
+      "title": "仓库 1 · 03",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "2"
+      },
+      "rows": [
+        "##########",
+        "#####. ###",
+        "#####.   #",
+        "#####  $ #",
+        "##### $###",
+        "##### .# #",
+        "###   $  #",
+        "###    $@#",
+        "##     .##",
+        "##########"
+      ],
+      "solution": "ULLULUUURRRDLULLDDDRDDLUUUUURRDLDLUDDDRRD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0003",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 12,
+      "title": "仓库 1 · 04",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "3"
+      },
+      "rows": [
+        "##########",
+        "#   . #. #",
+        "#.$  ##$ #",
+        "# $  ##  #",
+        "#    ### #",
+        "#   .### #",
+        "##    ##@#",
+        "##    $  #",
+        "###    ###",
+        "##########"
+      ],
+      "solution": "UUULURDDDDDLLDLLLUUUUUULRDDLLURDRUULURDRDDDDDDRRULDLUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0004",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 13,
+      "title": "仓库 1 · 05",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "4"
+      },
+      "rows": [
+        "##########",
+        "######.  #",
+        "##### . ##",
+        "###### $ #",
+        "######   #",
+        "## .  $  #",
+        "#   $  $ #",
+        "#  # .   #",
+        "#####@   #",
+        "##########"
+      ],
+      "solution": "URRRUUUULDLUURDRDDDDLLUUUUDDLDDLURULRRRRDLLULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0005",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 14,
+      "title": "仓库 1 · 06",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "5"
+      },
+      "rows": [
+        "##########",
+        "#  .  ####",
+        "# $.  ####",
+        "# $#######",
+        "# .#######",
+        "#   # ####",
+        "# .   $ ##",
+        "#  #  $ ##",
+        "######@ ##",
+        "##########"
+      ],
+      "solution": "RUULLLLULLUUURLDDRUULURLDDDDDDRUURDRRRRDDLURULLLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0006",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 15,
+      "title": "仓库 1 · 07",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "6"
+      },
+      "rows": [
+        "##########",
+        "#    .@###",
+        "#$$#$$####",
+        "#  #  ####",
+        "#  #.#####",
+        "#   ######",
+        "#     ####",
+        "#   . ####",
+        "#. #######",
+        "##########"
+      ],
+      "solution": "LLLLLDURDURRDULLLDDURDUURRDDRULULLLDDDURDLDURDLDRURDLLDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0007",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 16,
+      "title": "仓库 1 · 08",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "7"
+      },
+      "rows": [
+        "##########",
+        "#####    #",
+        "###### $ #",
+        "######  .#",
+        "#### $ . #",
+        "###   $. #",
+        "###  #  .#",
+        "###### $ #",
+        "######  @#",
+        "##########"
+      ],
+      "solution": "UULUULUURLDDDLLURRDRRDDDLLUURURUULUURDLLDDLDRDDDRULUR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0008",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 17,
+      "title": "仓库 1 · 09",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "8"
+      },
+      "rows": [
+        "##########",
+        "####### ##",
+        "####  #  #",
+        "## #$  $ #",
+        "#        #",
+        "#   $ .. #",
+        "##### .$.#",
+        "#####  #@#",
+        "##########",
+        "##########"
+      ],
+      "solution": "UUUUULDDLLLLDRRUUULDRDDLLURDRDRRLLULUURDRDULLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0009",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 18,
+      "title": "仓库 1 · 10",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "9"
+      },
+      "rows": [
+        "##########",
+        "#        #",
+        "#   $. $ #",
+        "#  #.  @.#",
+        "#  . $ $ #",
+        "#  #     #",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "LLUULDURRRRDLLDDLLRRDRULUR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0010",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 19,
+      "title": "仓库 1 · 11",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "10"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "#  #######",
+        "# $#######",
+        "#. #######",
+        "# .#####.#",
+        "# $ ##  $#",
+        "#   .  $@#",
+        "##########"
+      ],
+      "solution": "ULLDLLLLLUUUUURDDLDDDRRULDLUUDRRDRRRURRDLLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0011",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 20,
+      "title": "仓库 1 · 12",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "11"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "####### ##",
+        "####### .#",
+        "####.#  @#",
+        "###  $  .#",
+        "### $#   #",
+        "###  #$$ #",
+        "### .    #",
+        "##########"
+      ],
+      "solution": "DDDDLLLLLUUURRRDRULURDRULLDLLLDDRUURRDDURRDDLUULURDDDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0012",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 21,
+      "title": "仓库 1 · 13",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "12"
+      },
+      "rows": [
+        "##########",
+        "#####    #",
+        "####   $ #",
+        "###     .#",
+        "### $ .  #",
+        "##@$   # #",
+        "####.$ # #",
+        "#####. # #",
+        "####     #",
+        "##########"
+      ],
+      "solution": "RUURURRRURDLLLLDLDRRLDRD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0013",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 22,
+      "title": "仓库 1 · 14",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "13"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "##.####  #",
+        "## $  .$ #",
+        "#   $ $  #",
+        "#.  @. # #",
+        "##########"
+      ],
+      "solution": "RUULLDLURRRDLLULDRRRDRURRUULDRDLLDLLUURDLLDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0014",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 23,
+      "title": "仓库 1 · 15",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "14"
+      },
+      "rows": [
+        "##########",
+        "#  #######",
+        "#   @#####",
+        "# # .### #",
+        "### $### #",
+        "###  ##  #",
+        "### #### #",
+        "#        #",
+        "#.$ $..$ #",
+        "##########"
+      ],
+      "solution": "LDDDRULDDDDLRRURRRRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0015",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 24,
+      "title": "仓库 1 · 16",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "15"
+      },
+      "rows": [
+        "##########",
+        "#    #####",
+        "# $ .#####",
+        "##  $.####",
+        "###$ .####",
+        "###   ####",
+        "####@ ####",
+        "###  $ ###",
+        "## .   ###",
+        "##########"
+      ],
+      "solution": "UURULULULLDRDRRDDLURUUULLDDRLUURRDDLLURDDRDDDDRRULULDRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0016",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 25,
+      "title": "仓库 1 · 17",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "16"
+      },
+      "rows": [
+        "##########",
+        "######## #",
+        "#######  #",
+        "######## #",
+        "#### ### #",
+        "#### ### #",
+        "####  ##.#",
+        "## $ $##$#",
+        "#.  . .$@#",
+        "##########"
+      ],
+      "solution": "UDLLLLUURDLDLLURDRRUULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0017",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 26,
+      "title": "仓库 1 · 18",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "17"
+      },
+      "rows": [
+        "##########",
+        "#   ######",
+        "#  #######",
+        "#    # ###",
+        "# $.   $@#",
+        "# .  $ $ #",
+        "#    .####",
+        "#  . #####",
+        "#  #######",
+        "##########"
+      ],
+      "solution": "LLLLULLDURRDRRDLULDURRRRDLULLDDLUURRRDLULDLLD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0018",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 27,
+      "title": "仓库 1 · 19",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "18"
+      },
+      "rows": [
+        "##########",
+        "#.   .   #",
+        "# $ #$ $ #",
+        "#       .#",
+        "##.      #",
+        "###$  ## #",
+        "###@# ####",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "URUULULDLURRDRRURRURDLLLDLDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0019",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-01",
+      "order": 28,
+      "title": "仓库 1 · 20",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "19"
+      },
+      "rows": [
+        "##########",
+        "# ########",
+        "# .#######",
+        "#  .$ ####",
+        "#@  $.  ##",
+        "# $$    ##",
+        "#   ######",
+        "#.########",
+        "##########",
+        "##########"
+      ],
+      "solution": "DDRRURRUULLRRDDLLDLLUURULDDDRRUURLDLULDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0020",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 29,
+      "title": "仓库 2 · 01",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "20"
+      },
+      "rows": [
+        "##########",
+        "####.    #",
+        "#####.$$##",
+        "##### #. #",
+        "####  $  #",
+        "#####    #",
+        "######@  #",
+        "#######$ #",
+        "#####.   #",
+        "##########"
+      ],
+      "solution": "ULUUUURRDLRDRDDLLLUUURULDDDDRRULDLUUDRRDDDRDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0022",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 30,
+      "title": "仓库 2 · 02",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "22"
+      },
+      "rows": [
+        "##########",
+        "##  ..   #",
+        "### $   .#",
+        "### $ ##.#",
+        "###   ## #",
+        "### $$## #",
+        "###@  ## #",
+        "###  #   #",
+        "######   #",
+        "##########"
+      ],
+      "solution": "UUUURLDDRRUUDDLUULDDDDRUUULURRRRURDLLLLDDDDRUUULURRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0023",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 31,
+      "title": "仓库 2 · 03",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "23"
+      },
+      "rows": [
+        "##########",
+        "###    ###",
+        "#### $ #@#",
+        "####$. $ #",
+        "# $. . # #",
+        "#.    ## #",
+        "#   ######",
+        "#  #######",
+        "#  #######",
+        "##########"
+      ],
+      "solution": "DLLUULLDDDRRUULULDDURRDDLDLLURLDDLLUURLDDRRUL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0024",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 32,
+      "title": "仓库 2 · 04",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "24"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "######## #",
+        "# #   #  #",
+        "#  $...$ #",
+        "## .$    #",
+        "###  $@  #",
+        "#####    #",
+        "##########",
+        "##########"
+      ],
+      "solution": "ULULULDRRRDRRULDLDDLULUDRU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0025",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 33,
+      "title": "仓库 2 · 05",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "25"
+      },
+      "rows": [
+        "##########",
+        "#.    @  #",
+        "#.   $ $ #",
+        "#######. #",
+        "###### $ #",
+        "##### .$ #",
+        "#####    #",
+        "######## #",
+        "#######  #",
+        "##########"
+      ],
+      "solution": "DLLLLURRRRRRDDLURULLLLLLRRRRRRDDDDLU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0026",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 34,
+      "title": "仓库 2 · 06",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "26"
+      },
+      "rows": [
+        "##########",
+        "####@.   #",
+        "##### $$ #",
+        "##### .$ #",
+        "##### $. #",
+        "#######. #",
+        "#######  #",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "RRRRDDLRUULLLDDDRLUUURRRDDLDURUULDLRRDDLLLUURRD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0027",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 35,
+      "title": "仓库 2 · 07",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "27"
+      },
+      "rows": [
+        "##########",
+        "######   #",
+        "##@# $ $ #",
+        "#      . #",
+        "# .$    ##",
+        "# .#######",
+        "# $#######",
+        "#     ####",
+        "#  .  ####",
+        "##########"
+      ],
+      "solution": "DRRURDRRRUULLDLDDRRULUURDLDLDLLRRUULDRDLULLLDDRDLUUURDURRDLULLDDDRDLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0028",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 36,
+      "title": "仓库 2 · 08",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "28"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "######. ##",
+        "######. ##",
+        "####.$ $ #",
+        "####  $$.#",
+        "### @    #",
+        "##########"
+      ],
+      "solution": "RRUUUDLRDDRRUULRDDLLUUDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0029",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 37,
+      "title": "仓库 2 · 09",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "29"
+      },
+      "rows": [
+        "##########",
+        "###   . @#",
+        "#      $ #",
+        "#.$ .    #",
+        "## .##  ##",
+        "##$$######",
+        "#   ######",
+        "#   ######",
+        "#   ######",
+        "##########"
+      ],
+      "solution": "DLDLULLLDLDDDRUULURDDDDDLULURDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0030",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 38,
+      "title": "仓库 2 · 10",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "30"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "#######  #",
+        "#### ..$ #",
+        "####@ .$ #",
+        "#  # $$  #",
+        "#  .     #",
+        "##########"
+      ],
+      "solution": "DDRRRURUULLRRDDLURULDLLDURRDDLUDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0031",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 39,
+      "title": "仓库 2 · 11",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "31"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "###### ###",
+        "######.###",
+        "###### @ #",
+        "###### $ #",
+        "#   ## . #",
+        "##  #.$$ #",
+        "# .    $ #",
+        "##########"
+      ],
+      "solution": "RDLDLUURRDDDDLULRDLLLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0032",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 40,
+      "title": "仓库 2 · 12",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "32"
+      },
+      "rows": [
+        "##########",
+        "##   #####",
+        "###$ #####",
+        "#. @ #####",
+        "#  . #####",
+        "#    #  ##",
+        "# .$ $ $ #",
+        "# .      #",
+        "##########",
+        "##########"
+      ],
+      "solution": "RUULDRDLLRRDDDLULDRRDRRULLLRRRDRRULLLLDLUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0033",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 41,
+      "title": "仓库 2 · 13",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "33"
+      },
+      "rows": [
+        "##########",
+        "####    @#",
+        "####.$$$ #",
+        "#### ..  #",
+        "####   $ #",
+        "#####.#  #",
+        "#####  ###",
+        "#####  ###",
+        "#####  ###",
+        "##########"
+      ],
+      "solution": "LLDLURRRDLRDDLLRUUULLDDDRRUULULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0034",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 42,
+      "title": "仓库 2 · 14",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "34"
+      },
+      "rows": [
+        "##########",
+        "##  ##   #",
+        "## $   $ #",
+        "##.  $ ###",
+        "##  ######",
+        "# @ .# ###",
+        "##  $   ##",
+        "##.     ##",
+        "## .    ##",
+        "##########"
+      ],
+      "solution": "UURRULULDRRRRURRDLLDLLULLDURRDRRULLLDLDURUULDRDDLDURDLDURDDRU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0035",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 43,
+      "title": "仓库 2 · 15",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "35"
+      },
+      "rows": [
+        "##########",
+        "#    .   #",
+        "#@$# $ . #",
+        "# .###.$ #",
+        "#  #######",
+        "# $#######",
+        "#  #######",
+        "# ########",
+        "##########",
+        "##########"
+      ],
+      "solution": "DRULURRRDRRURRDDLRUULLDLLULLLDDDDDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0036",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 44,
+      "title": "仓库 2 · 16",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "36"
+      },
+      "rows": [
+        "##########",
+        "#     ####",
+        "# $..@####",
+        "#$$   ####",
+        "#. $######",
+        "#.  ######",
+        "## #######",
+        "## #######",
+        "##########",
+        "##########"
+      ],
+      "solution": "LLULLDRRLLDDUURRDLULDRDDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0037",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 45,
+      "title": "仓库 2 · 17",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "37"
+      },
+      "rows": [
+        "##########",
+        "# ########",
+        "#     ####",
+        "# $   ####",
+        "# ..  .###",
+        "#@ #   ###",
+        "# $  $ .##",
+        "# $##  ###",
+        "#  #######",
+        "##########"
+      ],
+      "solution": "UURURDLLDDDRRLUUURRRDRDDDLUULURLULLDDDRRRRLLLLLDDRUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0038",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 46,
+      "title": "仓库 2 · 18",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "38"
+      },
+      "rows": [
+        "##########",
+        "######## #",
+        "### ###  #",
+        "#   ###  #",
+        "# $  $ . #",
+        "#  $. $.@#",
+        "#       .#",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "LDLLLLLLUURDDRRUURLDDLLUURLDDRRURURLDLDLLUURRRDDRRURUULDRDDLLLUURLLLLDRURRRDLDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0039",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 47,
+      "title": "仓库 2 · 19",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "39"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "##  #   @#",
+        "# $ $ .$ #",
+        "#  ..  $ #",
+        "###  #.  #",
+        "###   ####",
+        "###  #####",
+        "##########"
+      ],
+      "solution": "LLLDDLLLLURURDRDRRUULDURRRDLRDDLLULUURRDDRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0040",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-02",
+      "order": 48,
+      "title": "仓库 2 · 20",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "40"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "######## #",
+        "###    . #",
+        "#@ .   $ #",
+        "###.###  #",
+        "# . $ $$ #",
+        "#        #",
+        "##########"
+      ],
+      "solution": "RRURRRRRDLLLLRRRRDDDLLLULLRRDRRUUUDDLLLDLU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0041",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 49,
+      "title": "仓库 3 · 01",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "41"
+      },
+      "rows": [
+        "##########",
+        "###. ### #",
+        "###    $ #",
+        "###     @#",
+        "######## #",
+        "######## #",
+        "#######. #",
+        "#### .$$ #",
+        "####.  $ #",
+        "##########"
+      ],
+      "solution": "ULLLLDLURRRRRDDDDDDLULRDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0042",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 50,
+      "title": "仓库 3 · 02",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "42"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "### . .###",
+        "###   $@##",
+        "### $$ ###",
+        "###    ###",
+        "### $  ###",
+        "###  . ###",
+        "###.   ###",
+        "##########"
+      ],
+      "solution": "LULLDRLLDDRRRUUDDLLUURDDLDURDLDURRDDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0043",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 51,
+      "title": "仓库 3 · 03",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "43"
+      },
+      "rows": [
+        "##########",
+        "#. .     #",
+        "#    #.$ #",
+        "##.$ @$$ #",
+        "###      #",
+        "######## #",
+        "#######  #",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "DRRRUULULLLDDLRRDRRUURULLLLLLRRRRRDDLLLDLUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0044",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 52,
+      "title": "仓库 3 · 04",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "44"
+      },
+      "rows": [
+        "##########",
+        "#####  . #",
+        "#####$ $ #",
+        "####   # #",
+        "##### @  #",
+        "#### $$# #",
+        "####.  # #",
+        "#####. . #",
+        "#####    #",
+        "##########"
+      ],
+      "solution": "UUULDURRRDLRDDLLUULURDDDLDURUULDDRDDLRUULDURRRDDDLDLLURUULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0045",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 53,
+      "title": "仓库 3 · 05",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "45"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "#### #   #",
+        "## #   $ #",
+        "## .$    #",
+        "##   ..###",
+        "## .$ $###",
+        "##     ###",
+        "####@  ###",
+        "##########"
+      ],
+      "solution": "URUUURRRULULDLDLURRRDLULDLDLDDRRULRDRU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0047",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 54,
+      "title": "仓库 3 · 06",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "47"
+      },
+      "rows": [
+        "##########",
+        "##.  @  ##",
+        "#   # $ ##",
+        "######  ##",
+        "######  ##",
+        "####  . ##",
+        "####   .##",
+        "# $ $ $ ##",
+        "#.       #",
+        "##########"
+      ],
+      "solution": "RRDDLURULLLLRRRDDDDLDDDLLLLURDRRRUULDRDRUULDDLLLURRDRULURR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0048",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 55,
+      "title": "仓库 3 · 07",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "48"
+      },
+      "rows": [
+        "##########",
+        "#     #..#",
+        "# $    $ #",
+        "#   . #  #",
+        "#  . ###@#",
+        "###   ## #",
+        "###   ## #",
+        "###$$ ## #",
+        "###   ## #",
+        "##########"
+      ],
+      "solution": "ULULLLLULLDRRRRRRDRULLLLDDDRDDDLLUUUDDDRUUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0049",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 56,
+      "title": "仓库 3 · 08",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "49"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "#  #######",
+        "#  #######",
+        "# $ $.####",
+        "# ..$ ####",
+        "# $. @####",
+        "#      ###",
+        "##########"
+      ],
+      "solution": "LLULLUURDRRLDDRRULULLLDDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0050",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 57,
+      "title": "仓库 3 · 09",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "50"
+      },
+      "rows": [
+        "##########",
+        "######   #",
+        "#      $ #",
+        "#  .$. $ #",
+        "# @  $   #",
+        "# . ######",
+        "#   . ####",
+        "#     ####",
+        "##########",
+        "##########"
+      ],
+      "solution": "UURRRRURRDLULDRRDDLLLUURDURRDLULLDDLLULDUURRRRRDDLLLRUULLDDRRULURRRDLDLLLDULLDDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0051",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 58,
+      "title": "仓库 3 · 10",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "51"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "#### ##@##",
+        "####   $ #",
+        "##### $..#",
+        "######.$ #",
+        "#######$ #",
+        "#####.   #",
+        "#####    #",
+        "##########"
+      ],
+      "solution": "DRDDLDURUULDULLDRRDRDDLUUDDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0052",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 59,
+      "title": "仓库 3 · 11",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "52"
+      },
+      "rows": [
+        "##########",
+        "# ########",
+        "#.$ ######",
+        "#  . #####",
+        "###.$#####",
+        "###  $ ###",
+        "##   @  ##",
+        "###  .$  #",
+        "###      #",
+        "##########"
+      ],
+      "solution": "LLUUUULRDRDDLDDRRURULLRDDLLUUURDRDLDLUURRRDRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0053",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 60,
+      "title": "仓库 3 · 12",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "53"
+      },
+      "rows": [
+        "##########",
+        "##       #",
+        "### .$ $ #",
+        "###.. $  #",
+        "#####  $##",
+        "#####.#@##",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "ULLULUURRDLLULDURRRRRDLLLRDURRDLLLRRDLULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0054",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 61,
+      "title": "仓库 3 · 13",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "54"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "###  @  ##",
+        "###$$ $ ##",
+        "###  #####",
+        "#     ####",
+        "# $ . ####",
+        "#   .  ###",
+        "#    ..###",
+        "##########"
+      ],
+      "solution": "LLDURDURRRDLULLLDDURDUURRDLULLDDDURDLUUURDDLDLDURDRLUURDRDULLLDDRUURRDDUULLDDDRRLLULLDRRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0055",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 62,
+      "title": "仓库 3 · 14",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "55"
+      },
+      "rows": [
+        "##########",
+        "##    # ##",
+        "#  . . $ #",
+        "#  $## #@#",
+        "##$ #### #",
+        "#   #### #",
+        "#    ### #",
+        "# $. ### #",
+        "#. ##### #",
+        "##########"
+      ],
+      "solution": "ULLLULLDRLLDDRUDDDLLURDRDLUUURDDLLD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0056",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 63,
+      "title": "仓库 3 · 15",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "56"
+      },
+      "rows": [
+        "##########",
+        "#. @    ##",
+        "# $$ #####",
+        "#  $ #####",
+        "##. .#####",
+        "###$ #####",
+        "###.######",
+        "###  ## ##",
+        "##       #",
+        "##########"
+      ],
+      "solution": "LLDDRUDDRRUUULLRRDLULDDRURDLDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0057",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 64,
+      "title": "仓库 3 · 16",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "57"
+      },
+      "rows": [
+        "##########",
+        "#     .. #",
+        "# $  .@ ##",
+        "# $ .$$ ##",
+        "#####   ##",
+        "##########",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "LLLULLDRURRDDLULURRRRLLLLLDDRRURRRRDDLLUDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0058",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 65,
+      "title": "仓库 3 · 17",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "58"
+      },
+      "rows": [
+        "##########",
+        "###### ###",
+        "####    .#",
+        "#### $ $ #",
+        "#### #   #",
+        "###.###  #",
+        "### #### #",
+        "##    $ @#",
+        "### . $ .#",
+        "##########"
+      ],
+      "solution": "UULULUULLDRURRRDDLLULURRDLDRURDDDDLLLLDLUUDRRRRDLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0059",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 66,
+      "title": "仓库 3 · 18",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "59"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "########@#",
+        "######## #",
+        "######   #",
+        "# ##   $ #",
+        "#    $ . #",
+        "#.$. .$ ##",
+        "#  #   ###",
+        "##########"
+      ],
+      "solution": "DDLLDDLULDLDLURRRDLURRRDLUUURD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0060",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 67,
+      "title": "仓库 3 · 19",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "60"
+      },
+      "rows": [
+        "##########",
+        "#  @ #####",
+        "# $$   ###",
+        "#    .   #",
+        "###.# .  #",
+        "####  $$.#",
+        "#######  #",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "LDRURDLLLDRURDRURRDRRDDDLURUULLDLDRRLUURRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0061",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-03",
+      "order": 68,
+      "title": "仓库 3 · 20",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "61"
+      },
+      "rows": [
+        "##########",
+        "#  .$  . #",
+        "# $  $ $ #",
+        "#@ #   . #",
+        "##### ## #",
+        "########.#",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "UURRRRLLLLDDRULURDRRURDRRURDLLLURLLDDRRURRDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0062",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 69,
+      "title": "仓库 4 · 01",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "62"
+      },
+      "rows": [
+        "##########",
+        "##### .  #",
+        "###.   $ #",
+        "### $    #",
+        "###   . ##",
+        "###### .##",
+        "###### $##",
+        "######$ ##",
+        "######@###",
+        "##########"
+      ],
+      "solution": "UUURUURULDLULDLDLURRRRDDLDDRU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0063",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 70,
+      "title": "仓库 4 · 02",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "63"
+      },
+      "rows": [
+        "##########",
+        "######## #",
+        "##     # #",
+        "## .$    #",
+        "##. . #  #",
+        "##@$  ####",
+        "## #  ####",
+        "##. $$ ###",
+        "#      ###",
+        "##########"
+      ],
+      "solution": "URRRULDLLDDDRDRUUULRDDLLUURRDDDRRULLL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0064",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 71,
+      "title": "仓库 4 · 03",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "64"
+      },
+      "rows": [
+        "##########",
+        "#@   #####",
+        "# $.######",
+        "##$ ######",
+        "#  $######",
+        "#.   #####",
+        "# $ .#####",
+        "#  . #####",
+        "#    #####",
+        "##########"
+      ],
+      "solution": "DRDDURDDLDRLLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0066",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 72,
+      "title": "仓库 4 · 04",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "66"
+      },
+      "rows": [
+        "##########",
+        "#    #####",
+        "# $.   .##",
+        "#  $ #  ##",
+        "#  #######",
+        "#..#######",
+        "#  #######",
+        "#$$#######",
+        "#  @ #####",
+        "##########"
+      ],
+      "solution": "LLUURUULUURRRRRLLDLULLDDRULURDDDDLDDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0067",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 73,
+      "title": "仓库 4 · 05",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "67"
+      },
+      "rows": [
+        "##########",
+        "# ..######",
+        "#. @ #####",
+        "# $  #####",
+        "#    #####",
+        "#    #####",
+        "##.$ #####",
+        "##$$ #####",
+        "##   #####",
+        "##########"
+      ],
+      "solution": "DLDLURRRDDDDDLLUUUUUURRDDDDLRDDLUUUUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0068",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 74,
+      "title": "仓库 4 · 06",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "68"
+      },
+      "rows": [
+        "##########",
+        "######## #",
+        "###  ### #",
+        "##  $  . #",
+        "##    $  #",
+        "# $# @####",
+        "#    .####",
+        "## .$ ####",
+        "##  . ####",
+        "##########"
+      ],
+      "solution": "UURRDLULDLLURRRLLLLDDURRRDLULLDLDRRDDRRULDLLUUUURRDDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0069",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 75,
+      "title": "仓库 4 · 07",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "69"
+      },
+      "rows": [
+        "##########",
+        "#      @ #",
+        "#.$.$ $.$#",
+        "### ####.#",
+        "######## #",
+        "######## #",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "LLLLDLURRRDLRRURRD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0070",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 76,
+      "title": "仓库 4 · 08",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "70"
+      },
+      "rows": [
+        "##########",
+        "#######  #",
+        "####### .#",
+        "########.#",
+        "####  ## #",
+        "#### .#  #",
+        "###@$ #$ #",
+        "#### $   #",
+        "#### .$  #",
+        "##########"
+      ],
+      "solution": "RDRUDRRDRUUUUUDDLDRDDLLURDRUUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0071",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 77,
+      "title": "仓库 4 · 09",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "71"
+      },
+      "rows": [
+        "##########",
+        "# @####  #",
+        "# $####$ #",
+        "#  ####. #",
+        "# $#####.#",
+        "#   ###  #",
+        "#  .   $ #",
+        "#  # #   #",
+        "#  #####.#",
+        "##########"
+      ],
+      "solution": "LDDDDRRDRRRDRRUUUUUULDRDDDDDLLULLLLLUUURDLUUURDLDDRDLUUURDLDDRRDRRRRLLLLULLUURDLDDRRLLUURDRDRRRDRRUUDDLLURURDDLLULLLULLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0072",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 78,
+      "title": "仓库 4 · 10",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "72"
+      },
+      "rows": [
+        "##########",
+        "#  ## ####",
+        "#@ $   $ #",
+        "# .     .#",
+        "# ###### #",
+        "# #  ##  #",
+        "# $..##  #",
+        "#     $  #",
+        "####  #  #",
+        "##########"
+      ],
+      "solution": "RDRRULDLLUURDRRRRDRRULLLLLRRRRRDDDLDDLLDLULLLUUUURRLLUURDRDRRRRLLLLULLDDDDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0073",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 79,
+      "title": "仓库 4 · 11",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "73"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "## ## ####",
+        "# .     ##",
+        "# . # $$@#",
+        "#    . $ #",
+        "#  .$ ####",
+        "#  #######",
+        "##########"
+      ],
+      "solution": "DLLUDRRULULLLLRRRRDLDLLLDLURRRDLULUURRD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0074",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 80,
+      "title": "仓库 4 · 12",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "74"
+      },
+      "rows": [
+        "##########",
+        "###      #",
+        "### $ $# #",
+        "###  . ..#",
+        "###  @   #",
+        "### $  $.#",
+        "#####    #",
+        "##### # ##",
+        "##########",
+        "##########"
+      ],
+      "solution": "LLUURURDLDRRRLLUURDLDRLLLDDRURRDDLUURDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0075",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 81,
+      "title": "仓库 4 · 13",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "75"
+      },
+      "rows": [
+        "##########",
+        "#####@   #",
+        "##### $.$#",
+        "#####. $ #",
+        "######## #",
+        "##### #  #",
+        "##### $  #",
+        "#####    #",
+        "#####  ..#",
+        "##########"
+      ],
+      "solution": "DRURRDDLLRRDDDDLLLURDRRUULDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0076",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 82,
+      "title": "仓库 4 · 14",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "76"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "# ########",
+        "# ########",
+        "#   ######",
+        "# $  #####",
+        "#  . $.###",
+        "# $.@$ ###",
+        "#   .  ###",
+        "##########"
+      ],
+      "solution": "LULLURURDRDRLULLLDDRDRRRRULULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0077",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 83,
+      "title": "仓库 4 · 15",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "77"
+      },
+      "rows": [
+        "##########",
+        "#.       #",
+        "#   # $$ #",
+        "# $## $ .#",
+        "#  ##@.  #",
+        "###### . #",
+        "######   #",
+        "######## #",
+        "######## #",
+        "##########"
+      ],
+      "solution": "UUURRDULLDRRURDLLLULLLLDDDRULUURRDLDLURURRRRDDURDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0079",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 84,
+      "title": "仓库 4 · 16",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "79"
+      },
+      "rows": [
+        "##########",
+        "# @      #",
+        "#    # $$#",
+        "#######. #",
+        "#######$.#",
+        "#######  #",
+        "###### $ #",
+        "#######. #",
+        "####### .#",
+        "##########"
+      ],
+      "solution": "RRRRRRDDDDLUDDURDDUUUUUULLDRURDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0080",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 85,
+      "title": "仓库 4 · 17",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "80"
+      },
+      "rows": [
+        "##########",
+        "# # ##.# #",
+        "#   $    #",
+        "# $ $   .#",
+        "## .     #",
+        "########.#",
+        "#####@## #",
+        "##### $  #",
+        "##### #  #",
+        "##########"
+      ],
+      "solution": "DRRDRUUUULLLLLUURRDRULLLLLDRURDRRRURRDDLLUR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0081",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 86,
+      "title": "仓库 4 · 18",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "81"
+      },
+      "rows": [
+        "##########",
+        "# @.  $  #",
+        "# $ $ $. #",
+        "######## #",
+        "########.#",
+        "######## #",
+        "########.#",
+        "######## #",
+        "######## #",
+        "##########"
+      ],
+      "solution": "RRRDRRURDDDDUUULLLULLDRLULLDRURRDRRRULDLLULLDRRRRULLRRRRDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0082",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 87,
+      "title": "仓库 4 · 19",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "82"
+      },
+      "rows": [
+        "##########",
+        "###.######",
+        "###  #####",
+        "# $ $#####",
+        "#  .  ####",
+        "#  $   ###",
+        "#   $ .###",
+        "# @  . ###",
+        "# ###  ###",
+        "##########"
+      ],
+      "solution": "LUUUURDRUURDLLDDDRDRRUUULULLDDRRURDLDRLLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0083",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-04",
+      "order": 88,
+      "title": "仓库 4 · 20",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "83"
+      },
+      "rows": [
+        "##########",
+        "## @     #",
+        "## $. # $#",
+        "## $ ##..#",
+        "### $.   #",
+        "#####   ##",
+        "##########",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "RRRRRDLULLLLLDDRDRRRDRULLLLULUURRDDLLURDDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0084",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 89,
+      "title": "仓库 5 · 01",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "84"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "#   ######",
+        "# $.######",
+        "#. $######",
+        "# $.######",
+        "#.$ #@####",
+        "#     ####",
+        "##########"
+      ],
+      "solution": "DLLLLUUUUURRDLDLDDDRRUUULUULDRDRDDDLLUURLDDRRUL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0085",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 90,
+      "title": "仓库 5 · 02",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "85"
+      },
+      "rows": [
+        "##########",
+        "#######  #",
+        "###### ..#",
+        "#####.$  #",
+        "#####@$  #",
+        "###### $ #",
+        "#######  #",
+        "#######$ #",
+        "####### .#",
+        "##########"
+      ],
+      "solution": "URURRDDLULURDRDDDLULUDRRUULLDDRUURDDDDDLUURUULLDRURDDD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0086",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 91,
+      "title": "仓库 5 · 03",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "86"
+      },
+      "rows": [
+        "##########",
+        "###. #####",
+        "###$.#####",
+        "###  #####",
+        "###  #####",
+        "###  #####",
+        "##   $  @#",
+        "##    $$ #",
+        "## .  .  #",
+        "##########"
+      ],
+      "solution": "DDLLLLLUUUUUURDDDDDRDRRRUULLLDLUUUUDDDRRDURRDLLLLULD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0087",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 92,
+      "title": "仓库 5 · 04",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "87"
+      },
+      "rows": [
+        "##########",
+        "######## #",
+        "######## #",
+        "###     .#",
+        "#### @ . #",
+        "####.$ $ #",
+        "####. $$ #",
+        "######   #",
+        "######## #",
+        "##########"
+      ],
+      "solution": "RDLULDURRRRDDDLLURULLRRDDRUUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0088",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 93,
+      "title": "仓库 5 · 05",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "88"
+      },
+      "rows": [
+        "##########",
+        "###     .#",
+        "###  .$  #",
+        "###  $ # #",
+        "####  ## #",
+        "### . #  #",
+        "####$### #",
+        "#  $  #@ #",
+        "##    .  #",
+        "##########"
+      ],
+      "solution": "RUUUUULULLDRLLDDRURUURRDDDDDDLDLLLUUURUURURLDLDDLDDRDRRURUUUUULLDLDDLDDDLLURDRRRRURUUUUULLDLDDLDDUURUULDURRURRDDDDDLDLLULLDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0089",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 94,
+      "title": "仓库 5 · 06",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "89"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "######@###",
+        "#####.$  #",
+        "#####  $$#",
+        "######$. #",
+        "######   #",
+        "#### ##  #",
+        "###    ..#",
+        "##########"
+      ],
+      "solution": "DRDURDLDUULLDRURRDDLDURUULDRDDLLUURULDDDRDURD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0090",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 95,
+      "title": "仓库 5 · 07",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "90"
+      },
+      "rows": [
+        "##########",
+        "#  #######",
+        "# .#######",
+        "# $#######",
+        "#  @######",
+        "#   $ #  #",
+        "#    . . #",
+        "# $  $ ###",
+        "#   .  ###",
+        "##########"
+      ],
+      "solution": "LUDRDDRRULDLLUURDLDRRRRLLLLLDRRURDURRDDLU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0091",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 96,
+      "title": "仓库 5 · 08",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "91"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "#   # ####",
+        "##   $ ###",
+        "## $$$ ###",
+        "# @    ###",
+        "##. #  .##",
+        "##  .   .#",
+        "##########"
+      ],
+      "solution": "RRRRUULLLULDDURDURDRURDLLLDRURRDULLDRLLDURRDRLUURDDLULLDLDRUUULDRRRDDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0092",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 97,
+      "title": "仓库 5 · 09",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "92"
+      },
+      "rows": [
+        "##########",
+        "###     @#",
+        "## $$ # $#",
+        "###  ###.#",
+        "## .  #  #",
+        "##  . .  #",
+        "##      ##",
+        "### $#####",
+        "###  #####",
+        "##########"
+      ],
+      "solution": "LLLLLDURDURRRRDLULLLLDDURDDRDDLLURRLLDDDRUU"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0093",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 98,
+      "title": "仓库 5 · 10",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "93"
+      },
+      "rows": [
+        "##########",
+        "##########",
+        "##########",
+        "#  @#  # #",
+        "##$##   .#",
+        "# . # $  #",
+        "#   .$.  #",
+        "#  $     #",
+        "#  ##    #",
+        "##########"
+      ],
+      "solution": "LDDRDRDRRUULURRLDDDLLULULLDDRURRRLDLULLDDRULURR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0094",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 99,
+      "title": "仓库 5 · 11",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "94"
+      },
+      "rows": [
+        "##########",
+        "#  #######",
+        "#   ######",
+        "#  #######",
+        "#@$$.#####",
+        "# .$.  ###",
+        "#.   $ ###",
+        "# ########",
+        "# ########",
+        "##########"
+      ],
+      "solution": "DRDRRURRDLLLLURLLUURDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0095",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 100,
+      "title": "仓库 5 · 12",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "95"
+      },
+      "rows": [
+        "##########",
+        "#####    #",
+        "##### $  #",
+        "#### $  .#",
+        "####   ###",
+        "## # . # #",
+        "# $      #",
+        "#   $ ..@#",
+        "#        #",
+        "##########"
+      ],
+      "solution": "LLUUUURUULLDRRURDLLLDDLDDLDLLURRRRLUURRDDLDRLULLDRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0096",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 101,
+      "title": "仓库 5 · 13",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "96"
+      },
+      "rows": [
+        "##########",
+        "#   ######",
+        "#  $ #####",
+        "# $  #####",
+        "#. $ #####",
+        "#   ######",
+        "##@ . ####",
+        "# $ . # ##",
+        "#.       #",
+        "##########"
+      ],
+      "solution": "ULUUURDRDULUURDRDDLLRDLUUURDDLDDRLUURDDLDRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0097",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 102,
+      "title": "仓库 5 · 14",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "97"
+      },
+      "rows": [
+        "##########",
+        "#        #",
+        "# @ .$ $ #",
+        "#   .#####",
+        "#  $  ####",
+        "###  .####",
+        "##    ####",
+        "## $  ####",
+        "###  .####",
+        "##########"
+      ],
+      "solution": "URRRRDLURRRDLLULLLLDDDRURDLUUURDURRDLULLDDDDRLDLDRRURD"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0098",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 103,
+      "title": "仓库 5 · 15",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "98"
+      },
+      "rows": [
+        "##########",
+        "#####  ###",
+        "##@# .$ ##",
+        "# $$   . #",
+        "##. #  ###",
+        "#### . ###",
+        "##### $###",
+        "#####  ###",
+        "#####    #",
+        "##########"
+      ],
+      "solution": "DRRURDRRULDLDRDDLDDRUUUULUR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0099",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 104,
+      "title": "仓库 5 · 16",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "99"
+      },
+      "rows": [
+        "##########",
+        "##### .  #",
+        "### @ $$ #",
+        "#####    #",
+        "## #    ##",
+        "##  $. $ #",
+        "##   . .##",
+        "##########",
+        "##########",
+        "##########"
+      ],
+      "solution": "RDRUDRRUULDRDLLULDDLDURRRDLULLDLDR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0100",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 105,
+      "title": "仓库 5 · 17",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "100"
+      },
+      "rows": [
+        "##########",
+        "#######  #",
+        "#######$ #",
+        "######  .#",
+        "#####.   #",
+        "#####$$$ #",
+        "####  @ .#",
+        "####.    #",
+        "####    ##",
+        "##########"
+      ],
+      "solution": "RRUUUUULDRDDLLURDRDDLLLUDRRRUULLDRURDLDLULDRDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0101",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 106,
+      "title": "仓库 5 · 18",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "101"
+      },
+      "rows": [
+        "##########",
+        "#. #######",
+        "# $#######",
+        "#  #######",
+        "# $#######",
+        "#.@#######",
+        "#.$ ######",
+        "#$   .####",
+        "#       ##",
+        "##########"
+      ],
+      "solution": "DLUUURDLUUURDLDDDDRRDDLLUUUUUUDDRDLUUURDLDDDDDRRUULRDDLLURRLUULUURDDDRDDLLUURRDLDLURRR"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0102",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 107,
+      "title": "仓库 5 · 19",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "102"
+      },
+      "rows": [
+        "##########",
+        "#####    #",
+        "#####@$$$#",
+        "#######  #",
+        "#######  #",
+        "#######$.#",
+        "##### .  #",
+        "#####.  .#",
+        "######## #",
+        "##########"
+      ],
+      "solution": "URRDULLDRURRDDDLDDRDLUUURUUULLDRURDLDDDURDLUUURDLDDRDLUUURDLDDDL"
+    },
+    {
+      "schemaVersion": 1,
+      "levelId": "boxoban-unfiltered-test-000-0103",
+      "contentVersion": "sokoban-campaign-v1",
+      "chapter": "warehouse-05",
+      "order": 108,
+      "title": "仓库 5 · 20",
+      "source": {
+        "collection": "boxoban-unfiltered-test-000",
+        "sourceId": "103"
+      },
+      "rows": [
+        "##########",
+        "#    .####",
+        "# $.  ####",
+        "## #. ####",
+        "##$  @####",
+        "##  $ ####",
+        "## $  ####",
+        "#   . ####",
+        "#    #####",
+        "##########"
+      ],
+      "solution": "LUULULLDRRURRDDLULURDDDLDLUUDRRUULULLDRDDRRRDDLUULLDDRURD"
+    }
+  ]
+}

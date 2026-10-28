@@ -73,3 +73,17 @@ All gameplay code, UI layout and synthesized sound generation in this repository
 - License: Unlicense, reproduced in `ThirdParty/Sudoku/LICENSE.txt`.
 - Bundled file: `Assets/Resources/Sudoku/puzzles.txt`, a selection of 2,000 standard 9×9 puzzles with locally computed answers and difficulty labels. Import provenance and verification are documented in `docs/sudoku-content.md`.
 - Only puzzle data is reused. The Sudoku rules, solver, hint explanations, interface and persistence code are original. No Sudoku Exchange web application code, QQWing or HoDoKu code is bundled.
+
+## Sokoban graphics and feedback audio (08 · 推箱子)
+
+- Graphics: [Kenney Sokoban](https://kenney.nl/assets/sokoban), by Kenney Vleugels, CC0. The archived source and its unchanged license are in `ThirdParty/Sokoban/kenney-sokoban/`. Archive SHA-256: `d8cc8af649a5e21d87a9f30a8a616fe2c0e94e68c80cdfe0df8ca72ec0f208ac`.
+- Included unchanged in `Assets/Resources/Sokoban/Sprites/`: wall `block_06`, normal crate `crate_02`, occupied-goal crate `crate_05`, and four outlined player directions `player_05`, `player_08`, `player_17`, `player_20`, all from the source's `PNG/Default size/` directory. Only these seven PNGs are bundled.
+- Audio: [Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds), by Kenney, CC0. The archived source and its unchanged license are in `ThirdParty/Sokoban/kenney-interface-sounds/`. Archive SHA-256: `f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232`.
+- Included unchanged in `Assets/Resources/Sokoban/Audio/`: `tick_001.ogg` as `move.ogg`, `click_001.ogg` as `push.ogg`, `confirmation_001.ogg` as `goal.ogg`, and `confirmation_002.ogg` as `complete.ogg`. These four clips are 0.023–0.539 seconds long. Both original Kenney licenses are included in the released `Licenses/` directory.
+
+## Google DeepMind Boxoban level data
+
+- Source: [google-deepmind/boxoban-levels](https://github.com/google-deepmind/boxoban-levels), fixed commit `78011d8c86ad423bfb2e1005012393b4c3c24409`, source file `unfiltered/test/000.txt`. The complete original 1,000-level file and both original license files are archived in `Data/Sokoban/boxoban/`.
+- License: Apache-2.0. The selected 100 maps in `Assets/Resources/Sokoban/campaign.json` retain their exact source rows and source IDs. Their derived solution witnesses and the original eight tutorial maps are identified separately in the release manifest. The source dataset labels are not presented as a human difficulty grade.
+- Both original Apache license texts and the unchanged upstream README with its complete author/BibTeX citation are included in `Assets/Resources/Sokoban/Licenses/`. The canonical attribution is “An investigation of Model-free planning: boxoban levels,” Arthur Guez and coauthors, 2018; the upstream citation includes all authors.
+- Only level data is reused. The game rules, UI, persistence and verification tooling are original. Third-party media and Boxoban data retain their own licenses and are not relicensed by the repository's MIT license. Per-file hashes, map hashes, exact selected-source mappings and production-rule replay evidence are in `Assets/Resources/Sokoban/manifest.json`, `verification-report.json` and `Data/Sokoban/campaign/README.md`.

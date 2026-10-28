@@ -4,12 +4,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
+using XanaduYonder.Core.Sokoban;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
 using XanaduYonder.Runtime.Watermelon;
 using XanaduYonder.Runtime.Sudoku;
 using XanaduYonder.Runtime.Minesweeper;
+using XanaduYonder.Runtime.Sokoban;
 
 namespace XanaduYonder.Runtime
 {
@@ -48,9 +50,11 @@ namespace XanaduYonder.Runtime
         private SudokuPage sudokuPage;
         private MinesweeperPage minesweeperPage;
         private Text lobbyMinesweeperRecordText;
+        private SokobanPage sokobanPage;
+        private Text lobbySokobanRecordText;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Sokoban }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -77,6 +81,7 @@ namespace XanaduYonder.Runtime
             BuildSheep();
             BuildSudoku();
             BuildMinesweeper();
+            BuildSokoban();
             var statusBand = UiFactory.Band(frame, "Status", 1278, 34, 1);
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
@@ -205,6 +210,15 @@ namespace XanaduYonder.Runtime
                 }
             }
             UiFactory.Button(minesweeperCard.transform, "选择难度 / 继续  →", 32, 270, 544, 62, EnterMinesweeper, true);
+            var sokobanCard = AddLobbyCard(content, "Sokoban", cardCount++, UiFactory.Hex("EAE4D4"));
+            UiFactory.Label(sokobanCard.transform, cardCount.ToString("00") + "   /   经典推箱", 32, 22, 450, 36, 21, UiFactory.Accent);
+            UiFactory.Label(sokobanCard.transform, "推箱子", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiFactory.Label(sokobanCard.transform, "把每一只箱子，推回它的位置。", 32, 170, 548, 40, 25, UiFactory.Ink);
+            var cratePreview = UiFactory.Rect(sokobanCard.transform, "Sokoban crate preview", 462, 74, 90, 90).gameObject.AddComponent<RawImage>();
+            cratePreview.texture = Resources.Load<Texture2D>("Sokoban/Sprites/crate");
+            cratePreview.raycastTarget = false;
+            lobbySokobanRecordText = UiFactory.Label(sokobanCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+            UiFactory.Button(sokobanCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSokoban, true);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  自动存档", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
             lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 进度自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -243,6 +257,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterIdiom()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
@@ -261,6 +276,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterWatermelon()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
@@ -376,6 +392,44 @@ namespace XanaduYonder.Runtime
                 " · 中等 " + sudokuPage.CompletedCountForDifficulty(2) + " · 困难 " + sudokuPage.CompletedCountForDifficulty(3);
         }
 
+        private void BuildSokoban(SokobanCatalog initialCatalog = null, SokobanProfile initialProfile = null, SokobanSaveStore initialStore = null)
+        {
+            var safeFrame = frame.GetComponent<SafeDesignFrame>();
+            bool previousWidthOnly = safeFrame.WidthOnly;
+            try
+            {
+                // Construct at the same 720-wide coordinate system used on entry, including short screens.
+                safeFrame.WidthOnly = true;
+                var root = UiFactory.Rect(frame, "Sokoban page", 0, 0, 720, 1320);
+                UiFactory.Stretch(root);
+                sokobanPage = root.gameObject.AddComponent<SokobanPage>();
+                sokobanPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+                    () => activePage == Page.Sokoban && modal == null && !paused && focused,
+                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus,
+                    initialCatalog, initialProfile, initialStore);
+                sokobanPage.Changed += RefreshSokobanRecord;
+                sokobanPage.Leave();
+            }
+            finally { safeFrame.WidthOnly = previousWidthOnly; }
+        }
+
+        private void RefreshSokobanRecord()
+        {
+            if (sokobanPage != null && lobbySokobanRecordText != null)
+                lobbySokobanRecordText.text = "已完成 " + sokobanPage.CompletedCount + "/108 关 · 随时撤回";
+        }
+
+        private void EnterSokoban()
+        {
+            StopAnimation(); CloseModal(); minesweeperPage.Leave(); sudokuPage.Leave();
+            jumpPage.Leave(); sheepPage.Leave(); idiomPage?.Leave(); watermelonPage?.Leave();
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
+            activePage = Page.Sokoban; lobbyPage.SetActive(false); gamePage.SetActive(false);
+            if (status != null) status.gameObject.SetActive(false);
+            sokobanPage.Enter();
+            SetStatus("");
+        }
+
         private void BuildMinesweeper()
         {
             var root = UiFactory.Rect(frame, "Minesweeper page", 0, 0, 720, 1320);
@@ -397,6 +451,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterMinesweeper()
         {
+            sokobanPage?.Leave();
             StopAnimation(); CloseModal(); sudokuPage.Leave(); jumpPage.Leave(); sheepPage.Leave();
             idiomPage?.Leave(); watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
@@ -407,6 +462,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterSudoku()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             StopAnimation(); CloseModal(); jumpPage.Leave(); sheepPage.Leave();
             idiomPage?.Leave(); watermelonPage?.Leave();
@@ -417,6 +473,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterSheep()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
@@ -434,6 +491,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterJump()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
@@ -485,6 +543,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterGame()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             CloseModal();
@@ -505,6 +564,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            sokobanPage?.Leave();
             minesweeperPage?.Leave();
             sudokuPage.Leave();
             StopAnimation();
@@ -678,16 +738,18 @@ namespace XanaduYonder.Runtime
             RefreshWatermelonRecord();
             RefreshSudokuRecord();
             RefreshMinesweeperRecord();
+            RefreshSokobanRecord();
         }
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? sokobanPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
             // The normal footer is hidden in Minesweeper focus mode; preserve shared save errors there.
             if (activePage == Page.Minesweeper) minesweeperPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
+            if (activePage == Page.Sokoban) sokobanPage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
             if (target != null) target.text = saveFailed ? saveWarning : pageError ?? message;
         }
 
@@ -705,6 +767,7 @@ namespace XanaduYonder.Runtime
             watermelonPage?.Save();
             sudokuPage?.Save();
             minesweeperPage?.Save();
+            sokobanPage?.Save();
             if (store == null || game == null) return;
             data.Game = game.GetSnapshot();
             Update2048Records();
@@ -720,7 +783,7 @@ namespace XanaduYonder.Runtime
             {
                 saveFailed = false;
                 saveWarning = null;
-                SetStatus(activePage == Page.Minesweeper ? "" : "进度已保存。");
+                SetStatus(activePage == Page.Minesweeper || activePage == Page.Sokoban ? "" : "进度已保存。");
             }
         }
 
@@ -732,6 +795,7 @@ namespace XanaduYonder.Runtime
             idiomPage?.Suspend();
             watermelonPage?.Suspend();
             minesweeperPage?.Suspend();
+            sokobanPage?.Suspend();
             StopAllCoroutines();
             animating = false;
             if (board != null)
@@ -750,6 +814,7 @@ namespace XanaduYonder.Runtime
                 else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
                 else if (activePage == Page.Sudoku) sudokuPage.Back();
                 else if (activePage == Page.Minesweeper) minesweeperPage.Back();
+                else if (activePage == Page.Sokoban) sokobanPage.Back();
                 else if (activePage != Page.Lobby) ShowLobby();
                 else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
                 return;
@@ -763,8 +828,9 @@ namespace XanaduYonder.Runtime
         private void OnApplicationPause(bool value)
         {
             paused = value;
-            if (value && activePage == Page.Minesweeper) CloseModal();
+            if (value && (activePage == Page.Minesweeper || activePage == Page.Sokoban)) CloseModal();
             minesweeperPage?.SetForeground(!paused && focused);
+            sokobanPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
@@ -773,8 +839,9 @@ namespace XanaduYonder.Runtime
         private void OnApplicationFocus(bool value)
         {
             focused = value;
-            if (!value && activePage == Page.Minesweeper) CloseModal();
+            if (!value && (activePage == Page.Minesweeper || activePage == Page.Sokoban)) CloseModal();
             minesweeperPage?.SetForeground(!paused && focused);
+            sokobanPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (!value)
             {
