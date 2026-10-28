@@ -4,7 +4,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PROJECT_ROOT/scripts/happy-ball-unity-environment.sh"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-happy-ball-validation.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.6.0-happy-ball-validation.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.7.0-happy-ball-validation.apk"
 mkdir -p "$(dirname "$LOG_FILE")"
 rm -f "$APK_FILE"
 if "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" -buildTarget Android \
