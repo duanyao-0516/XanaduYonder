@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>推箱子 · 页面预览 — XanaduYonder</title>
+<title>推箱子 · 入口与游戏页示例 — XanaduYonder</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="preview">
-  <header class="preview-header"><div><p class="eyebrow">XANADU YONDER / GAME STUDY</p><h1>推箱子 · 页面预览</h1></div><span class="prototype-tag">交互原型 · 不保存进度</span></header>
-  <section class="preview-controls" aria-label="预览关卡"><div class="segmented"><button data-level="compact" aria-pressed="true">紧凑关卡 · 8 × 8</button><button data-level="tall" aria-pressed="false">高地图 · 8 × 13</button></div></section>
-  <section class="phone" aria-label="推箱子手机页面">
+  <header class="preview-header"><div><p class="eyebrow">XANADU YONDER / GAME STUDY</p><h1>推箱子 · 入口与游戏页</h1></div><span class="prototype-tag">演示进度，不保存</span></header>
+  <section class="preview-controls" aria-label="切换页面示例"><div class="segmented"><button data-preview="entry" aria-pressed="true">关卡入口</button><button data-preview="game" aria-pressed="false">游戏页面</button><button data-preview="tall" aria-pressed="false">高地图 · 8 × 13</button></div></section>
+  <section class="phone" aria-label="推箱子手机页面" data-view="entry">
     <div class="safe-top"><span>9:41</span><span aria-label="信号与电量">●●● ▰</span></div>
     <nav class="nav" aria-label="游戏导航">
       <button class="nav-button home" data-action="home" aria-label="返回大厅"><span data-icon="Home"></span></button>
@@ -19,21 +19,34 @@
       <button class="nav-button settings" data-action="settings" aria-label="设置"><span data-icon="Settings"></span></button>
     </nav>
     <header class="game-heading"><h2>推箱子</h2></header>
-    <div class="game-info">
-      <button class="level-link" data-action="levels" aria-label="选择关卡"><span data-label="level">01 初次搬运</span><span class="chevron" aria-hidden="true"></span></button>
-      <span class="stat">步数 <b data-stat="moves">0</b></span><span class="stat">推动 <b data-stat="pushes">0</b></span><span class="stat">归位 <b data-stat="goals">0/2</b></span>
-    </div>
-    <div class="board-area" aria-label="棋盘视口，可拖动平移"><div class="board" role="img" aria-label="推箱子演示棋盘"></div><div class="board-toast" aria-hidden="true"></div></div>
-    <div class="operation-zone" aria-label="游戏操作">
-      <div class="left-controls">
-        <div class="game-actions"><button data-action="undo"><span data-icon="Undo"></span><span>撤回</span></button><button data-action="restart"><span data-icon="Restart"></span><span>重来</span></button></div>
-        <div class="zoom-controls" aria-label="棋盘缩放"><button data-action="zoom-out" aria-label="缩小棋盘">−</button><button data-action="fit" aria-label="适配棋盘，重置缩放与位置">适配</button><button data-action="zoom-in" aria-label="放大棋盘">+</button></div>
+    <section id="entry-page" class="entry-page" aria-label="关卡入口">
+      <p class="entry-intro">把每一只箱子，推回它的位置。</p>
+      <button class="continue-card" data-action="continue" aria-label="继续当前关卡">
+        <span class="continue-content"><span class="continue-copy"><span class="card-eyebrow" data-label="continue-eyebrow">继续上次的搬运</span><strong data-label="continue-title">01 初次搬运</strong><span class="continue-stats" data-label="continue-stats">1 步 · 1/2 归位</span></span><span class="mini-board" aria-hidden="true"></span></span>
+        <span class="continue-cta"><span data-label="continue-action">继续游戏</span><span aria-hidden="true">→</span></span>
+      </button>
+      <div class="entry-progress"><div><span>已完成 <b data-label="completed">0</b><span class="progress-total"> / <span data-label="total">108</span> 关</span></span><span class="open-note">全部关卡开放</span></div><div class="progress-track"><span></span></div></div>
+      <div class="chapter-tabs" id="entry-chapters" role="tablist" aria-label="选择章节"></div>
+      <div class="chapter-heading"><h3 data-label="chapter-title">入门教学</h3><span data-label="chapter-count">8 关</span></div>
+      <div id="entry-level-grid" class="level-grid" role="tabpanel" aria-label="当前章节关卡"></div>
+      <p id="catalog-notice" class="catalog-notice" role="status" hidden></p>
+      <p class="entry-footnote">随时可以撤回，也可以换一关继续探索。</p>
+    </section>
+    <section id="game-page" class="game-page" aria-label="推箱子游戏" hidden>
+      <div class="game-info">
+        <button class="level-link" data-action="levels" aria-label="选择关卡"><span data-label="level">01 初次搬运</span><span class="chevron" aria-hidden="true"></span></button>
+        <span class="stat">步数 <b data-stat="moves">1</b></span><span class="stat">推动 <b data-stat="pushes">1</b></span><span class="stat">归位 <b data-stat="goals">1/2</b></span>
       </div>
-      <div class="dpad" aria-label="移动方向"><button data-move="up" aria-label="向上移动"><span class="arrow up"></span></button><button data-move="left" aria-label="向左移动"><span class="arrow left"></span></button><span class="pad-center" aria-hidden="true"></span><button data-move="right" aria-label="向右移动"><span class="arrow right"></span></button><button data-move="down" aria-label="向下移动"><span class="arrow down"></span></button></div>
-    </div>
+      <div class="board-area" aria-label="棋盘自动完整适配"><div class="board" role="img" aria-label="推箱子棋盘"></div><div class="board-toast" aria-hidden="true"></div></div>
+      <div class="operation-zone" aria-label="游戏操作">
+        <div class="left-controls"><div class="game-actions"><button data-action="undo"><span data-icon="Undo"></span><span>撤回</span></button><button data-action="restart"><span data-icon="Restart"></span><span>重来</span></button></div></div>
+        <div class="dpad" aria-label="移动方向"><button data-move="up" aria-label="向上移动"><span class="arrow up"></span></button><button data-move="left" aria-label="向左移动"><span class="arrow left"></span></button><button data-move="right" aria-label="向右移动"><span class="arrow right"></span></button><button data-move="down" aria-label="向下移动"><span class="arrow down"></span></button></div>
+      </div>
+    </section>
     <div class="safe-bottom"><span></span></div>
   </section>
-  <footer>原创演示关卡 · 游戏美术：Kenney，CC0 · 仅供页面与交互评审</footer>
+  <div class="preview-state"><button data-action="preview-new">查看首次游玩状态</button><span>首屏先看入口，点击「继续游戏」体验同一局。</span></div>
+  <footer>交互设计示例，不写入游戏存档 · 关卡来自本地发布目录 · 游戏美术：Kenney，CC0</footer>
 </main>
 <div class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
 <dialog id="modal"><button id="close-modal" class="modal-close" aria-label="关闭弹层">×</button><div id="modal-content"></div></dialog>
