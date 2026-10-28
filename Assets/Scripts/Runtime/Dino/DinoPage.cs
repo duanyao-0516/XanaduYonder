@@ -281,7 +281,7 @@ namespace XanaduYonder.Runtime.Dino
         {
             UiFactory.Label(content, "Dino", 56, y, wide ? 170 : 400, wide ? 60 : 88,
                 wide ? 40 : 63, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            if (!wide) UiFactory.Label(content, "07 / 像素跑酷", viewport.Width - 280, y + 30,
+            if (!wide) UiFactory.Label(content, "09 / 像素跑酷", viewport.Width - 280, y + 30,
                 224, 42, 22, UiFactory.Muted, TextAnchor.MiddleRight);
         }
 

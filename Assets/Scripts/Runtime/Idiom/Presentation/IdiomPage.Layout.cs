@@ -21,11 +21,11 @@ namespace XanaduYonder.Runtime.Idiom
         {
             gameRoot = UiFactory.Rect(root, "Idiom game", 0, 0, 720, 1320); UiFactory.Stretch(gameRoot);
             bookRoot = UiFactory.Rect(root, "Idiom notebook", 0, 0, 720, 1320); UiFactory.Stretch(bookRoot);
-            UiFactory.IconButton(gameRoot, UiIconKind.Home, 32, 26, 58, 58, () => { if (CanNavigate) goLobby(); });
-            var title = IdiomUi.Label(gameRoot, "成语接龙", 200, 22, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            UiFactory.IconButton(gameRoot, UiIconKind.Home, 56, 34, 58, 58, () => { if (CanNavigate) goLobby(); });
+            var title = IdiomUi.Label(gameRoot, "成语接龙", 200, 30, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             title.name = "Idiom centered title";
-            bookButton = UiFactory.IconButton(gameRoot, UiIconKind.Notebook, 552, 26, 58, 58, () => { if (CanNavigate) OpenNotebook(false); });
-            UiFactory.IconButton(gameRoot, UiIconKind.Settings, 630, 26, 58, 58, () => { if (CanNavigate) ShowMenu(); });
+            bookButton = UiFactory.IconButton(gameRoot, UiIconKind.Notebook, 536, 34, 58, 58, () => { if (CanNavigate) OpenNotebook(false); });
+            UiFactory.IconButton(gameRoot, UiIconKind.Settings, 606, 34, 58, 58, () => { if (CanNavigate) ShowMenu(); });
             computerMatch = IdiomUi.Button(gameRoot, "人机对战", 32, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Computer));
             localMatch = IdiomUi.Button(gameRoot, "双人本地对战", 368, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Local));
             countText = IdiomUi.Label(gameRoot, "", 210, 184, 300, 52, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -93,9 +93,9 @@ namespace XanaduYonder.Runtime.Idiom
                 else BeginLoad();
             }, true);
 
-            IdiomUi.Button(bookRoot, "‹ 返回", 32, 26, 130, 58, () => { if (CanNavigate) ReturnFromNotebook(); });
-            IdiomUi.Label(bookRoot, "生词本", 210, 22, 300, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
-            bookCount = IdiomUi.Label(bookRoot, "", 500, 32, 188, 50, 22, UiFactory.Accent, TextAnchor.MiddleRight);
+            IdiomUi.Button(bookRoot, "‹ 返回", 56, 34, 130, 58, () => { if (CanNavigate) ReturnFromNotebook(); });
+            IdiomUi.Label(bookRoot, "生词本", 210, 30, 300, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            bookCount = IdiomUi.Label(bookRoot, "", 500, 40, 188, 50, 22, UiFactory.Accent, TextAnchor.MiddleRight);
             IdiomUi.Label(bookRoot, "适时复习 · 点开后可标记“我记住了”", 32, 108, 656, 50, 23, UiFactory.Muted);
             bookList = new IdiomVirtualList(bookRoot, "Saved idiom list", 158, BindNotebookRow, index =>
             {

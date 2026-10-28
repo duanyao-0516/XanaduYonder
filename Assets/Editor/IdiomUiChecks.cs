@@ -44,7 +44,7 @@ namespace XanaduYonder.EditorTools
                             CheckPage(fixture, match, mode, first);
                         CheckModalRaycasts(fixture);
                     }
-                    report.AppendLine("PASS " + size.x + "x" + size.y + ": 8 page states, mirrored turns, notebook, icon meshes and modal raycasts");
+                    report.AppendLine("PASS " + size.x + "x" + size.y + ": 8 page states, screen navigation, keyboard layout, mirrored turns, notebook return, icon meshes and modal raycasts");
                 }
                 report.AppendLine("IDIOM_UI_CHECKS_PASS: " + assertions + " assertions");
                 Debug.Log(report.ToString());
@@ -95,7 +95,8 @@ namespace XanaduYonder.EditorTools
             try
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
-                page.Initialize(pageRoot, () => { }, () => true, _ => { },
+                var lobbyVisits = 0;
+                page.Initialize(pageRoot, () => lobbyVisits++, () => true, _ => { },
                     (title, height, back) => { throw new InvalidOperationException("Unexpected modal in layout fixture: " + title); }, () => { });
                 var lexicon = TestLexicon();
                 Set(page, "lexicon", lexicon);
@@ -112,6 +113,7 @@ namespace XanaduYonder.EditorTools
 
                 var label = match + "/" + mode + "/" + first;
                 var gameRoot = Get<RectTransform>(page, "gameRoot");
+                CheckGameNavigation(fixture, page, label);
                 var title = (RectTransform)gameRoot.Find("Idiom centered title");
                 var count = Get<Text>(page, "countText");
                 Near(Center(title).x, Center(fixture.Root).x, label + " title centered in actual canvas");
@@ -151,18 +153,117 @@ namespace XanaduYonder.EditorTools
                     CheckComposer(fixture, page, game, label + " turn " + turn);
                     CheckTranscript(page, game, label);
                 }
-                Invoke(page, "OpenNotebook", false);
+                CheckKeyboardNavigation(fixture, page, game, label);
+                var historyBeforeNotebook = game.History.Count;
+                fixture.Click(Center((RectTransform)Get<Button>(page, "bookButton").transform));
                 fixture.Flush();
                 var book = Get<RectTransform>(page, "bookRoot");
                 Require(book.gameObject.activeInHierarchy && !gameRoot.gameObject.activeSelf, label + " notebook page opens");
                 var bookTitle = (RectTransform)book.Find("生词本");
                 Near(Center(bookTitle).x, Center(fixture.Root).x, label + " notebook title centered in actual canvas");
-                Invoke(page, "ReturnFromNotebook");
+                var back = (RectTransform)book.Find("‹ 返回");
+                CheckScreenRect(fixture, back, 56, 34, 130, 58, label + " notebook back");
+                CheckScreenRect(fixture, bookTitle, 210, 30, 300, 66, label + " notebook title");
+                CheckScreenRect(fixture, Get<Text>(page, "bookCount").rectTransform, 500, 40, 188, 50,
+                    label + " notebook count");
+                Require(bookTitle.GetComponent<Text>().fontSize == 35 && Get<Text>(page, "bookCount").fontSize == 22,
+                    label + " notebook title and count retain their font sizes");
+                Require(!ScreenRect(fixture, back).Overlaps(ScreenRect(fixture, bookTitle)),
+                    label + " notebook back does not overlap title");
+                fixture.Click(Center(back));
                 Require(gameRoot.gameObject.activeInHierarchy, label + " return preserves page");
+                Require(!book.gameObject.activeSelf && !Get<bool>(page, "notebookVisible"), label + " actual back click closes notebook");
+                Require(ReferenceEquals(game, typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page)) &&
+                    game.History.Count == historyBeforeNotebook, label + " notebook round trip preserves active game and history");
+                CheckGameNavigation(fixture, page, label + " returned");
+                fixture.Click(Center((RectTransform)gameRoot.Find("Home button")));
+                Require(lobbyVisits == 1, label + " aligned home hit target invokes lobby once");
                 Require(Get<IdiomSaveStore>(page, "store") == null,
                     "Layout checks must never own persistent stores");
             }
             finally { Object.DestroyImmediate(pageRoot.gameObject); }
+        }
+
+        private static void CheckGameNavigation(Fixture fixture, IdiomPage page, string label)
+        {
+            fixture.Flush();
+            var gameRoot = Get<RectTransform>(page, "gameRoot");
+            var home = (RectTransform)gameRoot.Find("Home button");
+            var notebook = (RectTransform)Get<Button>(page, "bookButton").transform;
+            var settings = (RectTransform)gameRoot.Find("Settings button");
+            var title = (RectTransform)gameRoot.Find("Idiom centered title");
+            CheckScreenRect(fixture, home, 56, 34, 58, 58, label + " home");
+            CheckScreenRect(fixture, notebook, 536, 34, 58, 58, label + " notebook");
+            CheckScreenRect(fixture, settings, 606, 34, 58, 58, label + " settings");
+            CheckScreenRect(fixture, title, 200, 30, 320, 66, label + " title");
+            Require(title.GetComponent<Text>().fontSize == 35 && Get<Text>(page, "countText").fontSize == 23,
+                label + " game title and count retain their font sizes");
+            var titleBounds = ScreenRect(fixture, title);
+            Near(titleBounds.center.x, fixture.Width * .5f, label + " title stays centered in screen");
+            foreach (var button in new[] { home, notebook, settings })
+            {
+                var bounds = ScreenRect(fixture, button);
+                Near(bounds.center.y, titleBounds.center.y, label + " navigation shares title row");
+                Require(!bounds.Overlaps(titleBounds), label + " navigation does not overlap title");
+                foreach (var mode in new[] { Get<Button>(page, "computerMatch"), Get<Button>(page, "localMatch") })
+                {
+                    var modeBounds = ScreenRect(fixture, (RectTransform)mode.transform);
+                    Near(fixture.Height - modeBounds.yMax, 108, label + " mode row retains top position");
+                    Require(bounds.yMin > modeBounds.yMax && titleBounds.yMin > modeBounds.yMax,
+                        label + " navigation and title stay above mode row");
+                }
+            }
+        }
+
+        private static void CheckKeyboardNavigation(Fixture fixture, IdiomPage page, IdiomGame game, string label)
+        {
+            var keyboard = Get<IdiomKeyboardViewport>(page, "keyboard");
+            var insetSetter = typeof(IdiomKeyboardViewport).GetProperty("BottomInset").GetSetMethod(true);
+            var visibleSetter = typeof(IdiomKeyboardViewport).GetProperty("IsVisible").GetSetMethod(true);
+            var footer = Get<RectTransform>(page, "footer");
+            var originalBottom = ScreenRect(fixture, footer).yMin;
+            // Supply a measured IME inset at the existing platform boundary. The
+            // real page layout and raycaster run; this is not a native IME test.
+            insetSetter.Invoke(keyboard, new object[] { 360f });
+            visibleSetter.Invoke(keyboard, new object[] { true });
+            try
+            {
+                Invoke(page, "Layout");
+                CheckGameNavigation(fixture, page, label + " keyboard open");
+                CheckComposer(fixture, page, game, label + " keyboard open");
+                Require(ScreenRect(fixture, footer).yMin > originalBottom,
+                    label + " keyboard sample actually moves composer");
+                Require(ScreenRect(fixture, footer).yMin >= 360,
+                    label + " composer remains above keyboard inset");
+            }
+            finally
+            {
+                insetSetter.Invoke(keyboard, new object[] { 0f });
+                visibleSetter.Invoke(keyboard, new object[] { false });
+                Invoke(page, "Layout");
+            }
+            fixture.Flush();
+            Near(ScreenRect(fixture, footer).yMin, originalBottom, label + " keyboard dismissal restores composer");
+            CheckGameNavigation(fixture, page, label + " keyboard closed");
+        }
+
+        private static void CheckScreenRect(Fixture fixture, RectTransform rect, float x, float y, float width, float height, string label)
+        {
+            Require(rect != null, label + " exists");
+            var bounds = ScreenRect(fixture, rect);
+            Near(bounds.xMin, (fixture.Width - 720) * .5f + x, label + " actual screen left");
+            Near(fixture.Height - bounds.yMax, y, label + " actual screen top");
+            Near(bounds.width, width, label + " actual screen width");
+            Near(bounds.height, height, label + " actual screen height");
+        }
+
+        private static Rect ScreenRect(Fixture fixture, RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            var bottomLeft = RectTransformUtility.WorldToScreenPoint(fixture.Camera, corners[0]);
+            var topRight = RectTransformUtility.WorldToScreenPoint(fixture.Camera, corners[2]);
+            return Rect.MinMaxRect(bottomLeft.x, bottomLeft.y, topRight.x, topRight.y);
         }
 
         private static void CheckComposer(Fixture fixture, IdiomPage page, IdiomGame game, string label)

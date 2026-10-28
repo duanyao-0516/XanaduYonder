@@ -18,7 +18,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 也可以使用菜单 `XanaduYonder / Configure VS Code` 设置外部编辑器并生成解决方案。默认路径为 `/Applications/Visual Studio Code.app`，其他位置用 `UNITY_SCRIPT_EDITOR` 指定。
 
-2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
+2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅纵向滚动，游戏卡片保持固定高度。规则、公共设置和各自存档逻辑均与手机共用。
 
 ## 命令
 
@@ -46,11 +46,16 @@ scripts/test-sudoku-selection.sh
 scripts/test-minigame-ui.sh
 scripts/test-watermelon.sh
 scripts/test-watermelon-persistence.sh
+scripts/test-minesweeper.sh
+scripts/test-minesweeper-session.sh
+scripts/test-minesweeper-input.sh
+scripts/test-minesweeper-persistence.sh
+scripts/test-minesweeper-ui.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查追加扫雷后的七款大厅顺序，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -74,7 +79,7 @@ mkdir -p artifacts/logs
 
 ## 合成大西瓜独立验证
 
-04 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。素材来自用户授权的固定版本仓库，完整路径、哈希及授权说明见[素材清单](watermelon-assets.md)。
+04 合成大西瓜使用 Unity 原生 `PhysicsScene2D` 独立场景与固定步长模拟，避免改变其他游戏的全局物理设置。水果、表情、校徽只改变贴图；同等级使用相同圆形碰撞体。水果、表情、前 10 级校徽和音效来自用户授权的固定版本仓库，第 11 级中山大学校徽来自学校官网；完整路径、哈希及来源说明见[素材清单](watermelon-assets.md)。
 
 ```bash
 scripts/test-watermelon.sh
@@ -95,6 +100,38 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 `watermelon-v1.json` 独立保存棋盘状态、当前/下一颗、随机状态、主题、得分、最高分及目标提示状态，保存备份为 `watermelon-v1.json.bak`。暂停、退回大厅和应用切后台时应保留续局；主题切换应保持物体位置、大小与速度。需要在真机覆盖拖动松手、连续合并、触摸取消、暂停/恢复、进程重启续局、声音/触感设置及三个主题显示。
 
 相对参考项目，本实现采用松手投球、持续 2 秒的稳定越线判定，以及首次合成最高级后的继续挑战。验收应覆盖短暂越线后回落、正在下落与弹跳的物体、持续堆高失败和第 11 级达成后继续。这些是当前实现的验收要求，文档不据此宣称已通过设备验证。
+
+## 扫雷独立验证
+
+扫雷的 Unity 界面测试和 APK 构建通过 `scripts/minesweeper-unity-environment.sh` 使用当前工作树的 `Library/MinesweeperGradle`，并分配独立临时 ADB 端口。不要把这些目录链接到其他工作树；该脚本只改变当前命令的环境，不修改全局 Gradle/ADB 设置。临时端口分配需要 Python 3。
+
+07 扫雷已接入当前源码；最新正式发布版 v0.4.0 仍包含六款游戏。扫雷保留源码版本 0.4.0 / Android versionCode 4，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
+
+本轮开发、测试和构建只使用 `/Users/bytedance/.codex/worktrees/minesweeper/XanaduYonder`；不切换、清理、构建或修改其他工作树，不共享其他检出的 Library/Temp。以下命令均从这一本工作树根目录执行：
+
+```bash
+scripts/test-minesweeper.sh
+scripts/test-minesweeper-session.sh
+scripts/test-minesweeper-input.sh
+scripts/test-minesweeper-persistence.sh
+scripts/test-minesweeper-ui.sh
+scripts/test-minigame-ui.sh
+scripts/build-minesweeper-validation.sh
+```
+
+前四项使用 .NET 10、C# 7.3，直接编译生产规则、Session/Profile、整帧输入、Viewport/ControlLayout 与 Codec/Store。输入检查包括 400 ms 长按即时提交与一次反馈、最终 UP 位置、同帧多指仲裁、全抬释放门禁、0.5..2 连续缩放、总览返回和 44 dp 按钮布局换算；持久化检查使用真实 Newtonsoft.Json 13.0.2 与临时目录，覆盖完整快照、字段/token、备份及文件异常。
+
+`test-minesweeper-ui.sh` 启动生产 UGUI 页面，注入内存 Profile 或明确的临时 Store，不读取或清空日常 `Application.persistentDataPath`。日志为 `artifacts/logs/minesweeper-ui-checks.log`，截图与报告位于 `artifacts/validation/minesweeper-ui/`。它需要图形渲染，不加 `-nographics`。两个 UI 检查与 Android 构建必须顺序执行；运行前关闭当前树的交互 Unity 编辑器。编辑器合成触点和尺寸换算不能代替真机多指、取消、物理 dp 与生命周期检查。
+
+构建脚本调用 `ProjectBuild.BuildAndroidMinesweeperValidation`，通过 try/finally 临时替换包名/产品名并恢复原配置，输出 `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，日志为 `artifacts/logs/build-minesweeper-validation.log`。仅成功退出且产物非空才可作为本次构建结果，独立包名是 `com.duanyao.xanaduyonder.minesweepertest`。以下安装/启动命令仅在本次构建成功并选定实际设备后执行：
+
+```bash
+MINESWEEPER_ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
+"$MINESWEEPER_ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk
+"$MINESWEEPER_ADB" -s DEVICE_SERIAL shell am start -n com.duanyao.xanaduyonder.minesweepertest/com.unity3d.player.UnityPlayerActivity
+```
+
+不要用普通 `install-android.sh` 启动此包，该脚本启动的是正式包名。扫雷测试包使用独立数据目录；`minesweeper-v1.json` 与 `.bak/.tmp` 不修改其他游戏的存档。设备验收需覆盖真实双指/第三指/取消、50% 小格和 100% 基准尺寸、按钮点击范围、全屏/总览/返回层级、共享设置后台关闭、锁屏恢复、胜负一次结算、保存失败后重试及已有六款游戏回归。是否已执行逐项以验证记录为准。
 
 ## 正式发布 APK
 
