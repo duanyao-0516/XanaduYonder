@@ -16,33 +16,46 @@ namespace XanaduYonder.Core.LinkMatch
             var start = new LinkMatchPoint(first % level.Columns, first / level.Columns);
             var end = new LinkMatchPoint(second % level.Columns, second / level.Columns);
             LinkMatchPath best = null;
-            if (start.X == end.X || start.Y == end.Y) Consider(level, tiles, start, end, ref best, start, end);
+            if (start.X == end.X || start.Y == end.Y) Consider(level, tiles, start, end, ref best, 0);
             if (best != null) return best;
 
             if (start.X != end.X && start.Y != end.Y) {
-                Consider(level, tiles, start, end, ref best, start, new LinkMatchPoint(start.X, end.Y), end);
-                Consider(level, tiles, start, end, ref best, start, new LinkMatchPoint(end.X, start.Y), end);
+                Consider(level, tiles, start, end, ref best, 1, new LinkMatchPoint(start.X, end.Y));
+                Consider(level, tiles, start, end, ref best, 1, new LinkMatchPoint(end.X, start.Y));
                 if (best != null) return best;
             }
             if (start.Y != end.Y) for (int x = -1; x <= level.Columns; x++) {
                 if (x == start.X || x == end.X) continue;
-                Consider(level, tiles, start, end, ref best, start, new LinkMatchPoint(x, start.Y), new LinkMatchPoint(x, end.Y), end);
+                Consider(level, tiles, start, end, ref best, 2, new LinkMatchPoint(x, start.Y), new LinkMatchPoint(x, end.Y));
             }
             if (start.X != end.X) for (int y = -1; y <= level.Rows; y++) {
                 if (y == start.Y || y == end.Y) continue;
-                Consider(level, tiles, start, end, ref best, start, new LinkMatchPoint(start.X, y), new LinkMatchPoint(end.X, y), end);
+                Consider(level, tiles, start, end, ref best, 2, new LinkMatchPoint(start.X, y), new LinkMatchPoint(end.X, y));
             }
             return best;
         }
-        private static void Consider(LinkMatchLevel level, int[] tiles, LinkMatchPoint start, LinkMatchPoint end, ref LinkMatchPath best, params LinkMatchPoint[] points)
+        private static void Consider(LinkMatchLevel level, int[] tiles, LinkMatchPoint start, LinkMatchPoint end, ref LinkMatchPath best, int turns, LinkMatchPoint firstBend = default(LinkMatchPoint), LinkMatchPoint secondBend = default(LinkMatchPoint))
         {
-            int steps = 0;
-            for (int i = 1; i < points.Length; i++) {
-                if (!ClearSegment(level, tiles, points[i - 1], points[i], start, end)) return;
-                steps += Math.Abs(points[i].X - points[i - 1].X) + Math.Abs(points[i].Y - points[i - 1].Y);
+            int steps = 0; var previous = start;
+            // Dense boards reject many candidates. Keep candidate corners on the
+            // stack, allocating a display path only after a route improves best.
+            if (turns >= 1) {
+                if (!ClearSegment(level, tiles, previous, firstBend, start, end)) return;
+                steps += Math.Abs(firstBend.X - previous.X) + Math.Abs(firstBend.Y - previous.Y);
+                previous = firstBend;
             }
+            if (turns == 2) {
+                if (!ClearSegment(level, tiles, previous, secondBend, start, end)) return;
+                steps += Math.Abs(secondBend.X - previous.X) + Math.Abs(secondBend.Y - previous.Y);
+                previous = secondBend;
+            }
+            if (!ClearSegment(level, tiles, previous, end, start, end)) return;
+            steps += Math.Abs(end.X - previous.X) + Math.Abs(end.Y - previous.Y);
             // Candidate iteration order breaks equal-cost ties deterministically.
-            if (best == null || points.Length - 2 < best.Turns || (points.Length - 2 == best.Turns && steps < best.Steps)) best = new LinkMatchPath(points);
+            if (best == null || turns < best.Turns || (turns == best.Turns && steps < best.Steps)) {
+                var points = turns == 0 ? new[] { start, end } : turns == 1 ? new[] { start, firstBend, end } : new[] { start, firstBend, secondBend, end };
+                best = new LinkMatchPath(points);
+            }
         }
         private static bool ClearSegment(LinkMatchLevel level, int[] tiles, LinkMatchPoint from, LinkMatchPoint to, LinkMatchPoint start, LinkMatchPoint end)
         {

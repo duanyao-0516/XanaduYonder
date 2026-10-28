@@ -174,7 +174,7 @@ SOKOBAN_ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPl
 
 ## 连连看独立验证
 
-13 连连看从大厅进入轻松／挑战选关页，三档为 24／36／48 张水果牌，两个模式各三关共六个独立续局槽位。先读[设计与调研](link-match-research.md)、[UI 原型说明](prototypes/link-match/README.md)和[架构契约](architecture.md#连连看的独立边界)；原型的交互或截图不能替代生产 UGUI、Android 输入与存档验证。
+13 连连看从大厅进入轻松／挑战选关页，五档为 24／36／48／96／192 张、6／9／12／24／48 种图案，每种四张；两个模式各五关共十个独立续局槽位。挑战初始时间为 90／120／150／300／600 秒，新两关为 5／10 分钟。先读[设计与调研](link-match-research.md)、[UI 原型说明](prototypes/link-match/README.md)和[架构契约](architecture.md#连连看的独立边界)；原型的交互或截图不能替代生产 UGUI、Android 输入与存档验证。
 
 ```bash
 scripts/test-link-match.sh
@@ -185,7 +185,7 @@ scripts/test-link-match-ui.sh
 scripts/build-link-match-validation.sh
 ```
 
-前三项分别使用生产 C# 规则、输入／布局及真实 Newtonsoft 存档代码；规则覆盖合法路径和生成见证，输入覆盖单次释放及取消，存档覆盖六槽、计时／道具、终局幂等和文件事务。`test-link-match-ui.sh` 启动 Unity Play Mode，以生产 UGUI、`Camera.Render` 和指针射线检查页面，输出 `artifacts/validation/link-match-ui/report.txt` 及截图，日志为 `artifacts/logs/link-match-ui-checks.log`。这些命令描述验证入口，不表示已经执行或通过。
+前三项分别使用生产 C# 规则、输入／布局及真实 Newtonsoft 存档代码；规则覆盖合法路径和生成见证，输入覆盖单次释放及取消，存档检查应覆盖十槽、严格 v1 六槽迁移、计时／道具、终局幂等和文件事务；新增密度还需检查 96／192 张的布局、相邻格命中与性能。`test-link-match-ui.sh` 启动 Unity Play Mode，以生产 UGUI、`Camera.Render` 和指针射线检查页面，输出 `artifacts/validation/link-match-ui/report.txt` 及截图，日志为 `artifacts/logs/link-match-ui-checks.log`。这些命令描述验证入口，不表示已经执行或通过。
 
 后三项会使用 Unity，必须在当前工作树中串行执行，运行前关闭本树的交互编辑器。连连看的 UI／构建脚本 source `scripts/link-match-unity-environment.sh`，使用本树 `Library/LinkMatchGradle` 和临时独立 ADB 端口；不复用其他工作树的 Library、Temp 或构建产物，不停止共享 ADB／Gradle 服务。
 
@@ -200,7 +200,11 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 "$LINK_MATCH_ADB" -s DEVICE_SERIAL shell am start -W -n com.duanyao.xanaduyonder.linkmatchtest/com.unity3d.player.UnityPlayerActivity
 ```
 
-`link-match-v1.json` 及 `.bak/.tmp` 只属于连连看。验收需分别覆盖：入口浏览不建局、六槽恢复和目标槽重开、下一关已有局的续接、最后一对与计时截止、无路自动重排、后台遮盘与明确继续、短屏最大棋盘及外围路线、真实触点取消／多指、游戏与公共设置保存失败提示，以及从 Zuma／Dino 横屏返回后的宿主恢复。Android dp、系统安全区、音效触感与实际设备交互另行记录；构建成功或安装启动成功都不代表这些场景已通过。
+当前 `link-match-v2.json` 及 `.bak/.tmp` 只属于连连看，schema/content 均为版本 2。仅当 v2 主档与备份都不存在时，才严格校验 v1 六槽后按模式及稳定关卡 ID 迁移，保留 v1 文件；旧挑战槽 3／4／5 映射到新 5／6／7，新增关卡槽为空。已有 v2 损坏时不回退 v1；迁移写失败保留内存进度与持续错误提示，后续可重试。安装验证包前先保留旧进度，使用覆盖安装，不卸载清数据。
+
+验收需分别覆盖：入口浏览不建局、十槽恢复和目标槽重开、合法及非法 v1 迁移、旧备份恢复、新版损坏不回退、迁移写失败、下一关已有局的续接、第 03／04 关前往下一关与第 05 关末关、最后一对与计时截止、无路自动重排、后台遮盘与明确继续、短屏 48／96／192 张及外围路线、真实相邻触点取消／多指、游戏与公共设置保存失败提示，以及从 Zuma／Dino 横屏返回后的宿主恢复。Android dp、系统安全区、音效触感与实际设备交互另行记录；构建成功或安装启动成功都不代表这些场景已通过。
+
+首版三关的历史测试、截图和 APK 记录保留在[原验证记录](verification-link-match.md)。新增五关、v2 迁移、生产 UGUI 对照和设备边界单独记入[扩关验证记录](verification-link-match-expanded.md)；[浏览器密度对照](prototypes/link-match-density/README.md)仅用于设计展示，不能替代这些验证。
 
 ## 正式发布 APK
 

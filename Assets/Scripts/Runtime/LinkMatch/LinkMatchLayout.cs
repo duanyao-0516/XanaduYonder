@@ -19,6 +19,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         public double ToolHeight { get; private set; }
         public double Bottom { get; private set; }
         public double Cell { get; private set; }
+        public double DecorationScale { get; private set; }
         public double GridLeft { get; private set; }
         public double GridTop { get; private set; }
         public bool Compact { get; private set; }
@@ -36,6 +37,8 @@ namespace XanaduYonder.Runtime.LinkMatch
             ToolGap=(Compact?10:16)*Scale; ToolHeight=(Compact?48:52)*Scale; Bottom=(Compact?12:16)*Scale;
             BoardWidth=width-2*Margin; BoardHeight=Math.Max(24*Scale,height-BoardTop-ToolGap-ToolHeight-Bottom);
             Cell=Math.Max(0,Math.Min((BoardWidth-24*Scale)/columns,(BoardHeight-24*Scale)/rows));
+            double originalCell=Math.Min((BoardWidth-24*Scale)/6,(BoardHeight-24*Scale)/8);
+            DecorationScale=originalCell>0?Math.Min(1,Cell/originalCell):1;
             GridLeft=(BoardWidth-Cell*columns)/2; GridTop=(BoardHeight-Cell*rows)/2;
         }
         public int Hit(double x,double y)

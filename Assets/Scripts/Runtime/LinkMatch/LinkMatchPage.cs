@@ -45,7 +45,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             root=parent;returnLobby=lobby;openSettings=settings;acceptsInput=canInput;soundEnabled=sound;hapticsEnabled=haptics;feedback=commonFeedback;setStatus=status;
             store=initialProfile!=null?initialStore:initialStore??new LinkMatchSaveStore(Application.persistentDataPath);
             if(initialProfile!=null) profile=initialProfile;
-            else { var saved=store.Load(out warning);profile=saved==null?new LinkMatchProfile():new LinkMatchProfile(saved); }
+            else { var saved=store.Load(out warning);saveFailed=store.MigrationPending;profile=saved==null?new LinkMatchProfile():new LinkMatchProfile(saved); }
             seedCounter=unchecked((uint)DateTime.UtcNow.Ticks);lastClock=Time.realtimeSinceStartupAsDouble;LayoutNow();
         }
         public void Enter() { visible=true;gameObject.SetActive(true);settingsBlocked=false;ShowEntry(); }
@@ -131,7 +131,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             needsRecovery=false;
             if(session==null||session.IsTerminal) return;
             TickClock();if(session.IsTerminal) return;
-            if(session.EnsureMove()) {lastClock=Time.realtimeSinceStartupAsDouble;CancelTransient();Save();RefreshBoard();Toast("没有可连的水果，已免费重新排列");}
+            if(session.EnsureMove()) {lastClock=Time.realtimeSinceStartupAsDouble;CancelTransient();Save();RefreshBoard();Toast("没有可连的图案，已免费重新排列");}
         }
         private void TickClock()
         {

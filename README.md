@@ -25,9 +25,9 @@
 
 源码另接入 **12 · 推箱子**：8 关原创教学和 100 关 Boxoban，四向推箱、连续撤回、重来、自由选关和独立续局。入口展示真实进度，教学使用命名卡片、普通关使用数字网格；游戏页单行计数、圆角棋盘背景及集中操作区，地图只做完整自动适配。验证进度与边界见[推箱子验证记录](docs/verification-sokoban.md)。
 
-源码另接入 **13 · 连连看**：大厅卡片进入轻松／挑战选关页，再进入独立竖屏棋盘；24／36／48 张水果牌按最多两次直角转弯连接消除，可绕外圈。轻松模式不限时，挑战模式为 90／120／150 秒、每局 3 次提示和 2 次主动洗牌，无可消对子时免费重排。两模式 × 三关使用六个独立续局槽位，暂停遮住棋盘，返回前台需明确继续；`link-match-v1.json` 保存真实牌阵、计时、道具、随机状态及同局成绩。设计依据见[调研与设计](docs/link-match-research.md)，UI 参考见[原型目录](docs/prototypes/link-match/README.md)，实现边界见[架构说明](docs/architecture.md#连连看的独立边界)。
+源码另接入 **13 · 连连看**：大厅卡片进入轻松／挑战选关页，再进入独立竖屏棋盘；五关为 24／36／48／96／192 张、6／9／12／24／48 种图案，每种四张，按最多两次直角转弯连接消除，可绕外圈。轻松模式不限时，挑战模式为 90／120／150／300／600 秒（新两关为 5／10 分钟）、每局 3 次提示和 2 次主动洗牌，无可消对子时免费重排。两模式 × 五关使用十个独立续局槽位，暂停遮住棋盘，返回前台需明确继续；`link-match-v2.json` 保存真实牌阵、计时、道具、随机状态及同局成绩。仅在 v2 主档和备份都不存在时，严格校验 v1 六槽后按模式与稳定关卡 ID 迁移，保留旧文件；已有 v2 损坏时不回退旧进度。设计依据见[调研与设计](docs/link-match-research.md)，UI 参考见[原型目录](docs/prototypes/link-match/README.md)和[48／96／192 张同尺寸对照](docs/prototypes/link-match-density/README.md)，实现边界见[架构说明](docs/architecture.md#连连看的独立边界)。
 
-连连看的生产 UI 截图、原型对照、自动化结果、验证 APK 信息和设备验收边界统一记录在[开发验证记录](docs/verification-link-match.md)。
+连连看首版三关的生产 UI、自动化和 APK 结果保留在[原开发验证记录](docs/verification-link-match.md)；五关扩展、严格迁移、新 UI 对照及设备验收边界见[扩关验证记录](docs/verification-link-match-expanded.md)。文档描述当前源码，不代表新增场景均已验证通过。
 
 大厅采用纵向滚动列表，每张游戏卡保持固定高度，卡间距略微收紧。除 Dino 外各款游戏独立保存对局；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。声音与触感设置共用，旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
@@ -109,7 +109,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 推箱子验证使用 `scripts/build-sokoban-validation.sh`，生成独立包名 `com.duanyao.xanaduyonder.sokobantest` 的 `artifacts/builds/XanaduYonder-0.5.0-sokoban-validation.apk`。专用脚本隔离 Gradle 和 ADB，UI 检查与构建串行执行；存档为 `sokoban-v1.json`。此包包含当前源码接入的全部游戏，独立包名用于避免覆盖正式应用。
 
-连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.5.0-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。12 张 Fluent 3D 水果原图和 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
+连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.5.0-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。48 张 Fluent 3D 原图（水果、食物、动物、自然与物品）和完整 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
 
 通用开发 APK 输出到 `artifacts/builds/XanaduYonder-0.5.0.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 

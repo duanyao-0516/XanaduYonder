@@ -46,7 +46,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         internal static bool ValidAttempt(string id) { return Guid.TryParseExact(id, "D", out var value) && value != Guid.Empty && value.ToString("D") == id; }
         internal static bool ValidMode(LinkMatchMode mode) { return mode == LinkMatchMode.Relaxed || mode == LinkMatchMode.Challenge; }
-        internal static bool KnownLevel(string id) { return id == "level-01" || id == "level-02" || id == "level-03"; }
+        internal static bool KnownLevel(string id) { foreach (var level in LinkMatchLevel.All) if (level.Id == id) return true; return false; }
         internal static bool Finite(double value) { return !double.IsNaN(value) && !double.IsInfinity(value); }
         internal static bool Fail(string message, out string reason) { reason = message; return false; }
     }
@@ -75,18 +75,19 @@ namespace XanaduYonder.Runtime.LinkMatch
 
     public sealed class LinkMatchSaveData
     {
-        public const string CurrentContentVersion = "1";
+        public const string CurrentContentVersion = "2";
         public string ContentVersion = CurrentContentVersion;
         public LinkMatchMode SelectedMode;
         public string SelectedLevelId = "level-01";
         public long ActivitySequence;
-        // Fixed index: mode * 3 + level.Number - 1. Null means never started.
-        public LinkMatchSessionData[] Slots = new LinkMatchSessionData[6];
+        // Index uses the current catalog; legacy indices are mapped explicitly by the codec.
+        public static int SlotCount { get { return 2 * LinkMatchLevel.Count; } }
+        public LinkMatchSessionData[] Slots = new LinkMatchSessionData[SlotCount];
         public LinkMatchRecord[] Records = CreateRecords();
         public static int SlotIndex(LinkMatchMode mode, string levelId)
-        { if (!LinkMatchSessionData.ValidMode(mode)) throw new ArgumentOutOfRangeException(nameof(mode)); return (int)mode * 3 + LinkMatchLevel.Get(levelId).Number - 1; }
+        { if (!LinkMatchSessionData.ValidMode(mode)) throw new ArgumentOutOfRangeException(nameof(mode)); return (int)mode * LinkMatchLevel.Count + LinkMatchLevel.Get(levelId).Number - 1; }
         private static LinkMatchRecord[] CreateRecords()
-        { var result = new LinkMatchRecord[6]; for (int i = 0; i < result.Length; i++) result[i] = new LinkMatchRecord { Mode = (LinkMatchMode)(i / 3), LevelId = LinkMatchLevel.Get(i % 3 + 1).Id }; return result; }
+        { var result = new LinkMatchRecord[SlotCount]; for (int i = 0; i < result.Length; i++) result[i] = new LinkMatchRecord { Mode = (LinkMatchMode)(i / LinkMatchLevel.Count), LevelId = LinkMatchLevel.Get(i % LinkMatchLevel.Count + 1).Id }; return result; }
         public LinkMatchSaveData Copy()
         {
             var copy = (LinkMatchSaveData)MemberwiseClone();
@@ -97,9 +98,9 @@ namespace XanaduYonder.Runtime.LinkMatch
         public bool TryValidate(out string reason)
         {
             reason = null;
-            if (ContentVersion != CurrentContentVersion || !LinkMatchSessionData.ValidMode(SelectedMode) || !LinkMatchSessionData.KnownLevel(SelectedLevelId) || ActivitySequence < 0 || Slots == null || Slots.Length != 6 || Records == null || Records.Length != 6) return LinkMatchSessionData.Fail("Invalid profile schema or selection.", out reason);
+            if (ContentVersion != CurrentContentVersion || !LinkMatchSessionData.ValidMode(SelectedMode) || !LinkMatchSessionData.KnownLevel(SelectedLevelId) || ActivitySequence < 0 || Slots == null || Slots.Length != SlotCount || Records == null || Records.Length != SlotCount) return LinkMatchSessionData.Fail("Invalid profile schema or selection.", out reason);
             var attempts = new HashSet<string>(StringComparer.Ordinal); var orders = new HashSet<long>(); var bestAttempts = new HashSet<string>(StringComparer.Ordinal);
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < SlotCount; i++)
             {
                 var record = Records[i];
                 if (record == null) return LinkMatchSessionData.Fail("Missing record.", out reason);
@@ -117,7 +118,7 @@ namespace XanaduYonder.Runtime.LinkMatch
                 if (record.BestAttemptId == slot.AttemptId && (record.BestElapsedSeconds != slot.ElapsedSeconds || record.BestHintsUsed != slot.HintsUsed || record.BestShufflesUsed != slot.ShufflesUsed)) return LinkMatchSessionData.Fail("Best tuple disagrees with its winning attempt.", out reason);
             }
             // A best ID belonging to another current slot cannot be a real same-run tuple.
-            for (int i = 0; i < 6; i++) for (int j = 0; j < 6; j++) if (i != j && Slots[j] != null && Records[i].BestAttemptId == Slots[j].AttemptId) return LinkMatchSessionData.Fail("A best attempt belongs to a different slot.", out reason);
+            for (int i = 0; i < SlotCount; i++) for (int j = 0; j < SlotCount; j++) if (i != j && Slots[j] != null && Records[i].BestAttemptId == Slots[j].AttemptId) return LinkMatchSessionData.Fail("A best attempt belongs to a different slot.", out reason);
             return true;
         }
     }

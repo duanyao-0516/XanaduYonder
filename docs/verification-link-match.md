@@ -1,5 +1,7 @@
 # 连连看开发与验证记录
 
+> 本文为三关首版的历史记录。后续第四、第五关已开发并在 OPPO 更新安装，最新参数、十槽迁移、截图与 APK 哈希见 [扩关验证记录](verification-link-match-expanded.md)。同名本地 APK 路径已由新版产物覆盖。
+
 日期：2026-10-28。实现位于独立工作树 `link-match-research/XanaduYonder`，分支 `p/duanyao.0516/codex/link-match-research`，基于已拉取的 `origin/master` 提交 `0f6e4fd691e405020da49128c3034cb808797738`。原 checkout 的未提交文档未改动；没有合并主线、推送或发布。
 
 ## 实现范围

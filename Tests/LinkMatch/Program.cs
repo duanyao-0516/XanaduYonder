@@ -1,25 +1,47 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using XanaduYonder.Core.LinkMatch;
 
 internal static class Program
 {
     private static int passed, failed;
-    private static void Main()
+    private static void Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--legacy-fingerprints") {
+            for (int n = 1; n <= 3; n++) Console.WriteLine("level-0" + n + " " + LegacyFingerprint(LinkMatchLevel.Get(n)));
+            return;
+        }
+        if (args.Length == 1 && args[0] == "--benchmark") { Benchmark(); return; }
         Check("level catalog uses stable ids and approved settings", () => {
-            Assert(LinkMatchLevel.All.Count == 3, "catalog");
-            for (int n = 1; n <= 3; n++) {
+            Assert(LinkMatchLevel.All.Count == 5, "catalog must contain the approved five levels");
+            var columns = new[] { 4, 6, 6, 8, 12 }; var rows = new[] { 6, 6, 8, 12, 16 };
+            var kinds = new[] { 6, 9, 12, 24, 48 }; var seconds = new[] { 90, 120, 150, 300, 600 };
+            for (int n = 1; n <= 5; n++) {
                 var l = LinkMatchLevel.Get(n);
                 Assert(l.Number == n && l.Id == "level-0" + n && ReferenceEquals(l, LinkMatchLevel.Get(l.Id)), "identity");
-                Assert(l.Columns == (n == 1 ? 4 : 6) && l.Rows == (n == 3 ? 8 : 6), "dimensions");
-                Assert(l.Kinds == 3 + n * 3 && l.ChallengeSeconds == 60 + n * 30, "rules");
+                Assert(l.Columns == columns[n - 1] && l.Rows == rows[n - 1], "dimensions");
+                Assert(l.Kinds == kinds[n - 1] && l.ChallengeSeconds == seconds[n - 1], "rules");
+                Assert(l.Columns * l.Rows == l.Kinds * 4, "exactly four copies per kind");
             }
             Throws<ArgumentOutOfRangeException>(() => LinkMatchLevel.Get(0));
-            Throws<ArgumentOutOfRangeException>(() => LinkMatchLevel.Get(4));
+            Throws<ArgumentOutOfRangeException>(() => LinkMatchLevel.Get(6));
             Throws<ArgumentException>(() => LinkMatchLevel.Get("LEVEL-01"));
             Throws<ArgumentException>(() => LinkMatchLevel.Get((string)null));
+        });
+        Check("catalog exposes count and actual maximums for shared consumers", () => {
+            foreach (var expected in new[] { new KeyValuePair<string, int>("Count", 5), new KeyValuePair<string, int>("MaximumTileCount", 192), new KeyValuePair<string, int>("MaximumKinds", 48) }) {
+                var property = typeof(LinkMatchLevel).GetProperty(expected.Key);
+                Assert(property != null && property.PropertyType == typeof(int) && property.GetGetMethod().IsStatic, "missing public static int " + expected.Key);
+                Assert((int)property.GetValue(null, null) == expected.Value, expected.Key + " value");
+            }
+        });
+        Check("legacy seeded boards and complete path witnesses remain byte-for-byte stable", () => {
+            var fingerprints = new[] { "2f88377da01eb2b411519602ddce6d55edb76676ebbaef40769d30400e9a320c", "d7b52eace46e394a717b9e9a3639eef3eed95a56a3beba5b04d4b1973b47c0d3", "6a864b807a080f1c36b466bfbfca6cdfcc6a7bd0cca89cb4339b64d8490b0149" };
+            for (int n = 1; n <= 3; n++) Assert(LegacyFingerprint(LinkMatchLevel.Get(n)) == fingerprints[n - 1], "legacy generation or tie-break drift at level " + n);
         });
         Check("board validates length ids and exact pair counts", () => {
             var l = LinkMatchLevel.Get(1);
@@ -33,11 +55,13 @@ internal static class Program
             Throws<ArgumentException>(() => new LinkMatchGame(l, b));
         });
         Check("empty game is won and rejects interaction", () => {
-            var l = LinkMatchLevel.Get(1); var g = new LinkMatchGame(l, Empty(l)); LinkMatchPath p;
+            foreach (var l in LinkMatchLevel.All) {
+            var g = new LinkMatchGame(l, Empty(l)); LinkMatchPath p;
             Assert(g.Won && g.Remaining == 0 && g.FindMatch() == null && !g.TryMatch(0, 1, out p) && p == null, "terminal");
             Assert(g.Shuffle(7).Solution.Count == 0 && g.Won, "empty shuffle");
             Throws<ArgumentOutOfRangeException>(() => g.TileAt(-1));
-            Throws<ArgumentOutOfRangeException>(() => g.TileAt(24));
+            Throws<ArgumentOutOfRangeException>(() => g.TileAt(l.Columns * l.Rows));
+            }
         });
         Check("straight horizontal and vertical paths retain empty positions", () => {
             foreach (var pair in new[] { new[] { 5, 7 }, new[] { 5, 17 }, new[] { 5, 6 } }) {
@@ -59,13 +83,15 @@ internal static class Program
             ValidatePath(l, b, 7, 28, p);
         });
         Check("outer ring is used on all four edges without wrapping", () => {
-            var l = LinkMatchLevel.Get(2);
-            var cases = new[] { new[] { 0, 2, 1, 7 }, new[] { 30, 32, 31, 25 }, new[] { 0, 12, 6, 7 }, new[] { 5, 17, 11, 10 } };
+            foreach (var l in LinkMatchLevel.All) {
+            int w = l.Columns, bottom = (l.Rows - 1) * w;
+            var cases = new[] { new[] { 0, 2, 1, w + 1 }, new[] { bottom, bottom + 2, bottom + 1, bottom - w + 1 }, new[] { 0, 2 * w, w, w + 1 }, new[] { w - 1, 3 * w - 1, 2 * w - 1, 2 * w - 2 } };
             foreach (var c in cases) {
                 var b = Fixture(l, c[0], c[1], c[2], c[3]); LinkMatchPath p;
                 Assert(new LinkMatchGame(l, b).TryMatch(c[0], c[1], out p) && p.Turns == 2 && p.Steps == 4, "edge");
                 Assert(p.Points.Any(v => v.X == -1 || v.X == l.Columns || v.Y == -1 || v.Y == l.Rows), "outside");
                 ValidatePath(l, b, c[0], c[1], p);
+            }
             }
         });
         Check("three-turn corridor is rejected even when a longer route exists", () => {
@@ -131,6 +157,41 @@ internal static class Program
                 if (found) { Assert(p.Turns == turns && p.Steps == steps, "cost " + run); ValidatePath(l, b, cells[0], cells[1], p); }
             }
         });
+        Check("dense paths agree with independent search and reject illegal submissions atomically", () => {
+            var random = new Random(96192);
+            foreach (int number in new[] { 4, 5 }) {
+                var l = LinkMatchLevel.Get(number); int count = l.Columns * l.Rows;
+                for (int run = 0; run < 160; run++) {
+                    var cells = Enumerable.Range(0, count).OrderBy(i => random.Next()).ToArray();
+                    var b = Fixture(l, cells[0], cells[1], cells.Skip(2).Take(random.Next((count - 4) / 2 + 1) * 2).ToArray());
+                    var game = new LinkMatchGame(l, b); LinkMatchPath path;
+                    Assert(!game.TryMatch(cells[0], cells[0], out path) && !game.TryMatch(-1, cells[1], out path) && !game.TryMatch(cells[0], count, out path), "invalid dense submission");
+                    Assert(game.GetTiles().SequenceEqual(b), "invalid submission mutated dense board");
+                    int turns, steps; bool found = Oracle(l, b, cells[0], cells[1], 2, out turns, out steps);
+                    Assert(game.TryMatch(cells[0], cells[1], out path) == found, "dense route existence");
+                    if (found) { Assert(path.Turns == turns && path.Steps == steps, "dense optimal route"); ValidatePath(l, b, cells[0], cells[1], path); }
+                    else Assert(game.GetTiles().SequenceEqual(b), "blocked route mutated dense board");
+                }
+                var full = LinkMatchGenerator.Generate(l, uint.MaxValue); var input = full.Tiles; var live = new LinkMatchGame(l, input); input[0] = -1;
+                var snapshot = live.GetTiles(); snapshot[count - 1] = -1;
+                Assert(live.Remaining == count && live.TileAt(0) >= 0 && live.TileAt(count - 1) >= 0, "dense defensive copies");
+                var illegal = Empty(l); illegal[0] = illegal[count - 1] = l.Kinds;
+                Throws<ArgumentException>(() => new LinkMatchGame(l, illegal));
+            }
+        });
+        Check("dense generation avoids per-candidate temporary arrays", () => {
+            foreach (int number in new[] { 4, 5 }) {
+                var level = LinkMatchLevel.Get(number);
+                LinkMatchGenerator.Generate(level, 0);
+                for (uint seed = 0; seed < 16; seed++) {
+                    long before = GC.GetAllocatedBytesForCurrentThread();
+                    var deal = LinkMatchGenerator.Generate(level, seed);
+                    long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+                    Assert(allocated <= level.Columns * level.Rows * 1536L, "dense generation allocated " + allocated + " bytes at " + level.Id + " seed " + seed);
+                    GC.KeepAlive(deal);
+                }
+            }
+        });
         Check("seeded generation is repeatable and fully replayable for every level", () => {
             foreach (var l in LinkMatchLevel.All) {
                 var layouts = new HashSet<string>();
@@ -156,10 +217,12 @@ internal static class Program
             }
         });
         Check("reshuffle handles separated singleton rows and last pair", () => {
-            var l = LinkMatchLevel.Get(3); var b = Empty(l);
-            for (int row = 0; row < 8; row++) b[row * 6 + row % 6] = row / 2;
+            foreach (var l in LinkMatchLevel.All) {
+            var b = Empty(l);
+            for (int row = 0; row < l.Rows; row++) b[row * l.Columns + row % l.Columns] = row / 2;
             var deal = LinkMatchGenerator.Reshuffle(l, b, uint.MaxValue); AssertPreserved(b, deal.Tiles); Replay(l, deal);
-            b = Fixture(l, 0, 47); deal = LinkMatchGenerator.Reshuffle(l, b, 0); Replay(l, deal);
+            b = Fixture(l, 0, b.Length - 1); deal = LinkMatchGenerator.Reshuffle(l, b, 0); Replay(l, deal);
+            }
         });
         Check("generated snapshots and solution collections cannot alter the deal", () => {
             var l = LinkMatchLevel.Get(1); var deal = LinkMatchGenerator.Generate(l, 3);
@@ -176,6 +239,49 @@ internal static class Program
         });
         Console.WriteLine("LinkMatch: " + passed + " passed, " + failed + " failed");
         if (failed != 0) Environment.Exit(1);
+    }
+
+    private static string LegacyFingerprint(LinkMatchLevel level)
+    {
+        var content = new StringBuilder();
+        for (uint seed = 0; seed < 100; seed++) {
+            var deal = LinkMatchGenerator.Generate(level, seed);
+            content.Append(string.Join(",", deal.Tiles)).Append('|');
+            foreach (var pair in deal.Solution) content.Append(pair.First).Append(',').Append(pair.Second).Append(':').Append(PathText(pair.Path)).Append('|');
+            content.Append('\n');
+        }
+        using (var hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(content.ToString()))).Replace("-", "").ToLowerInvariant();
+    }
+    private static void Benchmark()
+    {
+        Console.WriteLine("LinkMatch .NET " + Environment.Version + " latency/allocation; 128 fixed seeds per case; no Unity/device claims.");
+        foreach (int number in new[] { 4, 5 }) {
+            var level = LinkMatchLevel.Get(number);
+            var deals = Enumerable.Range(0, 128).Select(seed => LinkMatchGenerator.Generate(level, (uint)seed)).ToArray();
+            var games = deals.Select(deal => new LinkMatchGame(level, deal.Tiles)).ToArray();
+            var sparse = deals.Select(deal => {
+                var game = new LinkMatchGame(level, deal.Tiles);
+                foreach (var pair in deal.Solution.Take(deal.Solution.Count / 2)) { LinkMatchPath path; Assert(game.TryMatch(pair.First, pair.Second, out path), "benchmark sparse fixture"); }
+                return game.GetTiles();
+            }).ToArray();
+            Measure(level, "Generate", i => LinkMatchGenerator.Generate(level, (uint)i));
+            Measure(level, "FindMatch/full", i => games[i].FindMatch());
+            Measure(level, "Reshuffle/full", i => LinkMatchGenerator.Reshuffle(level, deals[i].Tiles, (uint)i));
+            Measure(level, "Reshuffle/half", i => LinkMatchGenerator.Reshuffle(level, sparse[i], (uint)i));
+        }
+    }
+    private static void Measure(LinkMatchLevel level, string name, Func<int, object> operation)
+    {
+        for (int i = 0; i < 16; i++) GC.KeepAlive(operation(i));
+        var milliseconds = new double[128]; var allocated = new long[128];
+        for (int i = 0; i < milliseconds.Length; i++) {
+            long bytes = GC.GetAllocatedBytesForCurrentThread(), started = Stopwatch.GetTimestamp();
+            object result = operation(i);
+            milliseconds[i] = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
+            allocated[i] = GC.GetAllocatedBytesForCurrentThread() - bytes; GC.KeepAlive(result);
+        }
+        Array.Sort(milliseconds);
+        Console.WriteLine(level.Id + " " + name + ": median=" + milliseconds[64].ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "ms p95=" + milliseconds[121].ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "ms max=" + milliseconds[127].ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "ms mean-bytes=" + ((long)allocated.Average()) + " max-bytes=" + allocated.Max());
     }
 
     private static int[] Empty(LinkMatchLevel l) { return Enumerable.Repeat(-1, l.Columns * l.Rows).ToArray(); }

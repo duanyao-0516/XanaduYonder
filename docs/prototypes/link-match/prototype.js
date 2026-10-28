@@ -1,15 +1,26 @@
 (() => {
   'use strict';
   // A presentation model only: no solver, timer, random deal or persistence.
-  const fruits = [
+  const patterns = [
     ['strawberry','草莓'],['red-apple','红苹果'],['tangerine','橘子'],['lemon','柠檬'],
     ['banana','香蕉'],['watermelon','西瓜'],['grapes','葡萄'],['cherries','樱桃'],
-    ['peach','桃子'],['pear','梨'],['pineapple','菠萝'],['avocado','牛油果']
+    ['peach','桃子'],['pear','梨'],['pineapple','菠萝'],['avocado','牛油果'],
+    ['croissant','牛角包'],['hamburger','汉堡'],['pizza','披萨'],['doughnut','甜甜圈'],
+    ['cupcake','纸杯蛋糕'],['carrot','胡萝卜'],['broccoli','西兰花'],['ear-of-corn','玉米'],
+    ['mushroom','蘑菇'],['cheese-wedge','奶酪'],['egg','鸡蛋'],['peanuts','花生'],
+    ['dog-face','小狗'],['cat-face','小猫'],['fox','狐狸'],['panda','熊猫'],
+    ['frog','青蛙'],['lion','狮子'],['pig-face','小猪'],['unicorn','独角兽'],
+    ['butterfly','蝴蝶'],['lady-beetle','瓢虫'],['octopus','章鱼'],['tropical-fish','热带鱼'],
+    ['sunflower','向日葵'],['hibiscus','木槿花'],['four-leaf-clover','四叶草'],['cactus','仙人掌'],
+    ['rainbow','彩虹'],['fire','火焰'],['soccer-ball','足球'],['basketball','篮球'],
+    ['rocket','火箭'],['wrapped-gift','礼物'],['musical-note','音符'],['gem-stone','宝石']
   ];
   const levels = [
     { id:1, columns:4, rows:6, kinds:6, seconds:90 },
     { id:2, columns:6, rows:6, kinds:9, seconds:120 },
-    { id:3, columns:6, rows:8, kinds:12, seconds:150 }
+    { id:3, columns:6, rows:8, kinds:12, seconds:150 },
+    { id:4, columns:8, rows:12, kinds:24, seconds:300 },
+    { id:5, columns:12, rows:16, kinds:48, seconds:600 }
   ];
   const params = new URLSearchParams(location.search);
   const state = { view:'entry', mode:'relaxed', level:2, profile:'resume', overlay:null, saveError:false, selected:[], showPath:true, variant:0, isResume:true, sound:true, haptics:true };
@@ -27,10 +38,11 @@
   let previousFocus = null;
   const level = () => levels.find(item => item.id === state.level);
   const total = () => level().columns * level().rows;
+  const lastLevel = () => levels[levels.length-1].id;
   const number = id => String(id).padStart(2,'0');
   const modeName = () => state.mode === 'relaxed' ? '轻松' : '挑战';
   const setText = (id,value) => { document.getElementById(id).textContent = value; };
-  const fruitImage = (index,alt='') => `<img src="assets/${fruits[index][0]}.png" alt="${alt}" draggable="false">`;
+  const patternImage = (index,alt='') => `<img src="${index<12?'assets':'../link-match-density/assets'}/${patterns[index][0]}.png" alt="${alt}" draggable="false">`;
   const endpoints = () => [level().columns, level().columns * 4];
   const clockText = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
 
@@ -52,7 +64,7 @@
   function makeFixture() {
     const current=level();
     const tiles=Array.from({length:current.columns*current.rows},(_,i)=>i%current.kinds);
-    // Fixed permutations retain exactly four copies of every fruit.
+    // Fixed permutations retain exactly four copies of every pattern.
     let seed=1709+state.level*37+state.variant*97;
     for(let i=tiles.length-1;i>0;i--){seed=(seed*1664525+1013904223)>>>0;const j=seed%(i+1);[tiles[i],tiles[j]]=[tiles[j],tiles[i]];}
     const reserved=[];
@@ -68,8 +80,8 @@
     if(state.showPath)state.selected=endpoints();
     board.style.gridTemplateColumns=`repeat(${level().columns},1fr)`;
     board.style.gridTemplateRows=`repeat(${level().rows},1fr)`;
-    board.innerHTML=fixture.map((fruit,index)=>`<button class="fruit-slot${state.selected.includes(index)?' selected':''}" data-tile="${index}" aria-label="第${Math.floor(index/level().columns)+1}行第${index%level().columns+1}列，${fruits[fruit][1]}" aria-pressed="${state.selected.includes(index)}">${fruitImage(fruit)}</button>`).join('');
-    board.setAttribute('aria-label',`${level().columns}列${level().rows}行，${total()}张水果，${level().kinds}种图案，每种4张；固定设计样例`);
+    board.innerHTML=fixture.map((fruit,index)=>`<button class="fruit-slot${state.selected.includes(index)?' selected':''}" data-tile="${index}" aria-label="第${Math.floor(index/level().columns)+1}行第${index%level().columns+1}列，${patterns[fruit][1]}" aria-pressed="${state.selected.includes(index)}">${patternImage(fruit)}</button>`).join('');
+    board.setAttribute('aria-label',`${level().columns}列${level().rows}行，${total()}张图案，${level().kinds}种图案，每种4张；固定设计样例`);
     requestAnimationFrame(layoutBoard);
   }
 
@@ -77,6 +89,12 @@
     if(state.view!=='game'||!area.clientWidth||!area.clientHeight)return;
     const padding=12;
     const slot=Math.min((area.clientWidth-padding*2)/level().columns,(area.clientHeight-padding*2)/level().rows);
+    // Match production DecorationScale against level 3 in this same board area.
+    const originalSlot=Math.min((area.clientWidth-padding*2)/6,(area.clientHeight-padding*2)/8);
+    const decoration=originalSlot>0?Math.min(1,slot/originalSlot):1;
+    const sizes={'tile-inset':2*decoration,'tile-radius':9*decoration,'tile-border':decoration,'tile-shadow':2*decoration,'selected-border':Math.max(1.5,2*decoration),'selected-halo':decoration,'path-stroke':3*decoration,'path-halo':6*decoration};
+    Object.entries(sizes).forEach(([name,value])=>area.style.setProperty(`--${name}`,`${value}px`));
+    screen.dataset.decoration=decoration.toFixed(4);
     const width=slot*level().columns,height=slot*level().rows;
     board.style.width=`${width}px`;board.style.height=`${height}px`;
     board.dataset.slot=slot.toFixed(2);
@@ -90,7 +108,7 @@
 
   function renderEntry() {
     const resume=state.profile==='resume';
-    setText('continue-eyebrow',resume?'接着上次的轻松':'从第一对水果开始');
+    setText('continue-eyebrow',resume?'接着上次的轻松':'从第一对图案开始');
     setText('continue-title',resume?'第 02 关':`来一局${modeName()}连连看`);
     setText('continue-detail',resume?'36 张待配 · 已用时 00:32':`第 01 关 · 24 张 · ${state.mode==='relaxed'?'不限时':'90 秒'}`);
     setText('continue-action',resume?'继续游戏':`开始${modeName()}第一关`);
@@ -99,7 +117,7 @@
     setText('mode-summary',state.mode==='relaxed'?'不限时 · 提示和洗牌随心用':'限时完成 · 每关 3 次提示、2 次洗牌');
     document.getElementById('level-list').innerHTML=levels.map(item=>{
       const active=resume&&state.mode==='relaxed'&&item.id===2;
-      return `<button class="level-card${active?' is-current':''}" data-level="${item.id}" aria-label="第${number(item.id)}关，${item.columns*item.rows}张，${item.kinds}种水果${state.mode==='challenge'?`，${item.seconds}秒`:''}${active?'，可继续':''}"><span class="level-number">${number(item.id)}</span><span class="level-detail"><strong>${item.columns*item.rows} 张 · ${item.kinds} 种水果</strong><small>${item.columns} × ${item.rows}${state.mode==='challenge'?` · ${item.seconds} 秒`:' · 不限时'}</small></span>${active?'<span class="level-state">继续</span>':'<span class="level-chevron" aria-hidden="true">›</span>'}</button>`;
+      return `<button class="level-card${active?' is-current':''}" data-level="${item.id}" aria-label="第${number(item.id)}关，${item.columns*item.rows}张，${item.kinds}种图案${state.mode==='challenge'?`，${item.seconds}秒`:''}${active?'，可继续':''}"><span class="level-number">${number(item.id)}</span><span class="level-detail"><strong>${item.columns*item.rows} 张 · ${item.kinds} 种图案</strong><small>${item.columns} × ${item.rows}${state.mode==='challenge'?` · ${item.seconds} 秒`:' · 不限时'}</small></span>${active?'<span class="level-state">继续</span>':'<span class="level-chevron" aria-hidden="true">›</span>'}</button>`;
     }).join('');
   }
 
@@ -116,7 +134,7 @@
   function render() {
     screen.dataset.view=state.view;
     ['lobby','entry','game','assets'].forEach(view=>{document.getElementById(`${view}-page`).hidden=view!==state.view;});
-    setText('page-title',state.view==='assets'?'水果素材板':'连连看');
+    setText('page-title',state.view==='assets'?'图案素材板':'连连看');
     setText('heading-tag',state.view==='game'?'':state.view==='lobby'?'XANADU YONDER':state.view==='assets'?'FLUENT / 3D':'闲下来，连一连');
     renderEntry();if(state.view==='game')renderGame();
     previewLevel.value=String(state.level);previewProfile.value=state.profile;
@@ -145,17 +163,17 @@
     modal.classList.toggle('center',['pause','restart','complete','timeout'].includes(kind));
     document.querySelector('.modal-close').hidden=['restart','complete','timeout'].includes(kind);
     const button=(text,action,secondary=false)=>`<button class="modal-button${secondary?' secondary':''}" data-action="${action}">${text}</button>`;
-    if(kind==='pause')modalContent.innerHTML=`<p class="modal-kicker">${modeName()} · 第 ${number(state.level)} 关</p><h2 id="modal-title">歇一会儿</h2><p>水果在这里等你。<br>回来时，从刚才那一步继续。</p>${button('继续游戏','close')}${button('返回选关','entry',true)}<button class="modal-text-link" data-action="restart">重新开始本关</button>`;
+    if(kind==='pause')modalContent.innerHTML=`<p class="modal-kicker">${modeName()} · 第 ${number(state.level)} 关</p><h2 id="modal-title">歇一会儿</h2><p>图案在这里等你。<br>回来时，从刚才那一步继续。</p>${button('继续游戏','close')}${button('返回选关','entry',true)}<button class="modal-text-link" data-action="restart">重新开始本关</button>`;
     if(kind==='restart')modalContent.innerHTML=`<p class="modal-kicker">${modeName()} · 第 ${number(state.level)} 关</p><h2 id="modal-title">重新开始这一关？</h2><p>将替换这一关的当前进度。其他模式和关卡不受影响。</p>${button('重新开始','confirm-restart')}${button('保留当前进度','pause',true)}`;
     if(kind==='timeout'){
       setText('game-time','00:00');
       modalContent.innerHTML=`<p class="modal-kicker">挑战 · 第 ${number(state.level)} 关</p><h2 id="modal-title">时间到</h2><p>本关未完成。<br>再试一次，慢慢找到自己的节奏。</p>${button('重试本关','replay')}${button('返回选关','entry',true)}`;
     }
     if(kind==='complete'){
-      const last=state.level===3,continueNext=state.profile==='resume'&&state.mode==='relaxed'&&state.level===1;
-      modalContent.innerHTML=`<img class="modal-hero" src="assets/${last?'pineapple':'strawberry'}.png" alt=""><p class="modal-kicker">${modeName()} · 第 ${number(state.level)} 关</p><h2 id="modal-title">${last?'第 03 关完成':'全部连起来了'}</h2><p>${last?'最后一关完成，再来一次也很开心。':'小小的配对，刚刚好的成就感。'}</p><div class="result-stats"><span><b>00:58</b>完成用时</span><span><b>${total()/2}</b>成功配对</span></div>${button(last?'再玩这一关':continueNext?'继续下一关':'下一关',last?'replay':'next')}${button('返回选关','entry',true)}`;
+      const last=state.level===lastLevel(),continueNext=state.profile==='resume'&&state.mode==='relaxed'&&state.level===1;
+      modalContent.innerHTML=`<img class="modal-hero" src="assets/${last?'pineapple':'strawberry'}.png" alt=""><p class="modal-kicker">${modeName()} · 第 ${number(state.level)} 关</p><h2 id="modal-title">${last?`第 ${number(state.level)} 关完成`:'全部连起来了'}</h2><p>${last?'最后一关完成，再来一次也很开心。':'小小的配对，刚刚好的成就感。'}</p><div class="result-stats"><span><b>00:58</b>完成用时</span><span><b>${total()/2}</b>成功配对</span></div>${button(last?'再玩这一关':continueNext?'继续下一关':'下一关',last?'replay':'next')}${button('返回选关','entry',true)}`;
     }
-    if(kind==='help')modalContent.innerHTML=`<p class="modal-kicker">一条路，两次转弯</p><h2 id="modal-title">连连看玩法</h2><div class="help-demo"><img src="assets/strawberry.png" alt="草莓"><svg viewBox="0 0 250 63"><path d="M42 27 V8 H208 V27"/></svg><img src="assets/strawberry.png" alt="草莓"></div><p>点击两张相同水果。连线不穿过其他牌，最多转弯两次，就能配成一对。棋盘外圈也可以走。</p><p class="help-line">配完所有水果就过关。轻松模式不限时；挑战模式需要在时间内完成。</p>${button('明白了','dismiss')}`;
+    if(kind==='help')modalContent.innerHTML=`<p class="modal-kicker">一条路，两次转弯</p><h2 id="modal-title">连连看玩法</h2><div class="help-demo"><img src="assets/strawberry.png" alt="草莓"><svg viewBox="0 0 250 63"><path d="M42 27 V8 H208 V27"/></svg><img src="assets/strawberry.png" alt="草莓"></div><p>点击两张相同图案。连线不穿过其他牌，最多转弯两次，就能配成一对。棋盘外圈也可以走。</p><p class="help-line">配完所有图案就过关。轻松模式不限时；挑战模式需要在时间内完成。</p>${button('明白了','dismiss')}`;
     if(kind==='settings')modalContent.innerHTML=`<p class="modal-kicker">合集共用</p><h2 id="modal-title">设置</h2><div class="setting-row"><span>声音</span><button class="switch" data-setting="sound" role="switch" aria-label="声音示例开关" aria-checked="${state.sound}"></button></div><div class="setting-row"><span>触感</span><button class="switch" data-setting="haptics" role="switch" aria-label="触感示例开关" aria-checked="${state.haptics}"></button></div><p class="setting-note">开关状态为演示，不播放声音或触发振动。</p>${button('完成','dismiss')}`;
     requestAnimationFrame(()=>{(modalContent.querySelector('button')||document.querySelector('.modal-close')).focus();});
   }
@@ -184,7 +202,7 @@
       state.view='game';
       if(value==='relaxed'||value==='challenge')state.mode=value;
       if(value==='timeout')state.mode='challenge';
-      if(value==='last')state.level=3;
+      if(value==='last')state.level=lastLevel();
       if(value==='save-error')state.saveError=true;
       state.isResume=state.profile==='resume'&&state.mode==='relaxed'&&state.level===2;
       render();
@@ -203,7 +221,7 @@
     if(button.dataset.setting){const setting=button.dataset.setting;state[setting]=!state[setting];button.setAttribute('aria-checked',String(state[setting]));return;}
     if(button.dataset.tile!==undefined){
       const index=Number(button.dataset.tile);state.showPath=false;state.selected=state.selected[0]===index?[]:[index];renderBoard();
-      document.getElementById('announcer').textContent=state.selected.length?`已选中${fruits[fixture[index]][1]}`:'已取消选中';return;
+      document.getElementById('announcer').textContent=state.selected.length?`已选中${patterns[fixture[index]][1]}`:'已取消选中';return;
     }
     switch(button.dataset.action){
       case 'overview':toggleOverview();break;
@@ -218,8 +236,8 @@
       case 'dismiss':dismissOverlay();break;
       case 'close':closeOverlay();previewState.value=state.view==='game'?(state.saveError?'save-error':state.mode):state.view;break;
       case 'hint':state.showPath=true;renderBoard();document.getElementById('announcer').textContent='两张草莓可经左侧外圈连通，转弯两次';break;
-      case 'shuffle':state.variant=1-state.variant;state.selected=[];state.showPath=false;renderBoard();document.getElementById('announcer').textContent='已切换固定洗牌示例，水果总数不变';break;
-      case 'next':startLevel(Math.min(3,state.level+1));break;
+      case 'shuffle':state.variant=1-state.variant;state.selected=[];state.showPath=false;renderBoard();document.getElementById('announcer').textContent='已切换固定洗牌示例，图案总数不变';break;
+      case 'next':startLevel(Math.min(lastLevel(),state.level+1));break;
       case 'replay':startLevel(state.level);break;
       case 'retry-save':document.getElementById('announcer').textContent='演示保存仍未成功，未保存提示继续保留';break;
     }
@@ -257,11 +275,11 @@
   }
   window.addEventListener('resize',layoutOverview);
   new ResizeObserver(layoutBoard).observe(area);
-  document.getElementById('asset-grid').innerHTML=fruits.map((fruit,index)=>`<div class="asset-item">${fruitImage(index,fruit[1])}<span>${fruit[1]}</span></div>`).join('');
+  document.getElementById('asset-grid').innerHTML=patterns.map((fruit,index)=>`<div class="asset-item">${patternImage(index,fruit[1])}<span>${fruit[1]}</span></div>`).join('');
   if(params.get('embed')==='1')document.body.classList.add('embed');
   if(params.get('size')==='compact')previewSize.value='compact';
   if(params.get('profile')==='new')state.profile='new';
-  if(['1','2','3'].includes(params.get('level')))state.level=Number(params.get('level'));
+  if(levels.some(item=>item.id===Number(params.get('level'))))state.level=Number(params.get('level'));
   if(params.get('mode')==='challenge')state.mode='challenge';
   const requested=params.get('view');
   const views=[...previewState.options].map(option=>option.value);

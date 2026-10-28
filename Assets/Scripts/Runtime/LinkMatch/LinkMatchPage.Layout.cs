@@ -46,7 +46,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             var levelButton=Button(information,"Level selection",0,0,90*s,info,ShowEntry,0,Color.clear);
             Label(levelButton.transform,"第 "+session.Game.Level.Number.ToString("00")+" 关",0,0,64*s,info,layout.Compact?11:12,UiFactory.Ink).name="LinkMatch level";
             Symbol(levelButton.transform,"Chevron",LinkMatchGraphicKind.Chevron,65*s,(info-9*s)/2,9*s,9*s);
-            float timeW=(layout.CssWidth<=370?65:72)*s,countW=62*s,modeW=30*s,infoGap=8*s;
+            float timeW=(layout.CssWidth<=370?65:72)*s,countW=(session.Game.Level.Columns*session.Game.Level.Rows>=100?72:62)*s,modeW=30*s,infoGap=8*s;
             Label(information,ModeName(session.Mode),w-timeW-countW-modeW-2*infoGap,0,modeW,info,10,UiFactory.Hex("6E8665"));
             remainingText=Label(information,"",w-timeW-countW-infoGap,0,countW,info,10,UiFactory.Muted,TextAnchor.MiddleRight);remainingText.name="LinkMatch remaining";
             timeText=Label(information,"",w-timeW,0,timeW,info,10,UiFactory.Muted,TextAnchor.MiddleRight);timeText.name="LinkMatch time";
@@ -54,7 +54,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             Shape(information,"Information divider",0,info-s,w,s,0,UiFactory.Hex("DCE2D6"));
             if(warningShown) BuildWarning(content,margin,(float)layout.BoardTop-40*s,w);
             var bg=Shape(content,"LinkMatch board",margin,(float)layout.BoardTop,w,(float)layout.BoardHeight,15*s,UiFactory.Hex("EBEEE2"));bg.BorderWidth=s;bg.BorderColor=UiFactory.Hex("DCE2D6");bg.raycastTarget=true;
-            surface=bg.rectTransform;board=new LinkMatchBoardView(surface);pointer=surface.gameObject.AddComponent<LinkMatchPointer>();
+            surface=bg.rectTransform;board=new LinkMatchBoardView(surface,session.Game.Level);pointer=surface.gameObject.AddComponent<LinkMatchPointer>();
             pointer.Surface=surface;pointer.Layout=()=>layout;pointer.Allowed=()=>CanPlay&&!removalFeedback;pointer.Submit=SelectTile;
             toastPanel=Shape(surface,"LinkMatch toast",12*s,(float)layout.BoardHeight-42*s,w-24*s,30*s,9*s,UiFactory.Ink).rectTransform;
             toastText=Label(toastPanel,"",8*s,0,w-40*s,30*s,10,UiFactory.Paper,TextAnchor.MiddleCenter);toastPanel.gameObject.SetActive(false);

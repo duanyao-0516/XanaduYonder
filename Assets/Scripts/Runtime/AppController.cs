@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Core.Sokoban;
+using XanaduYonder.Core.LinkMatch;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
@@ -273,7 +274,7 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(linkMatchCard.transform, cardCount.ToString("00") + "   /   轻松连线", 32, 22, 450, 36, 21, UiFactory.Accent);
             UiFactory.Label(linkMatchCard.transform, "连连看", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(linkMatchCard.transform, "找到相同，连起快乐。", 32, 170, 380, 40, 25, UiFactory.Ink);
-            lobbyLinkMatchRecordText = UiFactory.Label(linkMatchCard.transform, "轻松 / 挑战 · 三档棋盘", 32, 216, 548, 38, 21, UiFactory.Accent);
+            lobbyLinkMatchRecordText = UiFactory.Label(linkMatchCard.transform, "轻松 / 挑战 · 五档棋盘", 32, 216, 548, 38, 21, UiFactory.Accent);
             lobbyLinkMatchRecordText.resizeTextForBestFit = true;
             lobbyLinkMatchRecordText.resizeTextMinSize = 14;
             lobbyLinkMatchRecordText.resizeTextMaxSize = 21;
@@ -677,8 +678,8 @@ namespace XanaduYonder.Runtime
         {
             if (linkMatchPage != null && lobbyLinkMatchRecordText != null)
                 lobbyLinkMatchRecordText.text = linkMatchPage.CompletedCount == 0
-                    ? "轻松 / 挑战 · 三档棋盘"
-                    : "已完成 " + linkMatchPage.CompletedCount + "/6 关 · 轻松 / 挑战";
+                    ? "轻松 / 挑战 · 五档棋盘"
+                    : "已完成 " + linkMatchPage.CompletedCount + "/" + (LinkMatchLevel.Count * 2) + " 关 · 轻松 / 挑战";
         }
 
         private void EnterLinkMatch()

@@ -18,33 +18,55 @@ namespace XanaduYonder.Runtime.LinkMatch
             if (!data.TryValidate(out var reason)) throw new ArgumentException(reason, nameof(data));
             var slots = new JArray(); foreach (var slot in data.Slots) slots.Add(slot == null ? (JToken)JValue.CreateNull() : WriteSession(slot));
             var records = new JArray(); foreach (var r in data.Records) records.Add(new JObject { ["mode"] = r.Mode.ToString(), ["levelId"] = r.LevelId, ["wins"] = r.Wins, ["losses"] = r.Losses, ["bestElapsedSeconds"] = r.BestElapsedSeconds.HasValue ? new JValue(r.BestElapsedSeconds.Value) : JValue.CreateNull(), ["bestHintsUsed"] = r.BestHintsUsed, ["bestShufflesUsed"] = r.BestShufflesUsed, ["bestAttemptId"] = r.BestAttemptId == null ? JValue.CreateNull() : new JValue(r.BestAttemptId) });
-            string json = new JObject { ["schemaVersion"] = 1, ["gameId"] = "link-match", ["contentVersion"] = data.ContentVersion, ["selectedMode"] = data.SelectedMode.ToString(), ["selectedLevelId"] = data.SelectedLevelId, ["activitySequence"] = data.ActivitySequence, ["slots"] = slots, ["records"] = records }.ToString(Formatting.None);
+            string json = new JObject { ["schemaVersion"] = 2, ["gameId"] = "link-match", ["contentVersion"] = data.ContentVersion, ["selectedMode"] = data.SelectedMode.ToString(), ["selectedLevelId"] = data.SelectedLevelId, ["activitySequence"] = data.ActivitySequence, ["slots"] = slots, ["records"] = records }.ToString(Formatting.None);
             if (Encoding.UTF8.GetByteCount(json) > MaximumLength) throw new ArgumentException("Link Match save exceeds 128 KiB.", nameof(data));
             return json;
         }
         private static JObject WriteSession(LinkMatchSessionData s)
         { return new JObject { ["attemptId"] = s.AttemptId, ["mode"] = s.Mode.ToString(), ["levelId"] = s.LevelId, ["columns"] = s.Columns, ["rows"] = s.Rows, ["tiles"] = new JArray(s.Tiles), ["elapsedSeconds"] = s.ElapsedSeconds, ["remainingSeconds"] = s.RemainingSeconds, ["hintsUsed"] = s.HintsUsed, ["shufflesUsed"] = s.ShufflesUsed, ["randomState"] = s.RandomState, ["outcome"] = s.Outcome.ToString(), ["resultRecorded"] = s.ResultRecorded, ["activityOrder"] = s.ActivityOrder }; }
         public static bool TryDecode(string json, out LinkMatchSaveData data, out string reason)
+        { return TryDecodeVersion(json, false, out data, out reason); }
+        /// <summary>Only the original six-slot schema is accepted; output is a fully validated current profile.</summary>
+        public static bool TryDecodeLegacyV1(string json, out LinkMatchSaveData data, out string reason)
+        { return TryDecodeVersion(json, true, out data, out reason); }
+        private static bool TryDecodeVersion(string json, bool legacy, out LinkMatchSaveData data, out string reason)
         {
             data = null; reason = null;
             try
             {
                 var root = Parse(json); Fields(root, "schemaVersion", "gameId", "contentVersion", "selectedMode", "selectedLevelId", "activitySequence", "slots", "records");
-                if (Int(root["schemaVersion"]) != 1 || Text(root["gameId"]) != "link-match") throw new FormatException("Unknown schema or game identity.");
-                var decoded = new LinkMatchSaveData { ContentVersion = Text(root["contentVersion"]), SelectedMode = Mode(root["selectedMode"]), SelectedLevelId = Text(root["selectedLevelId"]), ActivitySequence = Long(root["activitySequence"]) };
+                if (Int(root["schemaVersion"]) != (legacy ? 1 : 2) || Text(root["gameId"]) != "link-match" || Text(root["contentVersion"]) != (legacy ? "1" : LinkMatchSaveData.CurrentContentVersion)) throw new FormatException("Unknown schema, content version or game identity.");
+                var decoded = new LinkMatchSaveData { SelectedMode = Mode(root["selectedMode"]), SelectedLevelId = Text(root["selectedLevelId"]), ActivitySequence = Long(root["activitySequence"]) };
+                if (legacy && !LegacyLevelId(decoded.SelectedLevelId)) throw new FormatException("Unknown legacy selection.");
                 var slots = Array(root["slots"]); var records = Array(root["records"]);
-                if (slots.Count != 6 || records.Count != 6) throw new FormatException("Expected exactly six slots and six records.");
-                for (int i = 0; i < 6; i++) { decoded.Slots[i] = slots[i].Type == JTokenType.Null ? null : ReadSession(slots[i]); decoded.Records[i] = ReadRecord(records[i]); }
+                int expectedCount = legacy ? 6 : LinkMatchSaveData.SlotCount;
+                if (slots.Count != expectedCount || records.Count != expectedCount) throw new FormatException("Unexpected slot or record count.");
+                for (int i = 0; i < expectedCount; i++)
+                {
+                    var slot = slots[i].Type == JTokenType.Null ? null : ReadSession(slots[i], legacy ? 48 : Core.LinkMatch.LinkMatchLevel.MaximumTileCount);
+                    var record = ReadRecord(records[i]); int destination = i;
+                    if (legacy)
+                    {
+                        // Old challenge indices 3..5 must become 5..7. Validate the old identity
+                        // before mapping; accepting a raw copy would silently attach progress to another level.
+                        var expectedMode = (Core.LinkMatch.LinkMatchMode)(i / 3);
+                        string expectedId = Core.LinkMatch.LinkMatchLevel.Get(i % 3 + 1).Id;
+                        if (record.Mode != expectedMode || record.LevelId != expectedId || (slot != null && (slot.Mode != expectedMode || slot.LevelId != expectedId))) throw new FormatException("Legacy slot identity does not match its original index.");
+                        destination = LinkMatchSaveData.SlotIndex(record.Mode, record.LevelId);
+                    }
+                    decoded.Slots[destination] = slot; decoded.Records[destination] = record;
+                }
                 if (!decoded.TryValidate(out reason)) return false;
                 data = decoded; return true;
             }
             catch (Exception exception) when (exception is JsonException || exception is FormatException || exception is ArgumentException || exception is OverflowException || exception is InvalidCastException)
             { reason = exception.Message; data = null; return false; }
         }
-        private static LinkMatchSessionData ReadSession(JToken token)
+        private static bool LegacyLevelId(string id) { return id == "level-01" || id == "level-02" || id == "level-03"; }
+        private static LinkMatchSessionData ReadSession(JToken token, int maximumTiles)
         {
             var o = Object(token); Fields(o, "attemptId", "mode", "levelId", "columns", "rows", "tiles", "elapsedSeconds", "remainingSeconds", "hintsUsed", "shufflesUsed", "randomState", "outcome", "resultRecorded", "activityOrder");
-            var tiles = Array(o["tiles"]); if (tiles.Count > 48) throw new FormatException("Too many tiles."); var values = new int[tiles.Count]; for (int i = 0; i < tiles.Count; i++) values[i] = Int(tiles[i]);
+            var tiles = Array(o["tiles"]); if (tiles.Count > maximumTiles) throw new FormatException("Too many tiles."); var values = new int[tiles.Count]; for (int i = 0; i < tiles.Count; i++) values[i] = Int(tiles[i]);
             long seed = Long(o["randomState"]); if (seed < 0 || seed > uint.MaxValue) throw new FormatException("Invalid random state.");
             return new LinkMatchSessionData { AttemptId = Text(o["attemptId"]), Mode = Mode(o["mode"]), LevelId = Text(o["levelId"]), Columns = Int(o["columns"]), Rows = Int(o["rows"]), Tiles = values, ElapsedSeconds = Number(o["elapsedSeconds"]), RemainingSeconds = Number(o["remainingSeconds"]), HintsUsed = Int(o["hintsUsed"]), ShufflesUsed = Int(o["shufflesUsed"]), RandomState = (uint)seed, Outcome = Outcome(o["outcome"]), ResultRecorded = Boolean(o["resultRecorded"]), ActivityOrder = Long(o["activityOrder"]) };
         }

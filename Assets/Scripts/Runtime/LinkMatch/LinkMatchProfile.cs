@@ -3,7 +3,7 @@ using XanaduYonder.Core.LinkMatch;
 
 namespace XanaduYonder.Runtime.LinkMatch
 {
-    /// <summary>Owns six attempts and atomically records terminal results with their board and clock.</summary>
+    /// <summary>Owns the catalog-sized set of attempts and atomically records terminal results with their board and clock.</summary>
     public sealed class LinkMatchProfile
     {
         private LinkMatchSaveData data;

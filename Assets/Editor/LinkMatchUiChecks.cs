@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
@@ -73,6 +74,7 @@ namespace XanaduYonder.EditorTools
         {
             UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
             Require(UiFactory.Font != null, "Bundled CJK font loads");
+            Require(LinkMatchBoardView.FruitIds.Length == 48 && LinkMatchLevel.Count == 5, "Five levels use the complete 48-pattern catalog");
             foreach (string fruit in LinkMatchBoardView.FruitIds)
             {
                 var texture = Resources.Load<Texture2D>("LinkMatch/Sprites/" + fruit);
@@ -197,35 +199,83 @@ namespace XanaduYonder.EditorTools
                 f.Capture("prototype-warning-48");
             }
 
+            foreach (Vector2Int size in new[] { new Vector2Int(388, 784), new Vector2Int(360, 640) })
+            foreach (int number in new[] { 4, 5 })
+            using (var f = new Fixture(size.x, size.y))
+            {
+                var level = LinkMatchLevel.Get(number); int total = level.Columns * level.Rows;
+                var page = f.MakePage(ProfileWith(Snapshot(level, LinkMatchMode.Challenge, PrototypeFixture(level), 32)));
+                page.Enter(); page.ContinueGame(); page.LayoutNow(); yield return null;
+                CheckGeometry(f, page, false); f.Capture("expanded-" + total);
+                Require(page.Session.Game.Remaining == total && page.Session.Game.GetTiles().Max() == level.Kinds - 1, "Dense board contains every approved pattern");
+                var original = new LinkMatchLayout(size.x, size.y, false, 6, 8);
+                if (number == 5) Near((float)page.Layout.Cell, (float)original.Cell / 2, "Fifth level halves the actual reference cell edge");
+                var pair = page.Session.Game.FindMatch(); var pressed = f.PressTile(page, pair.First);
+                f.DragTile(page, pressed, pair.Second); f.DragTile(page, pressed, pair.First); f.Release(pressed); f.ClickTile(page, pair.Second);
+                Require(page.Session.Game.Remaining == total, "Dense drag-out cannot select a stale first tile"); f.ClickTile(page, pair.Second);
+                var a = f.PressTile(page, pair.First, 1); var b = f.PressTile(page, pair.Second, 2);
+                f.Release(a); f.Release(b); f.ClickTile(page, pair.Second);
+                Require(page.Session.Game.Remaining == total, "Dense second pointer cancels pending matching tiles"); f.ClickTile(page, pair.Second);
+                f.ClickTile(page, pair.First); pressed = f.PressTile(page, pair.Second);
+                var sizeDelta = f.Root.sizeDelta; f.Root.sizeDelta += new Vector2(0, 2); f.Release(pressed);
+                Require(page.Session.Game.Remaining == total, "Dense resize before Update cancels the release");
+                f.Root.sizeDelta = sizeDelta; page.LayoutNow();
+                // Same fixed fixture as the prototype, with a valid outside-left route.
+                int first = level.Columns, second = level.Columns * 4;
+                f.ClickTile(page, first); f.Capture("expanded-selected-" + total); f.ClickTile(page, second);
+                Require(page.Session.Game.Remaining == total - 2, "Dense actual raycast submits exactly one valid pair");
+                var route = f.Find("LinkMatch path").GetComponent<LinkMatchGraphic>();
+                Require(route.Points != null && route.Points.Length == 4, "Dense successful match displays its actual two-turn route");
+                foreach (var point in route.Points) Require(point.x >= 0 && point.y >= 0 && point.x <= page.Surface.rect.width && point.y <= page.Surface.rect.height, "Dense outside route stays unclipped");
+                f.Capture("expanded-outer-route-" + total); page.ShowPause(); RequireConcealed(f, page, "dense pause"); page.ResumeGame();
+                page.SetHostSaveWarning("公共设置尚未保存"); CheckGeometry(f, page, true); f.Capture("expanded-warning-" + total);
+                if (number == 5 && size.x == 360) Near((float)page.Layout.Cell, 24.125f, "Fifth-level warning keeps exact half-edge targets");
+                Report.AppendLine("PASS expanded " + total + " tiles at " + size.x + "x" + size.y + ": all assets, real click cancellation, outside route, count width and warning layout");
+            }
+
             using (var f = new Fixture(388, 784))
             {
-                var profile = new LinkMatchProfile(); var attempts = new string[6]; var counts = new int[6];
+                var profile = new LinkMatchProfile(); var attempts = new string[LinkMatchLevel.Count * 2]; var counts = new int[LinkMatchLevel.Count * 2];
                 var page = f.MakePage(profile); page.Enter();
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < LinkMatchLevel.Count * 2; i++)
                 {
-                    var mode = (LinkMatchMode)(i / 3); string id = LinkMatchLevel.Get(i % 3 + 1).Id;
+                    var mode = (LinkMatchMode)(i / LinkMatchLevel.Count); string id = LinkMatchLevel.Get(i % LinkMatchLevel.Count + 1).Id;
                     page.StartLevel(mode, id); var pair = page.Session.Game.FindMatch();
                     page.SelectTile(pair.First); page.SelectTile(pair.Second); attempts[i] = page.Session.AttemptId; counts[i] = page.Session.Game.Remaining;
                     page.ShowEntry();
                 }
-                Require(CountSlots(profile) == 6, "All six mode by level slots are independent");
-                for (int i = 0; i < 6; i++)
+                Require(CountSlots(profile) == 10, "All ten mode by level slots are independent");
+                for (int i = 0; i < LinkMatchLevel.Count * 2; i++)
                 {
-                    page.SelectMode((LinkMatchMode)(i / 3)); page.LayoutNow(); yield return null;
-                    f.Click(f.Find("Entry level " + LinkMatchLevel.Get(i % 3 + 1).Id));
+                    page.SelectMode((LinkMatchMode)(i / LinkMatchLevel.Count)); page.LayoutNow(); yield return null;
+                    var entry = f.Find("Entry level " + LinkMatchLevel.Get(i % LinkMatchLevel.Count + 1).Id); f.RevealEntry(entry); f.Click(entry);
                     Require(page.Session.AttemptId == attempts[i] && page.Session.Game.Remaining == counts[i], "Entry level resumes the exact slot " + i);
                     page.ShowEntry();
                 }
-                Report.AppendLine("PASS six-slot entry resume: mode, level, attempt identity and exact remaining state");
+                Report.AppendLine("PASS ten-slot entry resume: mode, level, attempt identity and exact remaining state");
+            }
+
+            foreach (int number in new[] { 3, 4 })
+            using (var f = new Fixture(388, 784))
+            {
+                var level = LinkMatchLevel.Get(number); var tiles = new int[level.Columns * level.Rows];
+                for (int i = 0; i < tiles.Length; i++) tiles[i] = -1; tiles[0] = tiles[1] = 0;
+                var profile = ProfileWith(Snapshot(level, LinkMatchMode.Relaxed, tiles, 12));
+                var next = profile.Start(LinkMatchMode.Relaxed, LinkMatchLevel.Get(number + 1).Id, 700); string attempt = next.AttemptId; profile.Capture(next);
+                var page = f.MakePage(profile); page.Enter(); page.StartLevel(LinkMatchMode.Relaxed, level.Id);
+                f.ClickTile(page, 0); f.ClickTile(page, 1); yield return new WaitForSecondsRealtime(.3f); page.CheckEndState();
+                Require(HasText(f, "继续下一关"), "Completed level " + number + " now offers the existing next attempt");
+                f.Click(f.Find("Dialog primary"));
+                Require(page.Session.Game.Level.Number == number + 1 && page.Session.AttemptId == attempt, "Next action preserves the larger level's existing slot");
             }
 
             foreach (bool timeout in new[] { false, true })
             using (var f = new Fixture(388, 784))
             {
-                var level = LinkMatchLevel.Get(3); var tiles = new int[level.Columns * level.Rows];
+                var level = LinkMatchLevel.Get(LinkMatchLevel.Count); var tiles = new int[level.Columns * level.Rows];
                 for (int i = 0; i < tiles.Length; i++) tiles[i] = -1;
                 tiles[0] = tiles[1] = 0;
-                var state = Snapshot(level, LinkMatchMode.Challenge, tiles, timeout ? 149.95 : 12);
+                var state = Snapshot(level, LinkMatchMode.Challenge, tiles, timeout ? level.ChallengeSeconds - .05 : 12);
                 var page = f.MakePage(ProfileWith(state)); page.Enter(); page.ContinueGame(); page.LayoutNow();
                 Require(!page.Session.IsTerminal && page.CompletedCount == 0 && !page.HasDialog, "Two-tile last-level fixture starts as an unfinished game");
                 if (timeout)
@@ -251,6 +301,22 @@ namespace XanaduYonder.EditorTools
                 var record = page.Profile.GetRecord(LinkMatchMode.Challenge, level.Id);
                 Require(timeout ? record.Losses == 1 : record.Wins == 1, "Repeated terminal saves never recount the result");
                 Report.AppendLine("PASS real " + (timeout ? "deadline timeout" : "last-pair completion") + ": terminal-before-presentation save and idempotent record");
+            }
+
+            using (var f = new Fixture(360, 640))
+            {
+                string legacy = File.ReadAllText(Path.Combine(Application.dataPath, "../Tests/LinkMatchPersistence/Fixtures/legacy-v1-primary.json"));
+                string oldPath = Path.Combine(Path.GetDirectoryName(f.Store.SavePath), "link-match-v1.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(oldPath)); File.WriteAllText(oldPath, legacy);
+                Directory.CreateDirectory(f.Store.SavePath + ".tmp"); // Block only the migration write.
+                var page = f.MakePage(null); page.Enter(); page.LayoutNow(); yield return null;
+                Require(f.Store.MigrationPending && page.SaveError != null, "Failed migration is owned by the game and remains visible");
+                Require(page.Profile.Export().Slots.Length == 10 && page.Profile.GetLatestActive() != null, "Failed migration retains the full playable ten-slot in-memory profile");
+                f.Capture("migration-write-warning");
+                Directory.Delete(f.Store.SavePath + ".tmp"); f.Click(f.Find("Retry save"));
+                Require(!f.Store.MigrationPending && page.SaveError == null && File.Exists(f.Store.SavePath), "Actual retry saves migrated progress and clears its warning");
+                Require(File.ReadAllText(oldPath) == legacy, "Successful migration and retry leave the original v1 file unchanged");
+                Report.AppendLine("PASS actual migration failure and retry: preserved in-memory attempts, persistent warning and unchanged v1");
             }
 
             using (var f = new Fixture(360, 640, true))
@@ -321,10 +387,11 @@ namespace XanaduYonder.EditorTools
             f.CheckHit(f.Find("Continue game")); f.CheckHit(f.Find("Mode relaxed")); f.CheckHit(f.Find("Mode challenge"));
             foreach (var level in LinkMatchLevel.All)
             {
-                var rect = f.Find("Entry level " + level.Id); var bounds = f.Bounds(rect);
+                var rect = f.Find("Entry level " + level.Id); f.RevealEntry(rect); var bounds = f.Bounds(rect);
                 Require(bounds.xMin >= 0 && bounds.xMax <= f.Width + 1 && bounds.yMin >= 0 && bounds.yMax <= f.Height, "Entry level card is fully inside safe content: " + level.Id);
                 Near(bounds.height, (compact ? 58 : 64) * scale, "Entry level card matches approved height"); f.CheckHit(rect);
             }
+            f.Find("LinkMatch entry viewport").GetComponent<ScrollRect>().verticalNormalizedPosition = 1; f.Flush();
         }
         private static void CheckGeometry(Fixture f, LinkMatchPage page, bool warning)
         {
@@ -338,6 +405,8 @@ namespace XanaduYonder.EditorTools
             Near(board.yMin - tools.yMax, (l.Compact ? 10 : 16) * s, "Board to tool gap matches prototype");
             Near(tools.yMin, (l.Compact ? 12 : 16) * s, "Tools retain safe bottom padding");
             Require(board.xMin >= 0 && board.xMax <= f.Width + 1 && tools.yMin >= 0 && board.yMax <= f.Height, "Full board and tools are inside safe content");
+            Require(f.Find("LinkMatch remaining").GetComponent<Text>().preferredWidth <= f.Find("LinkMatch remaining").rect.width + 1, "Remaining count fits even with three digits");
+            int renderedTiles = 0;
             Rect previous = new Rect();
             foreach (string name in new[] { "Hint", "Shuffle", "Pause" })
             {
@@ -347,12 +416,14 @@ namespace XanaduYonder.EditorTools
             foreach (RectTransform tile in f.Root.GetComponentsInChildren<RectTransform>())
             {
                 if (!tile.name.StartsWith("Tile ", StringComparison.Ordinal)) continue;
+                renderedTiles++;
                 Rect rect = f.Bounds(tile); Near(rect.width, rect.height, "Tile target is square");
                 Require(rect.xMin >= board.xMin + 12 * s - 1 && rect.xMax <= board.xMax - 12 * s + 1 && rect.yMin >= board.yMin + 12 * s - 1 && rect.yMax <= board.yMax - 12 * s + 1, "Entire tile target fits board inset");
                 foreach (var graphic in tile.GetComponentsInChildren<Graphic>()) Require(!graphic.raycastTarget, "Board alone owns tile gestures");
                 var fruit = tile.Find("Fruit").GetComponent<RawImage>();
                 Require(fruit.texture != null, "Visible tile has its actual approved fruit asset");
             }
+            Require(renderedTiles == page.Session.Game.Remaining, "Every remaining cell has exactly one rendered tile");
             foreach (Text text in f.Root.GetComponentsInChildren<Text>()) Require(text.font == UiFactory.Font, "Production text uses shared local CJK font");
         }
         private static void RequireConcealed(Fixture f, LinkMatchPage page, string state)
@@ -454,6 +525,14 @@ namespace XanaduYonder.EditorTools
                 var hits = new List<RaycastResult>(); events.RaycastAll(data, hits);
                 Require(hits.Count > 0 && (hits[0].gameObject.transform == expected || hits[0].gameObject.transform.IsChildOf(expected)), "Rendered raycast reaches " + expected.name);
                 data.pointerCurrentRaycast = data.pointerPressRaycast = hits[0]; return data;
+            }
+            internal void RevealEntry(RectTransform rect)
+            {
+                var viewport = Find("LinkMatch entry viewport"); var scroll = viewport.GetComponent<ScrollRect>(); scroll.StopMovement();
+                Rect view = Bounds(viewport), row = Bounds(rect); Vector2 position = scroll.content.anchoredPosition;
+                if (row.yMin < view.yMin) position.y += view.yMin - row.yMin;
+                else if (row.yMax > view.yMax) position.y -= row.yMax - view.yMax;
+                scroll.content.anchoredPosition = position; Flush();
             }
             internal void CheckHit(RectTransform rect) { Pointer(RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center)), rect); }
             internal void Click(RectTransform rect) { Dispatch(Pointer(RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center)), rect)); }

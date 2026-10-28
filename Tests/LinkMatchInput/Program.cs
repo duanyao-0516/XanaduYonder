@@ -23,6 +23,23 @@ internal static class Program
         Near(small.Margin,14,"compact margin"); Near(small.BoardTop,120,"compact board top"); Near(small.BoardHeight,450,"compact board height"); Near(small.Cell,308.0/6,"compact target");
         var warning=new LinkMatchLayout(360,640,true,6,8); Near(warning.Cell,48.25,"warning retains48px slots"); Near(warning.BoardTop,160,"warning occupies actual space");
         var scaled=new LinkMatchLayout(720,1280,true,6,8); Near(scaled.Cell,warning.Cell*2,"uniform Unity scale");
+        foreach(bool showWarning in new[]{false,true})
+        foreach(var dimensions in new[]{new[]{360,640},new[]{388,784},new[]{720,1455}})
+        {
+            var original=new LinkMatchLayout(dimensions[0],dimensions[1],showWarning,6,8);
+            foreach(var grid in new[]{new[]{8,12},new[]{12,16}})
+            {
+                var dense=new LinkMatchLayout(dimensions[0],dimensions[1],showWarning,grid[0],grid[1]);
+                Near(dense.DecorationScale,dense.Cell/original.Cell,"dense decoration follows tile ratio");
+                if(grid[0]==12) Near(dense.Cell,original.Cell/2,"192 cell is exactly half existing edge");
+                for(int row=0;row<grid[1];row++)for(int col=0;col<grid[0];col++)
+                {
+                    var x=dense.GridLeft+(col+.5)*dense.Cell;var y=dense.GridTop+(row+.5)*dense.Cell;
+                    Check(dense.Hit(x,y)==row*grid[0]+col,"dense center has one owner");
+                    if(col+1<grid[0]) {double boundary=dense.GridLeft+(col+1)*dense.Cell;Check(dense.Hit(boundary-.001,y)==row*grid[0]+col,"dense boundary belongs left");Check(dense.Hit(boundary+.001,y)==row*grid[0]+col+1,"dense boundary belongs right");}
+                }
+            }
+        }
         foreach(var layout in new[]{large,small,warning,scaled})
         {
             Check(layout.BoardTop+layout.BoardHeight+layout.ToolGap+layout.ToolHeight+layout.Bottom<=layout.Height+.001,"all content fits");

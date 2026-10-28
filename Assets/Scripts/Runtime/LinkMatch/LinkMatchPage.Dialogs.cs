@@ -46,23 +46,23 @@ namespace XanaduYonder.Runtime.LinkMatch
             }
             float inner=width-48*s,y=31*s;bool center=result||dialogKind=="pause"||timeout;
             var align=center?TextAnchor.MiddleCenter:TextAnchor.MiddleLeft;
-            if(result) {Fruit(panel.transform,"Result fruit",session.Game.Level.Number==3?10:0,(width-76*s)/2,y,76*s);y+=94*s;}
+            if(result) {Fruit(panel.transform,"Result fruit",session.Game.Level.Number==LinkMatchLevel.Count?10:0,(width-76*s)/2,y,76*s);y+=94*s;}
             string kicker=help?"一条路，两次转弯":session==null?"连连看":ModeName(session.Mode)+" · 第 "+session.Game.Level.Number.ToString("00")+" 关";
             Label(panel.transform,kicker,24*s,y,inner,15*s,10,UiFactory.Hex("859576"),align);y+=27*s;
-            string title=help?"连连看玩法":restart?"重新开始这一关？":timeout?"时间到":result?(session.Game.Level.Number==3?"第 03 关完成":"全部连起来了"):"歇一会儿";
+            string title=help?"连连看玩法":restart?"重新开始这一关？":timeout?"时间到":result?(session.Game.Level.Number==LinkMatchLevel.Count?"第 "+session.Game.Level.Number.ToString("00")+" 关完成":"全部连起来了"):"歇一会儿";
             Label(panel.transform,title,24*s,y,inner,34*s,23,UiFactory.Ink,align,FontStyle.Bold).name="LinkMatch dialog title";y+=47*s;
             if(help)
             {
                 Fruit(panel.transform,"Help strawberry left",0,40*s,y,44*s);Fruit(panel.transform,"Help strawberry right",0,width-84*s,y,44*s);
                 var route=Symbol(panel.transform,"Help route",LinkMatchGraphicKind.Route,24*s,y,inner,63*s);route.Points=new[]{new Vector2(38*s,27*s),new Vector2(38*s,3*s),new Vector2(inner-38*s,3*s),new Vector2(inner-38*s,27*s)};route.Stroke=2.5f*s;route.color=UiFactory.Hex("729C51");y+=72*s;
-                Label(panel.transform,"点击两张相同水果。连线不穿过其他牌，最多转弯两次，就能配成一对。棋盘外圈也可以走。",24*s,y,inner,74*s,12,UiFactory.Muted);y+=86*s;
+                Label(panel.transform,"点击两张相同图案。连线不穿过其他牌，最多转弯两次，就能配成一对。棋盘外圈也可以走。",24*s,y,inner,74*s,12,UiFactory.Muted);y+=86*s;
                 var helpCard=Shape(panel.transform,"Help summary",24*s,y,inner,76*s,10*s,UiFactory.Hex("E7EDE1"));
-                Label(helpCard.transform,"配完所有水果就过关。轻松模式不限时；挑战模式需要在时间内完成。无路可连时会免费重新排列。",12*s,0,inner-24*s,76*s,12,UiFactory.Muted);y+=90*s;
+                Label(helpCard.transform,"配完所有图案就过关。轻松模式不限时；挑战模式需要在时间内完成。无路可连时会免费重新排列。",12*s,0,inner-24*s,76*s,12,UiFactory.Muted);y+=90*s;
                 DialogButton(panel.transform,"Dialog primary",isEntry?"明白了":"继续游戏",24*s,y,inner,()=>{if(isEntry){CloseDialog();RefreshBoard();}else ResumeGame();},true);
             }
             else
             {
-                string body=result?(session.Game.Level.Number==3?"最后一关完成，再来一次也很开心。":"小小的配对，刚刚好的成就感。"):timeout?"本关未完成。\n再试一次，慢慢找到自己的节奏。":restart?"将替换这一关的当前进度。\n其他模式和关卡不受影响。":"水果在这里等你。\n回来时，从刚才那一步继续。";
+                string body=result?(session.Game.Level.Number==LinkMatchLevel.Count?"最后一关完成，再来一次也很开心。":"小小的配对，刚刚好的成就感。"):timeout?"本关未完成。\n再试一次，慢慢找到自己的节奏。":restart?"将替换这一关的当前进度。\n其他模式和关卡不受影响。":"图案在这里等你。\n回来时，从刚才那一步继续。";
                 Label(panel.transform,body,24*s,y,inner,result?28*s:47*s,12,UiFactory.Muted,align);y+=(result?40:64)*s;
                 if(result)
                 {
@@ -74,7 +74,7 @@ namespace XanaduYonder.Runtime.LinkMatch
                 if(restart||timeout){primary=timeout?"重试本关":"重新开始";primaryAction=()=>StartLevel(session.Mode,session.Game.Level.Id,true);}
                 if(result)
                 {
-                    if(session.Game.Level.Number==3) {primary="再玩这一关";primaryAction=()=>StartLevel(session.Mode,session.Game.Level.Id,true);}
+                    if(session.Game.Level.Number==LinkMatchLevel.Count) {primary="再玩这一关";primaryAction=()=>StartLevel(session.Mode,session.Game.Level.Id,true);}
                     else {var next=LinkMatchLevel.Get(session.Game.Level.Number+1);var slot=profile.GetSlot(session.Mode,next.Id);primary=slot!=null&&slot.Outcome==LinkMatchOutcome.Playing?"继续下一关":"下一关";primaryAction=()=>StartLevel(session.Mode,next.Id);}
                 }
                 DialogButton(panel.transform,"Dialog primary",primary,24*s,y,inner,primaryAction,true);y+=55*s;

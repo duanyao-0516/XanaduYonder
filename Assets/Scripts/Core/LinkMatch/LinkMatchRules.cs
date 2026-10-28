@@ -9,7 +9,9 @@ namespace XanaduYonder.Core.LinkMatch
         private static readonly IReadOnlyList<LinkMatchLevel> Catalog = Array.AsReadOnly(new[] {
             new LinkMatchLevel(1, "level-01", 4, 6, 6, 90),
             new LinkMatchLevel(2, "level-02", 6, 6, 9, 120),
-            new LinkMatchLevel(3, "level-03", 6, 8, 12, 150)
+            new LinkMatchLevel(3, "level-03", 6, 8, 12, 150),
+            new LinkMatchLevel(4, "level-04", 8, 12, 24, 300),
+            new LinkMatchLevel(5, "level-05", 12, 16, 48, 600)
         });
         public int Number { get; private set; }
         public string Id { get; private set; }
@@ -18,6 +20,16 @@ namespace XanaduYonder.Core.LinkMatch
         public int Kinds { get; private set; }
         public int ChallengeSeconds { get; private set; }
         public static IReadOnlyList<LinkMatchLevel> All { get { return Catalog; } }
+        public static int Count { get { return Catalog.Count; } }
+        public static int MaximumTileCount { get; private set; }
+        public static int MaximumKinds { get; private set; }
+        static LinkMatchLevel()
+        {
+            foreach (var level in Catalog) {
+                MaximumTileCount = Math.Max(MaximumTileCount, level.Columns * level.Rows);
+                MaximumKinds = Math.Max(MaximumKinds, level.Kinds);
+            }
+        }
         private LinkMatchLevel(int number, string id, int columns, int rows, int kinds, int challengeSeconds)
         { Number = number; Id = id; Columns = columns; Rows = rows; Kinds = kinds; ChallengeSeconds = challengeSeconds; }
         public static LinkMatchLevel Get(int number)

@@ -15,7 +15,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             var scroll=viewport.gameObject.AddComponent<ScrollRect>();scroll.viewport=viewport;scroll.content=list;scroll.horizontal=false;scroll.vertical=true;scroll.movementType=ScrollRect.MovementType.Clamped;scroll.inertia=true;
             float y=1*s;
             if(warningShown) {BuildWarning(list,0,y,w);y+=40*s;}
-            Label(list,"相同的水果，刚好的一条路。",0,y,w,22*s,layout.Compact?11:12,UiFactory.Muted);y+=(layout.Compact?32:42)*s;
+            Label(list,"相同的图案，刚好的一条路。",0,y,w,22*s,layout.Compact?11:12,UiFactory.Muted);y+=(layout.Compact?32:42)*s;
             var active=profile.GetLatestActive();bool resume=active!=null;var mode=resume?active.Mode:profile.SelectedMode;
             float padding=(layout.Compact?13:16)*s,cardHeight=(layout.Compact?150:176)*s,mainHeight=(layout.Compact?70:84)*s,ctaHeight=(layout.Compact?42:44)*s;
             var card=Button(list,"Continue game",0,y,w,cardHeight,ContinueGame,17*s,UiFactory.Hex("E6ECDF"));
@@ -53,7 +53,7 @@ namespace XanaduYonder.Runtime.LinkMatch
                 var button=Button(list,"Entry level "+level.Id,0,y,w,height,()=>StartLevel(profile.SelectedMode,chosen.Id),12*s,UiFactory.Hex(ongoing?"EDF1E7":"FAF9F3"));
                 var shape=button.GetComponent<LinkMatchGraphic>();shape.BorderWidth=s;shape.BorderColor=UiFactory.Hex(ongoing?"9DB58D":"E0E5D7");
                 Label(button.transform,level.Number.ToString("00"),13*s,0,27*s,height,21,UiFactory.Hex("617E55"));
-                Label(button.transform,level.Columns*level.Rows+" 张 · "+level.Kinds+" 种水果",53*s,(layout.Compact?8:11)*s,w-104*s,18*s,12,UiFactory.Ink);
+                Label(button.transform,level.Columns*level.Rows+" 张 · "+level.Kinds+" 种图案",53*s,(layout.Compact?8:11)*s,w-104*s,18*s,12,UiFactory.Ink);
                 Label(button.transform,level.Columns+" × "+level.Rows+" · "+(profile.SelectedMode==LinkMatchMode.Relaxed?"不限时":level.ChallengeSeconds+" 秒"),53*s,(layout.Compact?31:34)*s,w-104*s,15*s,10,UiFactory.Hex("82907C"));
                 Label(button.transform,ongoing?"继续":profile.GetRecord(profile.SelectedMode,level.Id).Wins>0?"已完成":"›",w-50*s,0,37*s,height,ongoing?10:12,UiFactory.Hex("64815A"),TextAnchor.MiddleRight);
                 y+=height+8*s;
