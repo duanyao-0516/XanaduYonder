@@ -2,61 +2,37 @@ using System;
 
 namespace XanaduYonder.Runtime.Sokoban
 {
-    /// <summary>Viewport geometry in top-left coordinates; never changes a game or its history.</summary>
+    /// <summary>Centered automatic fit in top-left coordinates; the complete board stays inside its padding.</summary>
     public sealed class SokobanViewport
     {
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public double Width { get; private set; }
         public double Height { get; private set; }
-        public double Zoom { get; private set; }
-        public double CenterX { get; private set; }
-        public double CenterY { get; private set; }
-        public double FitCellSize { get { return Math.Min(Width/Columns,Height/Rows); } }
-        public double CellSize { get { return FitCellSize*Zoom; } }
-        public double OffsetX { get { return Width/2-CenterX*Columns*CellSize; } }
-        public double OffsetY { get { return Height/2-CenterY*Rows*CellSize; } }
-        public SokobanViewport(int columns,int rows,double width,double height)
+        public double Padding { get; private set; }
+        public double Zoom { get { return 1; } }
+        public double CenterX { get { return .5; } }
+        public double CenterY { get { return .5; } }
+        public double FitCellSize { get { return Math.Min((Width-2*Padding)/Columns,(Height-2*Padding)/Rows); } }
+        public double CellSize { get { return FitCellSize; } }
+        public double OffsetX { get { return (Width-Columns*CellSize)/2; } }
+        public double OffsetY { get { return (Height-Rows*CellSize)/2; } }
+        public SokobanViewport(int columns,int rows,double width,double height,double padding=0)
         {
-            if(columns<1||rows<1) throw new ArgumentOutOfRangeException("columns");
-            Columns=columns; Rows=rows; Zoom=1; CenterX=CenterY=.5; Resize(width,height);
+            if(columns<1) throw new ArgumentOutOfRangeException("columns");
+            if(rows<1) throw new ArgumentOutOfRangeException("rows");
+            Columns=columns; Rows=rows; Resize(width,height,padding);
         }
-        public void Resize(double width,double height)
+        public void Resize(double width,double height) { Resize(width,height,Padding); }
+        public void Resize(double width,double height,double padding)
         {
-            RequireFinite(width); RequireFinite(height);
-            if(width<=0||height<=0) throw new ArgumentOutOfRangeException("width");
-            Width=width; Height=height; ClampCenter();
+            RequireFinite(width); RequireFinite(height); RequireFinite(padding);
+            if(padding<0) throw new ArgumentOutOfRangeException("padding");
+            if(width<=2*padding) throw new ArgumentOutOfRangeException("width");
+            if(height<=2*padding) throw new ArgumentOutOfRangeException("height");
+            Width=width; Height=height; Padding=padding;
         }
-        public void Restore(double zoom,double centerX,double centerY)
-        {
-            RequireFinite(zoom); RequireFinite(centerX); RequireFinite(centerY);
-            Zoom=Clamp(zoom,1,2); CenterX=Clamp(centerX,0,1); CenterY=Clamp(centerY,0,1); ClampCenter();
-        }
-        public void Reset() { Zoom=1; CenterX=CenterY=.5; }
-        public void StepZoom(int direction)
-        { Transform(Width/2,Height/2,Width/2,Height/2,Clamp(Zoom+Math.Sign(direction)*.25,1,2)/Zoom); }
-        public void Pan(double dx,double dy)
-        {
-            RequireFinite(dx); RequireFinite(dy);
-            CenterX-=dx/(Columns*CellSize); CenterY-=dy/(Rows*CellSize); ClampCenter();
-        }
-        public void Transform(double oldX,double oldY,double newX,double newY,double ratio)
-        {
-            RequireFinite(oldX); RequireFinite(oldY); RequireFinite(newX); RequireFinite(newY); RequireFinite(ratio);
-            if(ratio<=0) throw new ArgumentOutOfRangeException("ratio");
-            double anchorX=(oldX-OffsetX)/CellSize,anchorY=(oldY-OffsetY)/CellSize;
-            Zoom=Clamp(Zoom*ratio,1,2);
-            CenterX=(anchorX-(newX-Width/2)/CellSize)/Columns;
-            CenterY=(anchorY-(newY-Height/2)/CellSize)/Rows; ClampCenter();
-        }
-        private void ClampCenter()
-        {
-            if(Zoom<=1) { CenterX=CenterY=.5; return; }
-            CenterX=Axis(CenterX,Width,Columns*CellSize); CenterY=Axis(CenterY,Height,Rows*CellSize);
-        }
-        private static double Axis(double center,double available,double extent)
-        { return extent<=available?.5:Clamp(center,available/(2*extent),1-available/(2*extent)); }
-        private static double Clamp(double v,double lo,double hi) { return Math.Max(lo,Math.Min(hi,v)); }
-        private static void RequireFinite(double v) { if(double.IsNaN(v)||double.IsInfinity(v)) throw new ArgumentOutOfRangeException("value"); }
+        private static void RequireFinite(double value)
+        { if(double.IsNaN(value)||double.IsInfinity(value)) throw new ArgumentOutOfRangeException("value"); }
     }
 }

@@ -9,12 +9,11 @@ namespace XanaduYonder.Runtime.Sokoban
     internal sealed partial class SokobanPage
     {
         private RectTransform navigation,information,operations,statusBand,toastPanel;
-        private Text title,levelText,movesText,pushesText,goalsText,zoomText,compactStatus,toastText;
-        private Button levelButton,undoButton,restartButton,zoomOut,zoomIn,fitButton;
+        private Text title,levelText,movesText,pushesText,goalsText,compactStatus,toastText;
+        private Button levelButton,undoButton,restartButton;
         private readonly RectTransform[] directionRects=new RectTransform[4];
         private readonly Direction[] directionValues={Direction.Up,Direction.Left,Direction.Right,Direction.Down};
         private readonly Button[] directionButtons=new Button[4];
-        private int pointerMoveFrame=-1;
         private readonly List<Button> hitButtons=new List<Button>();
         private Rect lastSafeArea;
         private float Scale { get { return Mathf.Max(1,root.rect.width)/388; } }
@@ -36,36 +35,27 @@ namespace XanaduYonder.Runtime.Sokoban
             var chevron=UiFactory.Rect(levelButton.transform,"Level chevron",154*s,17*s,10*s,10*s).gameObject.AddComponent<SokobanGraphic>();
             chevron.Kind=SokobanGraphicKind.Chevron; chevron.color=UiFactory.Ink; chevron.raycastTarget=false;
             movesText=Stat("Sokoban moves"); pushesText=Stat("Sokoban pushes"); goalsText=Stat("Sokoban goals");
-            var background=UiFactory.Panel(root,"Sokoban board viewport",19.5f*s,163.421875f*s,349*s,452.578125f*s,Color.clear,false);
-            surface=background.rectTransform; background.raycastTarget=true; surface.gameObject.AddComponent<RectMask2D>();
+            var background=Shape(root,"Sokoban board viewport",19.5f*s,163.421875f*s,349*s,452.578125f*s,15*s,UiFactory.Hex("EBEEE2"));
+            background.BorderWidth=s; background.BorderColor=UiFactory.Hex("DCE2D6")*new Color(1,1,1,.53f);
+            surface=background.rectTransform; background.raycastTarget=true; surface.gameObject.AddComponent<Mask>().showMaskGraphic=true;
             board=new SokobanBoardView(surface); pointer=surface.gameObject.AddComponent<SokobanPointer>();
             toastPanel=Shape(surface,"Sokoban toast",0,0,320*s,42*s,12*s,UiFactory.Ink).rectTransform;
             toastText=Label(toastPanel,"",10*s,0,300*s,42*s,12,UiFactory.Paper,TextAnchor.MiddleCenter); toastPanel.gameObject.SetActive(false);
             operations=UiFactory.Rect(root,"Sokoban operations",19.5f*s,632*s,349*s,152*s);
-            undoButton=ActionButton(operations,"Undo",0,24*s,79*s,48*s,Undo,12*s);
-            ActionContents(undoButton,UiIconKind.Undo,"撤回",79*s);
-            restartButton=ActionButton(operations,"Restart",87*s,24*s,79*s,48*s,ConfirmRestart,12*s);
-            ActionContents(restartButton,UiIconKind.Restart,"重来",79*s);
-            var zoom=Shape(operations,"Sokoban zoom controls",0,84*s,166*s,44*s,12*s,UiFactory.Hex("E7EDE4")).rectTransform;
-            zoomOut=ActionButton(zoom,"Zoom out",0,0,44*s,44*s,()=>Zoom(-1),0,true);
-            Label(zoomOut.transform,"−",0,0,44*s,44*s,23,UiFactory.Ink,TextAnchor.MiddleCenter);
-            fitButton=ActionButton(zoom,"Fit",46*s,0,74*s,44*s,ResetZoom,0,true);
-            zoomText=Label(fitButton.transform,"适配",0,0,74*s,44*s,12,UiFactory.Ink,TextAnchor.MiddleCenter);
-            zoomIn=ActionButton(zoom,"Zoom in",122*s,0,44*s,44*s,()=>Zoom(1),0,true);
-            Label(zoomIn.transform,"+",0,0,44*s,44*s,23,UiFactory.Ink,TextAnchor.MiddleCenter);
+            undoButton=ActionButton(operations,"Undo",0,24*s,166*s,48*s,Undo,12*s);
+            ActionContents(undoButton,UiIconKind.Undo,"撤回",166*s);
+            restartButton=ActionButton(operations,"Restart",0,80*s,166*s,48*s,ConfirmRestart,12*s);
+            ActionContents(restartButton,UiIconKind.Restart,"重来",166*s);
             float padX=197*s;
-            Vector2[] positions={new Vector2(52,0),new Vector2(0,52),new Vector2(104,52),new Vector2(52,104)};
+            Vector2[] positions={new Vector2(52,24),new Vector2(0,52),new Vector2(104,52),new Vector2(52,80)};
             for(int i=0;i<4;i++)
             {
-                int index=i; var button=ActionButton(operations,"Move "+directionValues[i],padX+positions[i].x*s,positions[i].y*s,48*s,48*s,()=>{
-                    if(Input.touchCount==0&&!pointer.HasOwner&&pointerMoveFrame!=Time.frameCount) Move(directionValues[index]);
-                },13*s);
+                var button=ActionButton(operations,"Move "+directionValues[i],padX+positions[i].x*s,positions[i].y*s,48*s,48*s,()=>{},13*s);
                 directionButtons[i]=button; directionRects[i]=(RectTransform)button.transform.Find("Sokoban hit area");
                 var arrow=UiFactory.Rect(button.transform,"Direction arrow",13*s,13*s,22*s,22*s).gameObject.AddComponent<SokobanGraphic>();
                 arrow.Kind=SokobanGraphicKind.Arrow; arrow.Direction=directionValues[i]; arrow.color=UiFactory.Accent; arrow.raycastTarget=false;
                 button.gameObject.AddComponent<SokobanDirectionTarget>().Pointer=pointer;
             }
-            Shape(operations,"Direction center",padX+73.5f*s,73.5f*s,5*s,5*s,2.5f*s,UiFactory.Hex("9AAF8F"));
             statusBand=UiFactory.Rect(root,"Sokoban compact status",19.5f*s,0,349*s,26*s);
             compactStatus=Label(statusBand,"",0,0,349*s,26*s,9.5f,UiFactory.Hex("B34842"),TextAnchor.MiddleCenter);
             compactStatus.resizeTextForBestFit=true; compactStatus.resizeTextMinSize=14; compactStatus.resizeTextMaxSize=18;
@@ -86,9 +76,9 @@ namespace XanaduYonder.Runtime.Sokoban
         }
         private void ActionContents(Button button,UiIconKind icon,string text,float width)
         {
-            float s=Scale,content=50*s,x=(width-content)/2;
+            float s=Scale,content=55*s,x=(width-content)/2;
             var symbol=UiFactory.Rect(button.transform,"Action icon",x,13*s,22*s,22*s).gameObject.AddComponent<UiIconGraphic>(); symbol.Kind=icon; symbol.color=UiFactory.Ink; symbol.raycastTarget=false;
-            Label(button.transform,text,x+28*s,0,22*s,48*s,11,UiFactory.Ink,TextAnchor.MiddleCenter);
+            Label(button.transform,text,x+31*s,0,24*s,48*s,12,UiFactory.Ink,TextAnchor.MiddleCenter);
         }
         private static SokobanGraphic Shape(Transform parent,string name,float x,float y,float width,float height,float radius,Color color)
         {
@@ -105,7 +95,7 @@ namespace XanaduYonder.Runtime.Sokoban
             var target=UiFactory.Panel(button.transform,"Sokoban hit area",(float)hit.X,(float)hit.Y,(float)hit.Width,(float)hit.Height,Color.clear,false); target.raycastTarget=true;
             var filter=target.gameObject.AddComponent<SokobanHitArea>(); filter.Original=(RectTransform)button.transform; filter.Round=name.StartsWith("Move ",StringComparison.Ordinal);
             hitButtons.Add(button);
-            button.onClick.AddListener(()=>action()); return button;
+            button.onClick.AddListener(()=>action?.Invoke()); return button;
         }
         private float? minimumTouchSize;
         private float MinimumTouchSize()
@@ -128,6 +118,7 @@ namespace XanaduYonder.Runtime.Sokoban
         private void RefreshHitAreas()
         {
             float minimum=MinimumTouchSize();
+            hitButtons.RemoveAll(button=>button==null);
             foreach(var button in hitButtons)
             {
                 var rect=(RectTransform)button.transform; var target=(RectTransform)rect.Find("Sokoban hit area");
@@ -153,11 +144,13 @@ namespace XanaduYonder.Runtime.Sokoban
             surface.sizeDelta=new Vector2((float)layout.BoardWidth,(float)layout.BoardHeight);
             operations.anchoredPosition=new Vector2((float)layout.Inset,-(float)layout.ControlsTop);
             statusBand.anchoredPosition=new Vector2((float)layout.Inset,-(float)layout.StatusTop); statusBand.gameObject.SetActive(hasWarning);
-            if(viewport!=null) { viewport.Resize(layout.BoardWidth,layout.BoardHeight); RenderView(); }
+            if(entryViewport!=null) LayoutEntry(hasWarning);
+            if(isEntry) statusBand.anchoredPosition=new Vector2((float)layout.Inset,-(size.y-26*Scale));
+            if(viewport!=null) { viewport.Resize(layout.BoardWidth,layout.BoardHeight,12*Scale); RenderView(); }
         }
         private void Refresh()
         {
-            if(session==null) return; RefreshCounts(); RenderView(); RefreshCompactStatus();
+            if(session==null) return; RefreshCounts(); RenderView(); RefreshEntry(); RefreshCompactStatus(); SetViewVisibility();
         }
         private void RefreshCounts()
         {
@@ -172,7 +165,7 @@ namespace XanaduYonder.Runtime.Sokoban
             }
             float levelWidth=Mathf.Max(36*s,right); ((RectTransform)levelButton.transform).sizeDelta=new Vector2(levelWidth,44*s);
             levelText.rectTransform.sizeDelta=new Vector2(Mathf.Max(10*s,levelWidth-16*s),44*s);
-            string full=LevelNumber(session.Game.Level.LevelId).ToString("00")+" "+session.Game.Level.Title;
+            string full=DisplayLevelLabel(session.Game.Level.LevelId);
             levelText.text=full;
             while(levelText.preferredWidth>levelText.rectTransform.rect.width&&full.Length>1) { full=full.Substring(0,full.Length-1); levelText.text=full+"…"; }
             var chevron=(RectTransform)levelButton.transform.Find("Level chevron"); chevron.anchoredPosition=new Vector2(Mathf.Min(levelText.preferredWidth+4*s,levelWidth-10*s),-17*s);
@@ -182,12 +175,9 @@ namespace XanaduYonder.Runtime.Sokoban
         }
         private string StatText(string caption,string value)
         { return caption+" <color=#173D35><size="+Mathf.RoundToInt(14*Scale)+">"+value+"</size></color>"; }
-        private int LevelNumber(string id) { for(int i=0;i<catalog.Count;i++) if(catalog.At(i).LevelId==id) return i+1; return 1; }
         private void RenderView()
         {
-            if(viewport==null||zoomText==null) return; board.Layout();
-            Enable(zoomOut,viewport.Zoom>1.00001); Enable(zoomIn,viewport.Zoom<1.99999);
-            zoomText.text=viewport.Zoom<=1.00001?"适配":Math.Round(viewport.Zoom*100)+"%";
+            if(viewport!=null) board.Layout();
         }
         private void RefreshCompactStatus()
         {

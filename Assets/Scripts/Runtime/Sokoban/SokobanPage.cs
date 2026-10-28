@@ -23,7 +23,7 @@ namespace XanaduYonder.Runtime.Sokoban
         private Func<bool> acceptsInput,soundEnabled,hapticsEnabled;
         private GameObject dialog;
         private Action dismissDialog;
-        private bool visible,foreground=true,settingsBlocked,choosing,resultDismissed,saveFailed,viewDirty;
+        private bool visible,foreground=true,settingsBlocked,choosing,resultDismissed,saveFailed,hasStarted,isEntry=true;
         private string warning,hostSaveWarning;
         private Direction facing=Direction.Down;
         private Direction? queued;
@@ -37,6 +37,7 @@ namespace XanaduYonder.Runtime.Sokoban
         internal SokobanViewport Viewport { get { return viewport; } }
         internal bool HasDialog { get { return dialog!=null; } }
         internal bool IsChoosing { get { return choosing; } }
+        internal bool IsEntry { get { return isEntry; } }
         internal bool IsAnimating { get { return board!=null&&board.Animating; } }
         public void Initialize(RectTransform parent,Action lobby,Action<Action> settings,Func<bool> canInput,
             Func<bool> sound,Func<bool> haptics,GameFeedback sharedFeedback,Action<string> status,
@@ -51,13 +52,17 @@ namespace XanaduYonder.Runtime.Sokoban
             store=initialProfile!=null?initialStore:initialStore??new SokobanSaveStore(Application.persistentDataPath,catalog);
             if(initialProfile!=null) profile=initialProfile;
             else { var saved=store.Load(out warning); profile=saved==null?new SokobanProfile(catalog):new SokobanProfile(catalog,saved); }
-            var active=profile.GetActive(); session=active==null?profile.StartLevel(profile.SelectedLevelId):new SokobanSession(active,catalog);
-            feedback=gameObject.AddComponent<SokobanFeedback>(); BuildGame(); SetupBoard(); Refresh();
+            var active=profile.GetActive(); hasStarted=active!=null;
+            // A migrated profile may keep its old selection without a resumable attempt.
+            // The fresh entry previews the same tutorial that its start action opens.
+            session=active==null?new SokobanSession(catalog.At(0)):new SokobanSession(active,catalog);
+            session.SetView(1,.5,.5); session.Leave();
+            feedback=gameObject.AddComponent<SokobanFeedback>(); BuildGame(); BuildEntry(); SetupBoard(); Refresh();
         }
         public void Enter()
         {
-            visible=true; gameObject.SetActive(true); settingsBlocked=false; session.SetBlocked(false); session.SetForeground(foreground); session.Enter();
-            choosing=false; resultDismissed=false; CancelInput(); LayoutNow(); Refresh(); CheckEndState();
+            visible=true; gameObject.SetActive(true); settingsBlocked=false; session.SetBlocked(false); session.SetForeground(foreground);
+            resultDismissed=false; ShowEntry();
         }
         public void Leave()
         {
@@ -73,27 +78,26 @@ namespace XanaduYonder.Runtime.Sokoban
         }
         public void Back()
         {
-            if(choosing) { Home(); return; }
             if(dialog!=null) { dismissDialog?.Invoke(); return; }
-            ShowLevels();
+            if(isEntry) Home(); else ShowLevels();
         }
         private void Home() { CancelInput(); feedback.Stop(); Save(); returnLobby(); }
         internal void StartLevel(string levelId,bool fresh=false)
         {
             CancelInput(); CloseDialog(); feedback.Stop();
-            if(session==null||session.Game.Level.LevelId!=levelId||fresh)
-            { if(session!=null) profile.Capture(session); session=profile.StartLevel(levelId); facing=Direction.Down; }
+            if(!hasStarted||session==null||session.Game.Level.LevelId!=levelId||fresh)
+            { if(hasStarted&&session!=null) profile.Capture(session); session=profile.StartLevel(levelId); facing=Direction.Down; }
+            hasStarted=true; isEntry=false;
             session.SetForeground(foreground); session.Enter(); session.SetBlocked(false); settingsBlocked=false; choosing=false; resultDismissed=false;
-            SetupBoard(); Save(); Refresh();
+            SetViewVisibility(); SetupBoard(); Save(); Refresh();
         }
         private void SetupBoard()
         {
-            LayoutNow(); viewport=new SokobanViewport(session.Game.Level.Width,session.Game.Level.Height,Math.Max(1,surface.rect.width),Math.Max(1,surface.rect.height));
-            viewport.Restore(session.Zoom,session.CenterX,session.CenterY);
+            LayoutNow(); viewport=new SokobanViewport(session.Game.Level.Width,session.Game.Level.Height,Math.Max(1,surface.rect.width),Math.Max(1,surface.rect.height),12*Scale);
             pointer.Initialize(surface,viewport,directionRects,directionValues,()=>ViewAllowed,HandleGesture);
             board.Render(session.Game,viewport,facing); RenderView();
         }
-        private bool ViewAllowed { get { return visible&&foreground&&!settingsBlocked&&dialog==null&&acceptsInput()!=false&&session!=null; } }
+        private bool ViewAllowed { get { return visible&&!isEntry&&foreground&&!settingsBlocked&&dialog==null&&acceptsInput()!=false&&session!=null; } }
         private bool MoveAllowed { get { return ViewAllowed&&session.CanInteract; } }
         internal void Move(Direction direction)
         {
@@ -123,16 +127,12 @@ namespace XanaduYonder.Runtime.Sokoban
         internal void Restart()
         {
             CancelInput(); CloseDialog(); feedback.Stop(); session.Restart(); session.Enter(); facing=Direction.Down; resultDismissed=false;
-            viewport.Reset(); Save(); Refresh(); board.Render(session.Game,viewport,facing); RenderView();
+            Save(); Refresh(); board.Render(session.Game,viewport,facing); RenderView();
         }
-        internal void Zoom(int direction) { if(!ViewAllowed) return; CancelInput(); viewport.StepZoom(direction); Save(); RenderView(); }
-        internal void ResetZoom() { if(!ViewAllowed) return; CancelInput(); viewport.Reset(); Save(); RenderView(); }
         private void HandleGesture(SokobanInputResult result)
         {
             if(result.CancelQueued) { queued=null; board.StopAnimation(); }
-            if(result.ViewChanged) { viewDirty=true; RenderView(); }
-            if(result.Direction.HasValue) { pointerMoveFrame=Time.frameCount; Move(result.Direction.Value); }
-            if(result.Completed&&viewDirty) { viewDirty=false; Save(); }
+            if(result.Direction.HasValue) Move(result.Direction.Value);
         }
         private void CancelInput() { pointer?.CancelGesture(); queued=null; board?.StopAnimation(); ClearToast(); }
         private void Settings()
@@ -143,8 +143,8 @@ namespace XanaduYonder.Runtime.Sokoban
         public void Save()
         {
             if(profile==null) return;
-            if(session!=null)
-            { if(viewport!=null) session.SetView(viewport.Zoom,viewport.CenterX,viewport.CenterY); profile.Capture(session); }
+            if(hasStarted&&session!=null)
+            { session.SetView(1,.5,.5); profile.Capture(session); }
             if(store!=null)
             {
                 string error;
@@ -169,7 +169,7 @@ namespace XanaduYonder.Runtime.Sokoban
                 else if(Input.GetKeyDown(KeyCode.LeftArrow)||Input.GetKeyDown(KeyCode.A)) Move(Direction.Left);
                 else if(Input.GetKeyDown(KeyCode.RightArrow)||Input.GetKeyDown(KeyCode.D)) Move(Direction.Right);
             }
-            // A resize, zoom or dialog may finish the view animation synchronously.
+            // A resize or dialog may finish the view animation synchronously.
             // Terminal delivery follows model state, not an animation completion callback.
             CheckEndState();
         }

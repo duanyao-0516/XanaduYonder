@@ -5,6 +5,7 @@ No network access or runtime solver. Source rows and selected CC0 media bytes ar
 copied unchanged. A failed validation never replaces the last good directory.
 """
 import argparse
+import ast
 import ctypes
 import hashlib
 import importlib.util
@@ -20,6 +21,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "sokoban-campaign-v1"
+PROTOTYPE_FIXTURES = {"tutorial-001": "compact", "tutorial-008": "tall"}
 SOURCE_HASH = "272928a4e7c185fdf84daa523b298750b6ff08703cb0c20d3be7eff93acc5256"
 SOURCE_COMMIT = "78011d8c86ad423bfb2e1005012393b4c3c24409"
 BOXOBAN = "boxoban-unfiltered-test-000"
@@ -111,6 +113,33 @@ def replay(rows, solution):
     return {"moves": len(solution), "pushes": pushes, "finalPlayer": player[1] * width + player[0], "finalBoxes": sorted(y * width + x for x, y in boxes)}
 
 
+def prototype_fixture_rows(prototype):
+    """Read the prototype's static fixture literal without executing its script."""
+    match = re.search(r"\bconst\s+fallbackLevels\s*=\s*(\[.*?\])\s*;", prototype, re.DOTALL)
+    require(match is not None, "Prototype fallbackLevels fixture array missing")
+    try:
+        literal = ast.parse(match.group(1), mode="eval")
+        # JavaScript permits bare object keys; the fixture values are literals.
+        for node in ast.walk(literal):
+            if isinstance(node, ast.Dict):
+                node.keys = [ast.Constant(key.id) if isinstance(key, ast.Name) else key for key in node.keys]
+        fixtures = ast.literal_eval(literal)
+    except (SyntaxError, ValueError) as error:
+        raise ValueError("Prototype fallbackLevels must contain static literal fixtures") from error
+    require(isinstance(fixtures, list), "Prototype fallbackLevels must be a list")
+    by_id = {}
+    for fixture in fixtures:
+        require(isinstance(fixture, dict) and isinstance(fixture.get("levelId"), str), "Prototype fixture requires a levelId")
+        level_id = fixture["levelId"]
+        require(level_id not in by_id, f"Duplicate prototype fixture: {level_id}")
+        rows = fixture.get("rows")
+        require(isinstance(rows, list) and rows and all(isinstance(row, str) for row in rows), f"Prototype fixture rows missing or invalid: {level_id}")
+        by_id[level_id] = rows
+    for level_id in PROTOTYPE_FIXTURES:
+        require(level_id in by_id, f"Prototype fixture missing: {level_id}")
+    return {level_id: by_id[level_id] for level_id in PROTOTYPE_FIXTURES}
+
+
 def build_campaign(tutorials_path):
     source_path = ROOT / "Data/Sokoban/boxoban/unfiltered-test-000.txt"
     spec = importlib.util.spec_from_file_location("boxoban_source", ROOT / "Data/Sokoban/verification/verify_boxoban.py")
@@ -131,11 +160,9 @@ def build_campaign(tutorials_path):
         records.append({"schemaVersion": 1, "levelId": level_id, "contentVersion": VERSION, "chapter": "tutorial", "order": index + 1, "title": level["title"], "source": {"collection": "xanadu-original", "sourceId": level_id}, "rows": level["rows"], "solution": level["solution"]})
     # The two visual review fixtures are compared to the actual approved prototype.
     prototype = (ROOT / "docs/prototypes/sokoban/prototype.js").read_text(encoding="utf-8")
-    for name, index in [("compact", 0), ("tall", 7)]:
-        match = re.search(name + r":\s*\{[^\n]*rows:\s*(\[[^\n]*?\])", prototype)
-        require(match is not None, "Prototype fixture missing")
-        prototype_rows = json.loads(match.group(1).replace("'", '"'))
-        require(records[index]["rows"] == prototype_rows, f"Tutorial {index + 1} differs from approved {name} map")
+    records_by_id = {record["levelId"]: record for record in records}
+    for level_id, rows in prototype_fixture_rows(prototype).items():
+        require(records_by_id[level_id]["rows"] == rows, f"Tutorial {level_id} differs from approved {PROTOTYPE_FIXTURES[level_id]} map")
     previous_id = -1
     for index, level in enumerate(candidates["levels"]):
         source_id = level["source_id"]

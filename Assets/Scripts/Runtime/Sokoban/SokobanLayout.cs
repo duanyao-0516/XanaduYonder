@@ -25,17 +25,10 @@ namespace XanaduYonder.Runtime.Sokoban
         public static double MinimumTarget(double designWidth,double usableWidthDp) { return 48*designWidth/usableWidthDp; }
         public static SokobanHitBounds HitBounds(string name,double width,double height,double scale,double minimum)
         {
-            double w=Math.Max(width,minimum),h=Math.Max(height,minimum),x=-(w-width)/2,y=-(h-height)/2;
-            if(name=="Home"||name=="Book"||name=="Settings") y=Math.Max(y,-6*scale);
-            if(name=="Book"&&w>width) x=-(w-width)+2*scale;
-            if(name=="Settings"&&w>width) x=-2*scale;
-            if(name=="Fit")
-            {
-                double grow=Math.Max(0,(minimum-44*scale)/2);
-                x=Math.Max(0,grow-2*scale); w=Math.Min(width,78*scale-2*grow);
-            }
-            if(name=="Move Down"||name=="Undo"||name=="Restart") y=-(h-height);
-            return new SokobanHitBounds(x,y,w,h);
+            // The approved compact controls and grids have narrow gaps. Expanding a
+            // target would steal its neighbour's press; touch and raycasts use the
+            // same visible rectangle, while responsive grids retain usable widths.
+            return new SokobanHitBounds(0,0,width,height);
         }
     }
     public struct SokobanHitBounds

@@ -20,7 +20,7 @@ namespace XanaduYonder.Runtime.Sokoban
         internal void Initialize(RectTransform board,SokobanViewport viewport,RectTransform[] buttons,Direction[] values,Func<bool> canInput,Action<SokobanInputResult> handle)
         {
             CancelGesture(); surface=board; controls=buttons; directions=values; allowed=canInput; deliver=handle;
-            input=new SokobanInput(viewport) { SwipeThreshold=Math.Max(20,28*board.rect.width/349) };
+            input=new SokobanInput();
         }
         internal void CancelGesture()
         { if(input==null) return; input.Cancel(); if(Input.touchCount==0&&!Input.GetMouseButton(0)) input.Process(false); }

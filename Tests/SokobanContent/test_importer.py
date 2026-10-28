@@ -45,9 +45,40 @@ class ContentImportTests(unittest.TestCase):
             content.build_campaign(self.tutorial_input(self.tutorials))
 
     def test_prototype_fixture_cannot_drift(self):
-        self.tutorials["levels"][0]["rows"][1] = "# .    #"
-        with self.assertRaisesRegex(ValueError, "approved compact"):
-            content.build_campaign(self.tutorial_input(self.tutorials))
+        for index, name in [(0, "compact"), (7, "tall")]:
+            with self.subTest(level_id=self.tutorials["levels"][index]["levelId"]):
+                changed = copy.deepcopy(self.tutorials)
+                changed["levels"][index]["rows"][1] = "# .    #"
+                with self.assertRaisesRegex(ValueError, f"approved {name}"):
+                    content.build_campaign(self.tutorial_input(changed))
+
+    def test_prototype_fixtures_use_stable_ids_across_order_and_format_changes(self):
+        compact, tall = self.tutorials["levels"][0], self.tutorials["levels"][7]
+        prototype = "const fallbackLevels = [\n" + ",\n".join(
+            "{rows: " + json.dumps(level["rows"], indent=2) + ",\n"
+            + "title: 'UI label may change', levelId: '" + level["levelId"] + "'}"
+            for level in [tall, compact]
+        ) + "\n];\nconst unrelated = {levelId: 'tutorial-001', rows: ['wrong']};"
+        self.assertEqual(
+            {level["levelId"]: level["rows"] for level in [compact, tall]},
+            content.prototype_fixture_rows(prototype),
+        )
+
+    def test_prototype_fixtures_reject_missing_ids_even_with_matching_rows_elsewhere(self):
+        fixtures = [self.tutorials["levels"][0], self.tutorials["levels"][7]]
+        for missing in fixtures:
+            with self.subTest(level_id=missing["levelId"]):
+                remaining = [level for level in fixtures if level is not missing]
+                prototype = "const fallbackLevels = " + json.dumps(remaining) + ";\n"
+                prototype += "const unrelated = " + json.dumps(missing) + ";"
+                with self.assertRaisesRegex(ValueError, "Prototype fixture missing: " + missing["levelId"]):
+                    content.prototype_fixture_rows(prototype)
+
+    def test_prototype_fixtures_reject_duplicate_ids(self):
+        fixtures = [self.tutorials["levels"][0], self.tutorials["levels"][7], self.tutorials["levels"][0]]
+        prototype = "const fallbackLevels = " + json.dumps(fixtures) + ";"
+        with self.assertRaisesRegex(ValueError, "Duplicate prototype fixture: tutorial-001"):
+            content.prototype_fixture_rows(prototype)
 
     def test_witness_does_not_allow_blocked_or_post_victory_steps(self):
         for solution in ("L", "RR", "RX", ""):

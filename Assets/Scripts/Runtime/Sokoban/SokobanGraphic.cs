@@ -10,11 +10,24 @@ namespace XanaduYonder.Runtime.Sokoban
     {
         internal SokobanGraphicKind Kind;
         internal float Radius=16;
+        internal float BorderWidth;
+        internal Color BorderColor;
+        internal bool Gradient;
+        internal bool GoalRing=true;
+        internal Color EndColor;
         internal Direction Direction;
         protected override void OnPopulateMesh(VertexHelper mesh)
         {
             mesh.Clear(); Rect r=GetPixelAdjustedRect();
-            if(Kind==SokobanGraphicKind.Round) { Rounded(mesh,r,Radius,color); return; }
+            if(Kind==SokobanGraphicKind.Round)
+            {
+                if(BorderWidth>0)
+                {
+                    Rounded(mesh,r,Radius,BorderColor);
+                    r=new Rect(r.x+BorderWidth,r.y+BorderWidth,Mathf.Max(0,r.width-2*BorderWidth),Mathf.Max(0,r.height-2*BorderWidth));
+                }
+                Rounded(mesh,r,Mathf.Max(0,Radius-BorderWidth),color,Gradient?EndColor:color); return;
+            }
             if(Kind==SokobanGraphicKind.Floor)
             {
                 var a=UiFactory.Hex("EEE5D0"); var b=UiFactory.Hex("E4DAC2");
@@ -30,7 +43,7 @@ namespace XanaduYonder.Runtime.Sokoban
                 float size=Mathf.Min(r.width,r.height)*.24f;
                 // The approved target is a rounded diamond, never a substitute asset tile.
                 float radius=Radius,ring=Radius*.75f;
-                Diamond(mesh,r.center,size+2*ring,radius+ring,UiFactory.Hex("8FA57C")*new Color(1,1,1,.15f));
+                if(GoalRing) Diamond(mesh,r.center,size+2*ring,radius+ring,UiFactory.Hex("8FA57C")*new Color(1,1,1,.15f));
                 Diamond(mesh,r.center,size,radius,UiFactory.Hex("789667")); return;
             }
             if(Kind==SokobanGraphicKind.Check)
@@ -61,15 +74,17 @@ namespace XanaduYonder.Runtime.Sokoban
             }
             for(int i=0;i<segments;i++) mesh.AddTriangle(first,first+1+i,first+1+(i+1)%segments);
         }
-        private static void Rounded(VertexHelper mesh,Rect r,float radius,Color shade)
+        private static void Rounded(VertexHelper mesh,Rect r,float radius,Color shade,Color? end=null)
         {
-            radius=Mathf.Min(radius,Mathf.Min(r.width,r.height)/2); int first=mesh.currentVertCount; mesh.AddVert(r.center,shade,Vector2.zero);
+            radius=Mathf.Min(radius,Mathf.Min(r.width,r.height)/2); int first=mesh.currentVertCount; mesh.AddVert(r.center,Color.Lerp(shade,end??shade,.5f),Vector2.zero);
             const int segments=36;
             for(int i=0;i<segments;i++)
             {
                 int quadrant=i/9; float angle=(quadrant*90+(i%9)*11.25f)*Mathf.Deg2Rad;
                 Vector2 center=new Vector2(quadrant==0||quadrant==3?r.xMax-radius:r.xMin+radius,quadrant<2?r.yMax-radius:r.yMin+radius);
-                mesh.AddVert(center+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius,shade,Vector2.zero);
+                var point=center+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;
+                float mix=r.width>0&&r.height>0?((point.x-r.xMin)/r.width*.7f+(r.yMax-point.y)/r.height*.3f):0;
+                mesh.AddVert(point,Color.Lerp(shade,end??shade,mix),Vector2.zero);
             }
             for(int i=0;i<segments;i++) mesh.AddTriangle(first,first+1+i,first+1+(i+1)%segments);
         }
