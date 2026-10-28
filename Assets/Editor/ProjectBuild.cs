@@ -165,6 +165,28 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidLinkMatchValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".linkmatchtest");
+                    PlayerSettings.productName = "Xanadu 连连看测试";
+                    BuildApk("-link-match-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         // User preview stays side-by-side with the installed app, without the Development runtime.
         // BuildAndroid remains the explicit diagnostic build; no runtime errors are hidden here.
         public static void BuildZumaPreview()

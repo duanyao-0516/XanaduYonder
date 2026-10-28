@@ -57,11 +57,15 @@ scripts/test-happy-ball.sh
 scripts/test-happy-ball-input.sh
 scripts/test-happy-ball-persistence.sh
 scripts/test-happy-ball-ui.sh
+scripts/test-link-match.sh
+scripts/test-link-match-input.sh
+scripts/test-link-match-persistence.sh
+scripts/test-link-match-ui.sh
 scripts/build-android.sh
 scripts/install-android.sh DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含扫雷、Zuma、Dino、五子棋和欢乐球球的十一款大厅顺序，并输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含推箱子和连连看的十三款大厅顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -111,7 +115,7 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 
 扫雷的 Unity 界面测试和 APK 构建通过 `scripts/minesweeper-unity-environment.sh` 使用当前工作树的 `Library/MinesweeperGradle`，并分配独立临时 ADB 端口。不要把这些目录链接到其他工作树；该脚本只改变当前命令的环境，不修改全局 Gradle/ADB 设置。临时端口分配需要 Python 3。
 
-07 扫雷已接入 0.5.0 的十款游戏合集，Android versionCode 为 5；独立测试包沿用当前源码版本，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
+07 扫雷已包含在正式 v0.5.0 的十款游戏合集中；当前源码另有欢乐球球、推箱子和连连看，共十三款，Android versionCode 仍为 5。独立测试包沿用当前源码版本，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
 
 本轮开发、测试和构建只使用 `/Users/bytedance/.codex/worktrees/minesweeper/XanaduYonder`；不切换、清理、构建或修改其他工作树，不共享其他检出的 Library/Temp。以下命令均从这一本工作树根目录执行：
 
@@ -167,6 +171,36 @@ SOKOBAN_ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPl
 ```
 
 稳定存档为 `sokoban-v1.json`，与其他玩法分离。继续、撤回、选关、后台恢复、多指取消、系统安全区和音频仍需按[检查表](sokoban-development-guide.md#8-后续小游戏可直接使用的检查表)完成对应验证；安装成功只证明本次安装步骤。
+
+## 连连看独立验证
+
+13 连连看从大厅进入轻松／挑战选关页，三档为 24／36／48 张水果牌，两个模式各三关共六个独立续局槽位。先读[设计与调研](link-match-research.md)、[UI 原型说明](prototypes/link-match/README.md)和[架构契约](architecture.md#连连看的独立边界)；原型的交互或截图不能替代生产 UGUI、Android 输入与存档验证。
+
+```bash
+scripts/test-link-match.sh
+scripts/test-link-match-input.sh
+scripts/test-link-match-persistence.sh
+scripts/test-link-match-ui.sh
+(PROJECT_ROOT="$PWD"; source scripts/link-match-unity-environment.sh; scripts/test-minigame-ui.sh)
+scripts/build-link-match-validation.sh
+```
+
+前三项分别使用生产 C# 规则、输入／布局及真实 Newtonsoft 存档代码；规则覆盖合法路径和生成见证，输入覆盖单次释放及取消，存档覆盖六槽、计时／道具、终局幂等和文件事务。`test-link-match-ui.sh` 启动 Unity Play Mode，以生产 UGUI、`Camera.Render` 和指针射线检查页面，输出 `artifacts/validation/link-match-ui/report.txt` 及截图，日志为 `artifacts/logs/link-match-ui-checks.log`。这些命令描述验证入口，不表示已经执行或通过。
+
+后三项会使用 Unity，必须在当前工作树中串行执行，运行前关闭本树的交互编辑器。连连看的 UI／构建脚本 source `scripts/link-match-unity-environment.sh`，使用本树 `Library/LinkMatchGradle` 和临时独立 ADB 端口；不复用其他工作树的 Library、Temp 或构建产物，不停止共享 ADB／Gradle 服务。
+
+`build-link-match-validation.sh` 调用 `ProjectBuild.BuildAndroidLinkMatchValidation`，目标为 `artifacts/builds/XanaduYonder-0.5.0-link-match-validation.apk`，日志为 `artifacts/logs/build-link-match-validation.log`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。这是包含当前源码游戏的合集开发验证包；构建入口在 finally 中恢复原包名和产品名。正常开发包、正式包的路径及标识不变，也不会自动创建 Release。产物是否成功以本次构建结果、时间和哈希为准，不能只凭目录已有同名 APK 判断。
+
+确认设备序列号后显式安装、启动此独立包，不用普通安装脚本代替包名隔离：
+
+```bash
+LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/adb"
+"$LINK_MATCH_ADB" devices -l
+"$LINK_MATCH_ADB" -s DEVICE_SERIAL install --no-streaming -r artifacts/builds/XanaduYonder-0.5.0-link-match-validation.apk
+"$LINK_MATCH_ADB" -s DEVICE_SERIAL shell am start -W -n com.duanyao.xanaduyonder.linkmatchtest/com.unity3d.player.UnityPlayerActivity
+```
+
+`link-match-v1.json` 及 `.bak/.tmp` 只属于连连看。验收需分别覆盖：入口浏览不建局、六槽恢复和目标槽重开、下一关已有局的续接、最后一对与计时截止、无路自动重排、后台遮盘与明确继续、短屏最大棋盘及外围路线、真实触点取消／多指、游戏与公共设置保存失败提示，以及从 Zuma／Dino 横屏返回后的宿主恢复。Android dp、系统安全区、音效触感与实际设备交互另行记录；构建成功或安装启动成功都不代表这些场景已通过。
 
 ## 正式发布 APK
 

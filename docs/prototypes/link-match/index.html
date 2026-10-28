@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>连连看 · UI 设计示例 — XanaduYonder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="review">
+    <header class="review-header">
+      <div><p class="eyebrow">XANADU YONDER / DESIGN STUDY 13</p><h1>连连看，连起一点小快乐。</h1></div>
+      <span class="review-tag">演示进度，不保存</span>
+    </header>
+    <section class="review-controls" aria-label="原型评审控制">
+      <label>预览状态<select id="preview-state"><option value="lobby">大厅卡片</option><option value="entry" selected>选关页面</option><option value="relaxed">轻松对局</option><option value="challenge">挑战对局</option><option value="timeout">挑战超时</option><option value="pause">暂停</option><option value="restart">重开确认</option><option value="complete">本关完成</option><option value="last">最后一关完成</option><option value="save-error">保存失败</option><option value="assets">素材板</option></select></label>
+      <label>安全内容<select id="preview-size"><option value="regular">388 × 784</option><option value="compact">360 × 640</option></select></label>
+      <label>入口样例<select id="preview-profile"><option value="resume">有一局可继续</option><option value="new">首次游玩</option></select></label>
+      <label>游戏关卡<select id="preview-level"><option value="1">01 · 24 张</option><option value="2" selected>02 · 36 张</option><option value="3">03 · 48 张</option></select></label>
+      <button class="overview-toggle" data-action="overview" aria-pressed="false">三页概览</button>
+    </section>
+    <section id="overview" class="overview" aria-label="大厅、选关和正式对局三页概览" hidden>
+      <article><h2><span>01</span> 大厅入口</h2><div class="overview-frame"><iframe title="大厅连连看卡片" data-overview-src="lobby" loading="lazy"></iframe></div></article>
+      <article><h2><span>02</span> 模式与选关</h2><div class="overview-frame"><iframe title="连连看模式与选关" data-overview-src="entry" loading="lazy"></iframe></div></article>
+      <article><h2><span>03</span> 独立竖屏对局</h2><div class="overview-frame"><iframe title="连连看挑战对局" data-overview-src="challenge" loading="lazy"></iframe></div></article>
+    </section>
+    <div class="review-layout">
+      <section class="screen" data-view="entry" data-size="regular" aria-label="连连看安全内容区，388乘784">
+        <div class="screen-content">
+          <nav class="nav" aria-label="合集导航">
+            <button class="nav-button" data-action="home" aria-label="返回大厅"><span data-icon="Home"></span></button>
+            <span class="nav-brand">XANADU / YONDER</span>
+            <div class="nav-right"><button class="nav-button" data-action="help" aria-label="玩法说明"><span data-icon="Book"></span></button><button class="nav-button" data-action="settings" aria-label="公共设置"><span data-icon="Settings"></span></button></div>
+          </nav>
+          <header class="page-heading"><h2 id="page-title">连连看</h2><span id="heading-tag">闲下来，连一连</span></header>
+          <section id="lobby-page" class="page lobby-page" hidden>
+            <div class="lobby-introduction"><h2>小小一局，慢慢向前。</h2><p>把片刻空闲，留给一点简单的快乐。</p></div>
+            <article class="lobby-card" aria-label="13 连连看，新增大厅卡片">
+              <div class="lobby-card-copy"><span class="game-number">13　/　轻松连线</span><h3>连连看</h3><p>找到相同，连起快乐。</p><span class="lobby-pill">轻松 / 挑战 · 三档棋盘</span></div>
+              <div class="lobby-art" aria-hidden="true"><span class="art-tile t1"><img src="assets/strawberry.png" alt=""></span><span class="art-tile t2"><img src="assets/banana.png" alt=""></span><span class="art-tile t3"><img src="assets/strawberry.png" alt=""></span><span class="art-tile t4"><img src="assets/grapes.png" alt=""></span><svg viewBox="0 0 170 170"><path d="M44 50 H16 V124 H44"/></svg></div>
+              <button class="lobby-cta" data-action="entry">开始 / 继续游戏　→</button>
+            </article>
+          </section>
+          <section id="entry-page" class="page entry-page">
+            <p class="entry-intro">相同的水果，刚好的一条路。</p>
+            <button id="continue-card" class="continue-card" data-action="continue">
+              <span class="continue-main"><span class="continue-copy"><span class="card-eyebrow" id="continue-eyebrow">接着上次的轻松</span><strong id="continue-title">第 02 关</strong><span id="continue-detail">36 张待配 · 已用时 00:32</span></span><span class="continue-art" aria-hidden="true"><img src="assets/strawberry.png" alt=""><img src="assets/banana.png" alt=""><img src="assets/grapes.png" alt=""></span></span>
+              <span class="continue-cta"><span id="continue-action">继续游戏</span><span aria-hidden="true">→</span></span>
+            </button>
+            <div class="mode-tabs" role="tablist" aria-label="游戏模式"><button role="tab" data-mode="relaxed" aria-selected="true">轻松</button><button role="tab" data-mode="challenge" aria-selected="false">挑战</button></div>
+            <p class="mode-summary" id="mode-summary">不限时 · 提示和洗牌随心用</p>
+            <div class="section-heading"><h3>挑一关开始</h3><span>全部开放</span></div>
+            <div id="level-list" class="level-list" aria-label="选择关卡"></div>
+          </section>
+          <section id="game-page" class="page game-page" hidden>
+            <div class="game-info"><button class="level-link" data-action="entry" aria-label="返回连连看选关"><span id="game-level">第 02 关</span><span class="chevron"></span></button><span class="mode-label" id="game-mode">轻松</span><span class="info-count">剩余 <b id="remaining">36</b> 张</span><span class="info-time"><span id="time-label">用时</span> <b id="game-time">00:32</b></span></div>
+            <div id="save-warning" class="save-warning" role="status" hidden><span>进度尚未保存，请暂时保留本页</span><button data-action="retry-save">重试</button></div>
+            <div class="board-area" aria-label="连连看棋盘，外圈可通行">
+              <div id="board" class="board" role="group" aria-label="水果棋盘"></div>
+              <svg class="path-layer" aria-hidden="true"><path class="route-halo"/><path class="route"/></svg>
+              <div class="board-notice" role="status" hidden></div>
+            </div>
+            <div class="operation-zone" aria-label="游戏操作"><button data-action="hint"><span data-icon="Hint"></span><span>提示 <small id="hint-count">∞</small></span></button><button data-action="shuffle"><span data-icon="Shuffle"></span><span>洗牌 <small id="shuffle-count">∞</small></span></button><button data-action="pause"><span data-icon="Pause"></span><span>暂停</span></button></div>
+          </section>
+          <section id="assets-page" class="page assets-page" hidden><p class="entry-intro">圆润一点，水果的好心情。</p><div id="asset-grid" class="asset-grid"></div><div class="asset-credit"><strong>Microsoft Fluent Emoji · 3D</strong><p>12 种水果 / 原始透明 PNG / 256 × 256</p><a href="assets/SOURCES.md">来源与固定版本</a><a href="assets/LICENSE.fluentui-emoji.txt">MIT 许可</a></div></section>
+        </div>
+        <div id="overlay" class="overlay" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" data-action="dismiss" aria-label="关闭弹层">×</button><div id="modal-content"></div></section></div>
+      </section>
+      <aside class="review-notes"><span class="note-index">01 — 03</span><h2>留白给棋盘，<br>快乐交给水果。</h2><p>大厅卡片 → 选模式与关卡 → 独立竖屏对局。Home 始终回大厅，游戏内关卡名回选关。</p><div class="note-rule"></div><p>这一页是可点击的设计样例。续局、时间、道具数和通关结果均为演示数据；没有计时器、存档或联网游戏。</p><p>点水果预览选中反馈；点「提示」看一条绕外圈、两次转弯的合法路径。</p><a href="README.md">阅读状态说明与验证边界 ↗</a></aside>
+    </div>
+    <footer class="review-footer">界面沿用合集纸色、深绿与 Noto 字体 · 图形 © Microsoft Corporation / MIT · 仅设计原型</footer>
+  </main>
+  <div class="sr-only" id="announcer" aria-live="polite"></div>
+  <script src="prototype.js"></script>
+</body>
+</html>

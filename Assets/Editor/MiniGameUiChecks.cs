@@ -144,7 +144,7 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = Get<Text>(shell, "lobbySudokuRecordText").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = (RectTransform)lobby.transform.Find("Lobby list viewport/Lobby list content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban" };
+                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban", "LinkMatch" };
                 float last = float.PositiveInfinity;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -153,6 +153,14 @@ namespace XanaduYonder.EditorTools
                     last = card.anchoredPosition.y;
                     Require(card.GetComponentInChildren<Text>().text.StartsWith((i + 1).ToString("00")), "Visible ordinal matches " + names[i]);
                 }
+                var linkMatchCard = (RectTransform)content.Find("LinkMatch game card");
+                Require(Mathf.Abs(linkMatchCard.rect.width - 608) < .5f && Mathf.Abs(linkMatchCard.rect.height - 350) < .5f,
+                    "Link Match preserves the approved 608 by 350 lobby card");
+                var fruit = linkMatchCard.GetComponentsInChildren<RawImage>();
+                Require(fruit.Length == 4, "Link Match lobby preview shows four fruit tiles");
+                foreach (var tile in fruit) Require(tile.texture != null && !tile.raycastTarget, "Decorative Link Match fruit loads without intercepting input");
+                Require(fruit[0].texture == fruit[2].texture && fruit[0].texture != fruit[1].texture && fruit[1].texture != fruit[3].texture,
+                    "Link Match preview retains the approved strawberry pair, banana and grapes");
                 f.Capture("lobby-top");
                 content.anchoredPosition = new Vector2(0, 1122);
                 f.Capture("lobby-watermelon-fourth");
@@ -161,9 +169,9 @@ namespace XanaduYonder.EditorTools
                 Invoke(shell, "SetStatus", "所有玩法离线可用 · 进度自动保存");
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - viewport.rect.height));
-                f.Capture("lobby-footer-with-sokoban");
-                var finalCard = (RectTransform)content.Find("Sokoban game card");
-                Require(-status.rectTransform.anchoredPosition.y > -finalCard.anchoredPosition.y + finalCard.rect.height, "Lobby footer follows Sokoban without overlapping the last card");
+                f.Capture("lobby-footer-with-link-match");
+                var finalCard = (RectTransform)content.Find("LinkMatch game card");
+                Require(-status.rectTransform.anchoredPosition.y > -finalCard.anchoredPosition.y + finalCard.rect.height, "Lobby footer follows Link Match without overlapping the last card");
                 var ids = new string[2000];
                 for (int d = 0; d < 4; d++) for (int level = 1; level <= 500; level++) ids[d * 500 + level - 1] = "se-v1-d" + d + "-l" + level.ToString("000");
                 Set(sudoku, "profile", new SudokuProfile { CompletedIds = ids });

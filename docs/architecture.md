@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前 0.5.0 源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma、Dino、五子棋和欢乐球球，共十一款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[v0.5.0 版本记录](releases/v0.5.0.md)。
+当前 0.5.0 源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma、Dino、五子棋、欢乐球球、推箱子和连连看，共十三款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述当前源码契约；已发布 v0.5.0 包含前十款，发布情况见[v0.5.0 版本记录](releases/v0.5.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -15,6 +15,8 @@
 | Dino | `Core/Dino` / `DinoPage`、`DinoViewport`、`DinoTrackView` | `dino-v1.json` | 横／竖屏最高纪录和上次成功进入方向；不保存跑酷局面 |
 | 五子棋 | `Core/Gomoku` / `GomokuSession`、`GomokuPage`、`GomokuBoardView` | `gomoku-v1.json` | 人机／双人各一局、完整棋谱与新局偏好；预选和 AI 任务不落盘 |
 | 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
+| 推箱子 | `Core/Sokoban` / `SokobanSession`、`SokobanProfile`、`SokobanPage`、`SokobanBoardView` | `sokoban-v1.json` | 唯一活动尝试、完整撤回历史、108 关完成记录及真实成绩元组 |
+| 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v1.json` | 轻松／挑战 × 三关共六槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)与[Dino 模块](dino-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -102,6 +104,22 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 `SokobanSaveCodec` 与 `SokobanSaveStore` 独立保存 `sokoban-v1.json`。严格校验 JSON 类型、必要字段、版本、有限视口数值及动作重放后的盘面一致性，限制 2 MiB、深度 12、50,000 步；临时文件刷盘后原子替换，只有合法主档可更新备份。内容版本变更时重新开始尝试并保留仍可对应的完成记录。损坏文件归档，写入失败不阻断内存游玩，并持续显示未保存提示。
 
 入包内容从已归档许可资源导入，8 关原创与 100 关 Boxoban 都通过生产规则重放；运行时不联网、不自动求解。源池和开发工具放在 Resources 之外，发布资源仅包含精选素材和关卡。详见[方案](superpowers/specs/2026-10-28-sokoban-design.md)与[验证记录](verification-sokoban.md)。
+
+## 连连看的独立边界
+
+`Core/LinkMatch` 不引用 Unity。`LinkMatchGame` 拥有静态牌阵、两牌消除和清盘状态；`LinkMatchPathFinder` 为消除、提示及生成提供同一套横竖路径判定，允许棋盘外一圈、最多两次直角转弯，按转弯数再按距离选路。`LinkMatchGenerator` 根据当前占用位置构造完整配对顺序，再用生产规则重放解法见证；洗牌保留空位和剩余图案数量。它不使用 Sheep 的叠层、卡槽或三消规则。
+
+`LinkMatchSession` 管理尝试身份、有效游玩时间、提示／洗牌配额及输入门禁。三档棋盘为 4×6、6×6、6×8，轻松模式不超时，挑战初始时间为 90／120／150 秒；挑战每局 3 次提示、2 次主动洗牌，无可消对子时的自动重排不消耗配额。页面提供前台时间增量，后台不按墙钟追扣；模型先提交胜负，再展示连线与消除效果。
+
+`LinkMatchProfile` 按 `mode * 3 + level.Number - 1` 固定保存六个槽位和六份记录。选模式／浏览入口只改变选择，不生成对局；最近续局只查找未完成槽位，已有活动槽默认恢复，重开只替换目标槽。`AttemptId` 隔离已被替换的尝试，旧回调不能覆盖新局；终局、累计胜负和 `ResultRecorded` 在同一 profile 快照中提交，重复保存不重复累计。最佳耗时、提示数、洗牌数与 `BestAttemptId` 来自同一局，不拼接不同对局的最小值。
+
+`LinkMatchPage` 负责选关／游戏／弹窗、暂停遮盘及状态投影；`LinkMatchBoardView` 只呈现牌阵、选中态与路径。UGUI 的 `LinkMatchPointer` 将指针交给 `LinkMatchInput` 仲裁，正常释放时经唯一 `Submit` 通道提交，牌面不另挂 `Button.onClick` 兜底；滑出、多指、换布局和离页取消未提交输入。首张选择、提示与连线均为瞬态，不落盘。页面在有效动作、离页、前后台变化和约每 5 秒检查点保存；后台恢复显示暂停遮罩，明确继续后再露牌和计时。检查点不保证进程强杀前最后一帧已写盘。
+
+`LinkMatchSaveCodec` 使用实际 Newtonsoft token 解析，并先拒绝 JSON 注释、单引号、尾逗号等扩展语法。schema 1、`gameId=link-match`、内容版本、精确六槽形状、模式／关卡与槽索引、尝试身份、牌量、有限计时、道具配额及终局／成绩一致性都在恢复前校验，限制为 128 KiB、深度 8；必要字段缺失、错误类型或未知值不靠 DTO 默认值补齐。`LinkMatchSaveStore` 只访问 `link-match-v1.json` 及其临时、备份和损坏归档文件；每次保存重新验证实际主档，临时文件 flush 后原子替换，只有合法主档可更新备份。读取失败尝试备份和损坏归档；写失败保留可游玩的内存局面与可重试提示。
+
+AppController 只接入第 13 张大厅卡、导航、共享设置与宿主生命周期，转发 Back、Suspend、SetForeground 和保存错误；连连看规则与六槽策略留在模块内。构造与进入都使用相同 `SafeDesignFrame.WidthOnly`，安全区只由宿主处理一次；页面承接本游戏及公共设置保存错误，其他游戏错误在大厅汇总。正常开发包、正式包和既有游戏存档协议不因独立验证入口而变化。
+
+生产素材为 12 张未经重编码的 Microsoft Fluent 3D 水果 PNG，逐文件来源、固定版本、尺寸及哈希见 [manifest](../Assets/Resources/LinkMatch/manifest.json)，原始 MIT 许可见 [Fluent-Emoji-MIT.txt](../Assets/Resources/LinkMatch/Licenses/Fluent-Emoji-MIT.txt)。设计与原型是[研究记录](link-match-research.md)，验证入口及其范围见[开发说明](development.md#连连看独立验证)；源码结构和脚本存在不代表已通过 Unity 或设备验收。
 
 ## Dino的独立边界
 
