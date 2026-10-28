@@ -112,3 +112,26 @@ Unity 6000.3.27f1，Android 编译目标，真实 UGUI + Camera.Render。扫雷�
 - 首版 APK 已另存同目录 `XanaduYonder-0.4.0-minesweeper-validation-20261027.apk`；本文前面的首版哈希对应此备份。两版 ZIP 条目清单无增删，本轮没有导入额外游戏资源。
 
 修订包保留原数据协议与包标识，可以覆盖此前的独立测试包。本轮没有自动替换用户手机上的安装，也没有修改正式包。新包的真人触感与原生键盘体验待设备复测。
+
+## 2026-10-28 第二轮设备反馈：小棋盘入口与配色
+
+此前长按/导航修订包已按用户要求覆盖安装到 PKM110，设备 APK 的 SHA-256 核对为 `2f91c03a…501b118`。本节对应用户随后提出的新两项反馈。
+
+- 9×9 的总览、全屏按钮保留位置，按钮禁用，图标与文字采用公共次要色；页面操作回调同样拒绝进入。正常 50%～200% 缩放仍可用，不因放大解锁这两个入口。
+- 16×16、30×16 继续支持总览与全屏，暂停遮盘与返回层级沿用原逻辑。旧 9×9 全屏存档恢复为普通布局，保留局 ID、棋盘、计时、模式、倍率与期望中心，并在保存时写回普通布局。
+- 可用总览图标/文字、横纵范围条统一使用 `UiFactory.Accent`（`#276653`）；棋盘视口背景改为 `#F0F3EC`。未开格、已开格和其他游戏的公共色系不变。游戏规则及规范文档同步。
+
+修改仅位于扫雷 Page/Layout/Dialogs/BoardView、对应 UI 检查及文档，无 Core、Session、存档 schema、共享主题或其他游戏改动。
+
+验证：新增用例在修改前于第 243 条断言失败，原因是初级扩展视图入口仍可用；报告保存为 `artifacts/validation/minesweeper-ui/small-board-actions-red-report.txt`。修订后 `scripts/test-minesweeper-ui.sh` 退出 0，共 **3910 条断言通过**，覆盖两种屏高、真实 raycast 点击与直接回调、同一页面 0→1→2→0 难度切换、旧准备/进行局全屏存档经真实 Codec 往返与恢复，以及原有长按、生命周期、终局、导航和控件布局回归。
+
+已查看实际渲染的初级禁用态、全屏局部与全屏总览截图，确认控件配色、浅背景和禁用态。独立源码交叉审查未发现阻塞问题。上述界面验证运行于 Unity 编辑器，不能替代 Android 真人触摸及视觉体验验收。
+
+本轮 `scripts/build-minesweeper-validation.sh` 退出 0；`aapt` 确认包名仍为 `com.duanyao.xanaduyonder.minesweepertest`、版本 0.4.0/code 4、ARM64；`apksigner verify --verbose` 退出 0，v2 签名通过。ProjectSettings 无最终差异。
+
+- APK：`artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.apk`，77,980,894 字节。
+- SHA-256：`e002a3f80862ae980329c63f7cc968309ba9f6b97910262e6e48b413bcc4bfe3`。
+- 已通过指定物理设备的 `adb install -r` 覆盖安装到 PKM110，退出 0 并返回 `Success`，未卸载或清空数据。随后从设备读取已安装 APK 的 SHA-256，与上述构建一致。
+- 上一版长按/导航修订包备份为 `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation-20261028-hold-navigation.apk`。
+
+本轮设备验证限于安装成功和产物一致性；实际触感及用户对新配色的验收仍需真人体验。

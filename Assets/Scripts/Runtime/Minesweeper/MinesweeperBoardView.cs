@@ -24,8 +24,8 @@ namespace XanaduYonder.Runtime.Minesweeper
         public MinesweeperBoardView(RectTransform viewport)
         {
             surface=viewport;
-            horizontal=UiFactory.Panel(viewport,"Horizontal range",0,0,10,4,UiFactory.Muted).rectTransform;
-            vertical=UiFactory.Panel(viewport,"Vertical range",0,0,4,10,UiFactory.Muted).rectTransform;
+            horizontal=UiFactory.Panel(viewport,"Horizontal range",0,0,10,4,UiFactory.Accent).rectTransform;
+            vertical=UiFactory.Panel(viewport,"Vertical range",0,0,4,10,UiFactory.Accent).rectTransform;
             for(int i=0;i<4;i++) outline[i]=UiFactory.Panel(viewport,"Overview bounds "+i,0,0,1,1,UiFactory.Accent,false).rectTransform;
         }
         private void Build(int width,int height)

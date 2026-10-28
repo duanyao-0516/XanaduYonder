@@ -42,7 +42,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             focusRemaining=UiFactory.Label(focus,"",142,32,210,66,29,UiFactory.Ink);
             focusTimer=UiFactory.Label(focus,"00:00",384,32,194,66,29,UiFactory.Ink,TextAnchor.MiddleRight); Fit(focusTimer,20,29);
             focusPause=LocalButton(focus,"Focus pause",MinesweeperIconKind.Pause,null,600,26,84,84,Pause);
-            var background=UiFactory.Panel(page,"Minesweeper viewport",36,350,648,762,UiFactory.Hex("E7EDE4"));
+            var background=UiFactory.Panel(page,"Minesweeper viewport",36,350,648,762,UiFactory.Hex("F0F3EC"));
             background.raycastTarget=true; surface=background.rectTransform; surface.gameObject.AddComponent<RectMask2D>();
             board=new MinesweeperBoardView(surface); pointer=surface.gameObject.AddComponent<MinesweeperPointer>();
             overviewNote=UiFactory.Label(surface,"总览 · 点选区域返回局部",10,12,628,38,21,UiFactory.Accent,TextAnchor.MiddleCenter);
@@ -216,6 +216,13 @@ namespace XanaduYonder.Runtime.Minesweeper
             button.GetComponent<Image>().color=selected?UiFactory.Accent:UiFactory.Hex("E7EDE4");
             foreach(var label in button.GetComponentsInChildren<Text>(true)) label.color=selected?Color.white:UiFactory.Ink;
             foreach(var icon in button.GetComponentsInChildren<MinesweeperIconGraphic>(true)) icon.color=selected?Color.white:UiFactory.Ink;
+        }
+        private static void ViewButtonState(Button button,bool available,Color activeColor)
+        {
+            button.interactable=available;
+            var color=available?activeColor:UiFactory.Muted;
+            foreach(var label in button.GetComponentsInChildren<Text>(true)) label.color=color;
+            foreach(var icon in button.GetComponentsInChildren<MinesweeperIconGraphic>(true)) icon.color=color;
         }
         private static void Fit(Text text,int minimum,int maximum)
         { text.resizeTextForBestFit=true;text.resizeTextMinSize=minimum;text.resizeTextMaxSize=maximum; }

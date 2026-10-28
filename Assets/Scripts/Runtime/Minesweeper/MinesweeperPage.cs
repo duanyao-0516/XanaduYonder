@@ -103,7 +103,8 @@ namespace XanaduYonder.Runtime.Minesweeper
             if(session!=null) { session.Leave(); Save(); }
             var saved=fresh?null:profile.GetSlot(difficulty);
             session=saved==null?new MinesweeperSession(difficulty,random):new MinesweeperSession(saved,random);
-            profile.SelectedDifficulty=difficulty; fullscreen=session.Fullscreen;
+            // Older saves may have used fullscreen even for the beginner board.
+            profile.SelectedDifficulty=difficulty; fullscreen=session.Fullscreen&&SupportsExpandedView;
             resultDismissed=session.IsTerminal; choosing=false; visible=true;
             selectionRoot.SetActive(false); gameRoot.SetActive(true);
             SetupBoard();
@@ -132,6 +133,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         }
         private bool ViewAllowed { get { return visible&&!choosing&&dialog==null&&acceptsInput()&&session!=null&&session.CanView; } }
         private bool CellAllowed { get { return ViewAllowed&&session.CanInteract; } }
+        private bool SupportsExpandedView { get { return session!=null&&(session.Game.Width>9||session.Game.Height>9); } }
         private void HandleGesture(MinesweeperGestureResult result)
         {
             if(session==null) return;
@@ -168,7 +170,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         { if(!ViewAllowed||viewport.IsOverview) return; CancelInput(); viewport.ResetZoom(); Save(); RenderView(); }
         private void ToggleOverview()
         {
-            if(!ViewAllowed) return;
+            if(!ViewAllowed||!SupportsExpandedView) return;
             CancelInput();
             if(viewport.IsOverview) ExitOverview();
             else { Save(); viewport.EnterOverview(); session.SetOverview(true); }
@@ -178,7 +180,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         { if(viewport!=null&&viewport.IsOverview) viewport.ExitOverview(); session?.SetOverview(false); }
         private void ToggleFullscreen()
         {
-            if(choosing||session==null||dialog!=null||viewport.IsOverview) return;
+            if(choosing||session==null||dialog!=null||viewport.IsOverview||(!SupportsExpandedView&&!fullscreen)) return;
             CancelInput(); fullscreen=!fullscreen; Layout(true); fullscreenChanged?.Invoke(fullscreen); Save(); Refresh();
         }
         private void Pause()
@@ -257,11 +259,13 @@ namespace XanaduYonder.Runtime.Minesweeper
             overviewNote.gameObject.SetActive(overview);
             zoomOut.interactable=view&&!overview&&viewport.ZoomScale>.5;
             zoomIn.interactable=view&&!overview&&viewport.ZoomScale<2;
-            zoomValue.interactable=view&&!overview; overviewButton.interactable=view;
+            zoomValue.interactable=view&&!overview;
+            ViewButtonState(overviewButton,view&&SupportsExpandedView,UiFactory.Accent);
             revealButton.interactable=flagButton.interactable=CellAllowed;
             ModeColor(revealButton,session.InputMode==MinesweeperInputMode.Reveal);
             ModeColor(flagButton,session.InputMode==MinesweeperInputMode.Flag);
-            enterFullscreen.interactable=exitFullscreen.interactable=dialog==null&&!overview;
+            ViewButtonState(enterFullscreen,dialog==null&&!overview&&SupportsExpandedView,UiFactory.Ink);
+            ViewButtonState(exitFullscreen,dialog==null&&!overview,UiFactory.Ink);
             hint.text=overview?"总览仅观察和定位 · 进行中的对局继续计时":viewport.ZoomScale<1?
                 (session.InputMode==MinesweeperInputMode.Flag?"插旗模式":"翻开模式")+" · 小格视图 · 点击倍率恢复 100%":
                 session.InputMode==MinesweeperInputMode.Flag?"点击插旗 / 拔旗 · 双指缩放和平移":"点击翻开 · 长按即标记 · 双指缩放和平移";

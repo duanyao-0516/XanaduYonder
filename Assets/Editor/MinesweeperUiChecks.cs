@@ -73,6 +73,8 @@ namespace XanaduYonder.EditorTools
                 {
                     CheckNavigationWorldAlignment(fixture);
                     CheckImmediateLongPress(fixture);
+                    CheckExpandedViewAvailability(fixture);
+                    CheckLegacySmallBoardFullscreen(fixture);
                     CheckSelectionAndSmallCells(fixture);
                     CheckReadyLifecycle(fixture);
                     CheckFocusOverviewAndPause(fixture);
@@ -133,7 +135,7 @@ namespace XanaduYonder.EditorTools
                             referenceRoot.gameObject.SetActive(false); game.Root.gameObject.SetActive(true);
                             f.Capture("navigation-minesweeper-selection"); referenceRoot.gameObject.SetActive(true);
                         }
-                        game.Page.StartGame(0, true);
+                        game.Page.StartGame(1, true);
                         referenceSelection.SetActive(false); referenceGame.SetActive(true);
                         CompareNavigation(f, Get<GameObject>(game.Page, "gameRoot").transform, referenceGame.transform,
                             new[] { UiIconKind.Back, UiIconKind.Restart, UiIconKind.Book, UiIconKind.Settings }, "game width " + width);
@@ -233,6 +235,103 @@ namespace XanaduYonder.EditorTools
         {
             pointer.ProcessFrame(new MinesweeperInputFrame(time, game.Session.SessionId, game.Session.CanView,
                 game.Session.CanInteract, game.Session.InputMode == MinesweeperInputMode.Flag, contacts));
+        }
+
+        private static void CheckExpandedViewAvailability(Fixture f)
+        {
+            using (var game = new PageFixture(f))
+            {
+                // Reuse one production page so disabled visuals must recover when
+                // changing to a larger difficulty, and disable again on returning.
+                foreach (int difficulty in new[] { 0, 1, 2, 0 })
+                {
+                    game.Page.StartGame(difficulty, true);
+                    var root = Get<GameObject>(game.Page, "gameRoot").transform;
+                    var overview = Find(root, "Overview");
+                    var fullscreen = Find(root, "Enter fullscreen");
+                    bool expanded = difficulty != 0;
+                    Require(overview.GetComponent<Button>().interactable == expanded && fullscreen.GetComponent<Button>().interactable == expanded,
+                        "Expanded-view actions match board size for difficulty " + difficulty);
+                    string before = BoardFingerprint(game.Session.Game.GetSnapshot());
+                    string id = game.Session.SessionId;
+                    if (!expanded)
+                    {
+                        foreach (var control in new[] { overview, fullscreen })
+                        {
+                            Require(control.GetComponentInChildren<MinesweeperIconGraphic>().color == UiFactory.Muted &&
+                                control.GetComponentInChildren<Text>().color == UiFactory.Muted,
+                                "Small-board disabled action has visibly muted icon and label: " + control.name);
+                            f.Click(control);
+                        }
+                        Invoke(game.Page, "ToggleOverview");
+                        Invoke(game.Page, "ToggleFullscreen");
+                        Require(!game.Viewport.IsOverview && !game.Session.Overview && !Get<bool>(game.Page, "fullscreen"),
+                            "Small-board real clicks and direct callbacks cannot enter overview or fullscreen");
+                        f.Click(Find(root, "Zoom in"));
+                        Near(game.Viewport.ZoomScale, 1.25, "Small boards retain normal zoom interaction");
+                        Require(!overview.GetComponent<Button>().interactable && !fullscreen.GetComponent<Button>().interactable,
+                            "Zooming a small board does not unlock expanded-view actions");
+                        f.Click(Find(root, "Zoom value"));
+                        f.Capture("small-board-disabled-view-actions");
+                    }
+                    else
+                    {
+                        Require(overview.GetComponentInChildren<MinesweeperIconGraphic>().color == UiFactory.Accent &&
+                            overview.GetComponentInChildren<Text>().color == UiFactory.Accent,
+                            "Enabled overview returns to the shared green accent after changing difficulty");
+                        f.RequireInkInFourQuadrants(overview.GetComponentInChildren<MinesweeperIconGraphic>().rectTransform);
+                        f.Click(overview);
+                        Require(game.Viewport.IsOverview && game.Session.Overview, "Larger board can enter overview: " + difficulty);
+                        game.Page.Back();
+                        f.Click(fullscreen);
+                        Require(Get<bool>(game.Page, "fullscreen"), "Larger board can enter fullscreen: " + difficulty);
+                        game.Page.Back();
+                        Require(!Get<bool>(game.Page, "fullscreen") && !Get<bool>(game.Page, "choosing"),
+                            "Larger-board fullscreen Back returns to its ordinary game page");
+                    }
+                    Require(game.Session.SessionId == id && BoardFingerprint(game.Session.Game.GetSnapshot()) == before,
+                        "View-action availability does not replace or mutate the board: " + difficulty);
+                }
+            }
+        }
+
+        private static void CheckLegacySmallBoardFullscreen(Fixture f)
+        {
+            foreach (bool active in new[] { false, true })
+            {
+                var legacy = new MinesweeperSession(0, new SeededRandom(2718), () => 0);
+                legacy.Execute(legacy.SessionId, 0, true);
+                if (active)
+                {
+                    legacy.Execute(legacy.SessionId, 40);
+                    Require(legacy.Game.State == MinesweeperState.Active, "Legacy fixture has an unfinished generated board");
+                }
+                legacy.SetInputMode(MinesweeperInputMode.Flag);
+                legacy.SetView(true, 1.25, 4.5, 4.5);
+                var profile = new MinesweeperProfile { TutorialSeen = true };
+                var data = profile.Capture(legacy);
+                if (active) data.Slots[0].ElapsedMilliseconds = 12345;
+                Require(MinesweeperSaveCodec.TryDecode(MinesweeperSaveCodec.Encode(data), out var decoded, out var reason),
+                    "Previously valid small-board fullscreen save remains readable: " + reason);
+                var saved = decoded.Slots[0];
+                using (var game = new PageFixture(f, initialProfile: new MinesweeperProfile(decoded)))
+                {
+                    game.Page.StartGame(0, false);
+                    Require(!Get<bool>(game.Page, "fullscreen") && !game.Session.Fullscreen && !game.Profile.GetSlot(0).Fullscreen,
+                        "Restoring an old small-board fullscreen save normalizes page, session and saved slot to ordinary layout");
+                    Require(game.Session.SessionId == saved.SessionId && BoardFingerprint(game.Session.Game.GetSnapshot()) == BoardFingerprint(saved.Board),
+                        "Small-board fullscreen normalization preserves the saved game and board");
+                    Require(game.Session.InputMode == saved.InputMode && game.Session.ElapsedMilliseconds == saved.ElapsedMilliseconds && game.Session.Paused == active,
+                        "Small-board fullscreen normalization preserves mode, elapsed time and the active-game resume gate");
+                    Near(game.Viewport.ZoomScale, saved.ZoomScale, "Small-board fullscreen normalization retains zoom");
+                    Near(game.Viewport.CenterColumn, saved.CenterColumn, "Small-board fullscreen normalization retains a legal column center");
+                    Near(game.Viewport.CenterRow, saved.CenterRow, "Small-board fullscreen normalization retains a legal row center");
+                    var root = Get<GameObject>(game.Page, "gameRoot").transform;
+                    Require(Find(root, "Minesweeper title").gameObject.activeInHierarchy && !Find(root, "Enter fullscreen").GetComponent<Button>().interactable,
+                        "Restored small board displays ordinary chrome with fullscreen disabled");
+                    if (active) CheckOpaqueCover(f, root);
+                }
+            }
         }
 
         private static void CheckSelectionAndSmallCells(Fixture f)
@@ -452,8 +551,8 @@ namespace XanaduYonder.EditorTools
         {
             using (var game = new PageFixture(f))
             {
-                game.Start(0);
-                var state = new MinesweeperGame(0, new SeededRandom(157));
+                game.Start(1);
+                var state = new MinesweeperGame(1, new SeededRandom(157));
                 state.Reveal(40);
                 var snapshot = state.GetSnapshot();
                 int target = -1;
@@ -472,9 +571,11 @@ namespace XanaduYonder.EditorTools
                         if (!snapshot.IsMine(i) && !snapshot.IsRevealed(i)) { flags[i] = true; break; }
                 }
                 Require(target >= 0, "Terminal fixture has an actionable final cell");
-                var board = new MinesweeperSnapshot(0, true, 40, MinesweeperState.Active, null, snapshot.Mines, revealed, flags);
+                var board = new MinesweeperSnapshot(1, true, 40, MinesweeperState.Active, null, snapshot.Mines, revealed, flags);
                 Require(board.TryValidate(out var reason), "Terminal fixture is a valid production snapshot: " + reason);
                 game.ReplaceBoard(board, 12345);
+                game.Viewport.RestoreNormal(.5, 8, 8);
+                Invoke(game.Page, "Refresh");
                 game.PressCell(target);
                 var session = game.Session;
                 var page = game.Page;
@@ -496,8 +597,9 @@ namespace XanaduYonder.EditorTools
                 Require(BoardFingerprint(session.Game.GetSnapshot()) == before && session.ElapsedMilliseconds == elapsed, "Terminal board presses cannot change rules or restart time");
                 f.Click(Find(root, "Enter fullscreen"));
                 f.Click(Find(root, "Overview"));
+                Require(Get<bool>(page, "fullscreen") && game.Viewport.IsOverview, "Terminal larger board retains fullscreen and overview actions");
                 f.Capture(won ? "won-overview" : "lost-overview");
-                game.PressAt(game.Viewport.BoardToViewport(new MinesweeperInputPosition(4.5, 4.5)), 100);
+                game.PressAt(game.Viewport.BoardToViewport(new MinesweeperInputPosition(8, 8)), 100);
                 Require(!game.Viewport.IsOverview && session.Game.State == expected && session.ElapsedMilliseconds == elapsed,
                     "Terminal overview location cannot revive the game");
                 Require(Get<GameObject>(page, "dialog") == null, "Terminal overview does not reopen the result");
@@ -507,7 +609,7 @@ namespace XanaduYonder.EditorTools
                     "Terminal foreground return is direct board viewing");
                 page.Save(); page.CheckEndState(); page.Save();
                 Require(Get<GameObject>(page, "dialog") == null, "Repeated terminal checks do not reopen dismissed results");
-                var record = game.Profile.GetRecord(0);
+                var record = game.Profile.GetRecord(1);
                 Require(won ? record.Wins == 1 && record.Losses == 0 : record.Losses == 1 && record.Wins == 0,
                     "Repeated result viewing and saves account for exactly one outcome");
                 f.Capture(won ? "won-board" : "lost-board");
@@ -542,7 +644,6 @@ namespace XanaduYonder.EditorTools
             var localIcons = overview.GetComponentsInChildren<MinesweeperIconGraphic>();
             Require(localIcons.Length == 1, "Overview uses one module-owned procedural icon");
             Require(localIcons[0].canvasRenderer.GetMesh() != null && localIcons[0].canvasRenderer.GetMesh().vertexCount > 0, "Overview icon submits a visible render mesh");
-            f.RequireInkInFourQuadrants(localIcons[0].rectTransform);
             CheckLocalButtonContents(f, root);
         }
 
@@ -622,7 +723,7 @@ namespace XanaduYonder.EditorTools
                 using (var host = new HostFixture(f, store))
                 {
                     var game = host.Game;
-                    game.Start(0);
+                    game.Start(1);
                     game.Page.Save();
                     Require(game.Page.SaveError != null && host.Status.text.Contains("扫雷进度暂未保存"),
                         "Real storage failure is visible in the normal host status");
@@ -679,7 +780,7 @@ namespace XanaduYonder.EditorTools
             for (int scenario = 0; scenario < widths.Length; scenario++)
             using (var game = new PageFixture(f))
             {
-                game.Start(0);
+                game.Start(1);
                 float minimum = minimums[scenario];
                 game.Root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, widths[scenario]);
                 // Editor uses one pixel per design unit. Inject an equivalent logical
@@ -834,12 +935,12 @@ namespace XanaduYonder.EditorTools
             public MinesweeperSession Session { get { return Get<MinesweeperSession>(Page, "session"); } }
             public MinesweeperViewport Viewport { get { return Get<MinesweeperViewport>(Page, "viewport"); } }
 
-            public PageFixture(Fixture fixture, AppController host = null, MinesweeperSaveStore store = null, bool tutorialSeen = true)
+            public PageFixture(Fixture fixture, AppController host = null, MinesweeperSaveStore store = null, bool tutorialSeen = true, MinesweeperProfile initialProfile = null)
             {
                 this.fixture = fixture;
                 Root = fixture.Page();
                 Page = Root.gameObject.AddComponent<MinesweeperPage>();
-                Profile = new MinesweeperProfile { TutorialSeen = tutorialSeen };
+                Profile = initialProfile ?? new MinesweeperProfile { TutorialSeen = tutorialSeen };
                 var feedback = Root.gameObject.AddComponent<GameFeedback>();
                 if (host != null) { Set(host, "minesweeperPage", Page); Set(host, "feedback", feedback); }
                 Page.Initialize(Root, () => LobbyRequests++, after => {

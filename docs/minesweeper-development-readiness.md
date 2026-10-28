@@ -56,7 +56,7 @@
 
 - 颜色、字体、标题与导航沿用现有 Xanadu 样式；总览图标固定为四个向内箭头。主要操作按钮由 `MinesweeperControlLayout` 换算 44 dp 目标并按空间单/双行排布，不改变全应用 `UiFactory`。
 - 正常缩放为 `0.5..2`，低于 100% 仍可操作；100% 基准格目标至少 32 dp，用户缩至 50% 可约 16 dp。命中使用实际已夹紧的渲染变换，视口空白不映射到边缘格。
-- 全屏按局保存；总览只观察和定位，Active 继续计时。`centerColumn/centerRow` 保存期望中心，纯布局夹紧不覆盖它；总览倍率和临时返回快照不进入正常视图存档。
+- 9×9 的总览/全屏按钮保留位置但禁用，旧初级全屏档恢复为普通布局；中高级全屏按局保存，总览只观察和定位，Active 继续计时。`centerColumn/centerRow` 保存期望中心，纯布局夹紧不覆盖它；总览倍率和临时返回快照不进入正常视图存档。
 - 独立文件为 `minesweeper-v1.json` 及其 `.bak/.tmp`。最终棋盘、冻结时间、`resultRecorded` 和本档记录同次捕获；失败重试只重写，不重新结算。解码必须先验证完整 Profile，读主档失败再读备份，禁止拼接两份版本的记录和棋盘。
 - 文件读写已由 [MinesweeperSaveCodec](../Assets/Scripts/Runtime/Minesweeper/MinesweeperSaveCodec.cs) / [MinesweeperSaveStore](../Assets/Scripts/Runtime/Minesweeper/MinesweeperSaveStore.cs) 独立实现：限制字节/深度、严格 UTF-8 与 token、先编码校验再 flush 临时文件、原子替换、损坏主档不能覆盖合法备份。扫雷具体字段与不变量以主设计第 11 节为准，不改其他游戏协议。
 - 首版无待下载素材：原创 UGUI 棋盘与旗/雷/错旗图形，复用 [UiFactory](../Assets/Scripts/Runtime/UiFactory.cs)、[UiIconGraphic](../Assets/Scripts/Runtime/UiIconGraphic.cs) 与现有 Noto 字体。Kenney 候选不引入。`MinesweeperFeedback` 按主设计第 8 节自行合成并管理短音，不复用会读取 Jump 资源的 `Miss/Land`；暂停、离开、关闭声音时停止，销毁时释放音频。

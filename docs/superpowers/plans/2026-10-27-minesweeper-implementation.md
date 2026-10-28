@@ -102,3 +102,11 @@ Expected: nonempty `artifacts/builds/XanaduYonder-0.4.0-minesweeper-validation.a
 ## Verification evidence
 
 Implemented steps are marked above. Completed commands, outcomes and remaining limits are recorded in [docs/verification-minesweeper.md](../../verification-minesweeper.md); a checked implementation step does not certify integrated UI, Android or device behavior. Other checkouts remain outside this work; subsequent checks are limited to this worktree and its master baseline.
+
+
+## 2026-10-28 小棋盘入口与配色修订
+
+- [x] 在 `Assets/Editor/MinesweeperUiChecks.cs` 验证 9×9 按钮禁用、真实点击与直接回调都不进入总览/全屏，以及旧全屏档恢复；把原来依赖 9×9 全屏的几何检查改用中级以保留覆盖。先运行 `scripts/test-minesweeper-ui.sh` 观察行为失败。
+- [x] 在 `MinesweeperPage.cs` 统一以宽或高大于 9 判断扩展视图能力，同时限制按钮、操作回调及恢复入口；在 `MinesweeperPage.Layout.cs` 同步禁用文字和图标，沿用 UiFactory 主题色。
+- [x] 视口背景改为 `#F0F3EC`，总览文字/图标和 `MinesweeperBoardView` 横纵范围条改为 `UiFactory.Accent`；同步规则中总览/全屏的难度范围。
+- [x] 执行 Unity 界面回归并查看实际渲染截图，再构建独立测试 APK，核对包名/签名/哈希，并覆盖安装到此前授权的 PKM110 扫雷测试应用。记录真实结果及未实测范围。
