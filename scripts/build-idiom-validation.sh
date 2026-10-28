@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-idiom-validation.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.5.0-idiom-validation.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.6.0-idiom-validation.apk"
 
 if [[ ! -x "$UNITY_EDITOR" ]]; then
     printf 'Unity Editor not found: %s\nSet UNITY_EDITOR to the Editor executable.\n' "$UNITY_EDITOR" >&2

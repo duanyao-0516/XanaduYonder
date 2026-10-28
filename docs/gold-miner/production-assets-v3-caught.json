@@ -1,0 +1,413 @@
+{
+  "schema_version": 3,
+  "created_on": "2026-10-28",
+  "purpose": "Nine complete claw-plus-load illustrations and one complete diamond-carrying running animal. Entire sprites encode physical grip and foreground/background occlusion; no independent load overlay is required. v1/v2 remain separately validated.",
+  "source_provenance": "Built-in image_gen original RGBA PNG outputs, copied byte-for-byte without raster transforms. The tool returned 1254 square outputs despite requested 1024; native bytes and measured per-sprite anchors are retained. All generation prompts are embedded below so a fresh checkout retains provenance without ignored artifacts.",
+  "counts": {
+    "production_png": 10,
+    "transparent_png": 10,
+    "sprite_rectangles": 0,
+    "captured_load_sprites": 9,
+    "running_animal_sprites": 1
+  },
+  "import_profile": {
+    "max_texture_size": 512,
+    "android_compression_quality": 100
+  },
+  "ring_calibration": "Top-left source pixels; suspension ring center measured from its enclosed transparent hole. Diameter measured across outer ring at center. Unity bottom-left pivots are derived from the measured center. Runtime uses ring diameter to normalize mechanical head scale. Running animal uses centered pivot and has no ring.",
+  "assets": [
+    {
+      "id": "caught-gold-small",
+      "group": "characters",
+      "title": "钢爪抓持小金块",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-gold-small.png",
+      "source_sha256": "454e3e349675e23e50d5cbec108a5eba807311bde395bac0d4555772dd9d8a4f",
+      "source_bytes": 677737,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-gold-small.png",
+      "resource_key": "GoldMiner/characters/caught-gold-small",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.49920255183413076,
+        0.8313397129186603
+      ],
+      "suspension_ring_center_xy_top_left": [
+        626.0,
+        211.5
+      ],
+      "suspension_ring_outer_diameter_px": 305,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing. Create a single production 2D Gold Miner game sprite, 1024x1024 RGBA with fully transparent background. Input 1 is the hook reference: use the RIGHT closed claw's exact silver steel design, dark outlines, three round hinges, circular upper suspension eye. Input 2 is the medium gold nugget style. Show this claw naturally holding ONE medium angular gold nugget between its curved jaws; proper contact and occlusion, rear claw behind nugget and foreground claw over its edge. Warm hand-painted cartoon, match references, no rope, miner, floor, shadows on background, letters, grid, sparkles or extra objects. Fixed layout for the sprite family: suspension ring center at (512,160), outer diameter 144 pixels; main steel center body approx 200px wide at y245..400, claw fingers extend to y650. Nugget approx 300px wide, centered (512,610), not obstructing the top ring or mechanical head. Enough empty margins, all parts entirely inside canvas. Do not enlarge the hook to fit the gold. Need a convincing single interconnected assembly, not a nugget floating below a closed claw.",
+        "Use case: precise-object-edit. Production 2D Gold Miner single caught-object sprite. Reference 1 is the MASTER hook+gold sprite. Replace ONLY the gold with a SMALL gold nugget, roughly HALF the width of the medium nugget in the master, clamped firmly BETWEEN inward-curled fingers; the tips touch the lower sides of the nugget. Reference 2 supplies the exact new object's color, texture, outline and shape. Retain the master hook's EXACT circular upper suspension ring, head, hinges, steel colors, sizes and relative coordinates. The claw fingers may flex around the new load but keep their length. Do not scale the hook or make giant claws. Ring must be at SAME coordinate as master. For giant object allow additional transparent canvas below/side without changing head. Seamless physical contact and front/back occlusion, object really hangs from claw, no separate floating load. Hand-painted cartoon matching references. Single complete centered assembly, fully transparent RGBA background. No rope, text, grid, scene, floor, particles, shadows outside sprite or extra objects. Do not crop anything."
+      ]
+    },
+    {
+      "id": "caught-gold-medium",
+      "group": "characters",
+      "title": "钢爪抓持中金块",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-gold-medium.png",
+      "source_sha256": "66efb6be601db5cac5fd7d404ca042afec3d93b28196ec511084cf479b2ba907",
+      "source_bytes": 821323,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-gold-medium.png",
+      "resource_key": "GoldMiner/characters/caught-gold-medium",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.4996012759170654,
+        0.8560606060606061
+      ],
+      "suspension_ring_center_xy_top_left": [
+        626.5,
+        180.5
+      ],
+      "suspension_ring_outer_diameter_px": 254,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing. Create a single production 2D Gold Miner game sprite, 1024x1024 RGBA with fully transparent background. Input 1 is the hook reference: use the RIGHT closed claw's exact silver steel design, dark outlines, three round hinges, circular upper suspension eye. Input 2 is the medium gold nugget style. Show this claw naturally holding ONE medium angular gold nugget between its curved jaws; proper contact and occlusion, rear claw behind nugget and foreground claw over its edge. Warm hand-painted cartoon, match references, no rope, miner, floor, shadows on background, letters, grid, sparkles or extra objects. Fixed layout for the sprite family: suspension ring center at (512,160), outer diameter 144 pixels; main steel center body approx 200px wide at y245..400, claw fingers extend to y650. Nugget approx 300px wide, centered (512,610), not obstructing the top ring or mechanical head. Enough empty margins, all parts entirely inside canvas. Do not enlarge the hook to fit the gold. Need a convincing single interconnected assembly, not a nugget floating below a closed claw."
+      ]
+    },
+    {
+      "id": "caught-gold-large",
+      "group": "characters",
+      "title": "钢爪抓持大金块",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-gold-large.png",
+      "source_sha256": "f402eec5e33dbabd52adc6babce6858cda5ea32eb24d840caea69bc3ee211481",
+      "source_bytes": 1032037,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-gold-large.png",
+      "resource_key": "GoldMiner/characters/caught-gold-large",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.9198564593301435
+      ],
+      "suspension_ring_center_xy_top_left": [
+        627.0,
+        100.5
+      ],
+      "suspension_ring_outer_diameter_px": 179,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing. Create a single production 2D Gold Miner game sprite, 1024x1024 RGBA with fully transparent background. Input 1 is the hook reference: use the RIGHT closed claw's exact silver steel design, dark outlines, three round hinges, circular upper suspension eye. Input 2 is the medium gold nugget style. Show this claw naturally holding ONE medium angular gold nugget between its curved jaws; proper contact and occlusion, rear claw behind nugget and foreground claw over its edge. Warm hand-painted cartoon, match references, no rope, miner, floor, shadows on background, letters, grid, sparkles or extra objects. Fixed layout for the sprite family: suspension ring center at (512,160), outer diameter 144 pixels; main steel center body approx 200px wide at y245..400, claw fingers extend to y650. Nugget approx 300px wide, centered (512,610), not obstructing the top ring or mechanical head. Enough empty margins, all parts entirely inside canvas. Do not enlarge the hook to fit the gold. Need a convincing single interconnected assembly, not a nugget floating below a closed claw.",
+        "Use case: precise-object-edit. Production 2D Gold Miner single caught-object sprite. Reference 1 is the MASTER hook+gold sprite. Replace ONLY the gold with a HUGE gold boulder about TWICE the width of the medium nugget in the master; keep claw the same size so its two curved tips pinch the two upper shoulders of the boulder, with solid overlap/contact; boulder extends downward far below the claw. Reference 2 supplies the exact new object's color, texture, outline and shape. Retain the master hook's EXACT circular upper suspension ring, head, hinges, steel colors, sizes and relative coordinates. The claw fingers may flex around the new load but keep their length. Do not scale the hook or make giant claws. Ring must be at SAME coordinate as master. For giant object allow additional transparent canvas below/side without changing head. Seamless physical contact and front/back occlusion, object really hangs from claw, no separate floating load. Hand-painted cartoon matching references. Single complete centered assembly, fully transparent RGBA background. No rope, text, grid, scene, floor, particles, shadows outside sprite or extra objects. Do not crop anything."
+      ]
+    },
+    {
+      "id": "caught-rock-small",
+      "group": "characters",
+      "title": "钢爪抓持小石块",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-rock-small.png",
+      "source_sha256": "88dfe2d5489ec12335df2cf3ed9a07d48bbb4c28e8debd3c08a95db18b22e516",
+      "source_bytes": 469840,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-rock-small.png",
+      "resource_key": "GoldMiner/characters/caught-rock-small",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5007974481658692,
+        0.7635566188197767
+      ],
+      "suspension_ring_center_xy_top_left": [
+        628.0,
+        296.5
+      ],
+      "suspension_ring_outer_diameter_px": 232,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing\nAsset type: production 2D game sprite, one complete mechanically gripping claw plus its captured load.\nInput image 1 is the exact steel claw style/identity reference: use ONLY the RIGHT-HAND CLOSED claw, not the left open one. Input image 2 is the exact load material/shape reference.\nCanvas: exactly 1024 by 1024 pixels, genuine transparent RGBA background. Single object centered on the vertical x=512 axis. Top-down pixel coordinates. Keep generous transparent margins, no cropping.\nLocked claw geometry: the suspension ring center is (512,160), circular outer diameter 144 pixels and a transparent open hole; the chrome metal neck starts at y230; the mechanical rectangular head is approximately 200 pixels wide, spans x412..612 and y245..400, with a central round rivet and two side hinge bolts. Ring and head MUST retain this size regardless of load. Two articulated curved steel pincers descend from the side hinge bolts and end around y650. The outline, beveled polished silver/chrome surfaces, faceted painterly highlights and dark charcoal shadows must match the reference. Do not add chain, rope, cable, or a second ring.\nThe entire captured claw and object is one believable precomposed illustration: the fingers wrap around the object volume with actual occlusion, contact pressure and subtle local contact shadows. No metal drawn like a decal pasted on the object's face. Keep clear silhouette and simple chunky geometry suitable for a small mobile game sprite.\nNo text, captions, numerals, labels, watermark, scenery, background, floor or drop shadow outside the object. Do not show reference sheets, multiple views, open/closed comparisons or any extra object.\nLoad: the small irregular gray stone from image 2, 180 pixels wide, dark brown-black outline, flat angular light gray facets. Place it at x422..602, approximately y525..670, genuinely caught in the lower pincer opening. Both tapering fingertips curve under its lower left and right edges around y650 so the rock cannot fall. The rock is inside the pincer grip, NOT behind the upper mechanical head, and NOT floating below separated fingertips. Leave transparent negative space above the little rock between the long curved fingers. The front fingertip overlaps a small front edge; the rear tip disappears behind the rock. Keep the ring/head exact fixed dimensions above.\n",
+        "Edit the referenced complete claw sprite into a SMALL ROCK capture sprite. Use image 1 as the exact fixed claw design/scale/position template: preserve the suspension ring, neck, central rectangular mechanical head and side hinge bolts PIXEL-ALIGNED and UNCHANGED in size, color, shape, material and location. Remove the large boulder. Replace it with a single tiny gray faceted rock matching image 2, only the width of the central rectangular head (approximately 200px across), clasped between the two inward-curving steel fingertips. Retain both long steel curved fingers, bring fingertips inward so they cradle the rock at their tips. The small rock sits at the bottom of the pincers, below the empty gap, not jammed directly against the head. Clear mechanical contact and a little natural overlap of metal finger in front, one tip behind. The complete new assembly should remain much narrower and lighter than the original big boulder assembly. Keep everything on a 1024x1024 transparent square canvas; do not scale up to fill the canvas. Preserve generous empty transparent bottom and side margin. No rope, words, labels, watermark, scene or extra items. The entire claw plus rock must be one connected physically convincing object, not two sprites overlaid.\n"
+      ]
+    },
+    {
+      "id": "caught-rock-large",
+      "group": "characters",
+      "title": "钢爪抓持大石块",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-rock-large.png",
+      "source_sha256": "f83becd2386eb1b13574c1d4b927b2f12708343b1aa7954b13d6a53f588d17b0",
+      "source_bytes": 788094,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-rock-large.png",
+      "resource_key": "GoldMiner/characters/caught-rock-large",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5007974481658692,
+        0.8333333333333334
+      ],
+      "suspension_ring_center_xy_top_left": [
+        628.0,
+        209.0
+      ],
+      "suspension_ring_outer_diameter_px": 188,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing\nAsset type: production 2D game sprite, one complete mechanically gripping claw plus its captured load.\nInput image 1 is the exact steel claw style/identity reference: use ONLY the RIGHT-HAND CLOSED claw, not the left open one. Input image 2 is the exact load material/shape reference.\nCanvas: exactly 1024 by 1024 pixels, genuine transparent RGBA background. Single object centered on the vertical x=512 axis. Top-down pixel coordinates. Keep generous transparent margins, no cropping.\nLocked claw geometry: the suspension ring center is (512,160), circular outer diameter 144 pixels and a transparent open hole; the chrome metal neck starts at y230; the mechanical rectangular head is approximately 200 pixels wide, spans x412..612 and y245..400, with a central round rivet and two side hinge bolts. Ring and head MUST retain this size regardless of load. Two articulated curved steel pincers descend from the side hinge bolts and end around y650. The outline, beveled polished silver/chrome surfaces, faceted painterly highlights and dark charcoal shadows must match the reference. Do not add chain, rope, cable, or a second ring.\nThe entire captured claw and object is one believable precomposed illustration: the fingers wrap around the object volume with actual occlusion, contact pressure and subtle local contact shadows. No metal drawn like a decal pasted on the object's face. Keep clear silhouette and simple chunky geometry suitable for a small mobile game sprite.\nNo text, captions, numerals, labels, watermark, scenery, background, floor or drop shadow outside the object. Do not show reference sheets, multiple views, open/closed comparisons or any extra object.\nLoad: the big irregular gray boulder from image 2, approximately 560 pixels wide (x232..792), occupying y515..910. Preserve rough bulky silhouette, broad gray facets, stone texture and dark brown-black outline. The claw stays the SAME ring/head size as specified. It grips a raised top shoulder of this much larger boulder: the long metal jaws taper down and bite/clamp opposite upper shoulder edges, fingertips near y650. The majority of the boulder hangs BELOW the claws. One fingertip partially wraps behind the upper edge and the other comes over the near upper side; use convincing occlusion and small contact shadows so it is visibly held. Do not spread the jaws to the boulder's widest edge, do not pass the head through the rock and do not paste a complete empty claw on the front surface. Leave a clear air gap from the mechanical head to the top of the boulder.\n",
+        "Edit the referenced LARGE ROCK capture sprite to standardize its composition on a 1024x1024 transparent canvas. Preserve the exact claw chrome material, thick dark outline, ring, rectangular head, center rivet, two side hinge bolts and stone textures. The claw must retain a small compact head while its long curved fingers grasp the boulder's UPPER SHOULDER. Put ring center at normalized canvas (0.50,0.156), ring outer diameter 0.141 of canvas width. Head width 0.195 of canvas width. Put boulder from approximately x0.227 to0.773 and y0.505 to0.89; it must be about THREE times the head's width. Fingers end at y0.635 and grip raised upper edges with credible rear/front occlusion. Major rock mass hangs below fingers. Do not enlarge whole object to fill frame. A lot of the image remains transparent around it, especially margins. Ring, head and boulder all aligned on center x0.50. No rope, text, watermark, background, floor, distant shadow or additional object. Output exactly 1024x1024 RGBA.\n"
+      ]
+    },
+    {
+      "id": "caught-diamond",
+      "group": "characters",
+      "title": "钢爪抓持钻石",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-diamond.png",
+      "source_sha256": "e3ba5ed9eae44de6eefb422faaff71f3bec2902c688f95c07239a88e4bc3f92e",
+      "source_bytes": 716645,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-diamond.png",
+      "resource_key": "GoldMiner/characters/caught-diamond",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.4996012759170654,
+        0.8560606060606061
+      ],
+      "suspension_ring_center_xy_top_left": [
+        626.5,
+        180.5
+      ],
+      "suspension_ring_outer_diameter_px": 254,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing. Create a single production 2D Gold Miner game sprite, 1024x1024 RGBA with fully transparent background. Input 1 is the hook reference: use the RIGHT closed claw's exact silver steel design, dark outlines, three round hinges, circular upper suspension eye. Input 2 is the medium gold nugget style. Show this claw naturally holding ONE medium angular gold nugget between its curved jaws; proper contact and occlusion, rear claw behind nugget and foreground claw over its edge. Warm hand-painted cartoon, match references, no rope, miner, floor, shadows on background, letters, grid, sparkles or extra objects. Fixed layout for the sprite family: suspension ring center at (512,160), outer diameter 144 pixels; main steel center body approx 200px wide at y245..400, claw fingers extend to y650. Nugget approx 300px wide, centered (512,610), not obstructing the top ring or mechanical head. Enough empty margins, all parts entirely inside canvas. Do not enlarge the hook to fit the gold. Need a convincing single interconnected assembly, not a nugget floating below a closed claw.",
+        "Use case: precise-object-edit. Production 2D Gold Miner single caught-object sprite. Reference 1 is the MASTER hook+gold sprite. Replace ONLY the gold with one small bright CYAN BLUE faceted diamond, same width as the space between the inward-curled fingers; closed claw tips visibly cup the lower left and lower right facets, diamond is inside the claw with believable contact. Reference 2 supplies the exact new object's color, texture, outline and shape. Retain the master hook's EXACT circular upper suspension ring, head, hinges, steel colors, sizes and relative coordinates. The claw fingers may flex around the new load but keep their length. Do not scale the hook or make giant claws. Ring must be at SAME coordinate as master. For giant object allow additional transparent canvas below/side without changing head. Seamless physical contact and front/back occlusion, object really hangs from claw, no separate floating load. Hand-painted cartoon matching references. Single complete centered assembly, fully transparent RGBA background. No rope, text, grid, scene, floor, particles, shadows outside sprite or extra objects. Do not crop anything."
+      ]
+    },
+    {
+      "id": "caught-mystery-bag",
+      "group": "characters",
+      "title": "钢爪抓持神秘袋袋口",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-mystery-bag.png",
+      "source_sha256": "62b76d786bfdb6d426313bdba84742ca4ebacdf518a8c23bd49cfa4fc99e623d",
+      "source_bytes": 578662,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-mystery-bag.png",
+      "resource_key": "GoldMiner/characters/caught-mystery-bag",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.8401116427432217
+      ],
+      "suspension_ring_center_xy_top_left": [
+        627.0,
+        200.5
+      ],
+      "suspension_ring_outer_diameter_px": 208,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing\nAsset type: production 2D game sprite, one complete mechanically gripping claw plus its captured load.\nInput image 1 is the exact steel claw style/identity reference: use ONLY the RIGHT-HAND CLOSED claw, not the left open one. Input image 2 is the exact load material/shape reference.\nCanvas: exactly 1024 by 1024 pixels, genuine transparent RGBA background. Single object centered on the vertical x=512 axis. Top-down pixel coordinates. Keep generous transparent margins, no cropping.\nLocked claw geometry: the suspension ring center is (512,160), circular outer diameter 144 pixels and a transparent open hole; the chrome metal neck starts at y230; the mechanical rectangular head is approximately 200 pixels wide, spans x412..612 and y245..400, with a central round rivet and two side hinge bolts. Ring and head MUST retain this size regardless of load. Two articulated curved steel pincers descend from the side hinge bolts and end around y650. The outline, beveled polished silver/chrome surfaces, faceted painterly highlights and dark charcoal shadows must match the reference. Do not add chain, rope, cable, or a second ring.\nThe entire captured claw and object is one believable precomposed illustration: the fingers wrap around the object volume with actual occlusion, contact pressure and subtle local contact shadows. No metal drawn like a decal pasted on the object's face. Keep clear silhouette and simple chunky geometry suitable for a small mobile game sprite.\nNo text, captions, numerals, labels, watermark, scenery, background, floor or drop shadow outside the object. Do not show reference sheets, multiple views, open/closed comparisons or any extra object.\nLoad: a tan fabric mystery sack based on image 2, approximately 280 pixels wide (x372..652), body occupying y665..890. Preserve its creamy tan cloth, angular folds and ochre drawstring collar, but no printed character, text or question mark on its surface. The narrow gathered bag neck is around y605..650; the two steel claw fingertips pinch and support this tied neck from opposing sides, gripping the cinched cloth immediately under its gathered mouth. One metal finger is in front of the cloth and the far finger is partially hidden behind it. The bag body droops naturally below the actual grip point with tension folds leading up to the neck. Bag must not float inside an empty claw and must not be pierced through its belly. The sack's own short drawstring knot is okay, but there is no rope above the suspension ring. Keep ring/head exact fixed dimensions above.\n",
+        "Edit reference image 1 (the large rock held by a claw) into a BAG capture sprite. Image 1 defines the exact steel claw: preserve its suspension ring, neck, rectangular mechanical head, central round rivet and two side hinge bolts PIXEL-ALIGNED unchanged in position and size. Remove the big gray boulder and replace it with the tan sack from image 2, making the sack MUCH SMALLER: the sack body is only 1.4 times the central rectangular head width, about 280 pixels, not wider than the pincers. Long curved fingers bend inward so the two narrow claw tips actually pinch the sack's narrow gathered neck, immediately BELOW the short ochre drawstring and bunched fabric mouth. Bag mouth should be compact, no larger than head width. The bag body hangs below that neck, natural cloth tension folds leading to grip. Front metal finger overlaps near side of neck; far finger is partly hidden behind gathered cloth. There is clear transparent air between head and mouth. Preserve reference material/outline but remove printed question mark. Use exactly 1024x1024 true transparent RGBA canvas, generous transparent side/bottom margins; do not enlarge assembly to fill frame. No rope/cable above ring, no text, no watermark, no background or extra items. Entire claw+bag is a single credible precomposed held object.\n"
+      ]
+    },
+    {
+      "id": "caught-mole",
+      "group": "characters",
+      "title": "钢爪抓持动物",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-mole.png",
+      "source_sha256": "e3254de5dd746fdb9a2998787cb6ce3bff24dbaced8201dafe7f60e1268d0b25",
+      "source_bytes": 746868,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-mole.png",
+      "resource_key": "GoldMiner/characters/caught-mole",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.4996012759170654,
+        0.8915470494417863
+      ],
+      "suspension_ring_center_xy_top_left": [
+        626.5,
+        136.0
+      ],
+      "suspension_ring_outer_diameter_px": 210,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing. Create ONE production-ready transparent RGBA game sprite, exactly 1024 x 1024 pixels.\nInput 1 is the exact steel claw design reference; use ONLY its RIGHT closed-claw design, not the open claw. Input 2 is the exact caught mole identity/style reference.\nSubject: one complete steel claw securely lifting one cute brown mole by its shoulders/back. The mole hangs naturally below the gripping mechanism, facing right, with both forelegs and hindlegs dangling. Cute surprised expression, completely unharmed. Two metal pincers wrap visibly around the mole's upper torso/back and contact the fur; coherent physical grip, the animal must not float or be stuck to the ring or to the outside of a pincer.\nLocked layout: square 1024 canvas. Circular steel suspension ring centered at pixel (512,160), outer diameter 144 pixels, inner hole truly transparent. Ring and mechanical head upright centered on x=512. Keep the head about 200 pixels wide between y=245 and y=400. Two curved steel gripping jaws continue downward and end near y=650. The hanging mole occupies roughly x=290..760, y=470..850, leaving generous transparent margins. Make the entire claw-plus-mole one illustrated composite asset, never a contact sheet.\nMatch the reference claw's angular chrome silver highlights, dark edge, central hexagonal/riveted housing and two side pivots. Preserve the existing warm hand-painted cartoon game look, thick crisp dark-brown/black outlines and brown fur. No realism, no redesign into a toy claw, no extra fingers or jaws.\nBackground is actual alpha transparency, no checkerboard baked in, no black field, no glow, no drop shadow on background. No rope, no scene, no text, no label, no ground, no extra animal, no diamond or other load. All pixels outside the isolated composite are transparent.\n"
+      ]
+    },
+    {
+      "id": "caught-diamond-mole",
+      "group": "characters",
+      "title": "钢爪抓持抱钻动物",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/caught-diamond-mole.png",
+      "source_sha256": "c03e45332c2ac4c76401a3d5860d7330df935804ffcf10cfca9834caf6b7d0e9",
+      "source_bytes": 799451,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/caught-diamond-mole.png",
+      "resource_key": "GoldMiner/characters/caught-diamond-mole",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.49920255183413076,
+        0.8915470494417863
+      ],
+      "suspension_ring_center_xy_top_left": [
+        626.0,
+        136.0
+      ],
+      "suspension_ring_outer_diameter_px": 211,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: precise-object-edit / compositing. Produce ONE transparent RGBA production game sprite, square canvas, requested output 1024x1024.\nInput 1 is the already approved complete caught-mole asset. Preserve its exact claw design, proportions, chrome highlights, thick outline, ring and central head. Input 2 is the game's blue diamond visual reference. Input 3 is the original claw reference, whose RIGHT closed claw defines the steel mechanism.\nChange the animal to a diamond-carrying mole: the same cute brown mole is hanging naturally from the steel claw gripping its BACK/SHOULDERS, and the mole uses BOTH FRONT PAWS to tightly hug ONE large bright blue faceted diamond against its CHEST/BELLY in front of it. The paws visibly overlap the diamond left and right edges so the grip is unmistakable. The diamond is centered on the chest/belly and touches fur and paws. Keep its face looking right and surprised, hind legs dangling. The claw contacts only the back/shoulders. The diamond must NEVER sit on its back, above its head, on the hook, or float beside it. No injury.\nKeep uniform assembly calibration: suspension ring centered on x=50%, desired y=15.625% of canvas, outer diameter 14.0625% of canvas; central steel head upright about 19.5% of canvas wide; tips of curved jaws near y=63.5%. Mole and held diamond fit below in the lower half with clean transparent margins. Preserve the ring and head relative proportions from input 1 even if the reference file's canvas size differs. Both pincers should wrap around the animal coherently; never pierce the body. One complete hook-plus-mole-plus-embraced-diamond silhouette, not separate icons and not a contact sheet.\nWarm hand-painted cartoon game art, crisp thick dark outline, brown furry mole with light muzzle, polished silver mechanical claw and saturated cyan-blue gem, matching the references exactly. True alpha transparency outside the composite, transparent ring hole, no scene, no rope, no text, no label, no ground, no exterior glow or shadow, no additional diamonds.\n"
+      ]
+    },
+    {
+      "id": "mole-carrying-diamond-run",
+      "group": "characters",
+      "title": "抱钻奔跑动物",
+      "source_path": "artifacts/gold-miner-followup-20261028/caught-art/mole-carrying-diamond-run.png",
+      "source_sha256": "7ef9d9a4d8287c41f869d063c4bea551873d2e344e0ca916091fe8412733b887",
+      "source_bytes": 807450,
+      "source_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "source_has_transparency": true,
+      "source_alpha_range": [
+        0,
+        255
+      ],
+      "target_path": "Assets/Resources/GoldMiner/characters/mole-carrying-diamond-run.png",
+      "resource_key": "GoldMiner/characters/mole-carrying-diamond-run",
+      "import_profile": "standalone",
+      "sprite_mode": "Single",
+      "android_format": "ETC2_RGBA8",
+      "alpha_source": "FromInput",
+      "alpha_is_transparency": true,
+      "planned_single_pivot_normalized_bottom_left": [
+        0.5,
+        0.5
+      ],
+      "suspension_ring_center_xy_top_left": null,
+      "suspension_ring_outer_diameter_px": 0,
+      "slices": [],
+      "generation_tool": "built-in image_gen",
+      "generation_prompts": [
+        "Use case: compositing / identity-preserve. ONE transparent RGBA sprite of a diamond-carrying mole walking right, not caught. Requested square output 1024x1024.\nInput 1 is the exact brown mole identity and game-art reference. Input 2 is the newly made diamond-hugging pose reference: reuse its very clear two-paw hold and chest contact. Input 3 is the exact blue diamond reference.\nCreate the same cute brown furry mole in a right-facing SIDE VIEW walking/running pose. The mole uses BOTH FRONT PAWS to hug ONE large bright cyan-blue faceted diamond tightly against its chest/belly. Its two rear legs support its body in a clear walking stride: one rear foot forward and low, the other lifted behind; its short furry tail trails left. Happy alert expression and visible face above/right of the gem. Paw shapes visibly overlap both lateral edges of the diamond, and the diamond touches the fur of its chest. The animal, front paws, and diamond must be drawn as one coherent held object, never as disconnected stickers. The diamond must not float above the back, not sit on its head or back, and not be carried in its mouth. The diamond's big blue face is visible and readable at small game size.\nRemove ALL hook machinery from input 2: this asset contains ONLY mole and the single diamond it embraces. No suspension ring, no claw, no metal, no rope. Full silhouette entirely in frame, centered with roughly 12 percent transparent margins, feet near y=85 percent, facing right.\nMatch warm hand-painted cartoon shading, thick crisp dark outlines, warm brown fur, beige muzzle, pink ear, black shiny nose, friendly large eyes, saturated turquoise-blue gem with white facet highlights. Actual alpha transparency outside the silhouette. No scene, no ground, no text, no border, no glowing halo, no drop shadow, no extra gems, no contact sheet, no alternative poses.\n"
+      ]
+    }
+  ]
+}

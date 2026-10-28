@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前 0.5.0 源码接入 2048、跳一跳、旸了个旸、合成大西瓜、成语接龙、数独、扫雷、Zuma、Dino、五子棋、欢乐球球、推箱子和数字华容道，共十三款游戏。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，不保存对局。本页描述源码中的模块契约，发布情况见[v0.5.0 版本记录](releases/v0.5.0.md)。
+当前源码沿用 0.6.0 版本配置，接入十四款游戏；数字华容道是 v0.6.0 正式版本之后新增的源码。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好。正式产物边界见[v0.6.0 版本记录](releases/v0.6.0.md)。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -16,6 +16,7 @@
 | 五子棋 | `Core/Gomoku` / `GomokuSession`、`GomokuPage`、`GomokuBoardView` | `gomoku-v1.json` | 人机／双人各一局、完整棋谱与新局偏好；预选和 AI 任务不落盘 |
 | 欢乐球球 | `Core/HappyBall`、`HappyBallPage`、`HappyBallSceneView` | `happy-ball-v1.json` | 完整塔/球/重击/RNG 状态、本局与最高分、开始与结算标记 |
 | 推箱子 | `Core/Sokoban` / `SokobanSession`、`SokobanProfile`、`SokobanPage` | `sokoban-v1.json` | 关卡进度、当前对局、完整动作历史、最少步数和最少推动元组 |
+| 黄金矿工 | `Core/GoldMiner`、`GoldMinerSession`、`GoldMinerPage` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、检查点与纪录 |
 | 数字华容道 | `Core/SlidingPuzzle` / `SlidingPuzzleSession`、`SlidingPuzzleProfile`、`SlidingPuzzlePage` | `sliding-puzzle-v1.json` | 三个自由槽与一个闯关槽、完整当前移动历史、撤回计数、计时、连续解锁进度和两项成绩元组 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
@@ -125,7 +126,15 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 
 `happy-ball-v1.json` 保存 schema 1、`gameId=happy-ball`、核心规则版本、完整层扇区/竖板、球/塔/重击状态、RNG、最高分、HasStarted 和 ResultRecorded。当前规则版本为 2；版本 1 先按旧层距 1.65 和旧竖板上限 0.5 校验，再按当前层重新定位球和层高度，保留球速、塔角、随机状态及已有竖板。旧 Spent 连击标记仅补记尚未入账的重击分一次；已入账的状态不重复加分。构造模型和真实 Decode 共用迁移，之后保存版本 2。分数字段为非负十进制字符串；严格拒绝缺失/未知/重复字段、null、错误类型、非法 JSON 扩展、非有限数和不一致快照，上限 256 KiB/深度 12。真实文件写入采用临时文件 flush 后替换，只有有效主档才能更新备份；恢复优先主档再备份，失败提示可重试。进入游戏与恢复前台都保持暂停，不保存旧触点或碎片动画。其余游戏及公共设置文件不变。实际测试、截图与设备边界见[欢乐球球验证](verification-happy-ball.md)。
 
-## 13 数字华容道的独立边界
+## 黄金矿工的独立边界
+
+`GoldMinerGame` 用 60 Hz 固定步模拟，按相对扫掠首次接触分配矿物，所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
+
+`GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
+
+输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
+
+## 数字华容道的独立边界
 
 `SlidingPuzzleGame` 在纯 C# 中独占 3／4／5 阶排列、单块相邻交换、计步、当前未撤回的移动历史和撤回计数。每次合法移动加一步；撤回恢复上次盘面，也加一步并永久标记本局为练习。终局不再接受移动或撤回。`SlidingPuzzleGenerator` 以固定算法从终局合法打乱，输出可解且未完成的自由题；打乱次数不作为难度。`SlidingPuzzleCatalog` 嵌入三个章节各六题，内容版本为 `1`，第一章最优步数由独立 BFS 证明为 2／4／6／8／12／16，后两章只提供合法解法见证。
 
@@ -133,7 +142,7 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 
 `SlidingPuzzlePage` 负责自由／选关／对局／弹窗呈现及宿主生命周期接线。`SlidingPuzzlePointer` 在同一 pointer-up 路径仲裁单指点击和向空格滑动，多指、取消、后台、重排和弹窗都会取消旧输入。`SlidingPuzzleBoardView` 只绘制与动画，不改变规则状态；数字块样式不因已经归位而变成不可移动。页面延续公共纸色、字体、Home／Book／Settings 与声音、触感设置。
 
-`SlidingPuzzleSaveCodec` 和 `SlidingPuzzleSaveStore` 独占 `sliding-puzzle-v1.json/.bak/.tmp`，校验 schema 1、`saveKind=sliding-puzzle`、内容版本、严格 JSON 字段和类型、全部槽位的完整历史重放、关卡身份、计时、连续解锁与成绩一致性。文件上限 2 MiB、深度 12，每局累计操作安全上限 100,000；达到上限保留历史并提示重玩或换题。写入先刷盘临时文件再原子替换，仅有效主档更新备份，损坏文件归档；失败保留内存对局并显示未保存提示。规则与真实存储测试入口为 `scripts/test-sliding-puzzle.sh` 和 `scripts/test-sliding-puzzle-persistence.sh`；Unity UI 与设备执行结果应另行记录。完整契约见[数字华容道玩法与接入](sliding-puzzle-game.md)。
+`SlidingPuzzleSaveCodec` 和 `SlidingPuzzleSaveStore` 独占 `sliding-puzzle-v1.json/.bak/.tmp`，校验 schema 1、`saveKind=sliding-puzzle`、内容版本、严格 JSON 字段和类型、全部槽位的完整历史重放、关卡身份、计时、连续解锁与成绩一致性。文件上限 2 MiB、深度 12，每局累计操作安全上限 100,000；达到上限保留历史并提示重玩或换题。写入先刷盘临时文件再原子替换，仅有效主档更新备份，损坏文件归档；失败保留内存对局并显示未保存提示。规则与真实存储测试入口为 `scripts/test-sliding-puzzle.sh` 和 `scripts/test-sliding-puzzle-persistence.sh`；Unity UI 与设备执行结果应另行记录。完整契约见[数字华容道玩法与接入](sliding-puzzle-game.md)，问题复盘与维护检查表见[开发指南](sliding-puzzle-development-guide.md)。
 
 ## 验证层次
 

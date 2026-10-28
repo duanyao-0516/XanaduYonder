@@ -1,6 +1,6 @@
 # 数字华容道实现与验证
 
-日期：2026-10-28。开发基线为本轮 `git fetch origin master` 得到的 `0f6e4fd691e405020da49128c3034cb808797738`。隔离工作树分支 `p/duanyao.0516/feature/sliding_puzzle`，原工作目录的分支和未提交改动保留。本次没有推送或合并 master。
+日期：2026-10-28。开发基线为本轮 `git fetch origin master` 得到的 `0f6e4fd691e405020da49128c3034cb808797738`。隔离工作树分支 `p/duanyao.0516/feature/sliding_puzzle`，原工作目录的分支和未提交改动保留。下述开发阶段基于旧主线完成，提交与最新主线集成情况另见文末记录。
 
 ## 功能与用户调整
 
@@ -41,7 +41,7 @@
 
 对照中修复了禁用卡片被 Unity 默认 tint 额外压暗、短屏尺寸标签被固定 padding 挤成两行、章节文本偏移、极长计时换行、损坏存档底注溢出。极长计时仅在超宽时缩小字号，正常计数仍为26；100000步不缩小。Unity 沿用 App 自带 Noto Sans CJK，原稿浏览器使用系统字体回退；字形、合成字重和抗锯齿存在细微引擎差异，不宣称逐像素相同。
 
-## 本轮验证
+## 开发阶段验证
 
 | 检查 | 结果 |
 | --- | --- |
@@ -76,8 +76,35 @@ Unity批处理启动曾出现Editor QuickSearch索引内部异常，位于`Unity
 
 `runtime.log` 与最终日志未发现游戏异常、AndroidRuntime致命异常或保存失败；保留 Development 构建查询 `il2cpp.usym` 的调试信息。前述UI批处理的Editor QuickSearch问题单独列出，不与Android运行混淆。
 
-范围限制：Android模拟器输入与桌面真实UGUI验证均已完成；实体手机多指/系统取消、触感、音频听感、不同厂商安全区和低端性能尚未验收。第2/3章解法保证可解，真人难度体验仍待后续校准。最终交付代码保留在隔离工作树，未提交、推送或合入master。
+范围限制：Android模拟器输入与桌面真实UGUI验证均已完成；实体手机多指/系统取消、触感、音频听感、不同厂商安全区和低端性能尚未验收。第2/3章解法保证可解，真人难度体验仍待后续校准。以上包名、哈希、截图和设备结果对应开发阶段的 0.5.0 包，不代表后续主线集成包已在设备验收。
 
 ## OPPO 安装记录
 
 2026-10-28 21:55（Asia/Shanghai），按用户要求将上述最终 SHA-256 的 APK 安装到 OPPO PKM110。指定设备执行 `adb install --no-streaming -r` 返回 `Success`；包管理器确认 `com.duanyao.xanaduyonder.slidingpuzzletest`、0.5.0 / code 5、`lastUpdateTime=2026-10-28 21:55:35`。桌面名称为 **Xanadu 华容道测试**。随后启动返回 `Status: ok`、`LaunchState: COLD`。这是安装和启动确认，不替代完整实体手机交互验收。原始输出保存在 `artifacts/validation/sliding-puzzle-oppo/`。
+
+## 主线集成验证
+
+2026-10-28，按用户要求将代码与[开发复盘与维护规范](sliding-puzzle-development-guide.md)一并集成到远端 master。实现提交为 `5ce70f7`；重新 fetch 的主线基准为 `9262b306a90a7c3180cac757829434a3c8b9db5b`，已包含黄金矿工及0.6.0版本配置。集成保留黄金矿工第13张卡，华容道追加为第14张；双方进入时清理另一页，保留各自保存、错误提示和生命周期接线。版本配置沿用0.6.0 / code 6，此次源码集成不创建或替换既有正式 Release。
+
+冲突处理后重新执行：
+
+| 检查 | 合并后实测结果 |
+| --- | --- |
+| 数字华容道规则／会话存档 | 15组／18组通过 |
+| 数字华容道生产 UGUI | 4716项断言通过 |
+| 共享 UI | 259项断言通过；补齐14款顺序、可见序号与末卡之后底注 |
+| 基础规则／输入 | 43项／10项通过 |
+| 黄金矿工规则／生产 UI | 50组／16303项断言通过；包含单人、合作、方向、暂停、保存失败及返回大厅 |
+| 独立源码审查 | 检查规则、存档和最终宿主接线，未发现有证据的P0/P1/P2阻断问题；审查不替代运行验证 |
+| 静态检查 | `git diff --check`、shell语法、文档相对文件链接及Assets metadata GUID重复检查通过 |
+
+黄金矿工 UI 初次在“Lobby ordinal Gold Miner”失败：该测试继承开发早期的七款清单，仍期待矿工第7张，最新主线实际为第13张。仅更新夹具为真实十四款清单，再取得上述通过结果；不改动矿工运行规则。共享 UI 也补齐两款新增游戏。此类历史测试预期与真实产品缺陷分别记录，复盘包含后续维护检查项。
+
+合并后再次完成 IL2CPP／ARM64／Development／StrictMode 构建；日志包含 `Build Finished, Result: Success.` 与同一产物路径。包信息由实际 APK 读取：
+
+- 文件：`artifacts/builds/XanaduYonder-0.6.0-sliding-puzzle-validation.apk`。
+- 包名：`com.duanyao.xanaduyonder.slidingpuzzletest`；桌面名：Xanadu 华容道测试。
+- 版本：0.6.0 / code 6；minSdk 26、targetSdk 36；大小124,011,759字节。
+- SHA-256：`1f1caee900dc1bc91057f4ff2349a11decdd8fc75903bc05485871dc632acc36`。
+
+本次0.6.0集成包完成编译打包，未重新安装或执行设备交互。OPPO仍对应上一节已安装的0.5.0测试包；不能把旧包的安装、冷启动或模拟器证据当成新包设备验收。QuickSearch编辑器内部告警仍单独保留于原始日志。原工作目录的分支与未提交文件保持原状，集成在华容道隔离工作树完成。

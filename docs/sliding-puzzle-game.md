@@ -1,6 +1,6 @@
 # 数字华容道玩法与接入
 
-数字华容道是当前源码大厅中的第十三款离线游戏，稳定标识为 `sliding-puzzle`。玩家利用一个空格移动数字，将棋盘按从左到右、从上到下的顺序还原，空格最终留在右下角。页面提供「自由拼图」与「解锁闯关」，默认自由模式为 4×4。
+数字华容道是当前源码大厅中的第十四款离线游戏，稳定标识为 `sliding-puzzle`。玩家利用一个空格移动数字，将棋盘按从左到右、从上到下的顺序还原，空格最终留在右下角。页面提供「自由拼图」与「解锁闯关」，默认自由模式为 4×4。
 
 本文说明现行源码的规则、UI 和存档契约。本轮实际检查、原稿对比和 Android 运行证据见[验证记录](verification-sliding-puzzle.md)。
 
@@ -62,7 +62,7 @@
 | `SlidingPuzzleProfile` | 三个自由槽、一个闯关槽、当前选择、连续完成进度及两类纪录。 |
 | `SlidingPuzzlePage` / `SlidingPuzzlePointer` / `SlidingPuzzleBoardView` | 页面、弹窗、输入仲裁、棋盘绘制和可取消动画；不另行计算规则。 |
 | `SlidingPuzzleSaveCodec` / `SlidingPuzzleSaveStore` | 严格数据边界、文件读写、备份和恢复。 |
-| `AppController` | 第十三张大厅卡片、路由、公共设置和应用生命周期分发。 |
+| `AppController` | 第十四张大厅卡片、路由、公共设置和应用生命周期分发。 |
 
 规则代码位于 `Assets/Scripts/Core/SlidingPuzzle/`，会话、存档和页面代码位于 `Assets/Scripts/Runtime/SlidingPuzzle/`。声音和触感通过宿主委托使用共用设置，不引入新的网络或服务依赖。
 
