@@ -54,6 +54,7 @@ namespace XanaduYonder.EditorTools
                     CheckModelAndRebuild(fixture);
                     CheckCollisionStop(fixture);
                 }
+                CheckCactusGroundLock();
                 Report.AppendLine("LIMITS: production UGUI geometry and source atlas pixels; no Android input or screenshot rasterization.");
                 Report.AppendLine("DINO_GROUND_CHECKS_PASS: " + assertions + " assertions");
             }
@@ -129,7 +130,7 @@ namespace XanaduYonder.EditorTools
             var game = fixture.Game; game.Jump();
             for (int i = 0; i < 181; i++) game.Step();
             Require(!game.IsGameOver && game.Obstacles.Count > 0, "Real simulation supplies a ground obstacle");
-            long tick = game.Tick, score = game.Score; double distance = game.Distance, y = game.PlayerY;
+            long tick = game.Tick, score = game.Score; double distance = game.Distance, groundDistance = game.GroundDistance, y = game.PlayerY;
             var obstacle = game.Obstacles[0];
             fixture.Track.Render(game, 0);
             var player = Get<RawImage>(fixture.Track, "player");
@@ -149,7 +150,7 @@ namespace XanaduYonder.EditorTools
             for (int i = 0; i < count; i++)
                 Require(newGround[i].uvRect == uvs[i] && newGround[i].rectTransform.anchoredPosition == positions[i], "Resized tree reconstructs the same paused world ground");
             for (int i = 0; i < 30; i++) rebuilt.Render(game, 0);
-            Require(game.Tick == tick && game.Score == score && game.Distance == distance && game.PlayerY == y &&
+            Require(game.Tick == tick && game.Score == score && game.Distance == distance && game.GroundDistance == groundDistance && game.PlayerY == y &&
                 game.Obstacles[0].X == obstacle.X && game.Obstacles[0].Y == obstacle.Y, "Rendering, terrain variation and rebuilding never change model state");
             Report.AppendLine("PASS real player / obstacle baselines, unchanged model state and paused-tree reconstruction");
         }
@@ -162,7 +163,7 @@ namespace XanaduYonder.EditorTools
                 "Real collision stops partway through a motion frame while score distance retains completed ticks");
             fixture.Track.Render(game, 0);
             float scale = Get<float>(fixture.Track, "scale");
-            double expected = -(game.PresentationDistance % (600 * DinoRules.SpriteScale)) * scale;
+            double expected = -(game.GroundDistance % (600 * DinoRules.SpriteScale)) * scale;
             Near(Ground(fixture.Track)[0].rectTransform.anchoredPosition.x, expected,
                 "Ground freezes at the same fractional collision position as player and obstacles");
             var position = Ground(fixture.Track)[0].rectTransform.anchoredPosition;
@@ -170,6 +171,34 @@ namespace XanaduYonder.EditorTools
             Require(Ground(fixture.Track)[0].rectTransform.anchoredPosition == position,
                 "Terminal collision position remains frozen even when given render time");
             Report.AppendLine("PASS real collision contact scroll and terminal ground freeze");
+        }
+
+        private static void CheckCactusGroundLock()
+        {
+            foreach (float width in new[] { 656f, 1451f })
+            foreach (long tick in new[] { 0L, 499L, 3000L, 6999L, 8140L, 10000L })
+            using (var fixture = new Fixture(width))
+            {
+                var game = fixture.Game; game.Jump();
+                for (int i = 0; i < 181; i++) game.Step();
+                Require(game.Obstacles.Count > 0 && game.Obstacles[0].Kind < DinoObstacleKind.LowBird,
+                    "Real generation provides a cactus for the render-lock check");
+                typeof(DinoGame).GetField("<Tick>k__BackingField", Private).SetValue(game, tick);
+                fixture.Track.Render(game, 0);
+                var cactus = Get<RawImage[]>(fixture.Track, "obstacles")[0];
+                float tileWidth = Ground(fixture.Track)[0].rectTransform.sizeDelta.x;
+                for (int i = 0; i < 20; i++)
+                {
+                    float oldGroundX = Ground(fixture.Track)[0].rectTransform.anchoredPosition.x;
+                    float oldCactusX = cactus.rectTransform.anchoredPosition.x;
+                    game.Step(); fixture.Track.Render(game, 0);
+                    Require(!game.IsGameOver, "Render-lock fixture stays before cactus contact");
+                    float groundTravel = Mathf.Repeat(oldGroundX - Ground(fixture.Track)[0].rectTransform.anchoredPosition.x, tileWidth);
+                    float cactusTravel = oldCactusX - cactus.rectTransform.anchoredPosition.x;
+                    Near(groundTravel, cactusTravel, "Rendered cactus stays attached to ground width=" + width + " tick=" + game.Tick);
+                }
+            }
+            Report.AppendLine("PASS portrait / landscape cactus and terrain share every rounded step at initial, middle and maximum speed");
         }
 
         private static bool Dark(Color pixel) { return pixel.a > .9f && pixel.r < .6f; }
@@ -188,9 +217,9 @@ namespace XanaduYonder.EditorTools
         private sealed class Fixture : IDisposable
         {
             private readonly GameObject owner = new GameObject("Dino ground fixture", typeof(RectTransform));
-            internal readonly DinoGame Game = new DinoGame(new DinoRules(608 / 1.2), 37);
+            internal readonly DinoGame Game;
             internal readonly DinoTrackView Track;
-            internal Fixture() { Track = CreateTrack(608, 320); }
+            internal Fixture(float width = 608) { Game = new DinoGame(new DinoRules(width / 1.2), 37); Track = CreateTrack(width, 320); }
             internal DinoTrackView CreateTrack(float width, float height)
             {
                 var card = UiFactory.Panel(owner.transform, "Dino ground card", 0, 0, width, height, Color.white);

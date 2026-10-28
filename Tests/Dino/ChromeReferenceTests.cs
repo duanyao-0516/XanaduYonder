@@ -209,6 +209,59 @@ internal static class ChromeReferenceTests
         game.Step(); Assert(game.IsGameOver && !game.Ducking, "airborne pose remains standing before the exact landing endpoint");
     }
 
+    internal static void GroundTracksCacti()
+    {
+        foreach (double width in new[] { 656 / 1.2, 1451 / 1.2 })
+        foreach (long start in new[] { 0L, 499L, 3000L, 6999L, 7000L, 8140L, 8141L, 10000L }) {
+            var game = new DinoGame(new DinoRules(width), 17); game.Jump();
+            typeof(DinoGame).GetField("<Tick>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(game, start);
+            typeof(DinoGame).GetField("motion", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(game, new DinoMotionState { Y = -100000 });
+            var obstacles = (List<DinoObstacle>)typeof(DinoGame).GetField("obstacles", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(game);
+            obstacles.Add(new DinoObstacle(1, DinoObstacleKind.SmallCactus, 1, 10000, start, 0, 0));
+            obstacles.Add(new DinoObstacle(2, DinoObstacleKind.LargeCactus, 3, 11000, start, 0, 0));
+            obstacles.Add(new DinoObstacle(3, DinoObstacleKind.HighBird, 1, 12000, start, 0, -.8));
+            double initial = Math.Min(6, 6 * (width / 1.35) / 600 * 1.2);
+            double expectedGround = 0, expectedScoreDistance = 0;
+            for (int i = 0; i < 125; i++) {
+                double speed = Math.Min(13, initial + (start + i) * .001);
+                double oldGround = GroundDistance(game), cactusX = game.Obstacles[0].X, largeX = game.Obstacles[1].X, birdX = game.Obstacles[2].X;
+                game.Step();
+                expectedGround += Math.Floor(speed) * 1.35;
+                expectedScoreDistance += speed * 1.35;
+                Near(GroundDistance(game) - oldGround, cactusX - game.Obstacles[0].X, "small cactus remains fixed to ground width=" + width + " tick=" + (start + i));
+                Near(GroundDistance(game) - oldGround, largeX - game.Obstacles[1].X, "grouped large cactus remains fixed to ground");
+                Near(GroundDistance(game), expectedGround, "Chrome horizon rounds each frame before accumulating");
+                Near(game.Distance, expectedScoreDistance, "score distance keeps original fractional travel");
+                Near(birdX - game.Obstacles[2].X, Math.Floor(speed - .8) * 1.35, "flying bird retains its independent speed offset");
+            }
+
+            typeof(DinoGame).GetField("motion", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(game, DinoMotionState.Grounded);
+            obstacles.Clear();
+            double fullStep = Math.Floor(Math.Min(13, initial + game.Tick * .001)) * 1.35;
+            double fraction = 0; DinoObstacle contact = default(DinoObstacle);
+            for (int x = 80; x < 240; x++) {
+                var candidate = new DinoObstacle(4, DinoObstacleKind.SmallCactus, 1, game.Rules.PlayerX + x * .25 * 1.35, game.Tick, 0, 0);
+                if (DinoCollision.TryHitsMotion(game.Rules, 0, 0, false, candidate, candidate.X - fullStep, out fraction)
+                    && fraction > 0 && fraction < 1) { contact = candidate; break; }
+            }
+            Assert(contact.Id == 4, "partial collision fixture exists");
+            obstacles.Add(contact);
+            double beforeContact = GroundDistance(game), scoreDistance = game.Distance;
+            game.Step(); Assert(game.IsGameOver, "contact stops game");
+            Near(GroundDistance(game) - beforeContact, contact.X - game.Obstacles[0].X, "ground and cactus stop at the same partial-frame contact");
+            Near(GroundDistance(game) - beforeContact, fullStep * fraction, "partial ground movement uses the rounded complete step");
+            Near(game.Distance, scoreDistance, "collision ground travel does not enter score distance");
+            double stopped = GroundDistance(game);
+            for (int i = 0; i < 20; i++) game.Step();
+            Near(GroundDistance(game), stopped, "ground freezes after collision");
+        }
+    }
+
+    private static double GroundDistance(DinoGame game)
+    {
+        return game.GroundDistance;
+    }
+
     internal static void OneFollowerPerObstacle()
     {
         var game = new DinoGame(new DinoRules(4096), 17); game.Jump();
@@ -246,13 +299,13 @@ internal static class ChromeReferenceTests
         typeof(DinoGame).GetField("<Speed>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(game, game.Rules.MaxSpeed);
         Assert(game.Jump(), "terminal fixture has an active jump to detect any motion update");
         var before = new List<DinoObstacle>(game.Obstacles);
-        double elapsed = game.Elapsed, distance = game.Distance, presentation = game.PresentationDistance;
+        double elapsed = game.Elapsed, distance = game.Distance, presentation = game.PresentationDistance, ground = game.GroundDistance;
         double y = game.PlayerY, velocity = game.PlayerVelocity, speed = game.Speed;
         long score = game.Score;
         bool jumping = game.Jumping, ducking = game.Ducking, started = game.IsStarted, over = game.IsGameOver;
         for (int tick = 0; tick < 100; tick++) game.Step();
         Assert(game.Tick == long.MaxValue && game.Score == score, "terminal tick and score never overflow");
-        Assert(game.Elapsed == elapsed && game.Distance == distance && game.PresentationDistance == presentation && game.Speed == speed,
+        Assert(game.Elapsed == elapsed && game.Distance == distance && game.PresentationDistance == presentation && game.GroundDistance == ground && game.Speed == speed,
             "terminal time and distances remain frozen");
         Assert(game.PlayerY == y && game.PlayerVelocity == velocity && game.Jumping == jumping && game.Ducking == ducking
             && game.IsStarted == started && game.IsGameOver == over, "terminal motion and lifecycle remain frozen");

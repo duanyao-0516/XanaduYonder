@@ -137,7 +137,11 @@ namespace XanaduYonder.Runtime.Dino
                 if (!clock.AddFrame(Time.unscaledDeltaTime)) Suspend();
                 else
                 {
-                    while (clock.ConsumeStep() && !game.IsGameOver) game.Step();
+                    while (clock.ConsumeStep() && !game.IsGameOver)
+                    {
+                        if (owners.JumpHeld) TryJump();
+                        game.Step();
+                    }
                     UpdateRecord();
                     if (game.IsGameOver) EndRun();
                     else if (game.Score / 100 > milestone) { milestone = game.Score/100; sound.PlayScore(); }
@@ -345,7 +349,7 @@ namespace XanaduYonder.Runtime.Dino
             stateLabel = UiFactory.Label(card.transform, phase == Phase.Ready ? "按下跳跃，开始奔跑" : "",
                 20, 22, area.width - 40, 76, 25, UiFactory.Ink, TextAnchor.MiddleCenter);
             AddActionButton("Dino duck input", "下蹲", "按住", layout.Duck, DuckDown, DuckUp, false);
-            AddActionButton("Dino jump input", "跳跃", layout.Landscape ? "轻按 / 按住" : "轻按短跳 · 按住长跳",
+            AddActionButton("Dino jump input", "跳跃", layout.Landscape ? "轻按 / 按住连跳" : "轻按短跳 · 按住连跳",
                 layout.Jump, JumpDown, JumpUp, true);
             Rect pause = layout.Pause;
             pauseButton = Button("暂停", pause.x, pause.y, pause.width, pause.height, ShowPause);
@@ -372,8 +376,13 @@ namespace XanaduYonder.Runtime.Dino
 
         private void JumpDown(int id)
         {
-            if (!CanPlay || game.Jumping || owners.DuckHeld) return;
+            if (!CanPlay || owners.DuckHeld) return;
             if (!owners.PressJump(id)) return;
+            TryJump();
+        }
+        private void TryJump()
+        {
+            if (!CanPlay || game.Jumping || owners.DuckHeld) return;
             if(inheritedDuck) { game.SetDuck(false); inheritedDuck=false; }
             if(game.Jump())
             {
@@ -459,7 +468,7 @@ namespace XanaduYonder.Runtime.Dino
             Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
             float doneY = panel.rect.height - 32 - 74;
             float licenseY = doneY - 14 - 74;
-            PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
+            PanelLabel(panel,"轻按短跳；按住长跳，落地继续跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
             PanelButton(panel,"素材与许可",licenseY,ShowLicense);
             PanelButton(panel,"知道了",doneY,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
         }

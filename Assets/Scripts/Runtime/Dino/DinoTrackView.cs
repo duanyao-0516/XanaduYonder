@@ -176,7 +176,7 @@ namespace XanaduYonder.Runtime.Dino
             nightAmount = Mathf.MoveTowards(nightAmount, targetNight, delta / DayNightSeconds);
             ApplyPalette();
             RenderSky(game.PresentationDistance);
-            RenderGround(game.PresentationDistance);
+            RenderGround(game.GroundDistance);
             RenderObstacles(game);
             RenderPlayer(game);
         }

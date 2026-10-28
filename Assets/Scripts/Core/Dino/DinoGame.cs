@@ -22,6 +22,9 @@ namespace XanaduYonder.Core.Dino
         public bool Jumping { get { return motion.Jumping; } }
         public double Speed { get; private set; }
         public double Distance { get; private set; }
+        // The horizon and stationary obstacles use the same per-tick integer pixel displacement.
+        // Keep this separate from Chrome's unrounded score distance, including fractional crash travel.
+        public double GroundDistance { get; private set; }
         // Chrome counters omit the crash tick; scenery still stops at the swept contact instant.
         public double PresentationDistance { get { return Distance + collisionTravel; } }
         public double Elapsed { get { return Tick * DinoRules.StepSeconds; } }
@@ -79,6 +82,7 @@ namespace XanaduYonder.Core.Dino
                 var obstacle = obstacles[i];
                 obstacles[i] = obstacle.At(obstacle.X - DinoRules.ObstacleStep(originalSpeed, obstacle.SpeedOffset) * fraction);
             }
+            GroundDistance += DinoRules.ObstacleStep(originalSpeed, 0) * fraction;
             if (collision) {
                 collisionTravel = originalSpeed * DinoRules.SpriteScale * fraction;
                 motion.Y += (predicted.Y - motion.Y) * fraction;

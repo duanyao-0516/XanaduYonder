@@ -55,6 +55,9 @@ namespace XanaduYonder.EditorTools
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Require(UiFactory.Font != null, "Bundled CJK font loads");
                 Check("pause Back opens exit confirmation and freezes the session", PauseAndBack);
+                Check("held jump repeats on landing and release stops repetition", HeldJump);
+                Check("airborne taps do not queue but airborne holds repeat", AirborneHeldJump);
+                Check("pointer cancellation and suspension discard held repeat", CancelHeldJump);
                 Check("cancel orientation waits for two stable portrait frames", CancelDirection);
                 Check("safe resize keeps the same game and permits countdown", SafeResize);
                 Check("background resize is applied on return and preserves the paused picture", BackgroundResize);
@@ -107,6 +110,84 @@ namespace XanaduYonder.EditorTools
             Require(f.Page.CurrentPhase == "Countdown" && game.Tick == tick, "Resume begins countdown with frozen tick");
             f.Page.Suspend();
             Require(f.Page.CurrentPhase == "Paused" && game.Tick == tick, "Countdown can be suspended without simulation");
+        }
+
+        private static void HeldJump(Fixture f)
+        {
+            foreach (var size in new[] { new Vector2(720, 1320), new Vector2(1515, 720) })
+            foreach (int id in new[] { -1, -101, -102 })
+            {
+                f.ReadyAt(size.x, size.y);
+                Invoke(f.Page, "JumpDown", id);
+                Require(f.Game.Jumping, "First held press launches immediately");
+                Land(f.Game);
+                PageStep(f);
+                Require(f.Game.Jumping && f.Game.PlayerVelocity > 0, "Held input launches again on the first grounded fixed step");
+                Land(f.Game);
+                PageStep(f);
+                Require(f.Game.Jumping && f.Game.PlayerVelocity > 0, "One press supports multiple landings");
+                Invoke(f.Page, "JumpUp", id);
+                Land(f.Game);
+                PageStep(f);
+                Require(!f.Game.Jumping, "Release cancels all further repeat jumps");
+            }
+        }
+
+        private static void AirborneHeldJump(Fixture f)
+        {
+            f.ReadyAt(720, 1320); f.PressJump(); Invoke(f.Page, "JumpUp", 12);
+            Invoke(f.Page, "JumpDown", 13); Invoke(f.Page, "JumpUp", 13);
+            Land(f.Game); PageStep(f);
+            Require(!f.Game.Jumping, "An airborne tap is not buffered after release");
+            Invoke(f.Page, "JumpDown", 12); Invoke(f.Page, "JumpUp", 12);
+            Invoke(f.Page, "JumpDown", 13);
+            Land(f.Game); PageStep(f);
+            Require(f.Game.Jumping, "A new airborne hold starts repeating at landing");
+            Invoke(f.Page, "DuckDown", 14);
+            Land(f.Game); PageStep(f);
+            Require(f.Game.Ducking && !f.Game.Jumping, "Held duck takes priority over held jump");
+            Invoke(f.Page, "DuckUp", 14); PageStep(f);
+            Require(f.Game.Jumping, "Releasing duck allows the still-held jump");
+        }
+
+        private static void CancelHeldJump(Fixture f)
+        {
+            foreach (bool pointerExit in new[] { true, false })
+            {
+                f.ReadyAt(720, 1320);
+                var content = Get<RectTransform>(f.Page, "content");
+                var control = content.Find("Dino jump input").GetComponent<DinoTouchControl>();
+                var pointer = new UnityEngine.EventSystems.PointerEventData(null) { pointerId = -1 };
+                control.OnPointerDown(pointer);
+                Require(f.Game.Jumping, "Actual UGUI Down owns the held action");
+                if (pointerExit) control.OnPointerExit(pointer); else control.OnCancel(null);
+                Land(f.Game); PageStep(f);
+                Require(!f.Game.Jumping && !Get<DinoActionOwners>(f.Page, "owners").JumpHeld,
+                    "Pointer exit/cancel cannot restart after landing");
+            }
+            f.ReadyAt(720, 1320); f.PressJump(); f.Page.Suspend();
+            Require(!Get<DinoActionOwners>(f.Page, "owners").JumpHeld, "Pause discards held repeat intent");
+            Invoke(f.Page, "Continue");
+            Set(f.Page, "phase", Enum.Parse(typeof(DinoPage).GetNestedType("Phase", BindingFlags.NonPublic), "Running"));
+            Set(f.Page, "unlockAt", -1f);
+            Land(f.Game); PageStep(f);
+            Require(!f.Game.Jumping, "Resumed run never inherits a stale held jump");
+        }
+
+        private static void Land(DinoGame game)
+        {
+            for (int i = 0; i < 120 && game.Jumping && !game.IsGameOver; i++) game.Step();
+            Require(!game.Jumping && !game.IsGameOver, "The unchanged jump physics lands before the obstacle arrives");
+        }
+
+        private static void PageStep(Fixture f)
+        {
+            // Exercise the real Update loop, supplying exactly one fixed step despite Editor frame timing.
+            Require(Time.unscaledDeltaTime <= .1f, "Editor frame is within the production delta guard");
+            Set(Get<DinoRunClock>(f.Page, "clock"), "accumulated", DinoRules.StepSeconds - Time.unscaledDeltaTime);
+            long before = f.Game.Tick;
+            Invoke(f.Page, "Update");
+            Require(f.Game.Tick == before + 1, "Actual page Update consumes one fixed step");
         }
 
         private static void CancelDirection(Fixture f)

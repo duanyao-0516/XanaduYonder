@@ -15,6 +15,7 @@ internal static class Program
         Run("Chrome high-speed launch and analytical travel", ChromeReferenceTests.SpeedDependentLaunchAndTravel);
         Run("diagnostic replay never changes production generation", ChromeReferenceTests.DiagnosticReplay);
         Run("whole-frame earliest collision commits all geometry", ChromeReferenceTests.CollisionCommit);
+        Run("ground stays attached to cacti through acceleration and collision", ChromeReferenceTests.GroundTracksCacti);
         Run("zero-height airborne landing preserves standing sweep", ChromeReferenceTests.ZeroHeightAirDuckLanding);
         Run("official collision regressions", CollisionRegressionTests.Run);
         Run("atlas geometry contract", AtlasGeometry.Check);
