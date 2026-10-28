@@ -352,11 +352,7 @@ namespace XanaduYonder.Runtime.Dino
             Rect pause = layout.Pause;
             pauseButton = Button("暂停", pause.x, pause.y, pause.width, pause.height, ShowPause);
             pauseButton.targetGraphic.color = Color.clear;
-            if (!layout.Landscape)
-            {
-                var help = Button("玩法说明", layout.Help.x, layout.Help.y, layout.Help.width, layout.Help.height, ShowHelp);
-                help.targetGraphic.color = Color.clear;
-            }
+            pauseButton.GetComponentInChildren<Text>().fontStyle = FontStyle.Bold;
             warningLabel = UiFactory.Label(content, SaveError ?? "最高纪录自动保存", layout.Status.x, layout.Status.y,
                 layout.Status.width, layout.Status.height, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             warningLabel.resizeTextForBestFit = true;
@@ -462,10 +458,12 @@ namespace XanaduYonder.Runtime.Dino
         }
         private void ShowHelp()
         {
-            Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",560);
-            PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，蹲过中空翼龙。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,270,24);
-            PanelButton(panel,"素材与许可",398,ShowLicense);
-            PanelButton(panel,"知道了",480,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
+            Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
+            float doneY = panel.rect.height - 32 - 74;
+            float licenseY = doneY - 14 - 74;
+            PanelLabel(panel,"按下跳跃，松手短跳、按住长跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，蹲过中空翼龙。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
+            PanelButton(panel,"素材与许可",licenseY,ShowLicense);
+            PanelButton(panel,"知道了",doneY,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
         }
         private void ShowLicense()
         {

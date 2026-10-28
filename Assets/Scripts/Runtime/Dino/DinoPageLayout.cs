@@ -10,7 +10,6 @@ namespace XanaduYonder.Runtime.Dino
         public readonly Rect Duck;
         public readonly Rect Jump;
         public readonly Rect Pause;
-        public readonly Rect Help;
         public readonly Rect Status;
         public readonly float HeadingY;
         public readonly float ScoresY;
@@ -32,9 +31,8 @@ namespace XanaduYonder.Runtime.Dino
                 Duck = new Rect(32, controlsY, duckWidth, 152);
                 Jump = new Rect(width - 32 - jumpWidth, controlsY, jumpWidth, 152);
                 float gapWidth = Jump.x - Duck.xMax;
-                Pause = new Rect(Duck.xMax + (gapWidth - 136) * .5f, controlsY + 4, 136, 76);
-                Help = default(Rect);
-                Status = new Rect(Duck.xMax + 8, controlsY + 96, gapWidth - 16, 42);
+                Pause = new Rect(Duck.xMax + (gapWidth - 136) * .5f, controlsY + 38, 136, 76);
+                Status = new Rect(Duck.xMax + 8, controlsY + 126, gapWidth - 16, 42);
             }
             else
             {
@@ -43,7 +41,6 @@ namespace XanaduYonder.Runtime.Dino
                 HeadingY = Mathf.Max(112, 112 + (ScoresY - 230) * .4f);
                 Duck = new Rect(32, height - 380, 208, 168);
                 Jump = new Rect(256, height - 380, width - 288, 168);
-                Help = new Rect(32, height - 164, 208, 76);
                 Pause = new Rect(width - 240, height - 164, 208, 76);
                 Status = new Rect(56, Duck.y - 64, width - 112, 34);
             }

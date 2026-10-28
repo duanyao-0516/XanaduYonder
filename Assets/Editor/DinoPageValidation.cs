@@ -69,6 +69,7 @@ namespace XanaduYonder.EditorTools
                 Check("short selection windows scroll both cards without covering fixed actions", ShortSelectionScroll);
                 Check("game Back returns to selection before the lobby", ReturnHierarchy);
                 Check("portrait and landscape controls stay low and expose pause", ControlsReach);
+                Check("help dialog retains readable content and bottom spacing", HelpSpacing);
                 Check("birthday entry uses the local lunar date without blocking selection", BirthdayEntry);
                 Check("celebration hat follows jump duck and collision without changing the model", CelebrationHatPoses);
                 Check("celebration snapshot survives layout replacement and refreshes on re-entry", CelebrationLifecycle);
@@ -494,6 +495,16 @@ namespace XanaduYonder.EditorTools
                 Require(FindText(content, "更换方向") == null, "There is no redundant direction action on the game page");
                 var jumpArea = RelativeRect(content, jump); var duckArea = RelativeRect(content, duck);
                 var pauseArea = RelativeRect(content, pause);
+                Require(FindText(pause, "暂停").fontStyle == FontStyle.Bold, "Pause has the requested bold emphasis");
+                Require(FindText(content, "玩法说明") == null, "Help is not duplicated in the bottom controls");
+                if (size.x > size.y)
+                {
+                    Require(Math.Abs(pauseArea.center.y - jumpArea.center.y) < .01 && Math.Abs(pauseArea.center.y - duckArea.center.y) < .01,
+                        "Landscape pause is vertically centered with both action cards");
+                    Require(!pauseArea.Overlaps(RelativeRect(content, Get<Text>(f.Page, "warningLabel").rectTransform)),
+                        "Saving status does not overlap the centered pause control");
+                }
+                else Require(Math.Abs(size.y + pauseArea.yMin - 88) < .01, "Portrait pause retains its prior bottom offset");
                 Require(jump.rect.width > duck.rect.width && jump.GetComponent<Image>().color == UiFactory.Accent,
                     "The larger right jump target is the primary action");
                 Require(-jumpArea.center.y > size.y * .72f && -duckArea.center.y > size.y * .72f,
@@ -504,6 +515,27 @@ namespace XanaduYonder.EditorTools
                     "Action cards align with the 32-unit playfield margins");
                 Require(ContainsText(jump, "轻按") && ContainsText(jump, "按住") && ContainsText(duck, "按住"),
                     "Action instructions are contained in their associated cards");
+            }
+        }
+
+        private static void HelpSpacing(Fixture f)
+        {
+            foreach (var size in new[] { new Vector2(720, 1320), new Vector2(1515, 720), new Vector2(730, 720) })
+            {
+                f.ReadyAt(size.x, size.y);
+                ClickIcon(f.Page, UiIconKind.Book);
+                var overlay = Get<RectTransform>(f.Page, "overlay");
+                var panel = (RectTransform)overlay.Find("Dino dialog");
+                var done = FindText(panel, "知道了").GetComponentInParent<Button>().GetComponent<RectTransform>();
+                var license = FindText(panel, "素材与许可").GetComponentInParent<Button>().GetComponent<RectTransform>();
+                Rect doneArea = RelativeRect(panel, done), licenseArea = RelativeRect(panel, license);
+                float bottomGap = panel.rect.height + doneArea.yMin;
+                Require(bottomGap >= 24 && bottomGap <= 40, "Help primary action has a normal 24..40 unit bottom margin");
+                Require(licenseArea.yMin - doneArea.yMax >= 12 && !doneArea.Overlaps(licenseArea), "Help actions remain separated");
+                Require(panel.rect.height <= size.y - 32 && panel.rect.Contains(doneArea.min) && panel.rect.Contains(doneArea.max),
+                    "Help primary action fits the dialog in either orientation");
+                done.GetComponent<Button>().onClick.Invoke();
+                Require(Get<RectTransform>(f.Page, "overlay") == null && f.Page.CurrentPhase == "Ready", "Help closes back to the prepared game");
             }
         }
 

@@ -7,7 +7,7 @@ internal static class Program
 {
     private static int passed;
     private static int failed;
-    private static readonly double[] Widths = { 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2 };
+    private static readonly double[] Widths = { 320, 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2, 4096 };
 
     private static int Main()
     {
@@ -27,38 +27,52 @@ internal static class Program
                 Near(r.DuckWidth / 59, 1.35, "duck width");
                 Near(r.DuckHeight / 25, 1.35, "duck height");
                 Assert(r.PlayerX >= width * .1 && r.PlayerX <= width * .15, "inset");
-                Assert(r.MaxSpeed > 0 && r.MaxSpeed <= 360, "bounded speed");
+                Assert(r.MaxSpeed > 0 && r.MaxSpeed <= 1440, "bounded high-speed peak");
             }
         });
-        Run("wide track reaches its unchanged top speed in fifteen seconds", delegate {
-            var rules = new DinoRules(1451 / 1.2);
-            Near(rules.SpeedAt(0), 180, "starting speed is unchanged");
-            Near(rules.SpeedAt(900), 360, "fifteen second speed cap");
-            Near(rules.SpeedAt(300), 240, "five seconds is one third faster");
-            Near(rules.SpeedAt(600), 300, "ten second speed");
-            Near(rules.SpeedAt(899), 359.8, "the final accelerating tick stays below the cap");
-            Near(rules.SpeedAt(1800), 360, "faster acceleration does not raise the top speed");
-            var game = new DinoGame(rules, 17); game.Jump();
-            for (int tick = 0; tick < 900; tick++) { Drive(game); game.Step(); }
-            Assert(!game.IsGameOver && game.Tick == 900, "real simulation reaches fifteen seconds");
-            Near(game.Speed, 360, "real simulation uses the accelerated curve");
+        Run("every supported viewport uses four times its established speed ceiling", delegate {
+            double[] previousCaps = { 60, 189.25, 267.25, 276.5, 360, 360, 360, 360 };
+            for (int i = 0; i < Widths.Length; i++)
+                Near(new DinoRules(Widths[i]).MaxSpeed, previousCaps[i] * 4, "actual peak at width " + Widths[i]);
+            Near(DinoRules.ReactionSeconds, .15, "the high-speed mode states its shorter response floor");
+            Near(DinoRules.InputBudgetSeconds, .1, "display and input budget is retained");
+            Near(DinoRules.RecoverySeconds, .25, "between-action recovery is retained");
         });
-        Run("inset portrait uses the same acceleration without exceeding its response cap", delegate {
+        Run("shared acceleration doubles without raising the initial speed", delegate {
+            foreach (double width in new[] { 656 / 1.2, 1451 / 1.2 }) {
+                var rules = new DinoRules(width);
+                Near(rules.SpeedAt(0), 180, "initial speed");
+                Near(rules.SpeedAt(300), 300, "five-second speed");
+                Near(rules.SpeedAt(600), 420, "ten-second speed");
+                Near(rules.SpeedAt(900), 540, "fifteen-second speed");
+            }
+        });
+        Run("wide track reaches the fourfold peak at fifty-two and a half seconds", delegate {
+            var rules = new DinoRules(1451 / 1.2);
+            Near(rules.SpeedAt(3149), 1439.6, "the last accelerating tick");
+            Near(rules.SpeedAt(3150), 1440, "52.5-second peak");
+            Near(rules.SpeedAt(18000), 1440, "the peak remains bounded");
+            var game = new DinoGame(rules, 17); game.Jump();
+            for (int tick = 0; tick < 3150; tick++) { Drive(game); game.Step(); }
+            Assert(!game.IsGameOver && game.Tick == 3150, "the real obstacle sequence reaches full speed");
+            Near(game.Speed, 1440, "real simulation uses the fourfold peak");
+        });
+        Run("portrait reaches its fourfold viewport peak on the correct fixed step", delegate {
             var rules = new DinoRules(656 / 1.2);
-            Near(rules.SpeedAt(0), 180, "portrait starts at the shared speed");
-            Near(rules.SpeedAt(300), 240, "portrait shares the five second acceleration");
-            long capTick = (long)Math.Ceiling((rules.MaxSpeed - 180) / .2);
-            Assert(rules.SpeedAt(capTick - 1) < rules.MaxSpeed, "the last portrait accelerating tick stays below its cap");
-            Near(rules.SpeedAt(capTick), rules.MaxSpeed, "portrait reaches its viewport-derived cap");
-            Near(rules.SpeedAt(3600), rules.MaxSpeed, "portrait remains capped");
+            Near((rules.MaxSpeed - 180) / 24, 37.0416666666667, "nominal ramp duration");
+            Near(rules.SpeedAt(2222), 1068.8, "last portrait accelerating tick");
+            Near(rules.SpeedAt(2223), 1069, "37.05-second fixed-step peak");
+            Near(rules.SpeedAt(3600), 1069, "portrait remains at its peak");
         });
         Run("traversal distance exactly matches accelerated fixed steps across speed caps", delegate {
             var wide = new DinoRules(1451 / 1.2);
-            Near(wide.Travel(0, 900), 4051.5, "fifteen second acceleration distance");
-            Near(wide.Travel(0, 1800), 9451.5, "thirty second distance includes fifteen capped seconds");
-            foreach (double width in new[] { 320.0, 420, 656 / 1.2, 600, 900, 1200, 1451 / 1.2, 4096 }) {
+            Near(wide.Travel(0, 900), 5403, "fifteen-second acceleration distance");
+            Near(wide.Travel(0, 1800), 16206, "thirty-second acceleration distance");
+            Near(wide.Travel(0, 3150), 42535.5, "distance when the peak is reached");
+            Near(wide.Travel(0, 3600), 53335.5, "sixty-second distance includes capped travel");
+            foreach (double width in Widths) {
                 var rules = new DinoRules(width);
-                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .2));
+                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .4));
                 foreach (long start in new[] { 0L, 10L, 500L, Math.Max(0, capTick - 3), capTick, capTick + 3, 5400L, long.MaxValue - 2048 }) {
                     foreach (int length in new[] { 1, 7, 120, 2048 }) {
                         double sum = 0;
@@ -69,6 +83,19 @@ internal static class Program
                 Near(rules.Travel(long.MaxValue, long.MaxValue), 0, "terminal empty interval");
                 Near(rules.Travel(8, 7), 0, "reversed interval");
                 Near(rules.SpeedAt(long.MaxValue), rules.MaxSpeed, "terminal tick has finite capped speed");
+            }
+        });
+        Run("single-cactus fallback remains visible and passable through the entire speed ramp", delegate {
+            foreach (double width in Widths) {
+                var rules = new DinoRules(width);
+                long capTick = Math.Max(0, (long)Math.Ceiling((rules.MaxSpeed - 180) / .4));
+                for (long spawn = 0; spawn <= capTick + 60; spawn++) {
+                    DinoPlan plan;
+                    Assert(DinoTraversal.TryPlan(rules, DinoObstacleKind.SmallCactus, 1, spawn, 0, out plan), "physical fallback width=" + width + " tick=" + spawn);
+                    Assert(plan.ReactionWindowSeconds + 1e-8 >= .15, "visible fallback response floor width=" + width + " tick=" + spawn);
+                    long firstVisiblePress = Math.Max(plan.EarliestActionTick, plan.FullVisibleTick + 6);
+                    Assert(plan.LatestActionTick - firstVisiblePress >= 6, "at least 100ms of valid timing remains after visibility and input budget");
+                }
             }
         });
         Run("ready freezes time and first press starts immediately", delegate {
@@ -191,7 +218,7 @@ internal static class Program
                     g.Step();
                 }
                 Assert(visible >= 0 && g.IsGameOver, "one tick beyond certified latest must collide");
-                Assert((latest - visible) / 60.0 - .1 >= 1.2, "independent observed response budget");
+                Assert((latest - visible) / 60.0 - .1 + 1e-8 >= .15, "independent observed high-speed response budget");
             }
         });
         Run("first small cactus admits a real released short jump", delegate {
@@ -245,25 +272,29 @@ internal static class Program
         int groups = 0, low = 0, mid = 0, count = 0; double minWindow = double.MaxValue;
         var rules = new DinoRules(width);
         foreach (uint seed in new uint[] { 0, 1, 17, 42, 1729, 123456 }) {
-            var g = new DinoGame(rules, seed); g.Jump(); long seen = 0, previousRecovery = 0;
+            var g = new DinoGame(rules, seed); g.Jump(); long seen = 0, previousRecovery = 0; bool peakObstacle = false;
+            long capTick = (long)Math.Ceiling((rules.MaxSpeed - 180) / .4);
             for (int i = 0; i < 14400; i++) {
                 foreach (var o in g.Obstacles) if (o.Id > seen) {
-                    seen = o.Id; count++;
+                    seen = o.Id; count++; peakObstacle |= o.SpawnTick >= capTick;
                     Assert(o.GroupSize >= 1 && o.GroupSize <= 3, "at most three");
                     Assert(o.SpawnTick >= 180, "three second opening");
                     if (o.GroupSize > 1) { groups++; Assert(o.SpawnTick >= 1200, "combos after 20 seconds"); }
                     if (o.Kind == DinoObstacleKind.LowBird) { low++; Assert(o.SpawnTick >= 2700, "low bird after 45 seconds"); }
                     if (o.Kind == DinoObstacleKind.MidBird) { mid++; Assert(o.SpawnTick >= 2700, "mid bird after 45 seconds"); }
-                    Assert(o.ReactionWindowSeconds + 1e-8 >= 1.2, "actual action window after input budget");
+                    Assert(o.ReactionWindowSeconds + 1e-8 >= .15, "actual high-speed window after input budget");
+                    long firstVisiblePress = Math.Max(o.EarliestActionTick, o.FullVisibleTick + 6);
+                    Assert(o.LatestActionTick - firstVisiblePress >= 6, "visible actions retain a real timing interval");
                     Assert(o.EarliestActionTick <= o.RecommendedActionTick && o.RecommendedActionTick <= o.LatestActionTick, "certified interval");
                     Assert(o.EarliestActionTick - previousRecovery >= 15, "all valid actions have recovery gap");
                     previousRecovery = o.RecoveryTick; minWindow = Math.Min(minWindow, o.ReactionWindowSeconds);
                 }
                 Drive(g, (int)(seed % 3)); g.Step();
                 Assert(!g.IsGameOver, "certified actions must physically clear actual production collisions, seed=" + seed + ", tick=" + g.Tick);
-                Assert(g.Speed <= rules.MaxSpeed + 1e-8 && g.Speed <= 360 && !double.IsNaN(g.PlayerY), "finite capped state");
+                Assert(g.Speed <= rules.MaxSpeed + 1e-8 && g.Speed <= 1440 && !double.IsNaN(g.PlayerY), "finite capped state");
             }
             Near(g.Speed, rules.MaxSpeed, "late run stays at the viewport cap");
+            Assert(peakObstacle, "generation continues at full speed rather than silently stopping");
         }
         Assert(count > 100 && groups > 0 && low > 0 && mid > 0, "late content exercised: " + count + "/" + groups + "/" + low + "/" + mid);
         Console.WriteLine("width=" + width + " cap=" + rules.MaxSpeed.ToString("F3") + " obstacles=" + count + " groups=" + groups + " low=" + low + " mid=" + mid + " minEffectiveWindow=" + minWindow.ToString("F3"));

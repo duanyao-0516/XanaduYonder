@@ -64,6 +64,8 @@ namespace XanaduYonder.EditorTools
                     fixture.Capture("ready", false, size.x == 1515 ? 0 : -1);
                     if (size.x == 720 && size.y == 1320)
                     {
+                        fixture.Night(); fixture.Capture("night", true);
+                        fixture.Ready();
                         fixture.Open("ShowHelp"); fixture.Capture("help");
                         fixture.Open("ShowSettings"); fixture.Capture("settings");
                         fixture.Ready(); fixture.Pause(); fixture.Capture("paused");
@@ -101,15 +103,14 @@ namespace XanaduYonder.EditorTools
                     }
                     fixture.Ready(); fixture.CheckCelebration(celebration);
                     fixture.Capture("hat-" + celebration.ToString().ToLowerInvariant() + "-" + date.ToString("MMdd"));
-                    if (celebration == DinoCelebration.Christmas)
-                    {
-                        fixture.Night(); fixture.Capture("christmas-night", true);
-                    }
+                    fixture.Night();
+                    fixture.Capture("hat-" + celebration.ToString().ToLowerInvariant() + "-night-" + date.ToString("MMdd"), true);
                 }
                 using (var fixture = new Fixture(1515, 720, new DateTime(2026, 5, 31)))
                 {
                     fixture.Ready(); fixture.CheckCelebration(DinoCelebration.Birthday);
                     fixture.Capture("birthday-landscape");
+                    fixture.Night(); fixture.Capture("birthday-landscape-night", true);
                 }
                 Report.AppendLine("PASS actual local-date resolution, birthday banners and all four celebration hat renders");
                 Report.AppendLine("LIMITS: controlled viewport and sample scores; screenshots use production Unity UGUI / Camera.Render.");
