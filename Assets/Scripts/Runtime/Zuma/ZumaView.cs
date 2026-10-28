@@ -18,7 +18,7 @@ namespace XanaduYonder.Runtime.Zuma
         private RawImage overlay,finish,finishMouth,foundation,body,tongue,eyes,current,next,gauge;
         private ZumaBitmapText score,stage,phaseLabel;
         private Text hint;
-        private readonly List<RawImage> balls=new List<RawImage>(),shadows=new List<RawImage>(),bullets=new List<RawImage>(),particles=new List<RawImage>(),dots=new List<RawImage>();
+        private readonly List<RawImage> balls=new List<RawImage>(),shadows=new List<RawImage>(),bullets=new List<RawImage>(),particles=new List<RawImage>(),dots=new List<RawImage>(),dotShadows=new List<RawImage>();
         private readonly List<Floating> floats=new List<Floating>();
         private RawImage coin;
         private readonly Text warning;
@@ -39,10 +39,10 @@ namespace XanaduYonder.Runtime.Zuma
             if(content!=null){content.gameObject.SetActive(false);UnityEngine.Object.Destroy(content.gameObject);}
             if(loadedMap!=null){assets.ReleaseLevelResources(loadedMap);loadedMap=null;}
             content=ZumaArt.Rect(root,"Zuma scene",0,0,1280,720);
-            balls.Clear();shadows.Clear();bullets.Clear();particles.Clear();dots.Clear();floats.Clear();Touch=null;
+            balls.Clear();shadows.Clear();bullets.Clear();particles.Clear();dots.Clear();dotShadows.Clear();floats.Clear();Touch=null;
             warning.transform.SetAsLastSibling();
         }
-        public void ShowSelection(string id,string difficulty,ZumaRecord record,Action back,Action previous,Action play,Action nextMap,Action<int> selectDifficulty,Action resume)
+        public void ShowSelection(string id,string difficulty,ZumaRecord record,Action back,Action previous,Action play,Action nextMap,Action<int> selectDifficulty,Action resume,Action help)
         {
             Clear();var menu=assets.Texture("Images/menu");var map=assets.Map(id);
             ZumaArt.Image(content,"Sky",menu,new Rect(0,1442,1280,250),0,0,1280,250);
@@ -66,6 +66,8 @@ namespace XanaduYonder.Runtime.Zuma
             ZumaArt.Text(content,assets,"cancun10",record.BestScore.ToString(),1140,632,140,40,ZumaArt.Gold);
             ZumaArt.Text(content,assets,"cancun10","BEST TIME:",924,686,212,40,Color.white);
             ZumaArt.Text(content,assets,"cancun10",FormatTime(record.BestTimeSeconds),1140,686,140,40,ZumaArt.Gold);
+            UiFactory.Button(content,"‹ 返回大厅",24,24,174,56,back);
+            UiFactory.Button(content,"玩法说明",210,24,174,56,help);
             if(resume!=null) StandardButton(content,"CONTINUE",940,40,276,64,resume);
         }
         public void ShowGame(ZumaLevelDefinition definition,ZumaSnapshot snapshot,Action pause,Action swap)
@@ -190,14 +192,22 @@ namespace XanaduYonder.Runtime.Zuma
                 ZumaArt.SetSource(coin,objects,new Rect(340,54*((s.TotalTicks/4)%30),54,54));
                 ZumaArt.Center(coin,p.X,p.Y,54*scale,54*scale);coin.color=new Color(1,1,1,s.Coin.FadeTicks>0?s.Coin.FadeTicks/15f:1);
             }
-            for(var i=0;i<(aiming?18:0);i++)
+            const int aimDotCount=22;
+            for(var i=0;i<(aiming?aimDotCount:0);i++)
             {
+                var x=level.FrogX+direction.x*(78+i*14);
+                var y=level.FrogY+direction.y*(78+i*14);
+                var outline=Pool(dotShadows,i,projectiles,"Aim dot contrast edge");
                 var dot=Pool(dots,i,projectiles,"Aim dot");
+                ZumaArt.SetSource(outline,objects,new Rect(s.Frog.CurrentColor*48,1152,48,48));
                 ZumaArt.SetSource(dot,objects,new Rect(s.Frog.CurrentColor*48,1152,48,48));
-                ZumaArt.Center(dot,level.FrogX+direction.x*(78+i*12),level.FrogY+direction.y*(78+i*12),5,5);
-                dot.color=new Color(1,1,1,.8f-i*.035f);
+                ZumaArt.Center(outline,x,y,11,11);
+                ZumaArt.Center(dot,x,y,8,8);
+                outline.color=new Color(.04f,.04f,.04f,.7f-i*.02f);
+                dot.color=new Color(1,1,1,.95f-i*.025f);
             }
-            HideRemaining(dots,aiming?18:0);
+            HideRemaining(dots,aiming?aimDotCount:0);
+            HideRemaining(dotShadows,aiming?aimDotCount:0);
             phaseLabel.SetText(s.Phase=="intro"?"LEVEL "+(Array.IndexOf(ZumaSaveData.MapIds,level.Id)+1)+"\n"+level.DisplayName:s.Phase=="winOutro"?"ZUMA!":"");
             hint.gameObject.SetActive(s.PlayTicks<600&&s.Phase=="play");
         }
@@ -226,8 +236,17 @@ namespace XanaduYonder.Runtime.Zuma
             ZumaArt.Text(panel,assets,"nativealienextended18",title,20,god?72:32,columns*121-40,60,Color.white,true);
             warning.transform.SetAsLastSibling();return panel;
         }
+        public void HideAim()
+        { HideRemaining(dots,0);HideRemaining(dotShadows,0); }
         public void CloseDialog()
         { if(dialog==null)return;dialog.gameObject.SetActive(false);UnityEngine.Object.Destroy(dialog.gameObject);dialog=null; }
+        public void ShowHelp(Action close)
+        {
+            CloseDialog();
+            dialog=ZumaArt.Rect(root,"Zuma help",0,0,1280,720);
+            new ZumaHelpView(dialog,close);
+            warning.transform.SetAsLastSibling();
+        }
         public void StandardButton(Transform parent,string title,float x,float y,float width,float height,Action action)
         {
             var button=ZumaArt.Button(parent,assets.Texture("Images/menu"),new Rect(0,532,180,72),x,y,width,height,action,true);

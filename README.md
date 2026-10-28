@@ -47,9 +47,9 @@ APK 输出到 `artifacts/builds/XanaduYonder-0.3.0.apk`，构建日志在 `artif
 
 [旸了个旸玩法与接入](docs/sheep-game.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
-[Zuma 接入设计](docs/superpowers/specs/2026-10-27-zuma-design.md) · [Zuma 实施与验证记录](docs/verification-zuma.md)。从大厅进入后转为横屏，按住拖动瞄准、松手单发，SWAP 换球。
+[Zuma 接入设计](docs/superpowers/specs/2026-10-27-zuma-design.md) · [Zuma 实施与验证记录](docs/verification-zuma.md) · [导航、中文说明与瞄准优化验证](docs/verification-zuma-help.md) · [小游戏架构审查](docs/architecture-audit-2026-10-28.md)。从大厅进入后转为横屏，按住拖动瞄准、松手单发，SWAP 换球。
 
-`scripts/build-zuma-preview.sh` 构建并行验证包：包名 `com.duanyao.xanaduyonder.zumapreview`，文件 `artifacts/builds/XanaduYonder-0.3.0-zuma-preview.apk`。它与已安装的主 APP 分别存储，避免覆盖更高版本的 APP；正式包名仍保持不变。
+`scripts/build-zuma-preview.sh` 构建并行验证包：包名 `com.duanyao.xanaduyonder.zumapreview`，文件 `artifacts/builds/XanaduYonder-0.3.0-zuma-preview.apk`。它与已安装的主 APP 分别存储，避免覆盖更高版本的 APP；正式包名仍保持不变。该预览默认关闭 Development，构建后自动验证无调试标记、无网络权限、无开发控制台；仍使用本地调试签名，正式发布走独立发布流程。选关左上角提供返回大厅和中文玩法说明，游戏内保留原版英文界面。
 
 ## 当前范围
 

@@ -35,6 +35,8 @@ namespace XanaduYonder.Runtime.Zuma
         public string SaveError { get { return saveError??navigationError; } }
         private bool AcceptsInput { get { return visible&&!transition&&foreground&&running&&game!=null&&view!=null&&!view.HasDialog; } }
 
+        private bool AcceptsSelectionInput { get { return visible&&!transition&&foreground&&game==null&&view!=null&&!view.HasDialog; } }
+
         public void Initialize(Action lobby,Func<bool> soundEnabled,Func<bool> hapticsEnabled,Func<bool,bool,bool> updateSetting,GameFeedback common)
         {
             returnLobby=lobby;sound=soundEnabled;haptics=hapticsEnabled;setSetting=updateSetting;feedback=common;
@@ -160,23 +162,35 @@ namespace XanaduYonder.Runtime.Zuma
         private void ShowSelectionCore()
         {
             if(data==null)return;
-            gesture.Cancel();running=false;accumulator=0;game=null;
+            CancelAim();running=false;accumulator=0;game=null;
             audioPlayer.Suspend(false);audioPlayer.SelectMusic("gauntlet");
             var p=data.Profile;
-            view.ShowSelection(p.LastMapId,p.LastDifficultyId,data.GetRecord(p.LastMapId,p.LastDifficultyId),Exit,
+            view.ShowSelection(p.LastMapId,p.LastDifficultyId,data.GetRecord(p.LastMapId,p.LastDifficultyId),()=>{if(AcceptsSelectionInput)Exit();},
                 ()=>SelectMap(-1),StartSelected,()=>SelectMap(1),SelectDifficulty,
-                data.Session!=null&&!data.Session.ResultAcknowledged?(Action)ShowContinuePrompt:null);
+                data.Session!=null&&!data.Session.ResultAcknowledged?(Action)(()=>{if(AcceptsSelectionInput)ShowContinuePrompt();}):null,ShowHelp);
             dialogBack=null;ShowWarnings();
+        }
+        private void ShowHelp()
+        {
+            if(!AcceptsSelectionInput)return;
+            CancelAim();
+            view.ShowHelp(CloseHelp);
+            dialogBack=CloseHelp;
+        }
+        private void CloseHelp()
+        {
+            view.CloseDialog();
+            dialogBack=null;
         }
         private void SelectMap(int delta)
         {
-            if(transition||!foreground)return;audioPlayer.Button();
+            if(!AcceptsSelectionInput)return;audioPlayer.Button();
             var index=Array.IndexOf(ZumaSaveData.MapIds,data.Profile.LastMapId);
             data.Profile.LastMapId=ZumaSaveData.MapIds[(index+delta+18)%18];profileRevision++;Save();ShowSelection();
         }
         private void SelectDifficulty(int index)
         {
-            if(transition||!foreground)return;audioPlayer.Button();
+            if(!AcceptsSelectionInput)return;audioPlayer.Button();
             data.Profile.LastDifficultyId=ZumaSaveData.DifficultyIds[index];profileRevision++;Save();ShowSelection();
         }
         private void ShowContinuePrompt()
@@ -191,7 +205,7 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void StartSelected()
         {
-            if(transition||!foreground)return;
+            if(!AcceptsSelectionInput)return;
             if(data.Session!=null&&!data.Session.ResultAcknowledged)
             {
                 var panel=view.Dialog("NEW GAME?");
@@ -225,7 +239,7 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void ShowRun(ZumaLevelDefinition definition,ZumaGame candidate,bool resume)
         {
-            gesture.Cancel();accumulator=0;running=false;dialogBack=null;
+            CancelAim();accumulator=0;running=false;dialogBack=null;
             view.ShowGame(definition,candidate.Snapshot(),ShowPause,Swap);
             view.Touch.Initialize(BeginAim,MoveAim,ReleaseAim);
             audioPlayer.SelectMusic("game");audioPlayer.Suspend(!resume);
@@ -257,8 +271,10 @@ namespace XanaduYonder.Runtime.Zuma
             if(gesture.Release(id,canceled,inside,AcceptsInput&&game.CanFire)&&game.TryFire())
             { HandleEvents();Save(); }
         }
+        private void CancelAim()
+        { gesture.Cancel();view?.HideAim(); }
         private void Swap()
-        { if(!AcceptsInput)return;gesture.Cancel();if(game.Swap()){HandleEvents();Save();} }
+        { if(!AcceptsInput)return;CancelAim();if(game.Swap()){HandleEvents();Save();} }
         private void ShowPause()
         {
             if(game==null||transition)return;
@@ -283,12 +299,12 @@ namespace XanaduYonder.Runtime.Zuma
         private void Resume()
         {
             if(!foreground||transition||game==null)return;
-            gesture.Cancel();view.CloseDialog();dialogBack=null;running=true;accumulator=0;
+            CancelAim();view.CloseDialog();dialogBack=null;running=true;accumulator=0;
             audioPlayer.Suspend(false);nextSave=Time.realtimeSinceStartupAsDouble+2;
         }
         private void ShowResult()
         {
-            gesture.Cancel();running=false;Save();
+            CancelAim();running=false;Save();
             var snapshot=game.Snapshot();audioPlayer.Suspend(false);audioPlayer.SelectMusic(snapshot.Phase=="won"?"win":"game_over");
             view.Stats(snapshot,AcknowledgeResult);dialogBack=AcknowledgeResult;ShowWarnings();
         }
@@ -300,13 +316,13 @@ namespace XanaduYonder.Runtime.Zuma
         public void HandleBack()
         {
             if(!visible||transition)return;
-            gesture.Cancel();
+            CancelAim();
             if(view!=null&&view.HasDialog){dialogBack?.Invoke();return;}
             if(game!=null)ShowPause();else Exit();
         }
         public void Suspend()
         {
-            gesture.Cancel();running=false;accumulator=0;
+            CancelAim();running=false;accumulator=0;
             audioPlayer?.Suspend(true);
             Save();
         }
@@ -320,7 +336,7 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void OnViewportChanged()
         {
-            gesture.Cancel();accumulator=0;
+            CancelAim();accumulator=0;
             if(visible&&!transition&&running&&game!=null)ShowPause();
         }
         private void Update()
@@ -391,6 +407,6 @@ namespace XanaduYonder.Runtime.Zuma
             if(canvasObject!=null){canvasObject.SetActive(false);Destroy(canvasObject);canvasObject=null;}
             assets?.Dispose();assets=null;
         }
-        private void OnDestroy() { ++navigationToken;gesture.Cancel();Save();ReleasePresentation(); }
+        private void OnDestroy() { ++navigationToken;CancelAim();Save();ReleasePresentation(); }
     }
 }
