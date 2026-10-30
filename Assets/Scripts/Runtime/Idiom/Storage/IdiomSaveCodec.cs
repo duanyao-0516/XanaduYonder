@@ -21,6 +21,7 @@ namespace XanaduYonder.Runtime.Idiom
                 throw new ArgumentException("成语学习记录不完整，当前进度未保存。");
             var root = new JObject { ["schemaVersion"] = 1, ["gameId"] = "idiom-learning", ["dictionaryVersion"] = lexicon.Version,
                 ["activeMode"] = (int)data.ActiveMode, ["activeMatchKind"] = (int)data.ActiveMatchKind,
+                ["closeKeyboardAfterSend"] = data.CloseKeyboardAfterSend, ["showPinyin"] = data.ShowPinyin,
                 ["character"] = WriteMode(data.Character), ["sound"] = WriteMode(data.Sound),
                 ["localCharacter"] = WriteMode(data.LocalCharacter), ["localSound"] = WriteMode(data.LocalSound),
                 ["profile"] = WriteProfile(data.Profile), ["notebook"] = JObject.Parse(IdiomNotebookCodec.Encode(data.Notebook)) };
@@ -86,13 +87,19 @@ namespace XanaduYonder.Runtime.Idiom
             var root = IdiomStrictJson.Read(json, MaximumBytes);
             IdiomStrictJson.Identity(root, "idiom-learning");
             if (IdiomStrictJson.Text(root["dictionaryVersion"], 128) != lexicon.Version) throw new IdiomVersionException();
+            // Existing aggregates have neither preference. Only missing keys receive
+            // defaults; explicit nulls and non-booleans must retain corruption protection.
+            if (root.Property("closeKeyboardAfterSend") == null) root["closeKeyboardAfterSend"] = true;
+            if (root.Property("showPinyin") == null) root["showPinyin"] = false;
             IdiomStrictJson.Object(root, "schemaVersion", "gameId", "dictionaryVersion", "activeMode", "activeMatchKind",
-                "character", "sound", "localCharacter", "localSound", "profile", "notebook");
+                "closeKeyboardAfterSend", "showPinyin", "character", "sound", "localCharacter", "localSound", "profile", "notebook");
             var profile = ReadProfile(root["profile"], lexicon);
             var notebook = IdiomNotebookCodec.Decode(root["notebook"].ToString(Formatting.None));
             ValidateNotebook(notebook, profile.GetSnapshot(), lexicon);
             return new IdiomSaveData { ActiveMode = (IdiomMode)IdiomStrictJson.Integer(root["activeMode"], 0, 1),
                 ActiveMatchKind = (IdiomMatchKind)IdiomStrictJson.Integer(root["activeMatchKind"], 0, 1),
+                CloseKeyboardAfterSend = IdiomStrictJson.Boolean(root["closeKeyboardAfterSend"]),
+                ShowPinyin = IdiomStrictJson.Boolean(root["showPinyin"]),
                 Character = ReadMode(root["character"], lexicon, profile, IdiomMode.SameCharacter, IdiomMatchKind.Computer),
                 Sound = ReadMode(root["sound"], lexicon, profile, IdiomMode.SameSound, IdiomMatchKind.Computer),
                 LocalCharacter = ReadMode(root["localCharacter"], lexicon, profile, IdiomMode.SameCharacter, IdiomMatchKind.Local),
@@ -163,7 +170,7 @@ namespace XanaduYonder.Runtime.Idiom
             if (mode != expectedMode || kind != expectedKind) throw new FormatException();
             var history = ReadIds(game["history"], lexicon.Count);
             var hints = new List<IdiomHint>();
-            foreach (var hintToken in IdiomStrictJson.Array(game["hints"], kind == IdiomMatchKind.Local ? 5 : 3))
+            foreach (var hintToken in IdiomStrictJson.Array(game["hints"], kind == IdiomMatchKind.Local ? 6 : 3))
             {
                 var hint = IdiomStrictJson.Object(hintToken, "turnIndex", "entryIds");
                 hints.Add(new IdiomHint((int)IdiomStrictJson.Integer(hint["turnIndex"], 0, history.Count), ReadIds(hint["entryIds"], 3)));
@@ -175,7 +182,7 @@ namespace XanaduYonder.Runtime.Idiom
                 context = new IdiomSelectionContext(ReadIds(selection["ordinaryIds"], lexicon.Count), ReadIds(selection["reviewIds"], lexicon.Count));
             }
             var snapshot = new IdiomSnapshot(mode, (IdiomActor)IdiomStrictJson.Integer(game["firstActor"], 0, 2),
-                (IdiomEndReason)IdiomStrictJson.Integer(game["endReason"], 0, 6),
+                (IdiomEndReason)IdiomStrictJson.Integer(game["endReason"], 0, 7),
                 (uint)IdiomStrictJson.Integer(game["randomState"], 1, uint.MaxValue), history, hints, kind,
                 (uint)IdiomStrictJson.Integer(game["hintRandomState"], 1, uint.MaxValue), ReadIds(game["assistedEntryIds"], lexicon.Count), context);
             // Historical legality and frozen terminal evidence are validated by Core,
