@@ -16,6 +16,7 @@ namespace XanaduYonder.Runtime
         private int lastShortSide;
 
         public Texture2D Logo { get => logo; set => logo = value; }
+        internal bool BlocksInput => overlay != null && overlay.activeInHierarchy;
 
         private void Awake()
         {
@@ -28,7 +29,7 @@ namespace XanaduYonder.Runtime
 
             overlay = new GameObject("App launch artwork", typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasGroup), typeof(GraphicRaycaster));
-            overlay.transform.SetParent(transform, false);
+            // Keep ScreenSpaceOverlay at the scene root per Unity's canvas contract.
             var canvas = overlay.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 32760;
@@ -52,18 +53,26 @@ namespace XanaduYonder.Runtime
         private IEnumerator Start()
         {
             if (overlay == null) yield break;
+            // Later canvas creation can leave native drawing order stale after a
+            // render-mode change. Reapply once after all Awake calls, before reveal.
+            var canvas = overlay.GetComponent<Canvas>();
+            canvas.sortingOrder = 32760;
             // Start the visible hold after the first rendered frame, not during scene setup.
             yield return new WaitForEndOfFrame();
             yield return new WaitForSecondsRealtime(1.75f);
-            var start = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup - start < .25f)
+            var app = GetComponent<AppController>();
+            do
             {
-                opacity.alpha = 1 - (Time.realtimeSinceStartup - start) / .25f;
-                yield return null;
+                while (app == null || !app.LobbyReadyForInput) yield return null;
+                // Finish rendering the ready lobby underneath the opaque artwork.
+                // Recheck after this frame in case focus or input changed meanwhile.
+                yield return new WaitForEndOfFrame();
             }
-            Destroy(overlay);
+            while (app == null || !app.LobbyReadyForInput);
+            // Reveal and unblock together. Destroy alone takes effect later in the frame.
+            RemoveOverlay();
             enabled = false;
-            Debug.Log("XanaduYonder splash dismissed; complete artwork at half the screen short side.");
+            Debug.Log("XanaduYonder splash dismissed; lobby input ready, no fade or retained touch blocker.");
         }
 
         private void Update() { UpdateSize(); }
@@ -77,9 +86,22 @@ namespace XanaduYonder.Runtime
             artwork.sizeDelta = new Vector2(width, width * logo.height / logo.width);
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            if (overlay != null) Destroy(overlay);
+            StopAllCoroutines();
+            RemoveOverlay();
+        }
+
+        private void OnDestroy() { RemoveOverlay(); }
+
+        private void RemoveOverlay()
+        {
+            if (overlay == null) return;
+            opacity.blocksRaycasts = false;
+            opacity.interactable = false;
+            overlay.SetActive(false);
+            Destroy(overlay);
+            overlay = null;
         }
     }
 }

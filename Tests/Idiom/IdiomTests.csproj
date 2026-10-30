@@ -11,6 +11,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="CatalogChecks.cs" />
     <Compile Include="LearningTests.cs" />
+    <Compile Include="PreservationTests.cs" />
     <Compile Include="../../Assets/Scripts/Core/Idiom/**/*.cs" />
   </ItemGroup>
 </Project>

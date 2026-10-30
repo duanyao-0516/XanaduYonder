@@ -14,7 +14,7 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.7.0";
+        public const string Version = "0.8.0";
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()
@@ -349,6 +349,24 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidStartupValidation()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".startuptest");
+                    PlayerSettings.productName = "Xanadu 启动测试";
+                    BuildApk("-startup-validation.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()
@@ -466,7 +484,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.bundleVersionCode = 7;
+            PlayerSettings.Android.bundleVersionCode = 8;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

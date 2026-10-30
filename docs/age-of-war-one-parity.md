@@ -108,4 +108,3 @@ python3 scripts/age-of-war-parity/one/compare-effects-special.py \
 ```
 
 To recapture, run `bash scripts/age-of-war-parity/one/prepare-scenario.sh properties` (default localhost8774), or `AOW_PARITY_PORT=8775 bash scripts/age-of-war-parity/one/prepare-scenario.sh effects-special`, open a separate tab, and use the original Play → Play → Normal controls. The page saves `/tmp/aow-parity-one-<scenario>/reference.csv` and suspends Ruffle. Exact source/hook/fixture/instrumented-SWF hashes and exclusions are recorded alongside each fixture. These samples do not prove other ability timelines, target collision or damage, late-age unit combat, or Adobe Flash equivalence.
-

@@ -33,6 +33,7 @@ namespace XanaduYonder.EditorTools
             {
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Require(UiFactory.Font != null, "Bundled CJK font must load");
+                CheckNativeKeyboardSamples();
                 foreach (var size in new[] { new Vector2Int(720, 1280), new Vector2Int(720, 1582), new Vector2Int(900, 1582) })
                 {
                     using (var fixture = new Fixture(size.x, size.y))
@@ -43,8 +44,17 @@ namespace XanaduYonder.EditorTools
                         foreach (var first in new[] { IdiomActor.Left, IdiomActor.Right })
                             CheckPage(fixture, match, mode, first);
                         CheckModalRaycasts(fixture);
+                        CheckSourceDefinition(fixture);
+                        CheckConversationPreferences(fixture);
+                        CheckViewportAnchors(fixture);
+                        foreach (IdiomMatchKind match in Enum.GetValues(typeof(IdiomMatchKind)))
+                        foreach (var closeAfterSend in new[] { true, false })
+                            CheckSendFocus(fixture, match, closeAfterSend);
+                        foreach (IdiomMatchKind match in Enum.GetValues(typeof(IdiomMatchKind)))
+                        foreach (IdiomMode mode in Enum.GetValues(typeof(IdiomMode)))
+                            CheckThirdHintContinues(fixture, match, mode);
                     }
-                    report.AppendLine("PASS " + size.x + "x" + size.y + ": 8 page states, screen navigation, keyboard layout, mirrored turns, notebook return, icon meshes and modal raycasts");
+                    report.AppendLine("PASS " + size.x + "x" + size.y + ": page states, keyboard transitions, send focus, saved preferences, adaptive bubbles, scroll anchors, mirrored turns, notebook, modal raycasts and full multi-source details");
                 }
                 report.AppendLine("IDIOM_UI_CHECKS_PASS: " + assertions + " assertions");
                 Debug.Log(report.ToString());
@@ -63,6 +73,27 @@ namespace XanaduYonder.EditorTools
                 File.WriteAllText(Path.Combine(directory, "idiom-ui-checks.txt"), report.ToString());
             }
             EditorApplication.Exit(exitCode);
+        }
+
+        private static void CheckNativeKeyboardSamples()
+        {
+            bool visible, foreground; float occlusion;
+            Require(IdiomKeyboardViewport.TryConvertNativeSample(new[] { 1, 600, 2400, 1, 1080 }, 540, 1200,
+                out visible, out foreground, out occlusion), "Same-aspect native geometry supports scaled rendering");
+            Require(visible && foreground, "Visibility and foreground come from the same native packet");
+            Near(occlusion, 300, "Native keyboard overlap is converted once into rendering pixels");
+            Require(IdiomKeyboardViewport.TryConvertNativeSample(new[] { 1, 0, 1800, 1, 1080 }, 1080, 1800,
+                out visible, out foreground, out occlusion) && visible && occlusion == 0,
+                "An already-resized surface does not subtract the keyboard a second time");
+            Require(!IdiomKeyboardViewport.TryConvertNativeSample(new[] { 1, 600, 2400, 1, 1080 }, 1080, 1800,
+                out visible, out foreground, out occlusion), "Old native geometry is rejected after Unity's surface resize");
+            Require(IdiomKeyboardViewport.TryConvertNativeSample(new[] { 0, 600, 2400, 0, 1080 }, 1080, 2400,
+                out visible, out foreground, out occlusion) && !visible && !foreground && occlusion == 0,
+                "A closed/background packet clears stale overlap");
+            foreach (var sample in new int[][] { null, new[] { 1, 600, 2400, 1 }, new[] { 1, -1, 2400, 1, 1080 },
+                new[] { 1, 2401, 2400, 1, 1080 }, new[] { 2, 600, 2400, 1, 1080 }, new[] { 1, 600, 0, 1, 1080 } })
+                Require(!IdiomKeyboardViewport.TryConvertNativeSample(sample, 1080, 2400, out visible, out foreground, out occlusion),
+                    "Malformed native geometry cannot produce a layout inset");
         }
 
         private static void CheckSharedIcons(Fixture fixture)
@@ -220,8 +251,13 @@ namespace XanaduYonder.EditorTools
             var keyboard = Get<IdiomKeyboardViewport>(page, "keyboard");
             var insetSetter = typeof(IdiomKeyboardViewport).GetProperty("BottomInset").GetSetMethod(true);
             var visibleSetter = typeof(IdiomKeyboardViewport).GetProperty("IsVisible").GetSetMethod(true);
+            var readySetter = typeof(IdiomKeyboardViewport).GetProperty("LayoutMeasurementReady").GetSetMethod(true);
             var footer = Get<RectTransform>(page, "footer");
             var originalBottom = ScreenRect(fixture, footer).yMin;
+            var viewport = Get<IdiomVirtualList>(page, "chat").Viewport;
+            var title = (RectTransform)Get<RectTransform>(page, "gameRoot").Find("Idiom centered title");
+            var originalTitle = ScreenRect(fixture, title).center;
+            var originalChatBottom = ScreenRect(fixture, viewport).yMin;
             // Supply a measured IME inset at the existing platform boundary. The
             // real page layout and raycaster run; this is not a native IME test.
             insetSetter.Invoke(keyboard, new object[] { 360f });
@@ -229,6 +265,27 @@ namespace XanaduYonder.EditorTools
             try
             {
                 Invoke(page, "Layout");
+                Near(ScreenRect(fixture, footer).yMin, originalBottom, label + " new inset starts a transition without snapping");
+                Invoke(page, "AdvanceComposerTransition", .06f);
+                var middleBottom = ScreenRect(fixture, footer).yMin;
+                Require(middleBottom > originalBottom && middleBottom < 374,
+                    label + " composer has an actual intermediate keyboard position");
+                Near(ScreenRect(fixture, viewport).yMin - originalChatBottom, middleBottom - originalBottom,
+                    label + " conversation and input move by the same amount");
+                Near(ScreenRect(fixture, title).center, originalTitle, label + " title remains fixed during keyboard animation");
+                // A native packet from the previous surface must freeze both the
+                // new target and an already-running transition until geometry agrees.
+                var heldPosition = footer.anchoredPosition;
+                var heldHeight = viewport.rect.height;
+                readySetter.Invoke(keyboard, new object[] { false });
+                insetSetter.Invoke(keyboard, new object[] { 420f });
+                Invoke(page, "Layout"); Invoke(page, "AdvanceComposerTransition", .2f);
+                Near(footer.anchoredPosition, heldPosition, label + " stale native geometry freezes the in-progress composer transition");
+                Near(viewport.rect.height, heldHeight, label + " stale native geometry also freezes the chat viewport");
+                readySetter.Invoke(keyboard, new object[] { true });
+                Invoke(page, "Layout");
+                Invoke(page, "AdvanceComposerTransition", .25f);
+                Near(ScreenRect(fixture, footer).yMin, 434, label + " fresh native geometry resumes toward the current keyboard inset");
                 CheckGameNavigation(fixture, page, label + " keyboard open");
                 CheckComposer(fixture, page, game, label + " keyboard open");
                 Require(ScreenRect(fixture, footer).yMin > originalBottom,
@@ -238,9 +295,17 @@ namespace XanaduYonder.EditorTools
             }
             finally
             {
+                readySetter.Invoke(keyboard, new object[] { true });
                 insetSetter.Invoke(keyboard, new object[] { 0f });
                 visibleSetter.Invoke(keyboard, new object[] { false });
                 Invoke(page, "Layout");
+                var openBottom = ScreenRect(fixture, footer).yMin;
+                Invoke(page, "AdvanceComposerTransition", .06f);
+                var middleBottom = ScreenRect(fixture, footer).yMin;
+                Require(middleBottom > originalBottom && middleBottom < openBottom,
+                    label + " dismissal also has an intermediate position");
+                Near(ScreenRect(fixture, title).center, originalTitle, label + " title stays fixed while dismissing keyboard");
+                Invoke(page, "AdvanceComposerTransition", .25f);
             }
             fixture.Flush();
             Near(ScreenRect(fixture, footer).yMin, originalBottom, label + " keyboard dismissal restores composer");
@@ -301,6 +366,8 @@ namespace XanaduYonder.EditorTools
             var list = Get<IdiomVirtualList>(page, "chat");
             var rows = Get<List<IdiomVirtualList.Row>>(list, "rows");
             var found = 0;
+            foreach (var text in Get<RectTransform>(page, "gameRoot").GetComponentsInChildren<Text>())
+                Require(!text.text.StartsWith("请接", StringComparison.Ordinal), label + " permanent next-letter prompt is removed");
             foreach (var row in rows)
             {
                 if (row.Index < 0 || !row.Root.gameObject.activeInHierarchy) continue;
@@ -309,9 +376,166 @@ namespace XanaduYonder.EditorTools
                 Require(row.Actor.text == expected, label + " transcript actor " + row.Index);
                 Require(right ? Center((RectTransform)row.Button.transform).x > Center(row.Root).x :
                     Center((RectTransform)row.Button.transform).x < Center(row.Root).x, label + " transcript side " + row.Index);
+                Require(!row.Pinyin.gameObject.activeSelf, label + " pinyin is hidden by default");
+                Require(row.Word.fontSize < 32, label + " smaller conversation type");
+                Require(row.Button.GetComponent<RectTransform>().rect.width <= row.Word.preferredWidth + 48,
+                    label + " bubble fits its idiom rather than a fixed column");
                 found++;
             }
             Require(found > 0, label + " production virtual rows rendered");
+        }
+
+        private static void CheckConversationPreferences(Fixture fixture)
+        {
+            var inert = new GameObject("Inactive preferences shell");
+            inert.SetActive(false); inert.transform.SetParent(fixture.Owner.transform, false);
+            var shell = inert.AddComponent<AppController>();
+            Set(shell, "canvasRoot", fixture.Root);
+            var pageRoot = UiFactory.Rect(fixture.Root, "Preferences owner", 0, 0, fixture.Width, fixture.Height);
+            UiFactory.Stretch(pageRoot);
+            var directory = Path.Combine(Path.GetTempPath(), "xanadu-idiom-preferences-ui-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var page = pageRoot.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(pageRoot, () => { }, () => true, _ => { },
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back),
+                    () => DestroyModal(shell));
+                var lexicon = TestLexicon(); Set(page, "lexicon", lexicon);
+                var data = (IdiomSaveData)Invoke(page, "NewSave");
+                Set(page, "data", data); Set(page, "notebook", data.Notebook);
+                Invoke(page, "RestoreGames"); Set(page, "loaded", true); Set(page, "visible", true);
+                var game = Get<IdiomGame>(page, "characterGame");
+                Require(game.Start(IdiomActor.Player).Success && game.Submit("一心一意").Success, "Preferences fixture starts a live transcript");
+                var disk = new IdiomSaveStore(directory, lexicon); string warning; disk.Load(out warning); Set(page, "store", disk);
+                Invoke(page, "Refresh", true); page.Save();
+                CheckTranscript(page, game, "default preferences");
+                var chat = Get<IdiomVirtualList>(page, "chat");
+                var firstRow = Get<List<IdiomVirtualList.Row>>(chat, "rows")[0];
+                var compactHeight = firstRow.Root.rect.height;
+                var historyCount = game.History.Count;
+                fixture.Click(Center((RectTransform)Get<RectTransform>(page, "gameRoot").Find("Settings button")));
+                var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
+                var close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
+                Require(!WorldRect((RectTransform)show.transform).Overlaps(WorldRect((RectTransform)close.transform)),
+                    "Preference switches have separate touch targets");
+                fixture.Click(Center((RectTransform)show.transform));
+                Require(data.ShowPinyin, "Real settings switch enables pinyin immediately");
+                fixture.Flush();
+                foreach (var row in Get<List<IdiomVirtualList.Row>>(chat, "rows"))
+                {
+                    if (row.Index < 0 || !row.Root.gameObject.activeInHierarchy) continue;
+                    Require(row.Pinyin.gameObject.activeSelf && !string.IsNullOrEmpty(row.Pinyin.text), "Enabled pinyin appears on existing conversation rows");
+                    Require(row.Root.rect.height > compactHeight, "Showing pinyin gives it real vertical space");
+                    Require(row.Pinyin.preferredWidth <= row.Pinyin.rectTransform.rect.width + .5f, "Displayed pinyin fits its adaptive bubble");
+                    var right = row.Index % 2 == 0;
+                    Require(row.Word.alignment == (right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft) &&
+                        row.Pinyin.alignment == row.Word.alignment, "Word and pinyin retain their side alignment");
+                }
+                close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
+                fixture.Click(Center((RectTransform)close.transform));
+                Require(!data.CloseKeyboardAfterSend, "Real settings switch keeps keyboard after sending");
+                var persisted = new IdiomSaveStore(directory, lexicon).Load(out warning);
+                Require(persisted != null && persisted.ShowPinyin && !persisted.CloseKeyboardAfterSend,
+                    "Both real settings clicks persist through a fresh disk read");
+                show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
+                fixture.Click(Center((RectTransform)show.transform));
+                Require(!data.ShowPinyin, "Pinyin can be switched off again");
+                CheckTranscript(page, game, "pinyin disabled again");
+                Near(firstRow.Root.rect.height, compactHeight, "Disabling pinyin restores compact row height");
+                Require(game.History.Count == historyCount && !game.IsEnded, "Settings toggles preserve the live game");
+                Invoke(page, "ReturnFromDialog");
+            }
+            finally
+            {
+                DestroyModal(shell); Object.DestroyImmediate(pageRoot.gameObject); Object.DestroyImmediate(inert);
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+        }
+
+        private static Button FindNamedButton(GameObject root, string name)
+        {
+            foreach (var button in root.GetComponentsInChildren<Button>()) if (button.name == name) return button;
+            throw new InvalidOperationException("Missing actual setting switch: " + name);
+        }
+
+        private static void CheckViewportAnchors(Fixture fixture)
+        {
+            var owner = UiFactory.Rect(fixture.Root, "List anchor checks", 0, 0, 672, 600);
+            try
+            {
+                var list = new IdiomVirtualList(owner, "Anchor transcript", 120, (row, index) => row.Word.text = "历史 " + index, _ => { });
+                IdiomUi.Place(list.Viewport, 0, 0, 672, 240);
+                list.SetCount(60, true); list.Tick();
+                var historicalOffset = 60 * 120 - 240 - 100;
+                list.SetOffset(historicalOffset);
+                list.BeginViewportTransition();
+                for (var height = 250; height <= 300; height += 10)
+                {
+                    IdiomUi.Place(list.Viewport, 0, 0, 672, height); list.Tick();
+                    Near(list.Offset, historicalOffset, "Growing viewport must not acquire bottom following after crossing the 90-unit threshold");
+                }
+                list.EndViewportTransition();
+                Near(list.Offset, historicalOffset, "History reading position is stable after viewport transition");
+                list.GoBottom(); list.BeginViewportTransition();
+                for (var height = 310; height <= 420; height += 10)
+                {
+                    IdiomUi.Place(list.Viewport, 0, 0, 672, height); list.Tick();
+                    Near(list.Offset, 60 * 120 - height, "A transcript already at bottom stays pinned throughout keyboard movement");
+                }
+                list.EndViewportTransition();
+                list.SetOffset(12 * 120 + 37);
+                list.SetRowHeight(150); list.Tick();
+                Near(list.Offset, 12 * 150 + 37, "Pinyin row-height change retains message index and pixel offset");
+                list.SetRowHeight(120); list.Tick();
+                Near(list.Offset, 12 * 120 + 37, "Repeated pinyin toggles return to the same history anchor");
+                list.GoBottom(); list.SetRowHeight(150); list.Tick();
+                Near(list.Offset, 60 * 150 - 420, "Pinyin changes keep an already-following transcript at bottom");
+            }
+            finally { Object.DestroyImmediate(owner.gameObject); }
+        }
+
+        private static void CheckSendFocus(Fixture fixture, IdiomMatchKind match, bool closeAfterSend)
+        {
+            var root = UiFactory.Rect(fixture.Root, "Send focus checks", 0, 0, fixture.Width, fixture.Height);
+            UiFactory.Stretch(root);
+            try
+            {
+                var page = root.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(root, () => { }, () => true, _ => { },
+                    (title, height, back) => { throw new InvalidOperationException("Unexpected focus-check modal: " + title); }, () => { });
+                Set(page, "lexicon", TestLexicon());
+                var data = (IdiomSaveData)Invoke(page, "NewSave"); data.ActiveMatchKind = match; data.CloseKeyboardAfterSend = closeAfterSend;
+                Set(page, "data", data); Set(page, "notebook", data.Notebook); Invoke(page, "RestoreGames");
+                Set(page, "loaded", true); Set(page, "visible", true); Invoke(page, "Refresh", true);
+                Get<Button>(page, "rightStart").onClick.Invoke();
+                var game = (IdiomGame)typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page);
+                var input = Get<InputField>(page, "input"); var send = Get<Button>(page, "send");
+                input.text = "一心一意"; Invoke(page, "Update");
+                FocusInput(input);
+                var pointer = fixture.Press(Center((RectTransform)send.transform));
+                Require(input.isFocused, match + " send pointer-down retains input ownership for close=" + closeAfterSend);
+                fixture.Release(pointer);
+                Require(game.History.Count > 0, "Real send release submits the idiom");
+                Require(input.isFocused == !closeAfterSend, "Only successful send obeys close-after-send preference");
+                Require(input.text.Length == 0, "Successful send clears the committed word while keeping the configured focus state");
+                var historyCount = game.History.Count;
+                input.text = "不合法词"; Invoke(page, "Update"); FocusInput(input);
+                pointer = fixture.Press(Center((RectTransform)send.transform)); fixture.Release(pointer);
+                Require(input.isFocused && input.text == "不合法词" && game.History.Count == historyCount,
+                    "Rejected input retains focus and draft even when successful sends normally dismiss the keyboard");
+                FocusInput(input);
+                var sameMode = Get<Button>(page, match == IdiomMatchKind.Local ? "localMatch" : "computerMatch");
+                pointer = fixture.Press(Center((RectTransform)sameMode.transform));
+                Require(!input.isFocused, "Tapping a non-send control still releases input focus normally");
+                fixture.Release(pointer);
+            }
+            finally { Object.DestroyImmediate(root.gameObject); }
+        }
+
+        private static void FocusInput(InputField input)
+        {
+            typeof(InputField).GetMethod("ActivateInputFieldInternal", PrivateInstance).Invoke(input, null);
+            Require(input.isFocused, "Production InputField is focused before the pointer event");
         }
 
         private static void CheckRuleSwitch(IdiomRuleSwitch ruleSwitch, string label)
@@ -530,6 +754,227 @@ namespace XanaduYonder.EditorTools
             }
         }
 
+        private static void CheckThirdHintContinues(Fixture fixture, IdiomMatchKind match, IdiomMode mode)
+        {
+            var inert = new GameObject("Inactive hint shell");
+            inert.SetActive(false); inert.transform.SetParent(fixture.Owner.transform, false);
+            var shell = inert.AddComponent<AppController>(); Set(shell, "canvasRoot", fixture.Root);
+            var pageRoot = UiFactory.Rect(fixture.Root, "Hint continuation owner", 0, 0, fixture.Width, fixture.Height);
+            UiFactory.Stretch(pageRoot);
+            try
+            {
+                var page = pageRoot.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(pageRoot, () => { }, () => true, _ => { },
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back), () => DestroyModal(shell));
+                var entries = new List<IdiomEntry>();
+                var middles = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉";
+                for (var i = 0; i < middles.Length; i++)
+                    entries.Add(new IdiomEntry("hint-" + i, "一" + middles[i] + "字一", "yī zì yī", "yi", "yi", "sense-hint-" + i, "fixture", true));
+                Set(page, "lexicon", new IdiomLexicon(entries, "hint-fixture"));
+                var data = (IdiomSaveData)Invoke(page, "NewSave"); data.ActiveMatchKind = match; data.ActiveMode = mode;
+                Set(page, "data", data); Set(page, "notebook", new IdiomNotebookData()); Invoke(page, "RestoreGames");
+                Set(page, "loaded", true); Set(page, "visible", true); Invoke(page, "Refresh", true);
+                var game = (IdiomGame)typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page);
+                Invoke(page, "StartGame", match == IdiomMatchKind.Local ? IdiomActor.Left : IdiomActor.Player);
+                var turns = match == IdiomMatchKind.Local ? 6 : 3;
+                for (var turn = 0; turn < turns; turn++)
+                {
+                    fixture.Click(Center((RectTransform)Get<Button>(page, "hint").transform));
+                    var candidate = game.CurrentHint;
+                    Require(candidate != null && candidate.EntryIds.Count > 0 && !game.IsEnded, match + "/" + mode + " hint remains playable at turn " + turn);
+                    IdiomEntry chosen; Get<IdiomLexicon>(page, "lexicon").TryGetById(candidate.EntryIds[0], out chosen);
+                    var modal = Get<GameObject>(shell, "modal");
+                    Button choose = null;
+                    foreach (var button in modal.GetComponentsInChildren<Button>())
+                    foreach (var text in button.GetComponentsInChildren<Text>())
+                        if (text.text == chosen.Word) choose = button;
+                    Require(choose != null, "Hint result retains actual selectable word row");
+                    fixture.Click(Center((RectTransform)choose.transform));
+                    Require(Get<GameObject>(shell, "modal") == null && Get<InputField>(page, "input").text == chosen.Word,
+                        "Hint row fills the draft without ending the turn");
+                    var count = game.HintCountFor(game.NextActor);
+                    if (count == 3)
+                        Require(Get<Button>(page, "hint").GetComponentInChildren<Text>().text == "认输" && !game.IsEnded,
+                            "After the third hint the composer offers surrender while keeping the selected word");
+                    var before = game.History.Count;
+                    Get<Button>(page, "send").onClick.Invoke();
+                    Require(game.History.Count > before && !game.IsEnded, "The third hinted word can be submitted and the next turn continues");
+                }
+                if (match == IdiomMatchKind.Local)
+                    Require(game.HintCountFor(IdiomActor.Left) == 3 && game.HintCountFor(IdiomActor.Right) == 3,
+                        "Both local players independently finish three playable hints");
+                var surrender = Get<Button>(page, "hint");
+                Require(surrender.GetComponentInChildren<Text>().text == "认输", "Hint quota exhaustion exposes explicit surrender");
+                fixture.Click(Center((RectTransform)surrender.transform));
+                Require(game.IsEnded && game.EndReason == IdiomEndReason.Surrendered, "Only the explicit surrender click ends this playable game");
+                var summary = Get<GameObject>(shell, "modal");
+                Require(summary != null && FindButton(summary, "再来一局") != null, "Surrender opens a round summary");
+                var explained = false;
+                foreach (var text in summary.GetComponentsInChildren<Text>()) if (text.text.Contains("选择认输")) explained = true;
+                Require(explained, "Summary names the actual surrender reason");
+                Invoke(page, "ReturnFromDialog");
+                var finalEntry = new IdiomEntry("last", "一心一意", "yī xīn yī yì", "yi", "yi", "sense-last", "fixture", true);
+                Set(page, "lexicon", new IdiomLexicon(new[] { finalEntry }, "last-word-fixture"));
+                data = (IdiomSaveData)Invoke(page, "NewSave"); data.ActiveMatchKind = match; data.ActiveMode = mode;
+                Set(page, "data", data); Invoke(page, "RestoreGames"); Invoke(page, "Refresh", true);
+                game = (IdiomGame)typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page);
+                Invoke(page, "StartGame", match == IdiomMatchKind.Local ? IdiomActor.Left : IdiomActor.Player);
+                Get<InputField>(page, "input").text = finalEntry.Word;
+                Get<Button>(page, "send").onClick.Invoke();
+                Require(game.IsEnded && game.EndReason == IdiomEndReason.DictionaryExhausted, "Final legal word ends only when the next player has no unused legal word");
+                summary = Get<GameObject>(shell, "modal"); explained = false;
+                foreach (var text in summary.GetComponentsInChildren<Text>())
+                    if (text.text.Contains("没有可接的成语") && (text.text.Contains("获胜") || text.text.Contains("赢了"))) explained = true;
+                Require(explained, "Dictionary exhaustion summary identifies the losing side and winner");
+                if (match == IdiomMatchKind.Local)
+                foreach (var first in new[] { IdiomActor.Left, IdiomActor.Right })
+                {
+                    Invoke(page, "ReturnFromDialog");
+                    var move = new IdiomEntry("first", "甲乙丙丁", "jiǎ yǐ bǐng dīng", "jia", "ding", "s-first", "fixture", true);
+                    var spare = new IdiomEntry("spare", "戊己庚辛", "wù jǐ gēng xīn", "wu", "xin", "s-spare", "fixture", true);
+                    Set(page, "lexicon", new IdiomLexicon(new[] { move, spare }, "either-no-moves"));
+                    data = (IdiomSaveData)Invoke(page, "NewSave"); data.ActiveMatchKind = match; data.ActiveMode = mode;
+                    Set(page, "data", data); Invoke(page, "RestoreGames"); Invoke(page, "Refresh", true);
+                    game = (IdiomGame)typeof(IdiomPage).GetProperty("Game", PrivateInstance).GetValue(page);
+                    Invoke(page, "StartGame", first);
+                    Get<InputField>(page, "input").text = move.Word;
+                    Get<Button>(page, "send").onClick.Invoke();
+                    Require(game.IsEnded && game.EndReason == (first == IdiomActor.Left ? IdiomEndReason.PlayerNoMoves : IdiomEndReason.AppNoMoves),
+                        "Either local side ends automatically only after no matching word remains");
+                    summary = Get<GameObject>(shell, "modal"); explained = false;
+                    var loser = first == IdiomActor.Left ? "右方" : "左方";
+                    var winner = first == IdiomActor.Left ? "左方" : "右方";
+                    foreach (var label in summary.GetComponentsInChildren<Text>())
+                        if (label.text.Contains(loser + "已没有可接的成语") && label.text.Contains(winner + "获胜")) explained = true;
+                    Require(explained, "No-move summary names both the losing and winning local side");
+                }
+            }
+            finally { DestroyModal(shell); Object.DestroyImmediate(pageRoot.gameObject); Object.DestroyImmediate(inert); }
+        }
+
+        private static void CheckSourceDefinition(Fixture fixture)
+        {
+            var inert = new GameObject("Inactive source-detail shell");
+            inert.SetActive(false);
+            inert.transform.SetParent(fixture.Owner.transform, false);
+            var shell = inert.AddComponent<AppController>();
+            Set(shell, "canvasRoot", fixture.Root);
+            var pageRoot = UiFactory.Rect(fixture.Root, "Source detail owner", 0, 0, fixture.Width, fixture.Height);
+            UiFactory.Stretch(pageRoot);
+            var directory = Path.Combine(Path.GetTempPath(), "xanadu-idiom-sources-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var page = pageRoot.gameObject.AddComponent<IdiomPage>();
+                page.Initialize(pageRoot, () => { }, () => true, _ => { },
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back), () => DestroyModal(shell));
+                var lexicon = TestLexicon();
+                Set(page, "lexicon", lexicon);
+                var data = (IdiomSaveData)Invoke(page, "NewSave");
+                Set(page, "data", data); Set(page, "notebook", new IdiomNotebookData());
+                Invoke(page, "RestoreGames");
+                Set(page, "loaded", true); Set(page, "visible", true);
+                var store = new IdiomSaveStore(directory, lexicon);
+                string warning; store.Load(out warning); Set(page, "store", store);
+                var sourceStory = new string('故', 18000) + "\n典故末尾原文。";
+                var definition = new IdiomDefinition
+                {
+                    Id = "ui-0", SenseId = "sense-0", Word = "一心一意", Pinyin = "UI fixture", Meaning = "根摘要不得替换源原文。",
+                    SourceLabel = "两个词库", Stories = new string[0], Origins = new IdiomCitation[0], Examples = new IdiomCitation[0],
+                    Sources = new[]
+                    {
+                        new IdiomDefinitionSource { SourceKey = "a", SourceRecordId = "a-1", SourceLabel = "资料库甲",
+                            Pinyin = new string('p', 160) + " 原拼音甲", Meaning = " 甲释义原文。 ", Stories = new[] { sourceStory },
+                            Origins = new[] { new IdiomCitation { Text = "甲出处原文。", Reference = "甲书" } }, Examples = new IdiomCitation[0] },
+                        new IdiomDefinitionSource { SourceKey = "b", SourceRecordId = "b-1", SourceLabel = "资料库乙", Pinyin = "乙原拼音",
+                            Meaning = "乙词库不同释义。", Stories = new string[0], Origins = new IdiomCitation[0],
+                            Examples = new[] { new IdiomCitation { Text = "乙例句末尾。", Reference = "" } } }
+                    }
+                };
+                var loader = Get<IdiomCatalogLoader>(page, "loader");
+                Set(loader, "lexicon", lexicon);
+                Get<Dictionary<string, Dictionary<string, IdiomDefinition>>>(loader, "cache").Add("fixture",
+                    new Dictionary<string, IdiomDefinition> { { definition.Id, definition } });
+                Invoke(page, "ShowDefinition", definition.Id, null, null, false);
+                fixture.Flush();
+                var modal = Get<GameObject>(shell, "modal");
+                Text pinyinHeader = null;
+                foreach (var text in modal.GetComponentsInChildren<Text>())
+                    if (text.text == "拼音见各词库资料") pinyinHeader = text;
+                Require(pinyinHeader != null && pinyinHeader.preferredHeight <= pinyinHeader.rectTransform.rect.height + .5f,
+                    "Multi-source header is short enough for its actual 42px row");
+                CheckSourceScroll(fixture, modal, IdiomDefinitionText.Format(definition, false));
+                fixture.Click(Center((RectTransform)FindButton(modal, "展开典故").transform));
+                modal = Get<GameObject>(shell, "modal");
+                fixture.Flush();
+                var fullText = IdiomDefinitionText.Format(definition, true);
+                var scroll = CheckSourceScroll(fixture, modal, fullText);
+                Require(scroll.content.GetComponentsInChildren<Text>().Length > 1,
+                    "An 18000-character story uses multiple real Text meshes");
+                scroll.verticalNormalizedPosition = 0;
+                fixture.Flush();
+                var segments = scroll.content.GetComponentsInChildren<Text>();
+                Require(WorldRect(segments[segments.Length - 1].rectTransform).yMin >= WorldRect(scroll.viewport).yMin - .5f,
+                    "The final original source line is reachable at the scroll bottom");
+                fixture.Click(Center((RectTransform)FindButton(modal, "加入生词本").transform));
+                var notebook = Get<IdiomNotebookData>(page, "notebook");
+                Require(notebook.Entries.Count == 1 && notebook.Entries[0].Meaning == fullText,
+                    "Actual add button saves all source text, including the unfolded long story");
+                var persisted = new IdiomSaveStore(directory, lexicon).Load(out warning);
+                Require(persisted.Notebook.Entries.Count == 1 && persisted.Notebook.Entries[0].Meaning == fullText,
+                    "Real notebook store round-trips full multi-source text");
+                // A failed resource read must show the exact previously saved complete text.
+                loader.ClearDetails(); Set(loader, "lexicon", null);
+                Invoke(page, "ShowDefinition", definition.Id, null, notebook.Entries[0], false);
+                modal = Get<GameObject>(shell, "modal");
+                var fallback = modal.GetComponentInChildren<ScrollRect>();
+                var fallbackText = new StringBuilder();
+                foreach (var text in fallback.content.GetComponentsInChildren<Text>()) fallbackText.Append(text.text);
+                Require(fallbackText.ToString().Contains(fullText), "Resource failure fallback retains every saved source character");
+                Require(FindButton(modal, "重新读取资料") != null, "Failed detail still exposes retry");
+            }
+            finally
+            {
+                DestroyModal(shell); Object.DestroyImmediate(pageRoot.gameObject); Object.DestroyImmediate(inert);
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+        }
+
+        private static ScrollRect CheckSourceScroll(Fixture fixture, GameObject modal, string expectedText)
+        {
+            fixture.Flush();
+            var scroll = modal.GetComponentInChildren<ScrollRect>();
+            Require(scroll != null, "Source details have a real scroll viewport");
+            var actual = new StringBuilder();
+            foreach (var segment in scroll.content.GetComponentsInChildren<Text>())
+            {
+                actual.Append(segment.text);
+                Require(!segment.supportRichText && segment.text.Length <= 2048, "Source segments are literal text with bounded mesh size");
+                Require(segment.preferredHeight <= segment.rectTransform.rect.height + .5f, "Every segment fits its measured height");
+            }
+            Require(actual.ToString() == expectedText, "Rendered Text segments exactly reproduce formatter output");
+            foreach (var button in modal.GetComponentsInChildren<Button>())
+            {
+                var caption = button.GetComponentInChildren<Text>();
+                if (caption == null || string.IsNullOrEmpty(caption.text)) continue;
+                var rect = (RectTransform)button.transform;
+                Near(Center(caption.rectTransform), Center(rect), "Definition button label remains centered: " + caption.text);
+                Require(caption.alignment == TextAnchor.MiddleCenter && caption.preferredWidth <= caption.rectTransform.rect.width + .5f,
+                    "Definition button text fits its centered bounds: " + caption.text);
+                Require(!WorldRect(scroll.viewport).Overlaps(WorldRect(rect)), "Definition scroll does not overlap footer action: " + caption.text);
+            }
+            return scroll;
+        }
+
+        private static Button FindButton(GameObject modal, string caption)
+        {
+            foreach (var button in modal.GetComponentsInChildren<Button>())
+            {
+                var text = button.GetComponentInChildren<Text>();
+                if (text != null && text.text == caption) return button;
+            }
+            throw new InvalidOperationException("Missing detail button: " + caption);
+        }
+
         private static void DestroyModal(AppController shell)
         {
             var modal = Get<GameObject>(shell, "modal");
@@ -633,6 +1078,8 @@ namespace XanaduYonder.EditorTools
             private readonly RenderTexture target;
             private readonly GraphicRaycaster raycaster;
             private readonly EventSystem events;
+            private readonly EventSystem previousEvents;
+            private readonly bool registeredEvents;
 
             public Fixture(int width, int height)
             {
@@ -666,6 +1113,12 @@ namespace XanaduYonder.EditorTools
                 var eventObject = new GameObject("UI fixture events", typeof(EventSystem));
                 eventObject.transform.SetParent(Owner.transform, false);
                 events = eventObject.GetComponent<EventSystem>();
+                previousEvents = EventSystem.current;
+                // These checks run outside Play Mode. Register the production
+                // event system lifecycle explicitly so InputField owns real focus.
+                var systems = (List<EventSystem>)typeof(EventSystem).GetField("m_EventSystems", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+                if (!systems.Contains(events)) { Invoke(events, "OnEnable"); registeredEvents = true; }
+                EventSystem.current = events;
             }
 
             public void Flush()
@@ -679,6 +1132,11 @@ namespace XanaduYonder.EditorTools
 
             public void Click(Vector2 worldPosition)
             {
+                Release(Press(worldPosition));
+            }
+
+            public PointerEventData Press(Vector2 worldPosition)
+            {
                 Flush();
                 var pointer = new PointerEventData(events)
                 {
@@ -689,9 +1147,19 @@ namespace XanaduYonder.EditorTools
                 raycaster.Raycast(pointer, hits);
                 Require(hits.Count > 0, "Production GraphicRaycaster finds a drawn target at " + pointer.position);
                 pointer.pointerCurrentRaycast = pointer.pointerPressRaycast = hits[0];
+                // Mirror StandaloneInputModule's DeselectIfSelectionChanged before
+                // pointerDown. Omitting this would hide the native keyboard bug.
+                var selected = ExecuteEvents.GetEventHandler<ISelectHandler>(hits[0].gameObject);
+                if (selected != events.currentSelectedGameObject) events.SetSelectedGameObject(null, pointer);
                 var pressed = ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, pointer, ExecuteEvents.pointerDownHandler);
                 var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject);
                 pointer.pointerPress = pressed != null ? pressed : clicked;
+                return pointer;
+            }
+
+            public void Release(PointerEventData pointer)
+            {
+                var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(pointer.pointerCurrentRaycast.gameObject);
                 if (pointer.pointerPress != null) ExecuteEvents.Execute(pointer.pointerPress, pointer, ExecuteEvents.pointerUpHandler);
                 if (clicked != null && pointer.pointerPress == clicked)
                     ExecuteEvents.Execute(clicked, pointer, ExecuteEvents.pointerClickHandler);
@@ -700,6 +1168,8 @@ namespace XanaduYonder.EditorTools
             public void Dispose()
             {
                 Camera.targetTexture = null;
+                if (registeredEvents) Invoke(events, "OnDisable");
+                if (previousEvents != null) EventSystem.current = previousEvents;
                 Object.DestroyImmediate(Owner);
                 target.Release();
                 Object.DestroyImmediate(target);

@@ -1,26 +1,32 @@
 {
-  "schemaVersion": 1,
-  "dictionaryVersion": "f1a8938cc8af8eb4fed5fb1c",
-  "entryCount": 42851,
-  "assumption": "No personal words or notebook; only the immediately preceding input is used. Static upper bound, not game success rate.",
+  "schemaVersion": 2,
+  "dictionaryVersion": "95ef1ff594899efa1f03ac19",
+  "entryCount": 45776,
+  "assumption": "No personal words or notebook; only the immediately preceding input is used. Sound input starts with all its parsed reading pairs; later turns may narrow those pairs. Ordinary followup affects weight only; other legal words remain selectable even with a nonempty common pool. Static upper bound, not selection probability or game success rate.",
   "current": {
     "count": 1534,
     "listSha256": "9f45f72268f8731502d61390566aa088cf6c7c4de4737a26a424c7e8871e7201",
     "character": {
+      "inputsEligibleForMode": 45776,
       "commonStartKeys": 555,
       "commonWithOrdinaryFollowup": 717,
-      "inputsWithFullDictionaryReply": 39005,
-      "inputsWithAnyCommonReply": 16794,
-      "inputsWithQualifiedReply": 11944,
-      "inputsWithFullReplyButNoQualifiedReply": 27061
+      "inputsWithFullDictionaryReply": 41843,
+      "inputsWithAnyCommonReply": 17944,
+      "inputsWithOtherLegalReply": 41839,
+      "inputsWithCommonReplyAndOrdinaryFollowup": 12761,
+      "inputsRequiringFullDictionaryFallback": 23899,
+      "inputsWithSelectableReply": 41843
     },
     "sound": {
+      "inputsEligibleForMode": 45674,
       "commonStartKeys": 257,
       "commonWithOrdinaryFollowup": 1400,
-      "inputsWithFullDictionaryReply": 42814,
-      "inputsWithAnyCommonReply": 38107,
-      "inputsWithQualifiedReply": 37702,
-      "inputsWithFullReplyButNoQualifiedReply": 5112
+      "inputsWithFullDictionaryReply": 45638,
+      "inputsWithAnyCommonReply": 40641,
+      "inputsWithOtherLegalReply": 45638,
+      "inputsWithCommonReplyAndOrdinaryFollowup": 40210,
+      "inputsRequiringFullDictionaryFallback": 4997,
+      "inputsWithSelectableReply": 45638
     }
   },
   "baselineRevision": "b066953b37bf34328466830b43488a92c853f82f",
@@ -28,20 +34,26 @@
     "count": 431,
     "listSha256": "8573c787fd7cf5e43e39ddf52869c0c60290648200c419dd16352243937726f1",
     "character": {
+      "inputsEligibleForMode": 45776,
       "commonStartKeys": 135,
       "commonWithOrdinaryFollowup": 138,
-      "inputsWithFullDictionaryReply": 39005,
-      "inputsWithAnyCommonReply": 8499,
-      "inputsWithQualifiedReply": 5432,
-      "inputsWithFullReplyButNoQualifiedReply": 33573
+      "inputsWithFullDictionaryReply": 41843,
+      "inputsWithAnyCommonReply": 9088,
+      "inputsWithOtherLegalReply": 41843,
+      "inputsWithCommonReplyAndOrdinaryFollowup": 5823,
+      "inputsRequiringFullDictionaryFallback": 32755,
+      "inputsWithSelectableReply": 41843
     },
     "sound": {
+      "inputsEligibleForMode": 45674,
       "commonStartKeys": 100,
       "commonWithOrdinaryFollowup": 250,
-      "inputsWithFullDictionaryReply": 42814,
-      "inputsWithAnyCommonReply": 22621,
-      "inputsWithQualifiedReply": 18797,
-      "inputsWithFullReplyButNoQualifiedReply": 24017
+      "inputsWithFullDictionaryReply": 45638,
+      "inputsWithAnyCommonReply": 24159,
+      "inputsWithOtherLegalReply": 45638,
+      "inputsWithCommonReplyAndOrdinaryFollowup": 20071,
+      "inputsRequiringFullDictionaryFallback": 21479,
+      "inputsWithSelectableReply": 45638
     }
   }
 }

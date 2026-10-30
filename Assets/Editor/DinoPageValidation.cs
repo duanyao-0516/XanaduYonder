@@ -319,10 +319,12 @@ namespace XanaduYonder.EditorTools
             var shellObject = new GameObject("Inert real app shell"); shellObject.SetActive(false);
             var shell = shellObject.AddComponent<AppController>();
             try {
-                var text = UiFactory.Label(f.Canvas, "", 0, 0, 600, 40, 20, Color.black);
-                Set(shell, "dinoPage", f.Page); Set(shell, "lobbyDinoRecordText", text);
+                var frame = UiFactory.Rect(shellObject.transform, "Inert lobby frame", 0, 0, 720, 1320);
+                Set(shell, "frame", frame); Set(shell, "dinoPage", f.Page);
+                Invoke(shell, "BuildLobby"); LobbyDesignChecks.SetModeForCheck(shell, 2);
                 Invoke(shell, "RefreshDinoRecord");
-                Require(text.text == "竖屏最高 " + profile.BestPortraitScore + "  ·  横屏最高 " + profile.BestLandscapeScore, "Actual shell displays both orientation records");
+                var text = LobbyDesignChecks.RecordForCheck(shell, "Dino");
+                Require(text.text == "竖屏最高 " + profile.BestPortraitScore + " · 横屏最高 " + profile.BestLandscapeScore, "Actual shell displays both orientation records");
             }
             finally { Object.DestroyImmediate(shellObject); }
             Invoke(f.Page, "StartNewGame");

@@ -2,6 +2,12 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## Lobby icons
+
+- The compact lobby and display controls use `lucide-static@1.17.0`, with original SVG geometry and the project's green stroke color. The two reserved game icons use `castle` and `swords` from the same pinned package.
+- The complete ISC license, including the package's notice for Feather-derived icons, is retained in [the lobby asset license](docs/design/lobby-v2/lobby-ui-v2-assets/LICENSE). Source URLs, exported PNG hashes and resource mappings are recorded in [the asset map](docs/design/lobby-v2/asset-map.json).
+- The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma and Happy Ball lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
+
 ## Sokoban archived design and content sources
 
 - Kenney Sokoban: [official page](https://kenney.nl/assets/sokoban), [author's OpenGameArt upload](https://opengameart.org/content/sokoban-100-tiles). CC0, Kenney Vleugels. Original PNG sizes, spritesheets, tilesheets, vector files and license are retained in `ThirdParty/Sokoban/kenney-sokoban/`. The UI prototype references these local images.
@@ -170,7 +176,7 @@ SOFTWARE.
 ## Age of War / Age of War 2
 
 - Fixed references: [Age of War, 7k7k 15793](https://www.7k7k.com/swf/15793.htm), SHA-256 `5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1`; [Age of War 2, 7k7k 28601](https://www.7k7k.com/swf/28601.htm), SHA-256 `b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c`. Downloaded 2026-10-30.
-- Original credits, logos, artwork, animation, fonts, music and sound remain attributable to their original creators and publishers, including Louissi and Max Games. At the user's request, promotional screens and external navigation are removed from the mobile interface; original attribution remains recorded in this notice. This repository's code license does not grant independent rights to those materials.
+- Original credits, logos, artwork, animation, fonts, music and sound remain attributable to their original creators and publishers, including Louissi, Max Games and music by Waterflame (including Glorious Morning). At the user's request, promotional screens and external navigation are removed from the mobile interface; original attribution remains recorded in this notice. This repository's code license does not grant independent rights to those materials.
 - `Assets/Resources/AgeOfWar/{One,Two}` contains offline-derived sprites, source fonts and audio. `scripts/age-of-war/` records source hashes, character/frame identities, conversion recipes, source and derived audio hashes, sample windows, and reproducible output validation. MP3 streams unsupported by the Unity importer are decoded to PCM; source latency/sample-window adjustments are documented independently.
 - The native C# implementations under `Assets/Scripts/Core/AgeOfWar` are ports of the fixed originals' decompiled rules and animation callbacks. The Unity host, input mapping, asset loader and lifecycle adapter are project integration code. Original quirks are retained where supported by source and runtime evidence.
 - FFDec and Ruffle are offline conversion/reference tools only. Original SWF files, the Flash runtime and Ruffle/WebAssembly are not included in the Android player. Their use for verification does not turn these proprietary game resources into open-source assets. See [asset provenance](docs/age-of-war-assets.md) and [verification scope](docs/verification-age-of-war.md).

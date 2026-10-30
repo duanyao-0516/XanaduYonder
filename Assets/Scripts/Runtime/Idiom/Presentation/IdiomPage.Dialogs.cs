@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using XanaduYonder.Core.Idiom;
@@ -41,6 +40,10 @@ namespace XanaduYonder.Runtime.Idiom
         private void RequestHint()
         {
             if (!AcceptsInput || !Game.IsStarted || Game.IsEnded) return;
+            if (Game.HintQuotaExhausted)
+            {
+                Game.Surrender(); Save(); Refresh(); Changed?.Invoke(); CheckEndState(); return;
+            }
             var candidate = Game.RequestHint();
             if (candidate == null)
             {
@@ -56,7 +59,7 @@ namespace XanaduYonder.Runtime.Idiom
             if (candidate == null || Game == null || Game.IsEnded) return;
             var hintCount = IsLocal ? Game.HintCountFor(Game.NextActor) : Game.HintCount;
             var panel = Dialog((IsLocal ? TurnName + " · " : "本轮") + "第 " + hintCount + " 次提示", 282 + candidate.EntryIds.Count * 98, null);
-            IdiomUi.Label(panel, "点选填入，或先看看释义。", 32, 104, 532, 44, 23, UiFactory.Muted);
+            IdiomUi.Label(panel, hintCount >= 3 ? "最后一次提示，仍可选词继续。" : "点选填入，或先看看释义。", 32, 104, 532, 44, 23, UiFactory.Muted);
             for (var i = 0; i < candidate.EntryIds.Count; i++)
             {
                 var id = candidate.EntryIds[i];
@@ -69,7 +72,7 @@ namespace XanaduYonder.Runtime.Idiom
                     Save(); Refresh(); input.ActivateInputField();
                 });
                 IdiomUi.Label(choose.transform, entry.Word, 18, 1, 378, 48, 30, UiFactory.Ink, bold: true);
-                IdiomUi.Label(choose.transform, entry.Pinyin, 18, 48, 378, 30, 19, UiFactory.Accent);
+                IdiomUi.Label(choose.transform, IdiomDefinitionText.CompactPinyin(entry.Pinyin), 18, 48, 378, 30, 19, UiFactory.Accent);
                 IdiomUi.Button(panel, "释义", 460, y, 104, 84,
                     () => ShowDefinition(id, () => ShowHint(candidate), null), false, 23);
             }
@@ -88,10 +91,13 @@ namespace XanaduYonder.Runtime.Idiom
                 "把新认识的词收进生词本，\n下次又能多接几个。";
             if (IsLocal && Game.EndReason == IdiomEndReason.HintLimit)
                 encouragement = TurnName + "的第 3 次提示已送达。\n一起把新成语收进生词本吧。";
-            if (!IsLocal && Game.EndReason == IdiomEndReason.AppNoMoves) encouragement = "这个词把我难住了！\n" + encouragement;
             if (Game.EndReason == IdiomEndReason.RecommendationExhausted)
                 encouragement = "这一轮适合的词先接到这里。\n一起回顾收获，下次再来相遇。";
-            if (Game.EndReason == IdiomEndReason.DictionaryExhausted) encouragement = "词库挑战完成！\n" + encouragement;
+            if (Game.EndReason == IdiomEndReason.Surrendered)
+                encouragement = (IsLocal ? TurnName + "选择认输，" + (Game.NextActor == IdiomActor.Left ? "右方" : "左方") + "获胜。" : "你选择认输，APP 获胜。") + "\n一起回顾学到的成语吧。";
+            if (Game.EndReason == IdiomEndReason.PlayerNoMoves || Game.EndReason == IdiomEndReason.AppNoMoves || Game.EndReason == IdiomEndReason.DictionaryExhausted)
+                encouragement = (IsLocal ? TurnName + "已没有可接的成语，" + (Game.NextActor == IdiomActor.Left ? "右方" : "左方") + "获胜。" :
+                    Game.NextActor == IdiomActor.App ? "APP 已没有可接的成语，你赢了。" : "你已没有可接的成语，APP 获胜。") + "\n一起回顾学到的成语吧。";
             if (ActiveSave.NewBestInRun) encouragement = "新纪录！ " + encouragement;
             IdiomUi.Label(panel, encouragement, 36, 250, 524, candidate == null ? 120 : 100, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
             if (candidate != null)
@@ -104,7 +110,7 @@ namespace XanaduYonder.Runtime.Idiom
                     var row = IdiomUi.Button(panel, "", 32, 364 + i * 82, 532, 72,
                         () => ShowDefinition(id, ShowSummary, null));
                     IdiomUi.Label(row.transform, entry.Word, 18, 0, 300, 42, 28, UiFactory.Ink, bold: true);
-                    IdiomUi.Label(row.transform, entry.Pinyin, 18, 39, 420, 28, 18, UiFactory.Accent);
+                    IdiomUi.Label(row.transform, IdiomDefinitionText.CompactPinyin(entry.Pinyin), 18, 39, 420, 28, 18, UiFactory.Accent);
                     IdiomUi.Label(row.transform, "释义 ›", 414, 14, 100, 42, 20, UiFactory.Accent, TextAnchor.MiddleRight);
                 }
             }
@@ -128,16 +134,17 @@ namespace XanaduYonder.Runtime.Idiom
             if (found) { word = definition.Word; pinyin = definition.Pinyin; }
             if ((found || saved != null) && entry != null && Game != null) Game.RecordDefinitionViewed(id);
             var panel = Dialog(word, Mathf.Clamp(root.rect.height * .74f, 680, 1000), back);
-            IdiomUi.Label(panel, pinyin, 32, 104, 532, 42, 25, UiFactory.Accent, TextAnchor.MiddleCenter);
+            var pinyinCaption = found ? IdiomDefinitionText.PinyinCaption(definition) : IdiomDefinitionText.CompactPinyin(pinyin);
+            IdiomUi.Label(panel, pinyinCaption, 32, 104, 532, 42, 25, UiFactory.Accent, TextAnchor.MiddleCenter);
             var added = FindNotebookItem(id) != null;
             var canRemove = added;
             var footerTop = panel.rect.height - (canRemove ? 196 : 132);
             var text = found ? DefinitionText(definition, expanded) : saved != null ?
                 "已保存的释义\n" + saved.Meaning + "\n\n当前资料暂不可用，仍为你保留加入时的内容。" :
                 "详情暂不可用。\n请重试，接龙进度不会受影响。";
-            var longStories = found && StoryLength(definition) > 480;
+            var longStories = found && IdiomDefinitionText.HasLongStories(definition);
             var expandHeight = longStories || !found ? 58 : 0;
-            IdiomUi.ScrollText(panel, text, 32, 164, 532, footerTop - 184 - expandHeight);
+            ScrollDefinition(panel, text, footerTop - 184 - expandHeight);
             if (longStories)
                 IdiomUi.Button(panel, expanded ? "收起长典故" : "展开典故", 32, footerTop - 62, 532, 48,
                     () => ShowDefinition(id, back, saved, !expanded), false, 21);
@@ -168,7 +175,7 @@ namespace XanaduYonder.Runtime.Idiom
                 updated.Entries.Add(new IdiomNotebookItem
                 {
                     Id = definition.Id, SenseId = definition.SenseId, Word = definition.Word, Pinyin = definition.Pinyin,
-                    Meaning = definition.Meaning, DictionaryVersion = lexicon.Version,
+                    Meaning = DefinitionText(definition, true), DictionaryVersion = lexicon.Version,
                     AddedAt = addedAt
                 });
                 if (SaveNotebook(updated, () => learning.AddNotebook(id, addedAt))) ShowDefinition(id, back, saved, expanded);
@@ -189,60 +196,46 @@ namespace XanaduYonder.Runtime.Idiom
                     updated.Entries.RemoveAll(item => item.Id == id);
                     if (SaveNotebook(updated, () => learning.RemoveNotebook(id))) { ReturnFromDialog(); RefreshNotebook(); }
                 }, false, 21);
-            var source = found ? definition.SourceLabel : saved != null ? "显示加入生词本时保存的资料" : "本地离线资料";
+            var source = found ? (definition.Sources != null ? "各词库原文分别列示" : definition.SourceLabel) : saved != null ? "显示加入生词本时保存的资料" : "本地离线资料";
             var sourceLabel = IdiomUi.Label(panel, source, 32, panel.rect.height - 48, 532, 32, 16, UiFactory.Muted, TextAnchor.MiddleCenter);
             sourceLabel.verticalOverflow = VerticalWrapMode.Truncate;
             dialogNotice = sourceLabel;
         }
 
-        private static int StoryLength(IdiomDefinition definition)
-        {
-            var count = 0;
-            if (definition.Stories != null) foreach (var story in definition.Stories) count += (story ?? "").Length;
-            return count;
-        }
-
         private static string DefinitionText(IdiomDefinition definition, bool expanded)
-        {
-            var text = new StringBuilder();
-            text.Append("词义\n").Append(definition.Meaning);
-            if (definition.Stories != null && definition.Stories.Length > 0)
-            {
-                text.Append("\n\n典故\n");
-                var stories = string.Join("\n\n", definition.Stories);
-                if (!expanded && stories.Length > 480)
-                {
-                    var cut = 480;
-                    if (char.IsHighSurrogate(stories[cut - 1])) cut--;
-                    text.Append(stories.Substring(0, cut)).Append("…");
-                }
-                else text.Append(stories);
-            }
-            AppendCitations(text, "出处", definition.Origins);
-            AppendCitations(text, "例句", definition.Examples);
-            return text.ToString();
-        }
+        { return IdiomDefinitionText.Format(definition, expanded); }
 
-        private static void AppendCitations(StringBuilder text, string title, IdiomCitation[] values)
+        private static void ScrollDefinition(Transform panel, string text, float height)
         {
-            if (values == null || values.Length == 0) return;
-            text.Append("\n\n").Append(title);
-            foreach (var value in values)
+            RectTransform viewport, content;
+            IdiomUi.Scroll(panel, "Scrollable explanation", out viewport, out content);
+            IdiomUi.Place(viewport, 32, 164, 532, height);
+            var top = 0f;
+            foreach (var segment in IdiomDefinitionText.DisplaySegments(text))
             {
-                if (value == null) continue;
-                text.Append("\n").Append(value.Text);
-                if (!string.IsNullOrEmpty(value.Reference)) text.Append("\n—— ").Append(value.Reference);
-                text.Append('\n');
+                var label = IdiomUi.Label(content, segment, 2, top, 520, 1, 24, UiFactory.Ink, TextAnchor.UpperLeft);
+                var segmentHeight = Mathf.Max(1, label.preferredHeight);
+                IdiomUi.Place(label.rectTransform, 2, top, 520, segmentHeight);
+                top += segmentHeight;
             }
+            IdiomUi.Place(content, 0, 0, 532, Mathf.Max(height, top + 20));
         }
 
         private void ShowMenu()
         {
             Save();
             var recoverCurrent = Game != null && store != null && store.NeedsRecovery;
-            var panel = Dialog("成语接龙", recoverCurrent ? 526 : 430, null);
-            IdiomUi.Button(panel, "玩法说明", 32, 116, 532, 72, ShowHelp);
-            var finish = IdiomUi.Button(panel, "结束本轮", 32, 212, 258, 72, () =>
+            var panel = Dialog("成语接龙 · 设置", recoverCurrent ? 730 : 634, null);
+            IdiomPreferenceSwitch.Create(panel, "发送后收起键盘", 114, data == null || data.CloseKeyboardAfterSend, data != null, value =>
+            {
+                data.CloseKeyboardAfterSend = value; Save();
+            });
+            IdiomPreferenceSwitch.Create(panel, "是否显示拼音", 192, data != null && data.ShowPinyin, data != null, value =>
+            {
+                data.ShowPinyin = value; Save(); Refresh();
+            });
+            IdiomUi.Button(panel, "玩法说明", 32, 278, 532, 72, ShowHelp);
+            var finish = IdiomUi.Button(panel, "结束本轮", 32, 374, 258, 72, () =>
             {
                 Confirm("结束这一轮？", "已完成的成语仍可回看，\n生词本会一直保留。", "回顾本轮", () =>
                 {
@@ -250,10 +243,10 @@ namespace XanaduYonder.Runtime.Idiom
                 }, ShowMenu);
             });
             finish.interactable = Game != null && Game.IsStarted && !Game.IsEnded;
-            var restart = IdiomUi.Button(panel, "新一局", 306, 212, 258, 72, () => { CloseDialog(); Restart(); }, true);
+            var restart = IdiomUi.Button(panel, "新一局", 306, 374, 258, 72, () => { CloseDialog(); Restart(); }, true);
             restart.interactable = Game != null;
             if (recoverCurrent)
-                IdiomUi.Button(panel, "保留旧档，保存当前进度", 32, 316, 532, 72, ConfirmCurrentGameRecovery, false, 23);
+                IdiomUi.Button(panel, "保留旧档，保存当前进度", 32, 470, 532, 72, ConfirmCurrentGameRecovery, false, 23);
             IdiomUi.Button(panel, "继续", 32, panel.rect.height - 104, 532, 62, ReturnFromDialog);
         }
 
@@ -263,9 +256,9 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomUi.ScrollText(panel,
                 "同字：上一词末字，接下一词首字。\n同音：首尾读音相同即可，声调不限。\n\n" +
                 "人机对战可选机器或你先开始；双人本地对战可选左方或右方先开始，之后轮流接词。双方本局用过的成语都不能重复。\n\n" +
-                "提示一直免费。每个回合只给一组，反复查看不重复计次。人机模式第 3 次新提示后回顾本轮；双人模式双方各 3 次，任一方用满即结算。\n\n" +
+                "提示一直免费。每回合给一组，查看同组不重复计次。人机模式你有 3 次；双人模式双方各 3 次。第 3 次提示后仍可选词继续，提示用尽后按钮变为“认输”。除了主动认输或结束本轮，只有完整词库没有未用过的合法接法时，才会自动结算。\n\n" +
                 "人机模式统计你接出的成语；双人模式统计总数和双方各自的数量。没有倒计时，也没有错误次数限制。\n\n" +
-                "点开成语查看释义、典故，加入生词本。APP 会适时带你复习生词，同一个词的自动复习间隔至少一天。\n\n" +
+                "点开成语查看各词库的原拼音、释义和典故，加入生词本。APP 会适时带你复习生词。\n\n" +
                 "人机对战中，生词本外独立接出的词会进入个人熟悉词；本回合提示过或查看过释义的词不算独立输入。生词仍由你点击“我记住了”确认。双人不会积累个人熟悉词。\n\n" +
                 "生词本中的“我记住了”会把词转为熟悉词；单纯移出只取消收藏。四种对局各自续玩，生词本共用。",
                 32, 116, 532, panel.rect.height - 218);

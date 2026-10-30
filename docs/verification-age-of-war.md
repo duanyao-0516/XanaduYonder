@@ -70,3 +70,13 @@ Unity UI、导航和构建在同一工作树必须串行；脚本使用独立 AD
 - 按用户要求，本轮仅源码修改与安装所需构建，不运行自动测试或设备玩法回归。最终 UI、点击及实际战斗效果交由用户验收。
 
 本轮 APK 构建进程退出码为 0；随后对同一 OPPO 执行 `adb -P 5039 -s 3B6F4NE8A66ZXTRL install -r artifacts/builds/XanaduYonder-0.7.0-age-of-war-validation.apk`，返回 `Success`。未卸载或清除应用数据。
+
+## 用户验收与最新大厅整合
+
+用户于 2026-10-30 确认两代及移动端修改“验证没问题”，授权提交并合并 master。验收后的版本选择页包含玩法说明和共用设置入口。
+
+整合以 `origin/master` 的 `307583a` 为基线（v0.8.0 大厅代码）：使用统一 `LobbyEntry` 接入，稳定 ID 为 `age-of-war`，编号 18，归入“逻辑策略”。双列与目录复用现成双剑小图标、Noto CJK 字体、字号与颜色；单列由既有 `LobbyArtwork` 布局原版标题和双剑徽标。没有单独复制大厅布局，也不在大厅初始化战场或加载整套游戏图集。原资源来源见[大厅素材说明](age-of-war-lobby-art.md)。
+
+本次只更新已有检查代码的入口、名单、分组与直达菜单预期，不重跑玩法或设备回归；用户此前验收不扩大为新大厅整合的设备验收。
+
+整合后的 `scripts/build-age-of-war-validation.sh` 完成 Android ARM64 IL2CPP 构建，进程退出码 0，生成 `artifacts/builds/XanaduYonder-0.8.0-age-of-war-validation.apk`。沿用 master 的版本设置，未创建新发布版本；本次未再安装或操作用户手机。

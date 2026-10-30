@@ -7,8 +7,8 @@ namespace XanaduYonder.Core.Idiom
     public enum IdiomMatchKind { Computer = 0, Local = 1 }
     // Values 1 and 2 remain compatible with the original computer-match saves.
     public enum IdiomActor { None = 0, App = 1, Player = 2, Left = App, Right = Player }
-    public enum IdiomEndReason { None = 0, HintLimit = 1, PlayerNoMoves = 2, AppNoMoves = 3, EndedByPlayer = 4, DictionaryExhausted = 5, RecommendationExhausted = 6 }
-    public enum IdiomError { None = 0, NotStarted = 1, AlreadyStarted = 2, AlreadyEnded = 3, InvalidWord = 4, UnknownWord = 5, RepeatedWord = 6, WrongStart = 7 }
+    public enum IdiomEndReason { None = 0, HintLimit = 1, PlayerNoMoves = 2, AppNoMoves = 3, EndedByPlayer = 4, DictionaryExhausted = 5, RecommendationExhausted = 6, Surrendered = 7 }
+    public enum IdiomError { None = 0, NotStarted = 1, AlreadyStarted = 2, AlreadyEnded = 3, InvalidWord = 4, UnknownWord = 5, RepeatedWord = 6, WrongStart = 7, UnavailableReading = 8 }
 
     public sealed class IdiomActionResult
     {

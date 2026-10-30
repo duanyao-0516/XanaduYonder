@@ -126,6 +126,7 @@ namespace XanaduYonder.EditorTools
             var shell = inert.AddComponent<AppController>();
             Set(shell, "frame", f.Root);
             Invoke(shell, "BuildLobby");
+            LobbyDesignChecks.SetModeForCheck(shell, 2);
             var lobby = Get<GameObject>(shell, "lobbyPage");
             try
             {
@@ -140,48 +141,181 @@ namespace XanaduYonder.EditorTools
                 Set(sudoku, "profile", new SudokuProfile { CompletedIds = new[] { "se-v1-d0-l001", "se-v1-d0-l002", "se-v1-d1-l001", "se-v1-d2-l001", "se-v1-d3-l001" } });
                 Set(shell, "sudokuPage", sudoku);
                 Invoke(shell, "RefreshScores");
-                Require(Get<Text>(shell, "lobbyBestText").text.Contains("12345") && Get<Text>(shell, "lobbyBestText").text.Contains("512"), "2048 lobby shows independent score and maximum tile records");
-                string sudokuSummary = Get<Text>(shell, "lobbySudokuRecordText").text;
+                var scoreRecord = LobbyDesignChecks.RecordForCheck(shell, "2048");
+                Require(scoreRecord.text.Contains("12345") && scoreRecord.text.Contains("512"), "2048 lobby shows independent score and maximum tile records");
+                string sudokuSummary = LobbyDesignChecks.RecordForCheck(shell, "Sudoku").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
-                var content = (RectTransform)lobby.transform.Find("Lobby list viewport/Lobby list content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban", "Gold Miner", "SlidingPuzzle", "Tetris", "FlappyBird", "LinkMatch", "AgeOfWar" };
-                float last = float.PositiveInfinity;
+                var content = lobby.GetComponentInChildren<ScrollRect>().content;
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "Idiom" };
+                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterIdiom" };
+                float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
-                    var card = (RectTransform)content.Find(names[i] + " game card");
-                    Require(card != null && card.anchoredPosition.y < last, "Lobby order at " + names[i]);
-                    last = card.anchoredPosition.y;
-                    Require(card.GetComponentInChildren<Text>().text.StartsWith((i + 1).ToString("00")), "Visible ordinal matches " + names[i]);
+                    var card = LobbyDesignChecks.FindCard(content, names[i]);
+                    float top = LobbyDesignChecks.CardTop(content, card);
+                    Require(i == 0 || Math.Abs(top - lastBottom - 13) < .5f, "Single lobby keeps the approved thirteen-unit gap at " + names[i]);
+                    lastBottom = top + card.rect.height;
+                    Require(Mathf.Abs(card.rect.width - 354) < .5f && Mathf.Abs(card.rect.height - 143) < .5f,
+                        names[i] + " uses the approved single-card dimensions");
+                    var entry = card.GetComponent<Button>();
+                    Require(entry != null && card.GetComponentsInChildren<Button>().Length == 1, names[i] + " has one whole-card entry");
+                    LobbyInputTestDriver.CheckBinding(entry, shell, routes[i], Require);
+                    f.ShowLobbyCard(content, card);
+                    f.CheckCardGestures(content.parent.GetComponent<ScrollRect>(), entry);
                 }
-                var linkMatchCard = (RectTransform)content.Find("LinkMatch game card");
-                Require(Mathf.Abs(linkMatchCard.rect.width - 608) < .5f && Mathf.Abs(linkMatchCard.rect.height - 350) < .5f,
-                    "Link Match preserves the approved 608 by 350 lobby card");
-                var fruit = linkMatchCard.GetComponentsInChildren<RawImage>();
+                int cardCount = 0;
+                foreach (var button in content.GetComponentsInChildren<Button>())
+                    if (button.name.EndsWith(" game card", StringComparison.Ordinal)) cardCount++;
+                Require(cardCount == names.Length, "Lobby contains exactly eighteen ordered game cards");
+                var fruit = LobbyDesignChecks.FindCard(content, "LinkMatch").GetComponentsInChildren<RawImage>();
                 Require(fruit.Length == 4, "Link Match lobby preview shows four fruit tiles");
                 foreach (var tile in fruit) Require(tile.texture != null && !tile.raycastTarget, "Decorative Link Match fruit loads without intercepting input");
                 Require(fruit[0].texture == fruit[2].texture && fruit[0].texture != fruit[1].texture && fruit[1].texture != fruit[3].texture,
                     "Link Match preview retains the approved strawberry pair, banana and grapes");
-                f.Capture("lobby-top");
-                content.anchoredPosition = new Vector2(0, 1122);
-                f.Capture("lobby-watermelon-fourth");
+                CheckLobbyPreviews(f, content);
+                content.anchoredPosition = Vector2.zero; f.Capture("lobby-top");
+                f.ShowLobbyCard(content, LobbyDesignChecks.FindCard(content, "Watermelon")); f.Capture("lobby-watermelon");
                 var status = Get<Text>(shell, "lobbyStatus");
                 Require(status.transform.parent == content, "Lobby status belongs to scrolling content");
                 Invoke(shell, "SetStatus", "所有玩法离线可用 · 进度自动保存");
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - viewport.rect.height));
-                f.Capture("lobby-footer-with-link-match");
-                var finalCard = (RectTransform)content.Find("AgeOfWar game card");
-                Require(-status.rectTransform.anchoredPosition.y > -finalCard.anchoredPosition.y + finalCard.rect.height, "Lobby footer follows Age of War without overlapping the last card");
+                f.Capture("lobby-footer");
+                var finalCard = LobbyDesignChecks.FindCard(content, "Idiom");
+                Require(-status.rectTransform.anchoredPosition.y > LobbyDesignChecks.CardTop(content, finalCard) + finalCard.rect.height,
+                    "Lobby footer follows the final card without overlap");
                 var ids = new string[2000];
                 for (int d = 0; d < 4; d++) for (int level = 1; level <= 500; level++) ids[d * 500 + level - 1] = "se-v1-d" + d + "-l" + level.ToString("000");
-                Set(sudoku, "profile", new SudokuProfile { CompletedIds = ids });
-                Invoke(shell, "RefreshSudokuRecord");
-                var maximum = Get<Text>(shell, "lobbySudokuRecordText");
-                Require(maximum.text.Contains("2000/2000") && maximum.text.Contains("困难 500"), "Maximum completed counts render in lobby");
-                Require(maximum.preferredHeight <= maximum.rectTransform.rect.height + .5f, "Maximum Sudoku summary fits its two-line region");
-                f.Capture("lobby-complete-summary");
+                Set(sudoku, "profile", new SudokuProfile { CompletedIds = ids }); Invoke(shell, "RefreshSudokuRecord");
+                var maximum = LobbyDesignChecks.RecordForCheck(shell, "Sudoku");
+                Require(maximum.text.Contains("2000/2000") && maximum.text.Contains("入门 500") && maximum.text.Contains("简单 500") &&
+                    maximum.text.Contains("中等 500") && maximum.text.Contains("困难 500"), "Maximum completed counts retain all four difficulty totals");
+                f.ShowLobbyCard(content, LobbyDesignChecks.FindCard(content, "Sudoku"));
+                CheckSingleLineSummary(maximum); f.Capture("lobby-complete-summary");
             }
             finally { Object.DestroyImmediate(lobby); Object.DestroyImmediate(inert); }
+        }
+
+        private static void CheckSingleLineSummary(Text summary)
+        {
+            Require(!summary.text.Contains("四档难度") && summary.text.IndexOfAny(new[] { '\r', '\n' }) < 0,
+                "Sudoku summary omits the redundant difficulty heading and explicit line breaks");
+            Require(summary.cachedTextGenerator.lineCount == 1, "Maximum Sudoku summary actually generates one rendered line");
+            var mesh = summary.canvasRenderer.GetMesh();
+            Require(mesh != null && mesh.vertexCount > 0 && mesh.bounds.size.x <= summary.rectTransform.rect.width + 1,
+                "Maximum Sudoku summary submits a visible mesh inside its available width");
+            var settings = summary.GetGenerationSettings(summary.rectTransform.rect.size);
+            if (summary.resizeTextForBestFit) settings.fontSize = summary.cachedTextGenerator.fontSizeUsedForBestFit;
+            settings.resizeTextForBestFit = false;
+            using (var generator = new TextGenerator())
+                Require(generator.GetPreferredWidth(summary.text, settings) / summary.pixelsPerUnit <= summary.rectTransform.rect.width + 1,
+                    "The complete maximum Sudoku summary fits at its actual rendered font size without truncation");
+        }
+
+        private static void CheckLobbyPreviews(Fixture f, RectTransform content)
+        {
+            var idiom = LobbyDesignChecks.FindCard(content, "Idiom");
+            Require(idiom.Find("Game logo") == null, "Idiom card retains its text-only presentation");
+            f.ShowLobbyCard(content, idiom); f.Capture("lobby-idiom-without-preview");
+            string[] cards = { "2048", "Jump", "Watermelon", "Sudoku", "Minesweeper", "Zuma", "Dino", "HappyBall", "SlidingPuzzle", "Tetris", "FlappyBird" };
+            var scroll = content.parent.GetComponent<ScrollRect>();
+            foreach (string name in cards)
+            {
+                var card = LobbyDesignChecks.FindCard(content, name); f.ShowLobbyCard(content, card);
+                var preview = card.Find("Game logo") as RectTransform;
+                var painted = f.CheckPreview(preview, scroll, name);
+                Require(Mathf.Abs(preview.rect.width - 63) < .5f && Mathf.Abs(preview.rect.height - 63) < .5f,
+                    name + " uses the approved large-logo slot");
+                if (name == "Sudoku" || name == "Minesweeper")
+                {
+                    for (int cell = 0; cell < 9; cell++)
+                    {
+                        RectTransform square = null;
+                        foreach (var candidate in preview.GetComponentsInChildren<RectTransform>())
+                            if (candidate.name == name + " preview " + cell) square = candidate;
+                        Require(square != null, name + " preview retains all nine cells");
+                        var corners = new Vector3[4]; square.GetWorldCorners(corners);
+                        float width = Vector3.Distance(corners[0], corners[3]); float height = Vector3.Distance(corners[0], corners[1]);
+                        Require(width > 0 && Mathf.Abs(width - height) < .5f, name + " cell " + cell + " remains square in the rendered layout");
+                        var mesh = square.GetComponent<Graphic>().canvasRenderer.GetMesh();
+                        Require(mesh != null && mesh.vertexCount >= 4 && Mathf.Abs(mesh.bounds.size.x - mesh.bounds.size.y) < .5f,
+                            name + " cell " + cell + " submits square render geometry");
+                    }
+                }
+                if (name == "Tetris") CheckTetrisPreview(preview.GetComponentInChildren<XanaduYonder.Runtime.Tetris.TetrisGraphic>());
+                if (name == "Zuma" || name == "HappyBall")
+                {
+                    var artwork = preview.GetComponentInChildren<RawImage>();
+                    Require(artwork != null && artwork.texture == Resources.Load<Texture2D>("Lobby/" + name + "Logo"),
+                        name + " uses the supplied lobby artwork resource");
+                }
+                if (name == "Watermelon" || name == "FlappyBird") f.CheckPaintedCenter(preview, painted, name);
+                f.Capture("lobby-preview-" + name.ToLowerInvariant());
+            }
+        }
+
+        private static Rect RenderedBounds(RectTransform relativeTo, Graphic[] graphics)
+        {
+            Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            int count = 0;
+            foreach (var graphic in graphics)
+            {
+                var mesh = graphic.canvasRenderer.GetMesh();
+                if (mesh == null) continue;
+                foreach (var vertex in mesh.vertices)
+                {
+                    Vector2 point = relativeTo.InverseTransformPoint(graphic.transform.TransformPoint(vertex));
+                    min = Vector2.Min(min, point); max = Vector2.Max(max, point); count++;
+                }
+            }
+            Require(count > 0, "Visible content submits geometry for its alignment check");
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private static void CheckTetrisPreview(Graphic graphic)
+        {
+            Require(graphic != null, "Tetris preview has a rendered Graphic");
+            var mesh = graphic.canvasRenderer.GetMesh();
+            var vertices = mesh.vertices; var triangles = mesh.triangles;
+            // Recover separate drawn shapes from triangle connectivity, rather than inspecting
+            // the production piece enum or repeating the preview's tile coordinates.
+            var groups = new int[vertices.Length];
+            for (int i = 0; i < groups.Length; i++) groups[i] = i;
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                int root = MeshGroup(groups, triangles[i]);
+                groups[MeshGroup(groups, triangles[i + 1])] = root;
+                groups[MeshGroup(groups, triangles[i + 2])] = root;
+            }
+            var bounds = new Dictionary<int, Bounds>();
+            var areas = new Dictionary<int, float>();
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                int group = MeshGroup(groups, i);
+                if (!bounds.TryGetValue(group, out var box)) box = new Bounds(vertices[i], Vector3.zero);
+                box.Encapsulate(vertices[i]); bounds[group] = box;
+            }
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                int group = MeshGroup(groups, triangles[i]);
+                float area = Vector3.Cross(vertices[triangles[i + 1]] - vertices[triangles[i]],
+                    vertices[triangles[i + 2]] - vertices[triangles[i]]).magnitude * .5f;
+                areas.TryGetValue(group, out float previous); areas[group] = previous + area;
+            }
+            Require(bounds.Count == 4, "Tetris preview draws a four-block piece");
+            foreach (var pair in bounds)
+            {
+                var size = pair.Value.size;
+                Require(size.x > 0 && Mathf.Abs(size.x - size.y) < .5f && areas[pair.Key] >= size.x * size.y * .9f,
+                    "Each Tetris block has square bounds and filled corners instead of a circular pad");
+            }
+        }
+
+        private static int MeshGroup(int[] groups, int index)
+        {
+            while (groups[index] != index) index = groups[index];
+            return index;
         }
 
         private static void CheckJump(Fixture f)
@@ -405,6 +539,105 @@ namespace XanaduYonder.EditorTools
                 Canvas.ForceUpdateCanvases();
                 camera.Render();
                 Canvas.ForceUpdateCanvases();
+            }
+            public void ShowLobbyCard(RectTransform content, RectTransform card)
+            {
+                Require(card != null, "The requested screenshot card exists");
+                var viewport = (RectTransform)content.parent;
+                var scroll = viewport.GetComponent<ScrollRect>();
+                scroll.StopMovement();
+                Flush();
+                float top = LobbyDesignChecks.CardTop(content, card);
+                float offset = top - (viewport.rect.height - card.rect.height) * .5f;
+                content.anchoredPosition = new Vector2(content.anchoredPosition.x,
+                    Mathf.Clamp(offset, 0, Mathf.Max(0, content.rect.height - viewport.rect.height)));
+                Flush();
+                var visible = ScreenRect(viewport);
+                var drawn = ScreenRect(card);
+                Require(drawn.xMin >= visible.xMin - 1 && drawn.xMax <= visible.xMax + 1 &&
+                    drawn.yMin >= visible.yMin - 1 && drawn.yMax <= visible.yMax + 1,
+                    card.name + " is wholly inside the viewport before pixel checks and screenshots");
+            }
+            public void CheckCardGestures(ScrollRect scroll, Button card)
+            {
+                LobbyInputTestDriver.CheckGestures(events, camera, scroll, card, Flush, Require);
+            }
+            private Rect ScreenRect(RectTransform rect)
+            {
+                var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+                Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+                Vector2 max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+                foreach (var corner in corners)
+                {
+                    var point = RectTransformUtility.WorldToScreenPoint(camera, corner);
+                    min = Vector2.Min(min, point); max = Vector2.Max(max, point);
+                }
+                return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+            }
+            public void CheckPaintedCenter(RectTransform preview, Rect painted, string context)
+            {
+                var region = ScreenRect(preview);
+                var offset = painted.center - region.center;
+                report.AppendLine(context + " painted center offset=" + offset);
+                Require(Mathf.Abs(offset.x) <= 8 && Mathf.Abs(offset.y) <= 8,
+                    context + " visible pixels are centered within the preview region");
+            }
+            public Rect CheckPreview(RectTransform preview, ScrollRect scroll, string context)
+            {
+                Require(preview != null && preview.gameObject.activeInHierarchy, context + " has an active preview");
+                Flush();
+                int vertices = 0;
+                foreach (var graphic in preview.GetComponentsInChildren<Graphic>())
+                {
+                    Require(!graphic.raycastTarget, context + " decoration cannot capture pointer input: " + graphic.name);
+                    var mesh = graphic.canvasRenderer.GetMesh();
+                    if (mesh != null) vertices += mesh.vertexCount;
+                }
+                Require(vertices >= 4, context + " submits actual visible preview geometry");
+                var pointer = new PointerEventData(events)
+                {
+                    position = RectTransformUtility.WorldToScreenPoint(camera, Center(preview)),
+                    button = PointerEventData.InputButton.Left
+                };
+                var hits = new List<RaycastResult>(); events.RaycastAll(pointer, hits);
+                Require(hits.Count > 0 && !hits[0].gameObject.transform.IsChildOf(preview) &&
+                    ExecuteEvents.GetEventHandler<IDragHandler>(hits[0].gameObject) == scroll.gameObject,
+                    context + " decoration leaves the real lobby ScrollRect reachable by raycast");
+
+                var bounds = ScreenRect(preview);
+                int x = Mathf.Max(0, Mathf.FloorToInt(bounds.xMin)), y = Mathf.Max(0, Mathf.FloorToInt(bounds.yMin));
+                int width = Mathf.Min(720, Mathf.CeilToInt(bounds.xMax)) - x;
+                int height = Mathf.Min(Height, Mathf.CeilToInt(bounds.yMax)) - y;
+                Require(width > 0 && height > 0, context + " has an on-screen pixel region");
+                var region = new Rect(x, y, width, height);
+                var visible = ReadPixels(region);
+                Color32[] hidden;
+                try
+                {
+                    preview.gameObject.SetActive(false);
+                    Flush(); hidden = ReadPixels(region);
+                }
+                finally { preview.gameObject.SetActive(true); Flush(); }
+                int changed = 0, left = width, bottom = height, right = -1, top = -1;
+                for (int index = 0; index < visible.Length; index++)
+                {
+                    var a = visible[index]; var b = hidden[index];
+                    if (Mathf.Abs(a.r - b.r) + Mathf.Abs(a.g - b.g) + Mathf.Abs(a.b - b.b) < 24) continue;
+                    changed++;
+                    int px = index % width, py = index / width;
+                    left = Mathf.Min(left, px); right = Mathf.Max(right, px);
+                    bottom = Mathf.Min(bottom, py); top = Mathf.Max(top, py);
+                }
+                Require(changed > Mathf.Max(12, width * height / 200), context + " paints visible pixels, compared with its own hidden render");
+                report.AppendLine(context + " visible preview pixels=" + changed + ", mesh vertices=" + vertices);
+                return Rect.MinMaxRect(x + left, y + bottom, x + right + 1, y + top + 1);
+            }
+            private Color32[] ReadPixels(Rect region)
+            {
+                var previous = RenderTexture.active; RenderTexture.active = target;
+                var image = new Texture2D((int)region.width, (int)region.height, TextureFormat.RGB24, false);
+                try { image.ReadPixels(region, 0, 0); image.Apply(); return image.GetPixels32(); }
+                finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }
             public void Capture(string name, bool requireVisibleIcons = false)
             {

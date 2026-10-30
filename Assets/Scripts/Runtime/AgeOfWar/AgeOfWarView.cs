@@ -297,7 +297,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
                 else if(name.StartsWith("btnT")&&int.TryParse(name.Substring(4),out id))visible=Offered(frame.Turrets,id);
                 else if(name.StartsWith("btnS")&&int.TryParse(name.Substring(4),out id))visible=id==frame.Age;
                 if(name=="btnCancel")visible=frame.PendingTurretId>0||sell;
-                
+
                 buttons.Layer(i,visible);
             }
             hud.Value("moneyTXT",frame.Gold+" Gold");hud.Value("xpTXT",frame.Experience+" Xp");hud.Value("popTXT",frame.Population+" / 10 Pop");
@@ -335,7 +335,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
                 return h;
             }
             h=hud.Hit(point);if(h!=null)return h;
-            
+
             if(oneHud!=null){var original=oneHud.Hit(point);if(original!=null)return original;}
             if(twoControls!=null){var original=twoControls.Hit(point);if(original!=null)return original;}
             return null;

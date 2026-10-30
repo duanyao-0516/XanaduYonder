@@ -9,14 +9,23 @@ namespace XanaduYonder.Runtime
         private AgeOfWarPage ageOfWarPage;
         private bool IsAgeOfWarPage {get{return activePage==Page.AgeOfWarOne||activePage==Page.AgeOfWarTwo;}}
         private GameObject ageOfWarSelection;
-        private void AddAgeOfWarCards(RectTransform content,ref int count)
+        private static void AddAgeOfWarPreview(Transform parent)
         {
-            var card=AddLobbyCard(content,"AgeOfWar",count++,UiFactory.Hex("D7E8D4"));
-            UiFactory.Label(card.transform,count.ToString("00")+"   /   文明与战争",32,22,450,36,21,UiFactory.Accent);
-            UiFactory.Label(card.transform,"战争进化史",28,74,548,90,54,UiFactory.Ink);
-            UiFactory.Label(card.transform,"从石器时代，走向未来战场。",32,170,548,40,25,UiFactory.Ink);
-            UiFactory.Label(card.transform,"一代 / 二代 · 时代进化 · 横屏战斗",32,216,548,38,21,UiFactory.Accent);
-            UiFactory.Button(card.transform,"选择游戏  →",32,270,544,62,ShowAgeOfWarSelection,true);
+            // Lobby-owned artwork stays independent of the battle assets' unload lifecycle.
+            var badge=UiFactory.Panel(parent,"Age of War badge",0,0,90,90,UiFactory.Paper);
+            badge.raycastTarget=false;
+            var swords=UiFactory.Rect(badge.transform,"Age of War crossed swords",17,7,56,56).gameObject.AddComponent<Image>();
+            swords.sprite=Resources.Load<Sprite>("Lobby/Icons/age-of-war");
+            swords.color=Color.white;
+            swords.preserveAspect=true;
+            swords.raycastTarget=false;
+            var titleBand=UiFactory.Panel(badge.transform,"Age of War title band",4,66,82,20,UiFactory.Ink);
+            titleBand.raycastTarget=false;
+            var logo=UiFactory.Rect(titleBand.transform,"Age of War original logo",4,5,74,10).gameObject.AddComponent<Image>();
+            logo.sprite=Resources.Load<Sprite>("Lobby/AgeOfWarLogo");
+            logo.color=Color.white;
+            logo.preserveAspect=true;
+            logo.raycastTarget=false;
         }
         private void ShowAgeOfWarSelection()
         {

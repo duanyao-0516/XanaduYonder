@@ -81,7 +81,7 @@ class MergeTests(unittest.TestCase):
                                  record("xinhua", explanation="另一个意思。", derivation="出处乙")])
         entry = result["entries"][0]
         self.assertEqual(len(entry["senses"]), 2)
-        self.assertIsNone(entry["gameSenseId"])
+        self.assertIsNotNone(entry["gameSenseId"])
         self.assertIn("meaning_conflict", entry["quality"]["reasons"])
         second = next(s for s in entry["senses"] if s["explanation"]["meaning"] == "另一个意思。")
         self.assertEqual(second["explanation"]["stories"], [])
@@ -90,13 +90,13 @@ class MergeTests(unittest.TestCase):
         entry = self.run_merge([record(), record("xinhua", pinyin="yì xīn yī yì")])["entries"][0]
         self.assertEqual(len(entry["senses"]), 2)
         self.assertIn("pinyin_conflict", entry["quality"]["reasons"])
-        self.assertFalse(entry["quality"]["eligibleForGame"])
+        self.assertTrue(entry["quality"]["eligibleForGame"])
 
-    def test_entirely_untoned_pinyin_is_retained_but_not_game_eligible(self):
+    def test_entirely_untoned_pinyin_is_retained_and_game_eligible(self):
         entry = self.run_merge([record(word="四时充美", pinyin="si shi chong mei")])["entries"][0]
         self.assertIn("missing_pinyin_tones", entry["quality"]["reasons"])
-        self.assertFalse(entry["quality"]["eligibleForGame"])
-        self.assertIsNone(entry["gameSenseId"])
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+        self.assertIsNotNone(entry["gameSenseId"])
         self.assertEqual(entry["senses"][0]["pinyin"]["display"], "si shi chong mei")
         self.assertEqual(entry["senses"][0]["pinyin"]["keys"], ["si", "shi", "chong", "mei"])
 
@@ -110,7 +110,7 @@ class MergeTests(unittest.TestCase):
         entry = self.run_merge([record(row=1), record(row=2, explanation="另义")])["entries"][0]
         self.assertEqual(len(entry["sourceRecords"]), 2)
         self.assertEqual(len(entry["senses"]), 2)
-        self.assertIsNone(entry["gameSenseId"])
+        self.assertIsNotNone(entry["gameSenseId"])
 
     def test_missing_meaning_can_be_filled_from_unique_matching_reading(self):
         entry = self.run_merge([record(explanation=None, story=["保留故事"]), record("xinhua")])["entries"][0]
@@ -133,13 +133,14 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(len(entry["senses"]), 2)
         self.assertEqual(len(entry["sourceRecords"]), 2)
         self.assertIn("invalid_pinyin", entry["quality"]["reasons"])
-        self.assertIsNone(entry["gameSenseId"])
+        self.assertIsNotNone(entry["gameSenseId"])
 
     def test_non_four_character_words_are_retained_without_game_eligibility(self):
         entry = self.run_merge([record(word="九回肠", pinyin="jiǔ huí cháng")])["entries"][0]
         self.assertEqual(entry["word"], "九回肠")
         self.assertIn("not_four_han", entry["quality"]["reasons"])
         self.assertFalse(entry["quality"]["eligibleForGame"])
+        self.assertIsNone(entry["gameSenseId"])
 
     def test_placeholders_are_not_definitions_origins_or_examples(self):
         entry = self.run_merge([record("xinhua", explanation="无", derivation="无", example="暂无")])["entries"][0]
@@ -159,7 +160,7 @@ class MergeTests(unittest.TestCase):
 
     def test_optional_field_wrong_types_are_reported_not_stringified(self):
         entry = self.run_merge([record(story="wrong", source=[], example={"text": 3})])["entries"][0]
-        self.assertFalse(entry["quality"]["eligibleForGame"])
+        self.assertTrue(entry["quality"]["eligibleForGame"])
         self.assertIn("invalid_field:story", entry["quality"]["reasons"])
         self.assertEqual(entry["senses"][0]["explanation"]["stories"], [])
 
@@ -170,18 +171,81 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(result["stats"]["inputRecords"], 3)
         self.assertEqual(result["stats"]["sourceRecords"] + result["stats"]["invalidRecords"], 3)
 
-    def test_core_wrong_types_are_preserved_as_ineligible_candidates(self):
+    def test_core_wrong_types_are_preserved_as_playable_candidates(self):
         entry = self.run_merge([record(explanation=[], pinyin=5)])["entries"][0]
-        self.assertFalse(entry["quality"]["eligibleForGame"])
+        self.assertTrue(entry["quality"]["eligibleForGame"])
         self.assertIn("invalid_field:explanation", entry["quality"]["reasons"])
         self.assertIn("invalid_pinyin", entry["quality"]["reasons"])
 
-    def test_exclusions_and_font_coverage_both_block_eligibility(self):
+    def test_exclusions_and_font_coverage_are_audit_reasons_only(self):
         entry = self.run_merge([record()], {"一心一意": "requires source review"}, {ord(c) for c in "一心一意y x "})["entries"][0]
         self.assertIn("excluded:requires source review", entry["quality"]["reasons"])
         self.assertIn("font_missing_pinyin", entry["quality"]["reasons"])
         other = self.run_merge([record()], font=set())["entries"][0]
         self.assertIn("font_missing_word", other["quality"]["reasons"])
+
+    def test_dangrenburang_preserves_each_source_complete_text_without_rewriting(self):
+        rows = [record(word="当仁不让", pinyin="  Dāng rén bù ràng  ",
+                       explanation=" 当：面对。\n面对仁义，主动承担。 ", story=[" 故事甲\n原段落。 ", "无"],
+                       source={"book": " 《论语》 ", "text": " 当仁，不让于师。 "},
+                       example={"book": " 作品 ", "text": " 例句甲 "}, quote={"text": "引文甲", "book": "书"}),
+                record("xinhua", word="当仁不让", pinyin="dāng rén bù ràng",
+                       explanation="原指以仁为任，无所谦让。后指遇到应该做的事就积极主动去做，不推让。",
+                       derivation="《论语·卫灵公》：当仁，不让于师。", example="例句乙～。")]
+        entry = self.run_merge(rows)["entries"][0]
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+        self.assertEqual(2, len(entry.get("sourceVariants", [])))
+        first, second = entry["sourceVariants"]
+        self.assertEqual("jingmo:jingmo.json:0", first["sourceRecordId"])
+        self.assertEqual("景墨词库", first["sourceLabel"])
+        self.assertEqual(rows[0]["data"]["pinyin"], first["pinyin"])
+        self.assertEqual(rows[0]["data"]["explanation"], first["meaning"])
+        self.assertEqual(rows[0]["data"]["story"], first["stories"])
+        self.assertEqual([{"text": " 当仁，不让于师。 ", "reference": " 《论语》 "}], first["origins"])
+        self.assertEqual([{"text": " 例句甲 ", "reference": " 作品 "}, {"text": "引文甲", "reference": "书"}], first["examples"])
+        self.assertEqual("新华成语词库", second["sourceLabel"])
+        self.assertEqual(rows[1]["data"]["explanation"], second["meaning"])
+        self.assertEqual([], second["stories"])
+        self.assertEqual([{"text": rows[1]["data"]["derivation"], "reference": ""}], second["origins"])
+        self.assertNotIn(entry["gameSenseId"], {sense["id"] for sense in entry["senses"]})
+
+    def test_same_source_multiple_senses_remain_separate_source_variants(self):
+        entry = self.run_merge([record(row=5, explanation="第一义", story=["甲"]),
+                                record(row=9, explanation="第二义", story=["乙"])])["entries"][0]
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+        self.assertEqual(["第一义", "第二义"], [v["meaning"] for v in entry.get("sourceVariants", [])])
+        self.assertEqual([["甲"], ["乙"]], [v["stories"] for v in entry["sourceVariants"]])
+
+    def test_bad_reading_does_not_remove_valid_source_reading(self):
+        entry = self.run_merge([record(pinyin="broken"), record("xinhua")])["entries"][0]
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+        self.assertEqual([{"firstKey": "yi", "lastKey": "yi"}], entry.get("gameReadings"))
+        self.assertEqual("broken", entry["sourceVariants"][0]["pinyin"])
+
+    def test_all_bad_readings_keep_word_playable_with_no_sound_pairs(self):
+        entry = self.run_merge([record(pinyin="broken", explanation=None)])["entries"][0]
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+        self.assertEqual([], entry.get("gameReadings"))
+        self.assertIsNotNone(entry["gameSenseId"])
+
+    def test_readings_collect_all_distinct_endpoint_pairs_in_stable_source_order(self):
+        rows = [record("xinhua", pinyin="yī xīn yī yuè"), record(pinyin="yi xin yi yi"),
+                record(row=4, pinyin="yì xīn yī yì")]
+        entry = self.run_merge(rows)["entries"][0]
+        self.assertEqual([{"firstKey": "yi", "lastKey": "yi"}, {"firstKey": "yi", "lastKey": "yue"}],
+                         entry.get("gameReadings"))
+        self.assertTrue(entry["quality"]["eligibleForGame"])
+
+    def test_raw_placeholders_and_decomposed_unicode_survive_in_source_variants(self):
+        row = record(pinyin="yi\u0304 xīn yī yì", explanation="无", story=["暂无"],
+                     source={"text": "无", "book": ""})
+        entry = self.run_merge([row])["entries"][0]
+        self.assertEqual(1, len(entry.get("sourceVariants", [])))
+        variant = entry["sourceVariants"][0]
+        self.assertEqual(row["data"]["pinyin"], variant["pinyin"])
+        self.assertEqual("无", variant["meaning"])
+        self.assertEqual(["暂无"], variant["stories"])
+        self.assertEqual([{"text": "无", "reference": ""}], variant["origins"])
 
     def test_entire_result_is_order_independent_and_input_is_unchanged(self):
         rows = [record(row=0, story=["乙", "甲"], source={"text": "古文", "book": "书"}),

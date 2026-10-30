@@ -172,10 +172,17 @@ namespace XanaduYonder.EditorTools
                     Set(host,"canvasRoot",(RectTransform)f.Root.parent);Set(host,"frame",f.Root);Set(host,"data",new SaveData());
                     Set(host,"feedback",inert.AddComponent<GameFeedback>());
                     Invoke(host,"BuildLobby");Invoke(host,"RefreshFlappyRecord");
-                    var scroll=f.Root.GetComponentInChildren<ScrollRect>();scroll.verticalNormalizedPosition=0;f.Flush();
+                    var scroll=f.Root.GetComponentInChildren<ScrollRect>();f.Flush();
                     var card=f.Find("FlappyBird game card");
-                    Require(f.Bounds(card).yMin>=f.Bounds(scroll.viewport).yMin,"Last lobby card fits at scroll bottom");
-                    f.CheckHit(f.Find("开始游戏"));f.Capture("lobby-bottom");
+                    scroll.StopMovement();
+                    scroll.content.anchoredPosition=new Vector2(0,Mathf.Clamp(LobbyDesignChecks.CardTop(scroll.content,card)-(scroll.viewport.rect.height-card.rect.height)/2,
+                        0,Mathf.Max(0,scroll.content.rect.height-scroll.viewport.rect.height)));f.Flush();
+                    Require(f.Bounds(card).yMin>=f.Bounds(scroll.viewport).yMin && f.Bounds(card).yMax<=f.Bounds(scroll.viewport).yMax,
+                        "Flappy card is fully visible for its lobby entry check");
+                    Require(card.GetComponent<Button>()!=null && card.GetComponentsInChildren<Button>().Length==1,
+                        "Flappy enters through its whole card without a separate CTA");
+                    LobbyInputTestDriver.CheckBinding(card.GetComponent<Button>(),host,"EnterFlappyBird",Require);
+                    f.CheckHit(card);f.Capture("lobby-flappy-card");
                     Get<GameObject>(host,"lobbyPage").SetActive(false);
                     var root=UiFactory.Rect(f.Root,"Host Flappy",0,0,720,1455);UiFactory.Stretch(root);
                     var page=root.gameObject.AddComponent<FlappyBirdPage>();Set(host,"flappyBirdPage",page);

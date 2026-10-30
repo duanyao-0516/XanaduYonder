@@ -61,6 +61,37 @@ class ImportCliTests(unittest.TestCase):
         self.assertEqual(index["entries"][0]["word"], "一心一意")
         self.assertTrue((output / index["entries"][0]["detailFile"]).is_file())
 
+    def test_export_includes_source_variants_and_all_readings(self):
+        payload = {"data": [
+            {"word": "当仁不让", "pinyin": " Dāng rén bù ràng ", "explanation": " 释义甲。 "},
+            {"word": "一心一意", "pinyin": "bad", "explanation": None},
+            {"word": "空前绝后", "pinyin": "bad", "explanation": None},
+            {"word": "九回肠", "pinyin": "jiǔ huí cháng", "explanation": "非四字"}]}
+        data = encoded(payload)
+        (self.sources / "jingmo.json").write_bytes(data)
+        manifest = json.loads(self.manifest.read_text())
+        manifest["files"][0].update(sha256=hashlib.sha256(data).hexdigest(), expectedRecords=4)
+        self.manifest.write_bytes(encoded(manifest))
+        output = self.base / "result"
+        result = self.run_cli(output)
+        self.assertEqual(0, result.returncode, result.stderr)
+        index = json.loads((output / "game-index.json").read_text())
+        entries = {row["word"]: row for row in index["entries"]}
+        self.assertEqual({"当仁不让", "一心一意", "空前绝后"}, set(entries))
+        self.assertEqual([], entries["空前绝后"]["readings"])
+        self.assertEqual("", entries["空前绝后"]["firstKey"])
+        self.assertEqual("", entries["空前绝后"]["lastKey"])
+        self.assertNotIn("", index["byFirstSyllable"])
+        self.assertEqual(" Dāng rén bù ràng ", entries["当仁不让"]["pinyin"]["display"])
+        self.assertEqual([{"firstKey": "yi", "lastKey": "yi"}], entries["一心一意"]["readings"])
+        self.assertEqual("bad / yī xīn yī yì", entries["一心一意"]["pinyin"]["display"])
+        details = json.loads((output / entries["一心一意"]["detailFile"]).read_text())["entries"]
+        row = next(row for row in details if row["word"] == "一心一意")
+        self.assertEqual(2, len(row.get("sourceVariants", [])))
+        self.assertEqual("", row["sourceVariants"][0]["meaning"])
+        self.assertEqual("心思专一。", row["sourceVariants"][1]["meaning"])
+        self.assertEqual(entries["一心一意"]["senseId"], row["senseId"])
+
     def test_hash_mismatch_fails_before_publishing(self):
         (self.sources / "xinhua.json").write_text("[]")
         output = self.base / "result"

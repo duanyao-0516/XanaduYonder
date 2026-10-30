@@ -9,6 +9,9 @@ namespace XanaduYonder.Core.Idiom
         private readonly List<string> history = new List<string>();
         private readonly List<IdiomHint> hints = new List<IdiomHint>();
         private readonly HashSet<string> used = new HashSet<string>(StringComparer.Ordinal);
+        private IReadOnlyList<string> activeSoundKeys = new List<string>().AsReadOnly();
+        public IReadOnlyList<string> CurrentSoundKeys { get { return activeSoundKeys; } }
+        public bool HintQuotaExhausted { get { return IsStarted && HintCountFor(NextActor) >= 3; } }
         private uint randomState;
         private uint hintRandomState;
         private readonly IdiomLearningProfile profile;
@@ -87,9 +90,10 @@ namespace XanaduYonder.Core.Idiom
             if (MatchKind == IdiomMatchKind.Computer && actor == IdiomActor.App)
             {
                 var opening = ChooseApp(now);
-                if (opening == null) EndReason = IdiomEndReason.RecommendationExhausted;
+                if (opening == null) EndReason = NaturalEnd(IdiomActor.App, null, used);
                 else { Append(opening); profile.RecordApp(opening.Id, now); EndReason = NaturalEnd(IdiomActor.Player, LastEntry, used); }
             }
+            else EndReason = NaturalEnd(actor, null, used);
             return Result(IdiomError.None);
         }
 
@@ -102,7 +106,8 @@ namespace XanaduYonder.Core.Idiom
             IdiomEntry entry;
             if (!lexicon.TryGetWord(word, out entry)) return Result(IdiomError.UnknownWord);
             if (used.Contains(entry.Id)) return Result(IdiomError.RepeatedWord);
-            if (!Matches(LastEntry, entry)) return Result(IdiomError.WrongStart);
+            if (Mode == IdiomMode.SameSound && entry.SoundReadings.Count == 0) return Result(IdiomError.UnavailableReading);
+            if (!Matches(LastEntry, entry, activeSoundKeys)) return Result(IdiomError.WrongStart);
             long now = Now();
             if (MatchKind == IdiomMatchKind.Computer)
                 profile.RecordUse(entry.Id, assisted.Contains(entry.Id) || Contains(CurrentHint, entry.Id));
@@ -118,7 +123,7 @@ namespace XanaduYonder.Core.Idiom
             if (!IsEnded)
             {
                 var reply = ChooseApp(now);
-                if (reply == null) EndReason = IdiomEndReason.RecommendationExhausted;
+                if (reply == null) EndReason = NaturalEnd(IdiomActor.App, LastEntry, used);
                 else { Append(reply); profile.RecordApp(reply.Id, now); EndReason = NaturalEnd(IdiomActor.Player, LastEntry, used); }
             }
             return Result(IdiomError.None);
@@ -128,19 +133,22 @@ namespace XanaduYonder.Core.Idiom
         {
             if (!IsStarted) return null;
             if (CurrentHint != null) return CurrentHint;
-            if (IsEnded) return null;
+            if (IsEnded || HintQuotaExhausted) return null;
             long now = Now();
             var context = profile.SelectionContext(now, false);
             var choices = Candidates(context, LastEntry);
             if (choices.Count == 0) return null;
             var ids = new List<string>();
-            var ordinary = new List<Candidate>(); var review = new List<Candidate>();
-            foreach (var choice in choices) (profile.IsNotebook(choice.Entry.Id) ? review : ordinary).Add(choice);
-            AddHints(ordinary, ids, 2, now); AddHints(review, ids, 1, now);
+            var ordinary = new List<Candidate>(); var review = new List<Candidate>(); var other = new List<Candidate>();
+            Split(choices, ordinary, review, other);
+            AddHints(ordinary, ids, 2, now);
+            // The final slot can also explore any legal word outside the preferred pools.
+            if (other.Count > 0 && Next(ref hintRandomState) % 100 < 5) AddHints(other, ids, 1, now);
+            else AddHints(review, ids, 1, now);
             ordinary.AddRange(review); AddHints(ordinary, ids, 3 - ids.Count, now);
+            AddHints(other, ids, 3 - ids.Count, now);
             var hint = new IdiomHint(history.Count, ids);
             hints.Add(hint);
-            if (HintCountFor(NextActor) == 3) EndReason = IdiomEndReason.HintLimit;
             return hint;
         }
         private void AddHints(List<Candidate> choices, List<string> ids, int count, long now)
@@ -173,6 +181,12 @@ namespace XanaduYonder.Core.Idiom
             if (IsStarted && !IsEnded) EndReason = IdiomEndReason.EndedByPlayer;
         }
 
+        public void Surrender()
+        {
+            if (IsStarted && !IsEnded && (MatchKind == IdiomMatchKind.Local || NextActor == IdiomActor.Player))
+                EndReason = IdiomEndReason.Surrendered;
+        }
+
         public IdiomSnapshot GetSnapshot()
         {
             var assistedIds = new List<string>(assisted); assistedIds.Sort(StringComparer.Ordinal);
@@ -184,9 +198,12 @@ namespace XanaduYonder.Core.Idiom
         {
             var context = profile.SelectionContext(now, true);
             var choices = Candidates(context, LastEntry);
-            if (choices.Count == 0) { endSelectionContext = context; return null; }
-            var ordinary = new List<Candidate>(); var review = new List<Candidate>();
-            foreach (var choice in choices) (profile.IsNotebook(choice.Entry.Id) ? review : ordinary).Add(choice);
+            if (choices.Count == 0) return null;
+            var ordinary = new List<Candidate>(); var review = new List<Candidate>(); var other = new List<Candidate>();
+            Split(choices, ordinary, review, other);
+            // Priority changes probability only. Every unused legal word keeps positive probability.
+            if (ordinary.Count + review.Count == 0 || (other.Count > 0 && Next(ref randomState) % 100 < 5))
+                return Pick(other, ref randomState, now).Entry;
             var pool = ordinary.Count == 0 ? review : review.Count == 0 ? ordinary : Next(ref randomState) % 100 < 20 ? review : ordinary;
             return Pick(pool, ref randomState, now).Entry;
         }
@@ -194,21 +211,32 @@ namespace XanaduYonder.Core.Idiom
         {
             internal IdiomEntry Entry;
             internal int Continuations;
+            internal bool Ordinary;
+            internal bool Review;
         }
-        private List<Candidate> Candidates(IdiomSelectionContext context, IdiomEntry last)
+        private static void Split(List<Candidate> choices, List<Candidate> ordinary, List<Candidate> review, List<Candidate> other)
+        {
+            foreach (var choice in choices) (choice.Ordinary ? ordinary : choice.Review ? review : other).Add(choice);
+        }
+        private List<Candidate> Candidates(IdiomSelectionContext context, IdiomEntry last, bool legacyPolicy = false)
         {
             var ordinary = new HashSet<string>(context.OrdinaryIds, StringComparer.Ordinal);
             var review = new HashSet<string>(context.ReviewIds, StringComparer.Ordinal);
             var result = new List<Candidate>();
-            foreach (var candidate in lexicon.Following(Mode, last))
+            foreach (var candidate in lexicon.Following(Mode, last, activeSoundKeys))
             {
-                if (used.Contains(candidate.Id) || (!ordinary.Contains(candidate.Id) && !review.Contains(candidate.Id))) continue;
+                if (used.Contains(candidate.Id)) continue;
+                bool isOrdinary = ordinary.Contains(candidate.Id), isReview = review.Contains(candidate.Id);
+                if (legacyPolicy && !isOrdinary && !isReview) continue;
                 int continuations = 0;
-                foreach (var next in lexicon.Following(Mode, candidate))
+                var tails = Mode == IdiomMode.SameSound ? TailKeys(candidate, last == null ? null : activeSoundKeys) : null;
+                foreach (var next in lexicon.Following(Mode, candidate, tails))
                 {
                     if (next.Id != candidate.Id && !used.Contains(next.Id) && ordinary.Contains(next.Id) && ++continuations == 3) break;
                 }
-                if (continuations > 0) result.Add(new Candidate { Entry = candidate, Continuations = continuations });
+                // Only legacy terminal validation uses the former exclusion rule, never new actions.
+                if (!legacyPolicy || continuations > 0)
+                    result.Add(new Candidate { Entry = candidate, Continuations = continuations, Ordinary = isOrdinary, Review = isReview });
             }
             return result;
         }
@@ -233,15 +261,26 @@ namespace XanaduYonder.Core.Idiom
         private IdiomEndReason NaturalEnd(IdiomActor nextActor, IdiomEntry last, HashSet<string> occupied)
         {
             if (occupied.Count == lexicon.Count) return IdiomEndReason.DictionaryExhausted;
-            foreach (var candidate in lexicon.Following(Mode, last))
+            foreach (var candidate in lexicon.Following(Mode, last, activeSoundKeys))
                 if (!occupied.Contains(candidate.Id)) return IdiomEndReason.None;
             return nextActor == IdiomActor.Player ? IdiomEndReason.PlayerNoMoves : IdiomEndReason.AppNoMoves;
         }
 
-        private bool Matches(IdiomEntry previous, IdiomEntry next)
+        private bool Matches(IdiomEntry previous, IdiomEntry next, IReadOnlyList<string> soundKeys)
         {
-            return previous == null || (Mode == IdiomMode.SameCharacter
-                ? previous.LastCharacter == next.FirstCharacter : previous.LastKey == next.FirstKey);
+            if (Mode == IdiomMode.SameCharacter) return previous == null || previous.LastCharacter == next.FirstCharacter;
+            return TailKeys(next, previous == null ? null : soundKeys).Count > 0;
+        }
+        internal static IReadOnlyList<string> TailKeys(IdiomEntry entry, IReadOnlyList<string> incoming)
+        {
+            var tails = new List<string>();
+            foreach (var reading in entry.SoundReadings)
+            {
+                bool matches = incoming == null;
+                if (incoming != null) foreach (string key in incoming) if (key == reading.FirstKey) { matches = true; break; }
+                if (matches && !tails.Contains(reading.LastKey)) tails.Add(reading.LastKey);
+            }
+            tails.Sort(StringComparer.Ordinal); return tails.AsReadOnly();
         }
         public IdiomActor ActorAt(int index)
         {
@@ -255,7 +294,11 @@ namespace XanaduYonder.Core.Idiom
             if (index < 0) return null;
             IdiomEntry entry; lexicon.TryGetById(history[index], out entry); return entry;
         }
-        private void Append(IdiomEntry entry) { used.Add(entry.Id); history.Add(entry.Id); }
+        private void Append(IdiomEntry entry)
+        {
+            if (Mode == IdiomMode.SameSound) activeSoundKeys = TailKeys(entry, history.Count == 0 ? null : activeSoundKeys);
+            used.Add(entry.Id); history.Add(entry.Id);
+        }
         private static IdiomActionResult Result(IdiomError error) { return new IdiomActionResult(error); }
         private static bool ValidMode(IdiomMode mode) { return mode == IdiomMode.SameCharacter || mode == IdiomMode.SameSound; }
         private static bool ValidMatchKind(IdiomMatchKind kind) { return kind == IdiomMatchKind.Computer || kind == IdiomMatchKind.Local; }
@@ -264,35 +307,35 @@ namespace XanaduYonder.Core.Idiom
         private void ValidateRestoredState()
         {
             if (!ValidMode(Mode) || !ValidMatchKind(MatchKind) || FirstActor < IdiomActor.None || FirstActor > IdiomActor.Player ||
-                EndReason < IdiomEndReason.None || EndReason > IdiomEndReason.RecommendationExhausted || randomState == 0 || hintRandomState == 0)
+                EndReason < IdiomEndReason.None || EndReason > IdiomEndReason.Surrendered || randomState == 0 || hintRandomState == 0)
                 Invalid("unsupported mode, actor, end reason, or random state.");
-            if (history.Count > lexicon.Count || hints.Count > (MatchKind == IdiomMatchKind.Local ? 5 : 3)) Invalid("history or hints exceeds bounds.");
+            if (history.Count > lexicon.Count || hints.Count > (MatchKind == IdiomMatchKind.Local ? 6 : 3)) Invalid("history or hints exceeds bounds.");
             if (!IsStarted)
             {
                 if (history.Count != 0 || hints.Count != 0 || assisted.Count != 0 || endSelectionContext != null || IsEnded) Invalid("unstarted game contains progress.");
                 return;
             }
-            if (MatchKind == IdiomMatchKind.Computer && FirstActor == IdiomActor.App && history.Count == 0 && EndReason != IdiomEndReason.RecommendationExhausted) Invalid("APP opening is missing.");
+            if (MatchKind == IdiomMatchKind.Computer && FirstActor == IdiomActor.App && history.Count == 0 && EndReason != IdiomEndReason.RecommendationExhausted && EndReason != IdiomEndReason.AppNoMoves) Invalid("APP opening is missing.");
             IdiomEntry previous = null;
             foreach (string id in history)
             {
                 IdiomEntry entry;
                 if (!lexicon.TryGetById(id, out entry) || !used.Add(id)) Invalid("unknown or repeated history id.");
-                if (!Matches(previous, entry)) Invalid("history does not follow the selected rule.");
+                if (!Matches(previous, entry, activeSoundKeys)) Invalid("history does not follow the selected rule.");
+                if (Mode == IdiomMode.SameSound) activeSoundKeys = TailKeys(entry, previous == null ? null : activeSoundKeys);
                 previous = entry;
             }
             ValidateHints();
             IdiomActor nextActor = ActorAt(history.Count);
             IdiomEndReason natural = NaturalEnd(nextActor, LastEntry, used);
             bool hintLimit = HintCountFor(IdiomActor.App) == 3 || HintCountFor(IdiomActor.Player) == 3;
-            if (hintLimit && EndReason != IdiomEndReason.HintLimit) Invalid("third hint must end the game.");
             if (EndReason != IdiomEndReason.RecommendationExhausted && endSelectionContext != null) Invalid("unexpected policy ending context.");
             if (EndReason == IdiomEndReason.HintLimit)
             {
                 if (!hintLimit || hints[hints.Count - 1].TurnIndex != history.Count || HintCountFor(nextActor) != 3 || natural != IdiomEndReason.None)
                     Invalid("hint terminal does not match its final human turn.");
             }
-            else if (EndReason == IdiomEndReason.None || EndReason == IdiomEndReason.EndedByPlayer)
+            else if (EndReason == IdiomEndReason.None || EndReason == IdiomEndReason.EndedByPlayer || EndReason == IdiomEndReason.Surrendered)
             {
                 if ((MatchKind == IdiomMatchKind.Computer && nextActor != IdiomActor.Player) || natural != IdiomEndReason.None)
                     Invalid("incomplete round or unrecorded natural ending.");
@@ -305,7 +348,7 @@ namespace XanaduYonder.Core.Idiom
                 foreach (var group in new[] { endSelectionContext.OrdinaryIds, endSelectionContext.ReviewIds })
                     foreach (string id in group)
                     { IdiomEntry entry; if (!lexicon.TryGetById(id, out entry) || !ids.Add(id)) Invalid("invalid policy eligibility."); }
-                if (Candidates(endSelectionContext, LastEntry).Count != 0) Invalid("policy ending still has eligible recommendations.");
+                if (Candidates(endSelectionContext, LastEntry, true).Count != 0) Invalid("policy ending still has eligible recommendations.");
             }
             else if (EndReason != natural) Invalid("end reason disagrees with remaining legal moves.");
         }
@@ -315,6 +358,7 @@ namespace XanaduYonder.Core.Idiom
             int previousTurn = -1, prefixLength = 0;
             int leftHints = 0, rightHints = 0;
             var prefix = new HashSet<string>(StringComparer.Ordinal);
+            IReadOnlyList<string> prefixSounds = null;
             foreach (var hint in hints)
             {
                 if (hint == null || hint.TurnIndex <= previousTurn || hint.TurnIndex > history.Count ||
@@ -322,15 +366,19 @@ namespace XanaduYonder.Core.Idiom
                     hint.EntryIds.Count < 1 || hint.EntryIds.Count > 3)
                     Invalid("hint has invalid turn, order, or candidate count.");
                 int actorHints = ActorAt(hint.TurnIndex) == IdiomActor.App ? ++leftHints : ++rightHints;
-                if (actorHints > 3 || (actorHints == 3 && hint.TurnIndex != history.Count))
-                    Invalid("progress continued after a human's third hint.");
-                while (prefixLength < hint.TurnIndex) prefix.Add(history[prefixLength++]);
+                if (actorHints > 3) Invalid("human hint quota exceeded.");
+                while (prefixLength < hint.TurnIndex)
+                {
+                    var accepted = At(prefixLength);
+                    if (Mode == IdiomMode.SameSound) prefixSounds = TailKeys(accepted, prefixLength == 0 ? null : prefixSounds);
+                    prefix.Add(history[prefixLength++]);
+                }
                 IdiomEntry last = At(hint.TurnIndex - 1);
                 var candidates = new HashSet<string>(StringComparer.Ordinal);
                 foreach (string id in hint.EntryIds)
                 {
                     IdiomEntry entry;
-                    if (!lexicon.TryGetById(id, out entry) || prefix.Contains(id) || !candidates.Add(id) || !Matches(last, entry))
+                    if (!lexicon.TryGetById(id, out entry) || prefix.Contains(id) || !candidates.Add(id) || !Matches(last, entry, prefixSounds))
                         Invalid("hint candidate was not legal at its recorded turn.");
                 }
                 previousTurn = hint.TurnIndex;

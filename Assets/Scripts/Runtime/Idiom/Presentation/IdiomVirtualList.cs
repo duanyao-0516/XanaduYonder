@@ -24,7 +24,10 @@ namespace XanaduYonder.Runtime.Idiom
         private readonly ScrollRect scroll;
         private readonly Action<Row, int> bind;
         private readonly Action<int> clicked;
-        private readonly float rowHeight;
+        private float rowHeight;
+        private bool viewportTransition, viewportFollow;
+        private float viewportAnchor;
+        private readonly IdiomListGesture gesture;
         private int count, revision, renderedRevision = -1, renderedStart = -1;
         private float lastWidth, lastHeight;
         private int appearingIndex = -1;
@@ -40,6 +43,12 @@ namespace XanaduYonder.Runtime.Idiom
             scroll = IdiomUi.Scroll(parent, name, out viewport, out body);
             Viewport = viewport; content = body;
             rowHeight = height; bind = binder; clicked = onClick;
+            gesture = viewport.gameObject.AddComponent<IdiomListGesture>();
+            gesture.Changed = () =>
+            {
+                if (!viewportTransition) return;
+                viewportFollow = false; viewportAnchor = content.anchoredPosition.y;
+            };
             scroll.onValueChanged.AddListener(_ => Render());
         }
 
@@ -47,11 +56,17 @@ namespace XanaduYonder.Runtime.Idiom
         {
             count = value; revision++;
             ResizeContent();
-            if (bottom) GoBottom(); else SetOffset(Offset);
+            if (bottom) GoBottom(); else ApplyOffset(Offset);
             Render();
         }
 
         public void SetOffset(float offset)
+        {
+            if (viewportTransition) { viewportFollow = false; viewportAnchor = offset; }
+            ApplyOffset(offset);
+        }
+
+        private void ApplyOffset(float offset)
         {
             scroll.StopMovement();
             content.anchoredPosition = new Vector2(0, Mathf.Clamp(offset, 0, MaximumOffset));
@@ -59,7 +74,34 @@ namespace XanaduYonder.Runtime.Idiom
             Render();
         }
 
-        public void GoBottom() { SetOffset(MaximumOffset); }
+        public void GoBottom()
+        {
+            if (viewportTransition) viewportFollow = true;
+            ApplyOffset(MaximumOffset);
+        }
+
+        public void BeginViewportTransition()
+        {
+            if (viewportTransition) return;
+            viewportFollow = NearBottom;
+            viewportAnchor = content.anchoredPosition.y;
+            viewportTransition = true;
+        }
+
+        public void EndViewportTransition() { Tick(); viewportTransition = false; }
+
+        public void SetRowHeight(float height)
+        {
+            height = Mathf.Max(1, height);
+            if (Mathf.Abs(rowHeight - height) < .1f) return;
+            var follow = viewportTransition ? viewportFollow : NearBottom;
+            var offset = viewportTransition ? viewportAnchor : content.anchoredPosition.y;
+            var anchor = Mathf.Floor(offset / rowHeight) * height + Mathf.Min(offset % rowHeight, height - 1);
+            rowHeight = height; revision++;
+            if (viewportTransition) viewportAnchor = anchor;
+            ResizeContent();
+            ApplyOffset(follow ? MaximumOffset : anchor);
+        }
 
         public void BeginAppearance(int index)
         {
@@ -81,12 +123,18 @@ namespace XanaduYonder.Runtime.Idiom
 
         public void Tick()
         {
+            if (viewportTransition && gesture.IsDragging)
+            {
+                viewportFollow = false; viewportAnchor = content.anchoredPosition.y;
+            }
             if (Mathf.Abs(lastWidth - Viewport.rect.width) > .1f || Mathf.Abs(lastHeight - Viewport.rect.height) > .1f)
             {
-                var follow = lastHeight > 0 && count * rowHeight - lastHeight - content.anchoredPosition.y < 90;
+                var follow = viewportTransition ? viewportFollow :
+                    lastHeight > 0 && count * rowHeight - lastHeight - content.anchoredPosition.y < 90;
+                var anchor = viewportTransition ? viewportAnchor : content.anchoredPosition.y;
                 lastWidth = Viewport.rect.width; lastHeight = Viewport.rect.height;
                 ResizeContent(); revision++;
-                if (follow) GoBottom(); else SetOffset(Offset);
+                ApplyOffset(follow ? MaximumOffset : anchor);
             }
             Render();
             UpdateAppearance();

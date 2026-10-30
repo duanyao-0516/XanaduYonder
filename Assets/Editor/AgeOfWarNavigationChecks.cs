@@ -18,6 +18,7 @@ namespace XanaduYonder.EditorTools
 {
     // Production coroutines and Unity objects, with only physical orientation readiness controlled.
     // This suite does not claim Android rotation, safe-area delivery, or physical input coverage.
+    // LobbyDesignChecks owns the shared lobby-card route to the edition selection page.
     [InitializeOnLoad]
     public static class AgeOfWarNavigationChecks
     {
@@ -47,14 +48,14 @@ namespace XanaduYonder.EditorTools
             for (int edition = 1; edition <= 2; edition++)
             {
                 Check(edition, "unfinished canvas stays hidden", HiddenConstruction);
-                Check(edition, "entry publishes exactly one complete original loading screen", ReadyMenu);
+                Check(edition, "selected edition publishes exactly one complete menu", ReadyMenu);
                 Check(edition, "stale entry cannot construct a page", StaleEntry);
                 Check(edition, "Back cancels entry once", CancelEntry);
                 Check(edition, "failed direction never publishes a menu", FailedDirection);
                 Check(edition, "exit retains the last picture with input disabled", ExitRetainsCanvas);
                 Check(edition, "stale exit cannot release another presentation", StaleExit);
                 Check(edition, "background resets production clock and preserves page identity", BackgroundClock);
-                Check(edition, "opening pauses without catch-up and Back exits", OpeningLifecycle);
+                Check(edition, "direct menu survives background and Back exits", MenuLifecycle);
                 Check(edition, "inactive resume cannot rotate or create a page", InactiveOrientation);
                 yield return CheckAsync(edition, "exit releases original audio and presentation resources", ExitReleasesResources);
             }
@@ -72,7 +73,7 @@ namespace XanaduYonder.EditorTools
             Set(f.Page, "assets", AgeOfWarAssets.Load(f.Edition));
             Invoke(f.Page, "BuildCanvas");
             Require(!Get<GameObject>(f.Page, "canvasObject").activeSelf, "Canvas remains hidden before completed presentation handoff");
-            Require(Get<AgeOfWarView>(f.Page, "view").SceneKey == null, "Hidden construction does not bypass the original opening");
+            Require(Get<AgeOfWarView>(f.Page, "view").SceneKey == null, "Hidden canvas construction does not publish a menu before entry is ready");
         }
         private static void ReadyMenu(Fixture f)
         {
@@ -83,12 +84,9 @@ namespace XanaduYonder.EditorTools
                 var canvas = Get<GameObject>(f.Page, "canvasObject");
                 var view = Get<AgeOfWarView>(f.Page, "view");
                 Require(canvas != null && canvas.activeSelf, "Canvas is visible before notifying the host");
-                var opening = Get<AgeOfWarOpening>(f.Page, "opening");
-                Require(view != null && view.SceneKey == null && opening != null && !opening.Done, "Ready notification contains the verified local loading screen");
+                Require(view != null && view.SceneKey == "menu", "The selected edition enters its menu directly without an opening");
                 Require(canvas.transform.Find("Original stage") != null, "Actual original stage exists before handoff");
-                if(f.Edition==1)opening.Advance(1.0/40);
-                var point = f.Edition == 1 ? new Vector2(325, 241) : new Vector2(359, 236);
-                Require(opening.Hit(point) != null, "Original loaded Play hit region exists before handoff");
+                Require(Get<IAgeOfWarBattle>(f.Page, "battle") == null, "Publishing the menu does not start a battle or require an opening Play click");
                 Require(Get<AgeOfWarAudio>(f.Page, "audioPlayer") != null, "Original audio owner is initialized before handoff");
             });
             var routine = f.EnterRoutine();
@@ -97,7 +95,7 @@ namespace XanaduYonder.EditorTools
             Require(Get<GameObject>(f.Page, "canvasObject") == null && notifications == 0, "Waiting entry leaves host ownership unchanged");
             CompleteDirection(routine, true);
             Require(!routine.MoveNext(), "Ready entry completes");
-            Require(notifications == 1 && !Get<bool>(f.Page, "transition"), "Exactly one complete loading screen is published");
+            Require(notifications == 1 && !Get<bool>(f.Page, "transition"), "Exactly one complete menu is published");
             Require(!routine.MoveNext() && notifications == 1, "Completed iterator cannot notify twice");
             f.Page.Enter(f.Edition == 1 ? 2 : 1);
             Require(Get<int>(f.Page, "edition") == f.Edition && f.OrientationRequests.Count == 1, "Entering an already visible page cannot replace the active edition");
@@ -186,22 +184,17 @@ namespace XanaduYonder.EditorTools
             Require(Get<GameObject>(f.Page, "canvasObject") == canvas && Get<AgeOfWarView>(f.Page, "view") == view && Get<AgeOfWarAssets>(f.Page, "assets") == assets && ReferenceEquals(Get<IAgeOfWarBattle>(f.Page, "battle"), battle), "Resume preserves the same scene, resources and battle");
             Require(f.OrientationRequests.Count == 1, "Background and resume do not request another rotation");
         }
-        private static void OpeningLifecycle(Fixture f)
+        private static void MenuLifecycle(Fixture f)
         {
             f.CompleteEntry();
-            var opening=Get<AgeOfWarOpening>(f.Page,"opening");
             var view=Get<AgeOfWarView>(f.Page,"view");
-            if(f.Edition==1)opening.Advance(1.0/40);
-            var point=f.Edition==1?new Vector2(325,241):new Vector2(359,236);
-            var hit=opening.Hit(point);opening.Pointer(hit,true,false);opening.Pointer(hit,false,true);
-            opening.Advance(.1);int before=opening.SourceFrame;
-            f.Page.HostActivity(false);opening.Advance(10);
-            Require(opening.SourceFrame==before,"A suspended opening cannot consume background elapsed time");
-            f.Page.HostActivity(true);opening.Advance(0);
-            Require(opening.SourceFrame==before,"Resume preserves source frame without replaying background time");
-            Require(!opening.Done&&view.SceneKey==null,"Clicking Play starts the original movie without skipping to the menu");
+            f.Page.HostActivity(false);Invoke(f.Page,"Update");
+            Require(Get<AgeOfWarView>(f.Page,"view")==view&&view.SceneKey=="menu","Background preserves the published menu");
+            f.Page.HostActivity(true);
+            Require(Get<AgeOfWarView>(f.Page,"view")==view&&view.SceneKey=="menu","Resume retains the same menu without replaying an opening");
+            Require(Get<GameObject>(f.Page,"canvasObject").activeSelf&&Get<IAgeOfWarBattle>(f.Page,"battle")==null,"Resume keeps the menu visible without starting a battle");
             f.Page.HandleBack();
-            Require(Get<bool>(f.Page,"leaving"),"Android Back leaves the game during its non-skippable opening");
+            Require(Get<bool>(f.Page,"leaving"),"Android Back from the direct menu begins the normal lobby return");
         }
         private static void InactiveOrientation(Fixture f)
         {
@@ -217,11 +210,10 @@ namespace XanaduYonder.EditorTools
             audio.SelectMusic("music/1");
             var music = Get<AudioSource>(audio, "music");
             var effects = Get<AudioSource>(audio, "effects");
-            audio.StartOpeningStream(f.Edition==1?"intro-stream":"sponsor-stream");
             var stream = Get<AudioSource>(audio,"openingStream");
             var canvas = Get<GameObject>(f.Page, "canvasObject");
             var assets = Get<AgeOfWarAssets>(f.Page, "assets");
-            Require(music != null && effects != null && music != effects && music.clip != null, "Both real original audio sources and soundtrack are owned before exit");
+            Require(music != null && effects != null && music != effects && music.clip != null && stream != null && stream.clip == null, "Music and effects are owned before exit while skipped-opening audio remains unused");
             Set(f.Page, "transition", true); Set(f.Page, "leaving", true);
             var routine = (IEnumerator)Invoke(f.Page, "ExitRoutine", 7);
             Require(routine.MoveNext(), "Resource exit waits for direction");

@@ -22,17 +22,41 @@ internal static class LearningTests
             if (use.EntryId == id) return assisted ? (int)use.AssistedUses : (int)use.IndependentUses;
         return 0;
     }
+    public static void PositiveAllWords()
+    {
+        var lex = Loop(); var counts = lex.Entries.ToDictionary(e => e.Id, e => 0);
+        for (uint seed = 1; seed <= 10000; seed++)
+        {
+            var profile = P(lex); profile.AddNotebook("e", Now);
+            var game = G(lex, profile, seed); game.Start(IdiomActor.App);
+            A(game.LastEntry != null, "a legal opening exists"); counts[game.LastEntry.Id]++;
+        }
+        A(counts.Values.All(n => n > 0), "ordinary, due review and every other legal word retain positive probability");
+        A(counts["f"] > 350 && counts["f"] < 650, "remaining legal pool receives approximately five percent");
+        A(counts["e"] > 1700 && counts["e"] < 2100, "due review receives twenty percent within the ninety-five percent preferred pool");
+        int ordinary = counts["a"] + counts["b"] + counts["c"] + counts["d"];
+        A(ordinary > 7300 && ordinary < 7900, "ordinary words receive eighty percent within the preferred pool");
+        var onlyRare = new IdiomLexicon(new[] { E("rare", "甲一一乙", false), E("spare", "丙一一丁", false) }, "only-rare");
+        var seen = new HashSet<string>();
+        for (uint seed = 1; seed <= 100; seed++)
+        {
+            var game = G(onlyRare, P(onlyRare), seed); game.Start(IdiomActor.App);
+            A(game.LastEntry != null && game.EndReason == IdiomEndReason.PlayerNoMoves, "a legal zero-successor word may open and end naturally");
+            seen.Add(game.LastEntry.Id);
+        }
+        A(seen.Count == 2, "remaining pool gets all selection probability when preferred pool is empty");
+    }
     public static void Pools()
     {
         var lex = Loop(); IdiomLearningProfile p = P(lex); p.Remember("e"); p.AddNotebook("c", Now);
         var seen = new HashSet<string>();
-        for (uint seed = 1; seed <= 150; seed++)
+        for (uint seed = 1; seed <= 1000; seed++)
         {
             IdiomLearningProfile fresh = P(lex); fresh.ReplaceSnapshot(p.GetSnapshot());
             var game = G(lex, fresh, seed); game.Start(IdiomActor.App); seen.Add(game.LastEntry.Id);
-            A(game.LastEntry.Id != "f", "unfamiliar non-notebook word must not be an APP fallback");
+
         }
-        A(seen.Contains("e") && seen.Contains("c"), "familiar and notebook pools both reachable");
+        A(seen.SetEquals(lex.Entries.Select(e => e.Id)), "familiar, notebook and unfamiliar legal words all remain reachable");
         var human = G(lex, p); human.Start(IdiomActor.Player);
         A(human.Submit(lex.Entries.Single(e => e.Id == "f").Word).Success, "human input uses full lexicon");
         A(p.IsFamiliar("f"), "independent valid unfamiliar input becomes familiar immediately");
@@ -71,8 +95,11 @@ internal static class LearningTests
         var lex = ReviewLex(); IdiomLearningProfile p = P(lex); p.AddNotebook("review", Now);
         var game = G(lex, p); game.Start(IdiomActor.Player); game.Submit("甲一一乙");
         A(game.LastEntry.Id == "review" && !p.IsFamiliar("review"), "first eligible review may happen immediately, without promotion");
+        var firstExposure = p.GetSnapshot();
+        A(!p.SelectionContext(Now + 86399, true).ReviewIds.Contains("review") && p.SelectionContext(Now + 86400, true).ReviewIds.Contains("review"), "automatic preferred review honors the exact 24-hour boundary");
         game = G(lex, p, now: Now + 86399); game.Start(IdiomActor.Player); game.Submit("甲一一乙");
-        A((int)game.EndReason == 6 && game.History.Count == 1, "same review unavailable before 24 hours");
+        A(game.LastEntry.Id == "review" && game.EndReason == IdiomEndReason.None, "cooldown removes preferred review status but preserves the only legal fallback");
+        p = new IdiomLearningProfile(lex, firstExposure);
         game = G(lex, p, now: Now + 86400); game.Start(IdiomActor.Player); game.Submit("甲一一乙");
         A(game.LastEntry.Id == "review", "review available exactly at 24 hours");
         var human = G(lex, p); human.Start(IdiomActor.Player); human.Submit("乙一一丙");
@@ -110,6 +137,23 @@ internal static class LearningTests
         }
         A(recent > 0 && recent < cold / 2, "recent candidate stays possible with quarter weight");
     }
+    public static void HintExploration()
+    {
+        var lex = Loop(); var seen = new HashSet<string>(); int other = 0;
+        for (uint seed = 1; seed <= 2000; seed++)
+        {
+            var profile = P(lex); profile.AddNotebook("e", Now);
+            var game = G(lex, profile, seed); game.Start(IdiomActor.Player);
+            uint before = game.GetSnapshot().RandomState; var hint = game.RequestHint();
+            A(hint != null && hint.EntryIds.Count == 3 && hint.EntryIds.Distinct().Count() == 3, "hint group contains three distinct legal words");
+            A(game.GetSnapshot().RandomState == before && game.History.Count == 0, "exploration never changes APP randomness or accepted history");
+            foreach (var id in hint.EntryIds) seen.Add(id);
+            if (hint.EntryIds.Contains("f")) other++;
+            A(game.RequestHint() == hint && game.HintCount == 1, "exploration group is cached rather than redrawn");
+        }
+        A(seen.SetEquals(lex.Entries.Select(e => e.Id)), "every legal word is reachable as requested assistance");
+        A(other > 50 && other < 160, "third hint slot keeps approximately five percent exploration probability");
+    }
     public static void Hints()
     {
         var lex = Loop(); IdiomLearningProfile p1 = P(lex), p2 = P(lex);
@@ -128,9 +172,13 @@ internal static class LearningTests
     {
         var lex = ReviewLex(); IdiomLearningProfile p = P(lex);
         var game = G(lex,p); game.Start(IdiomActor.Player); game.Submit("甲一一乙");
-        A((int)game.EndReason == 6 && game.History.Count == 1, "policy-empty APP turn ends without rare fallback");
-        var snapshot=game.GetSnapshot(); p.AddNotebook("review",Now);
-        A(Restore(lex,snapshot,p).EndReason==game.EndReason,"later notebook changes cannot invalidate terminal witness");
+        A(game.LastEntry.Id == "review" && !game.IsEnded, "new APP turns use legal rare fallback instead of policy exhaustion");
+        var snapshot = new IdiomSnapshot(IdiomMode.SameCharacter, IdiomActor.Player, IdiomEndReason.RecommendationExhausted, 17,
+            new[] { "start" }, new IdiomHint[0], IdiomMatchKind.Computer, 19, new string[0],
+            new IdiomSelectionContext(new[] { "start", "after", "more" }, new string[0]));
+        p.AddNotebook("review",Now);
+        var legacy = Restore(lex, snapshot, p);
+        A(legacy.EndReason == IdiomEndReason.RecommendationExhausted && legacy.Submit("乙一一丙").Error == IdiomError.AlreadyEnded, "legacy policy terminal keeps its frozen witness and stays read-only");
         var next=G(lex,p);next.Start(IdiomActor.Player);next.Submit("甲一一乙");
         A(next.LastEntry.Id=="review","new actions in another slot use current shared notebook state");
     }
@@ -153,11 +201,11 @@ internal static class LearningTests
         A(game.LastEntry.Id=="review","familiar word may first be an ordinary APP reply");
         p.AddNotebook("review",Now+10);
         var next=G(lex,p,now:Now+10); next.Start(IdiomActor.Player); next.Submit("甲一一乙");
-        A(next.EndReason==IdiomEndReason.RecommendationExhausted,"ordinary exposure before adding N still starts automatic review cooldown");
+        A(!p.SelectionContext(Now+10,true).ReviewIds.Contains("review") && next.LastEntry.Id=="review", "ordinary exposure delays preferred review but cannot remove the only legal fallback");
         var local=G(lex,p,now:Now+10,kind:IdiomMatchKind.Local); local.Start(IdiomActor.Left); local.Submit("甲一一乙");
         var hint=local.RequestHint();
         A(hint!=null && hint.EntryIds.Contains("review"),"requested learning hint may show N during automatic review cooldown");
-        A(p.GetSnapshot().AppExposures.Single(e=>e.EntryId=="review").LastShownUtc==Now,"hints do not reset automatic review timestamp");
+        A(p.GetSnapshot().AppExposures.Single(e=>e.EntryId=="review").LastShownUtc==Now+10,"hints do not reset the most recent fallback exposure timestamp");
     }
     public static void SharedUpdates()
     {
@@ -177,7 +225,8 @@ internal static class LearningTests
     {
         var lex=ReviewLex();var p=P(lex);var game=G(lex,p,kind:IdiomMatchKind.Local);
         game.Start(IdiomActor.Left);game.Submit("甲一一乙");
-        A(game.RequestHint()==null && !game.IsEnded && game.HintCount==0,"no suitable recommendation does not imply human has no legal words");
+        var hint = game.RequestHint();
+        A(hint != null && hint.EntryIds.Contains("review") && !game.IsEnded && game.HintCount==1,"hint falls back to the remaining legal word when preferred candidates are absent");
         A(game.Submit("乙一一丙").Success,"human may still independently use rare legal word");
     }
     public static void PersonalWeights()

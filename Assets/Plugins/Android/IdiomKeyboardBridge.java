@@ -8,12 +8,16 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.inputmethod.InputMethodManager;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Read-only IME measurements, scoped to the idiom page. Does not change window flags. */
 public final class IdiomKeyboardBridge implements Application.ActivityLifecycleCallbacks {
     private static volatile IdiomKeyboardBridge instance;
     private final Activity activity;
-    private volatile int[] state = new int[] {0, 0, 0, 1};
+    // visible, overlap, surface height, foreground, surface width: one immutable
+    // measurement, published atomically for Unity's render thread.
+    private volatile int[] state = new int[] {0, 0, 0, 1, 0};
+    private final AtomicBoolean measurePending = new AtomicBoolean();
     private boolean resumed = true;
     private int fullBottom;
     private final android.view.ViewTreeObserver.OnGlobalLayoutListener layoutListener = this::measure;
@@ -46,9 +50,15 @@ public final class IdiomKeyboardBridge implements Application.ActivityLifecycleC
 
     public static int[] sample() {
         IdiomKeyboardBridge current = instance;
-        if (current == null) return new int[] {0, 0, 0, 0};
+        if (current == null) return new int[] {0, 0, 0, 0, 0};
         // Insets animations do not always dispatch a global layout every frame.
-        current.activity.runOnUiThread(current::measure);
+        // Coalesce requests instead of queuing stale work if the UI thread stalls.
+        if (current.measurePending.compareAndSet(false, true)) {
+            current.activity.runOnUiThread(() -> {
+                try { if (instance == current) current.measure(); }
+                finally { current.measurePending.set(false); }
+            });
+        }
         return current.state;
     }
 
@@ -78,8 +88,8 @@ public final class IdiomKeyboardBridge implements Application.ActivityLifecycleC
             visible = true;
             keyboardTop = visibleFrame.bottom;
         }
-        int overlap = visible ? Math.max(0, surfaceBottom - keyboardTop) : 0;
-        state = new int[] { visible ? 1 : 0, overlap, surface.getHeight(), resumed ? 1 : 0 };
+        int overlap = visible ? Math.min(surface.getHeight(), Math.max(0, surfaceBottom - keyboardTop)) : 0;
+        state = new int[] { visible ? 1 : 0, overlap, surface.getHeight(), resumed ? 1 : 0, surface.getWidth() };
     }
 
     private View findSurface(View view) {

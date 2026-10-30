@@ -12,7 +12,8 @@ import tempfile
 from urllib.request import urlopen
 
 from idiom_pipeline.font import read_font_codepoints
-from idiom_pipeline.merge import merge_records
+from idiom_pipeline.merge import game_readings, game_sense_id, merge_records, source_pinyin_display, source_variant
+from idiom_pipeline.normalize import is_four_han
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,6 +116,7 @@ def validate_result(records, result):
     def key(ref):
         return ref["source"], ref["file"], ref["row"]
     expected = Counter(key(record) for record in records)
+    originals = {key(record): record for record in records}
     actual = Counter(key(ref) for entry in entries for ref in entry["sourceRecords"])
     actual.update(key(ref) for ref in invalid)
     if actual != expected:
@@ -127,14 +129,19 @@ def validate_result(records, result):
         senses = {sense["id"]: sense for sense in entry["senses"]}
         if len(senses) != len(entry["senses"]):
             raise ValueError("duplicate sense: " + entry["word"])
-        if entry["quality"]["eligibleForGame"]:
-            if entry["quality"]["reasons"] or entry["gameSenseId"] not in senses:
-                raise ValueError("invalid playable status: " + entry["word"])
-            sense = senses[entry["gameSenseId"]]
-            if len(entry["word"]) != 4 or len(sense["pinyin"]["keys"]) != 4 or not sense["explanation"]["meaning"]:
-                raise ValueError("incomplete playable record: " + entry["word"])
-        elif entry["gameSenseId"] is not None:
-            raise ValueError("quarantined record has gameSenseId: " + entry["word"])
+        variants = entry["sourceVariants"]
+        expected_refs = Counter("%s:%s:%d" % (ref["source"], ref["file"], ref["row"])
+                                for ref in entry["sourceRecords"])
+        if Counter(v["sourceRecordId"] for v in variants) != expected_refs:
+            raise ValueError("source variant lineage mismatch: " + entry["word"])
+        expected_variants = {"%s:%s:%d" % (ref["source"], ref["file"], ref["row"]):
+                             source_variant(originals[key(ref)]) for ref in entry["sourceRecords"]}
+        if any(variant != expected_variants[variant["sourceRecordId"]] for variant in variants):
+            raise ValueError("source variant content mismatch: " + entry["word"])
+        if (entry["quality"]["eligibleForGame"] != is_four_han(entry["word"])
+                or entry["gameSenseId"] != game_sense_id(entry["word"], entry["senses"], variants)
+                or entry["gameReadings"] != game_readings(variants)):
+            raise ValueError("invalid playable status: " + entry["word"])
 
 
 def write_json(path, value):
@@ -152,7 +159,7 @@ def export(stage, result, manifest, manifest_hash, exclusions_hash, licenses, fo
     entries = sorted(result["entries"], key=lambda entry: entry["id"])
     invalid = sorted(result["invalidRecords"], key=lambda row: (row["source"], row["file"], row["row"]))
     playable = [entry for entry in entries if entry["quality"]["eligibleForGame"]]
-    review = [entry for entry in entries if not entry["quality"]["eligibleForGame"]]
+    review = [entry for entry in entries if entry["quality"]["reasons"]]
     write_lines(stage / "catalog.jsonl", entries)
     write_lines(stage / "review-required.jsonl", review)
     write_lines(stage / "invalid-records.jsonl", invalid)
@@ -161,15 +168,19 @@ def export(stage, result, manifest, manifest_hash, exclusions_hash, licenses, fo
         detail_file = "details/%04d.json" % (start // 256)
         details = []
         for entry in playable[start:start + 256]:
-            sense = next(s for s in entry["senses"] if s["id"] == entry["gameSenseId"])
             word = entry["word"]
-            keys = sense["pinyin"]["keys"]
-            index.append({"id": entry["id"], "word": word, "senseId": sense["id"],
-                          "pinyin": sense["pinyin"], "firstChar": word[0], "lastChar": word[-1],
-                          "firstKey": keys[0], "lastKey": keys[-1], "detailFile": detail_file})
+            readings = entry["gameReadings"]
+            first = readings[0] if readings else {"firstKey": "", "lastKey": ""}
+            pinyin = {"display": source_pinyin_display(entry["sourceVariants"])}
+            index.append({"id": entry["id"], "word": word, "senseId": entry["gameSenseId"],
+                          "pinyin": pinyin, "firstChar": word[0], "lastChar": word[-1],
+                          "firstKey": first["firstKey"], "lastKey": first["lastKey"],
+                          "readings": readings, "detailFile": detail_file})
             head_chars.setdefault(word[0], []).append(entry["id"])
-            head_keys.setdefault(keys[0], []).append(entry["id"])
-            details.append({"id": entry["id"], "word": word, "sense": sense})
+            for key in dict.fromkeys(reading["firstKey"] for reading in readings):
+                head_keys.setdefault(key, []).append(entry["id"])
+            details.append({"id": entry["id"], "word": word, "senseId": entry["gameSenseId"],
+                            "pinyin": pinyin, "sourceVariants": entry["sourceVariants"]})
         write_json(stage / detail_file, {"schemaVersion": 1, "entries": details})
     write_json(stage / "game-index.json", {"schemaVersion": 1, "entries": index,
                "byFirstChar": head_chars, "byFirstSyllable": head_keys})
@@ -177,7 +188,8 @@ def export(stage, result, manifest, manifest_hash, exclusions_hash, licenses, fo
     within = sum(sum(n - 1 for n in Counter(ref["source"] for ref in entry["sourceRecords"]).values()) for entry in entries)
     cross = sum(len(set(ref["source"] for ref in entry["sourceRecords"])) > 1 for entry in entries)
     counts = {"inputRecords": source_rows + len(invalid), "uniqueWords": len(entries),
-              "playableWords": len(playable), "reviewWords": len(review), "invalidRecords": len(invalid),
+              "playableWords": len(playable), "reviewWords": len(review),
+              "nonFourWords": len(entries) - len(playable), "invalidRecords": len(invalid),
               "mergedDuplicateRecords": source_rows - len(entries), "withinSourceDuplicateRecords": within,
               "crossSourceSharedWords": cross}
     reasons = Counter(reason for entry in review for reason in entry["quality"]["reasons"])
@@ -187,7 +199,7 @@ def export(stage, result, manifest, manifest_hash, exclusions_hash, licenses, fo
              "sourceManifestSha256": manifest_hash, "exclusionsSha256": exclusions_hash, "fontSha256": font_hash,
              "counts": counts, "exclusionReasonCounts": dict(sorted(reasons.items())),
              "normalizationStats": result["stats"], "sources": manifest["files"],
-             "assurance": "Deterministic structural checks and known-conflict isolation; not a human linguistic review."}
+             "assurance": "All four-Han words remain playable; source text is preserved per row. Diagnostics do not adjudicate linguistic correctness."}
     write_json(stage / "audit.json", audit)
     for spec, path in licenses:
         destination = stage / "licenses" / spec["cacheName"]
@@ -195,20 +207,21 @@ def export(stage, result, manifest, manifest_hash, exclusions_hash, licenses, fo
         shutil.copyfile(path, destination)
     lines = ["# 成语词库脚本清洗报告", "", "本报告由脚本生成；未使用大模型改写、补义或猜读音。", "",
              "| 项目 | 数量 |", "| --- | ---: |"]
-    labels = {"inputRecords": "源记录", "uniqueWords": "统一词条", "playableWords": "通过自动检查的游戏候选",
-              "reviewWords": "保留但不进入游戏", "invalidRecords": "无法归并的源记录",
+    labels = {"inputRecords": "源记录", "uniqueWords": "统一词条", "playableWords": "全部四字游戏候选",
+              "reviewWords": "带审计原因的词条（可与游戏候选重叠）", "nonFourWords": "保留但不参与四字游戏",
+              "invalidRecords": "无法归并的源记录",
               "mergedDuplicateRecords": "归并的重复源记录", "withinSourceDuplicateRecords": "同库内重复源记录",
               "crossSourceSharedWords": "跨库同名词条"}
     lines += ["| %s | %s |" % (labels[key], value) for key, value in counts.items()]
-    lines += ["", "## 隔离原因", "", "一条词可有多个原因，下列数量不能直接相加。", ""]
+    lines += ["", "## 审计原因", "", "一条词可有多个原因，下列数量不能直接相加。释义、拼音、来源分歧及旧排除项均不拦词。", ""]
     lines += ["- `%s`：%s" % (key, value) for key, value in sorted(reasons.items())]
     lines += ["", "## 产物", "", "- `catalog.jsonl`：全量统一资料，保留来源及未解决版本。",
-              "- `game-index.json` 与 `details/`：通过规则的四字候选及首字/首音索引。",
-              "- `review-required.jsonl`：不进入游戏的记录和原因；非四字也保留在这里。",
+              "- `game-index.json` 与 `details/`：全部四字候选、各来源原文及全部可解析首尾音对。",
+              "- `review-required.jsonl`：带审计原因的记录；审计原因不决定是否进入游戏。",
               "- `invalid-records.jsonl`：无法取得合法词条的输入记录。",
               "- `audit.json`：源摘要、规则摘要、字体摘要和精确统计。",
               "- `checksums.json`：所有产物（自身除外）的 SHA256。", "",
-              "## 结论边界", "", "通过自动检查不代表每个词都已人工考据。无法确定的读音或释义冲突保持隔离，原始文件保持不变。",
+              "## 结论边界", "", "不替用户裁定来源正误。逐条保留各来源原文；不可解析的读音不参与同音判断，同字规则仍可用。",
               "当前产物尚未接入 Unity，也未验证真机文字渲染。", ""]
     (stage / "report.md").write_text("\n".join(lines), encoding="utf-8")
     checksums = {p.relative_to(stage).as_posix(): sha256(p.read_bytes()) for p in sorted(stage.rglob("*")) if p.is_file()}
