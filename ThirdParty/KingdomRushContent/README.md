@@ -39,4 +39,4 @@ The standalone preview uses `com.duanyao.xanaduyonder.kingdomrushtest`; its save
 
 The previous pruning experiment is saved on local branch `p/duanyao.0516/codex/kr1-pruning-snapshot-20261030-193034`, commit `10ce12f905c2112ec5c440b6700903ecc0a46bbe`. Its complete filesystem snapshot is at `/Users/bytedance/Desktop/code/XanaduYonder-backups/kingdom-rush-before-stable-rollback-20261030-193034/`. It is not the active build.
 
-The user's acceptance covers the restored baseline, not every level or this later menu/lobby change. Current content verification, UI checks, APK size, installation and device results are tracked in the linked record; historical tests do not establish those results.
+The user accepted the restored baseline and subsequently accepted the new menu, logo and lobby integration on OPPO, authorizing v0.9.0. This does not establish complete coverage of every level. Content verification, UI checks, preview installation and formal release results are tracked separately in the linked record and `docs/releases/v0.9.0.md`.
