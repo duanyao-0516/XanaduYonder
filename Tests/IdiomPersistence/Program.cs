@@ -28,11 +28,16 @@ internal static class Program
         Check("Learning state uses one new aggregate document and leaves legacy files untouched", LearningAggregateContract);
         Check("Legacy identities are rejected by the learning aggregate", LegacyGameRejected);
         Check("Learning profile notebook assisted input and random streams round trip together", LearningRoundTrip);
+        Check("Idiom display and keyboard preferences round trip without changing game or learning data", PreferenceRoundTrip);
+        Check("Missing idiom preferences use independent defaults without discarding old records", MissingPreferences);
+        Check("Malformed idiom preferences protect originals instead of coercing values", InvalidPreferences);
         Check("Failed aggregate writes preserve all domains and retries commit once", AggregateAtomicFailure);
         Check("Malformed learning state and notebook profile mismatches are rejected", InvalidLearningState);
-        Check("Recommendation terminals retain frozen selection context across profile changes", SelectionTerminalRoundTrip);
+        Check("Legacy recommendation terminals retain frozen context across profile changes", SelectionTerminalRoundTrip);
+        Check("Six local hints round trip after both humans continue", SixHintsRoundTrip);
+        Check("Surrendered games round trip with stable reason seven", SurrenderRoundTrip);
         Check("Four match and rule slots preserve separate progress and hint quotas", FourSlotRoundTrip);
-        Check("Aggregate rejects mismatched match kinds, scores and local hint terminals", InvalidLocalStates);
+        Check("Aggregate rejects mismatched match kinds, scores and forged local hints", InvalidLocalStates);
         Check("Unknown game schema protects primary instead of loading compatible backup", UnknownGameSchema);
         Check("Game JSON rejects unknown fields, duplicate fields and token coercion", StrictGameJson);
         Check("Core restore validates history, mode, hints and terminal state", InvalidGameStates);
@@ -304,6 +309,68 @@ internal static class Program
             Assert(restored.Character.Game.RandomState==data.Character.Game.RandomState && restored.Character.Game.HintRandomState==data.Character.Game.HintRandomState,"Independent random streams changed");
         });
     }
+    private static void PreferenceRoundTrip()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
+            Assert(data.CloseKeyboardAfterSend && !data.ShowPinyin,"New saves must close after sending and hide chat pinyin by default");
+            Load(store); Save(store,data);
+            var original=JObject.Parse(File.ReadAllText((string)store.SavePath));
+            original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin");
+            foreach(bool close in new[]{false,true}) foreach(bool pinyin in new[]{false,true})
+            {
+                data.CloseKeyboardAfterSend=close; data.ShowPinyin=pinyin; Save(store,data);
+                dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
+                Assert(restored.CloseKeyboardAfterSend==close && restored.ShowPinyin==pinyin,"Preference values did not survive a fresh disk load");
+                var written=JObject.Parse(File.ReadAllText((string)store.SavePath));
+                Assert(written["closeKeyboardAfterSend"].Type==JTokenType.Boolean && written["showPinyin"].Type==JTokenType.Boolean,"Preferences must be JSON booleans");
+                written.Remove("closeKeyboardAfterSend"); written.Remove("showPinyin");
+                Assert(JToken.DeepEquals(original,written),"Changing preferences altered games, drafts, notebook or learning profile");
+            }
+        });
+    }
+    private static void MissingPreferences()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
+            Load(store); Save(store,data);
+            string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path));
+            foreach(int mask in new[]{0,1,2})
+            {
+                var original=(JObject)root.DeepClone();
+                original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin");
+                if((mask&1)!=0) original["closeKeyboardAfterSend"]=false;
+                if((mask&2)!=0) original["showPinyin"]=true;
+                File.WriteAllText(path,original.ToString()); if(File.Exists(path+".bak")) File.Delete(path+".bak");
+                store=New("IdiomSaveStore",dir,lexicon); dynamic restored=Load(store);
+                Assert(restored!=null && store.CanWrite && !store.NeedsRecovery,"Preference-free aggregate was rejected");
+                Assert(restored.CloseKeyboardAfterSend==((mask&1)==0) && restored.ShowPinyin==((mask&2)!=0),"One missing preference reset another setting or used the wrong default");
+                Save(store,restored);
+                var rewritten=JObject.Parse(File.ReadAllText(path));
+                foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin"}) { original.Remove(field);rewritten.Remove(field); }
+                Assert(JToken.DeepEquals(original,rewritten),"Defaulting missing preferences changed existing records");
+            }
+        });
+    }
+    private static void InvalidPreferences()
+    {
+        WithDirectory(dir => {
+            dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
+            Load(store); Save(store,data); string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path));
+            foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin"})
+            {
+                foreach(var bad in new JToken[]{JValue.CreateNull(),"true","false",0,1,1.0,new JArray(),new JObject()})
+                {
+                    var changed=(JObject)root.DeepClone(); changed[field]=bad;
+                    var json=changed.ToString(); RejectGameDocument(dir,lexicon,json);
+                    byte[] before=File.ReadAllBytes(path);
+                    store=New("IdiomSaveStore",dir,lexicon); Load(store); RejectSave(store,data); Equal(before,File.ReadAllBytes(path));
+                }
+                var valid=root.ToString(Newtonsoft.Json.Formatting.None);
+                RejectGameDocument(dir,lexicon,valid.Replace("\""+field+"\":", "\""+field+"\":false,\""+field+"\":"));
+            }
+        });
+    }
     private static void AggregateAtomicFailure()
     {
         WithDirectory(dir => {
@@ -364,9 +431,12 @@ internal static class Program
             dynamic profile=FreshProfile(lexicon);
             dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,EnumValue("IdiomMode",0),(uint)17,EnumValue("IdiomMatchKind",0),profile,(Func<long>)(()=>200000L)});
             game.Start((dynamic)EnumValue("IdiomActor",2));Assert(game.Submit("甲一一乙").Success,"Terminal fixture failed");
-            Assert((int)game.EndReason==6 && game.GetSnapshot().EndSelectionContext!=null,"Policy exhaustion needs a frozen witness");
+            Assert((int)game.EndReason==0 && game.History.Count==2,"New games use remaining legal words instead of recommendation exhaustion");
+            var legacy = new IdiomSnapshot(IdiomMode.SameCharacter, IdiomActor.Player, IdiomEndReason.RecommendationExhausted, 17,
+                new[] { "a" }, new IdiomHint[0], IdiomMatchKind.Computer, 19, new string[0],
+                new IdiomSelectionContext(new[] { "a" }, new string[0]));
             dynamic data=New("IdiomSaveData"),character=New("IdiomModeSave"),sound=New("IdiomModeSave");
-            character.Game=game.GetSnapshot();character.Best=1;data.Character=character;
+            character.Game=legacy;character.Best=1;data.Character=character;
             sound.Game=new IdiomGame(lexicon,IdiomMode.SameSound,17).GetSnapshot();data.Sound=sound;
             AddFreshLocalSlots(data,lexicon);data.Notebook=New("IdiomNotebookData");
             profile.Remember("b");profile.Remember("c");data.Profile=profile.GetSnapshot();
@@ -438,6 +508,55 @@ internal static class Program
             Equal(before,File.ReadAllBytes(path));
         });
     }
+    private static IdiomLexicon HintLoopLexicon()
+    {
+        var entries = new IdiomEntry[12];
+        for (int i = 0; i < entries.Length; i++)
+            entries[i] = new IdiomEntry("loop" + i, "一" + (char)(0x4e00 + i) + "心一", "yī yī xīn yī", "yi", "yi", "sense" + i, "00", true);
+        return new IdiomLexicon(entries, "hint-loop-v1");
+    }
+    private static IdiomSaveData EmptyAggregate(IdiomLexicon lexicon)
+    {
+        return new IdiomSaveData {
+            Character = new IdiomModeSave { Game = new IdiomGame(lexicon, IdiomMode.SameCharacter, 17).GetSnapshot() },
+            Sound = new IdiomModeSave { Game = new IdiomGame(lexicon, IdiomMode.SameSound, 17).GetSnapshot() },
+            LocalCharacter = new IdiomModeSave { Game = new IdiomGame(lexicon, IdiomMode.SameCharacter, 17, IdiomMatchKind.Local).GetSnapshot() },
+            LocalSound = new IdiomModeSave { Game = new IdiomGame(lexicon, IdiomMode.SameSound, 17, IdiomMatchKind.Local).GetSnapshot() },
+            Profile = new IdiomLearningProfile(lexicon).GetSnapshot(), Notebook = new IdiomNotebookData() };
+    }
+    private static void SixHintsRoundTrip()
+    {
+        WithDirectory(dir => {
+            var lexicon = HintLoopLexicon(); var game = new IdiomGame(lexicon, IdiomMode.SameCharacter, 17, IdiomMatchKind.Local);
+            game.Start(IdiomActor.Left);
+            for (int i = 0; i < 6; i++) {
+                Assert(game.RequestHint() != null, "Both humans must get their third hint");
+                Assert(game.Submit(lexicon.Entries[i].Word).Success, "Third suggestions do not end the local match");
+            }
+            Assert(!game.IsEnded && game.HintCount == 6 && game.HintQuotaExhausted, "Fixture needs active continuation with exhausted quotas");
+            var data = EmptyAggregate(lexicon); data.LocalCharacter.Game = game.GetSnapshot(); data.LocalCharacter.Best = 6;
+            var store = new IdiomSaveStore(dir, lexicon); string warning; store.Load(out warning); Save(store, data);
+            var restored = new IdiomSaveStore(dir, lexicon).Load(out warning);
+            Assert(restored != null, "Codec must accept six local hint records: " + warning);
+            game = new IdiomGame(lexicon, restored.LocalCharacter.Game);
+            Assert(game.HintCount == 6 && !game.IsEnded && game.RequestHint() == null, "Quota and active state survive codec round trip");
+            Assert(game.Submit(lexicon.Entries[6].Word).Success, "Restored local game continues after all six hints");
+        });
+    }
+    private static void SurrenderRoundTrip()
+    {
+        WithDirectory(dir => {
+            var lexicon = HintLoopLexicon(); var game = new IdiomGame(lexicon, IdiomMode.SameCharacter, 17);
+            game.Start(IdiomActor.Player); game.Surrender();
+            Assert(game.EndReason == IdiomEndReason.Surrendered && (int)game.EndReason == 7, "Fixture surrender has stable serialized value");
+            var data = EmptyAggregate(lexicon); data.Character.Game = game.GetSnapshot();
+            var store = new IdiomSaveStore(dir, lexicon); string warning; store.Load(out warning); Save(store, data);
+            var restored = new IdiomSaveStore(dir, lexicon).Load(out warning);
+            Assert(restored != null, "Codec must accept surrender reason seven: " + warning);
+            game = new IdiomGame(lexicon, restored.Character.Game);
+            Assert(game.EndReason == IdiomEndReason.Surrendered && game.Submit(lexicon.Entries[0].Word).Error == IdiomError.AlreadyEnded, "Surrender remains terminal after storage restore");
+        });
+    }
     private static void FourSlotRoundTrip()
     {
         WithDirectory(dir => {
@@ -450,7 +569,8 @@ internal static class Program
             Assert(data.LocalCharacter.Draft=="左侧草稿" && data.LocalSound.Draft=="右侧草稿" && data.LocalCharacter.Best==4 && data.LocalSound.Best==3,"Local drafts and total-word records persist");
             Assert(data.LocalCharacter.NewBestInRun && !data.LocalSound.NewBestInRun,"Each local best flag persists");
             dynamic game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,data.LocalCharacter.Game});
-            Assert((int)game.MatchKind==1 && (int)game.EndReason==1 && game.HintCount==5 && game.HintCountFor((dynamic)EnumValue("IdiomActor",1))==3 && game.HintCountFor((dynamic)EnumValue("IdiomActor",2))==2,"Local terminal preserves per-human quota");
+            Assert((int)game.MatchKind==1 && !game.IsEnded && game.HintQuotaExhausted && game.HintCount==5 && game.HintCountFor((dynamic)EnumValue("IdiomActor",1))==3 && game.HintCountFor((dynamic)EnumValue("IdiomActor",2))==2,"Active local game preserves independent per-human quotas");
+            Assert(game.Submit("为所欲为").Success && game.History.Count==5,"Restored local game uses its third hint and continues");
             game=Activator.CreateInstance(CoreType("IdiomGame"),new object[]{lexicon,data.LocalSound.Game});
             Assert((int)game.NextActor==1 && game.Submit("意气风发").Success && game.History.Count==2,"Restored local game continues one human word at a time");
         });
@@ -467,8 +587,8 @@ internal static class Program
                 r=>r["localCharacter"]["game"]["matchKind"]=2,
                 r=>r["localCharacter"]["best"]=2,
                 r=>r["localCharacter"]["best"]=5,
-                r=>r["localCharacter"]["game"]["endReason"]=0,
-                r=>((JArray)r["localCharacter"]["game"]["hints"]).RemoveAt(4),
+                r=>r["localCharacter"]["game"]["endReason"]=2,
+                r=>((JArray)r["localCharacter"]["game"]["hints"]).Add(r["localCharacter"]["game"]["hints"][0].DeepClone()),
                 r=>((JArray)r["localCharacter"]["game"]["history"]).Add("entry4"),
                 r=>r["localSound"]["game"]["history"][0]="unknown",
                 r=>r["localSound"]["game"]["hints"][0]["entryIds"][0]="entry0" })
@@ -496,7 +616,8 @@ internal static class Program
                 foreach(var property in current.Properties())
                 {
                     var changed=(JObject)root.DeepClone(); var target=section.Length==0?changed:(JObject)changed.SelectToken(section);
-                    target.Remove(property.Name); RejectGameDocument(dir,lexicon,changed.ToString());
+                    if(section.Length!=0 || property.Name!="closeKeyboardAfterSend" && property.Name!="showPinyin")
+                    { target.Remove(property.Name); RejectGameDocument(dir,lexicon,changed.ToString()); }
                     changed=(JObject)root.DeepClone(); target=section.Length==0?changed:(JObject)changed.SelectToken(section);
                     if(property.Value.Type!=JTokenType.Null) { target[property.Name]=JValue.CreateNull(); RejectGameDocument(dir,lexicon,changed.ToString()); }
                 }
@@ -599,8 +720,8 @@ internal static class Program
     private static void FourLongHistories()
     {
         WithDirectory(dir => {
-            // The packed catalog currently has 42,851 entries with 30-character IDs.
-            const int count=42851;
+            // Exercise all 45,776 four-character entries with stable 30-character IDs.
+            const int count=45776;
             var entries=new IdiomEntry[count]; var history=new string[count];
             for(int i=0;i<count;i++)
             {

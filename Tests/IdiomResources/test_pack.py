@@ -34,20 +34,41 @@ class PackTests(unittest.TestCase):
         self.assertEqual(encoded, pack.encode(value))
         self.assertEqual(value, json.loads(gzip.decompress(encoded)))
 
-    def test_projection_keeps_exact_sense_and_all_learning_fields(self):
-        row = {'id': 'a', 'word': '一心一意', 'sense': {'id': 's',
-            'pinyin': {'display': 'yī xīn yī yì'},
-            'explanation': {'meaning': '专心。', 'stories': ['故事'],
-                'origins': [{'text': '原文', 'reference': '书名'}]},
-            'examples': [{'text': '例句', 'reference': ''}],
-            'provenance': {'pinyin': [{'source': 'jingmo'}, {'source': 'xinhua'}]}}}
+    def test_projection_keeps_all_source_text_and_does_not_mix_learning_fields(self):
+        row = {'id': 'a', 'word': '当仁不让', 'senseId': 'collection',
+            'pinyin': {'display': ' dāng rén bù ràng  / dāng rén bù ránɡ'},
+            'sourceVariants': [
+                {'sourceKey': 'jingmo', 'sourceLabel': '景墨词库', 'sourceRecordId': 'jingmo:a.json:0',
+                 'pinyin': ' dāng rén bù ràng ', 'meaning': ' 原指以仁为任。 ', 'stories': [' 故事甲 '],
+                 'origins': [{'text': '原文甲', 'reference': '书名甲'}],
+                 'examples': [{'text': '例句甲', 'reference': ''}]},
+                {'sourceKey': 'xinhua', 'sourceLabel': '新华成语词库', 'sourceRecordId': 'xinhua:b.json:2',
+                 'pinyin': 'dāng rén bù ránɡ', 'meaning': '遇到应该做的事就积极主动去做，不推让。',
+                 'stories': [], 'origins': [{'text': '原文乙', 'reference': ''}], 'examples': []}]}
         result = pack.project_detail(row)
-        self.assertEqual('s', result['SenseId'])
-        self.assertEqual(['故事'], result['Stories'])
-        self.assertEqual('书名', result['Origins'][0]['Reference'])
-        self.assertEqual('例句', result['Examples'][0]['Text'])
+        self.assertEqual('collection', result['SenseId'])
         self.assertEqual('景墨词库 · 新华成语词库', result['SourceLabel'])
-        self.assertNotIn('provenance', result)
+        self.assertEqual('【景墨词库】\n 原指以仁为任。 \n\n【新华成语词库】\n遇到应该做的事就积极主动去做，不推让。', result['Meaning'])
+        self.assertEqual([], result['Stories'])
+        self.assertEqual([], result['Origins'])
+        self.assertEqual([], result['Examples'])
+        self.assertEqual(2, len(result['Sources']))
+        for actual, source in zip(result['Sources'], row['sourceVariants']):
+            for key in ('sourceKey', 'sourceLabel', 'sourceRecordId', 'pinyin', 'meaning', 'stories'):
+                self.assertEqual(source[key], actual[key[0].upper()+key[1:]])
+        self.assertEqual({'Text': '原文甲', 'Reference': '书名甲'}, result['Sources'][0]['Origins'][0])
+        self.assertEqual('例句甲', result['Sources'][0]['Examples'][0]['Text'])
+
+    def test_projection_preserves_repeated_source_labels_as_separate_records(self):
+        variants = [{'sourceKey': 'jingmo', 'sourceLabel': '景墨词库',
+                     'sourceRecordId': 'jingmo:a.json:' + str(i), 'pinyin': '', 'meaning': meaning,
+                     'stories': [], 'origins': [], 'examples': []} for i, meaning in enumerate(['甲义', '乙义'])]
+        result = pack.project_detail({'id': 'a', 'word': '当仁不让', 'senseId': 'collection',
+                                      'pinyin': {'display': ''}, 'sourceVariants': variants})
+        self.assertEqual(2, len(result.get('Sources', [])))
+        self.assertEqual(['甲义', '乙义'], [v['Meaning'] for v in result['Sources']])
+        self.assertEqual('【景墨词库】\n甲义\n\n【景墨词库】\n乙义', result['Meaning'])
+        self.assertEqual('景墨词库', result['SourceLabel'])
 
     def test_packed_details_use_correct_dictionary_display_names(self):
         resources = ROOT / 'Assets/Resources/Idioms'
@@ -76,8 +97,9 @@ class PackTests(unittest.TestCase):
 
     def test_index_projection_preserves_pronunciation_keys(self):
         row = {'id': 'a', 'word': '一心一意', 'pinyin': {'display': 'yī xīn yī yì'},
-            'firstKey': 'yi', 'lastKey': 'yi', 'senseId': 's', 'detailFile': 'details/0001.json'}
-        self.assertEqual([['a','一心一意','yī xīn yī yì','yi','yi','s','0001',True]],
+            'firstKey': 'yi', 'lastKey': 'yi', 'senseId': 's', 'detailFile': 'details/0001.json',
+            'readings': [{'firstKey': 'yi', 'lastKey': 'yi'}, {'firstKey': 'yi', 'lastKey': 'yue'}]}
+        self.assertEqual([['a','一心一意','yī xīn yī yì','yi','yi','s','0001',True,[['yi','yi'],['yi','yue']]]],
                          pack.build_rows([row], {'一心一意'}))
 
 if __name__ == '__main__': unittest.main()

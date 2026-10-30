@@ -143,7 +143,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 ## 成语接龙与离线词库
 
-成语接龙已接入，内置 42,851 个可玩成语与 1,534 个公共常用词；支持人机与双人本地对战，字／音规则分别续玩。双人双方各 3 次提示，任一方第三次展示提示后回顾本轮。页面说明见[成语接龙玩法与 UI](docs/idiom-game.md)，选词、20% 生词复习与个人熟悉词规则见[算法设计](docs/idiom-selection.md)，常用表策划见[数据审计](docs/idiom-common-vocabulary.md)，本轮结果见[学习机制验证](docs/verification-idiom-personalization.md)。使用 `scripts/test-idiom-data.sh` 验证清洗规则，运行 `python3 -B scripts/import-idioms.py` 离线整理两个固定版本的词库。缺少原始文件时可加 `--fetch` 下载；产物、冲突隔离和复现方式见[成语数据清洗说明](docs/idiom-data.md)。
+成语接龙已接入，收录全部 45,776 个四汉字词与 1,534 个公共常用词，各来源原拼音和释义分别展示；支持人机与双人本地对战，字／音规则分别续玩。双方每人各 3 次提示，第 3 次后仍可继续，用完后按钮变为“认输”；APP 保留所有合法候选的选择机会，只在全库无合法词时无词可接。页面说明见[成语接龙玩法与 UI](docs/idiom-game.md)，95% 优先/5% 探索、优先池内20%复习与个人熟悉词规则见[算法设计](docs/idiom-selection.md)，常用表策划见[数据审计](docs/idiom-common-vocabulary.md)，旧版本结果见[学习机制历史验证](docs/verification-idiom-personalization.md)。使用 `scripts/test-idiom-data.sh` 验证清洗规则，运行 `python3 -B scripts/import-idioms.py` 离线整理两个固定版本的词库。缺少原始文件时可加 `--fetch` 下载；产物、逐来源原文保留和复现方式见[成语数据清洗说明](docs/idiom-data.md)。
 
 调整成语页头、计数、开关、图标或弹窗时，运行 `scripts/test-idiom-ui.sh` 检查实际居中、控件边界和点击分发，并在长短屏截图中复核字形、留白、键盘展开与收起。该检查需要 Unity 图形渲染；不要与本工作树的 Unity 构建同时运行。编辑器检查不能代替 Android 输入和生命周期验收。
 

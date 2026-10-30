@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "ruleVersion": "idiom-clean-v1",
+  "ruleVersion": "idiom-preserve-sources-v2",
   "repositories": {
     "jingmo": {"url": "https://github.com/hefengbao/jingmo-data", "commit": "dc3ed0bc8877512d8ac0b2b93cf6b2420237ec72", "license": "MIT"},
     "xinhua": {"url": "https://github.com/pwxcoo/chinese-xinhua", "commit": "fe6d6c2e8baa82187f4c96bbe042e43f96c05666", "license": "MIT"}
