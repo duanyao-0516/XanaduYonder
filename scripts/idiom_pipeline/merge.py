@@ -72,6 +72,60 @@ def _citation(value, field, issues, structured):
     return {"text": text, "reference": reference or ""}
 
 
+def source_variant(record):
+    """Project one source row without normalizing, combining, or choosing its prose."""
+    data = record["data"]
+    source = record["source"]
+    structured = source == "jingmo"
+
+    def text(value):
+        return value if isinstance(value, str) else ""
+
+    def citations(value):
+        if not structured:
+            return [{"text": value, "reference": ""}] if isinstance(value, str) else []
+        if not isinstance(value, dict):
+            return []
+        if not any(isinstance(value.get(field), str) for field in ("text", "book")):
+            return []
+        return [{"text": text(value.get("text")), "reference": text(value.get("book"))}]
+
+    stories = data.get("story")
+    return {"sourceKey": source,
+            "sourceLabel": {"jingmo": "景墨词库", "xinhua": "新华成语词库"}[source],
+            "sourceRecordId": "%s:%s:%d" % (source, record["file"], record["row"]),
+            "pinyin": text(data.get("pinyin")), "meaning": text(data.get("explanation")),
+            "stories": [value for value in stories if isinstance(value, str)]
+                       if structured and isinstance(stories, list) else [],
+            "origins": citations(data.get("source" if structured else "derivation")),
+            "examples": citations(data.get("example")) + (citations(data.get("quote")) if structured else [])}
+
+
+def source_pinyin_display(variants):
+    """Keep each distinct original spelling in deterministic source order."""
+    return " / ".join(dict.fromkeys(variant["pinyin"] for variant in variants if variant["pinyin"]))
+
+
+def game_readings(variants):
+    """Only successfully parsed source readings participate in sound matching."""
+    pairs = {}
+    for variant in variants:
+        try:
+            keys = parse_pinyin(variant["pinyin"])["keys"]
+        except ValueError:
+            continue
+        pairs.setdefault((keys[0], keys[-1]), {"firstKey": keys[0], "lastKey": keys[-1]})
+    return list(pairs.values())
+
+
+def game_sense_id(word, senses, variants):
+    if not is_four_han(word):
+        return None
+    if len(senses) == 1:
+        return senses[0]["id"]
+    return _id("sources", [word, [variant["sourceRecordId"] for variant in variants]])
+
+
 def _parse(record):
     ref = _ref(record)
     if (not isinstance(record, dict) or record.get("source") not in ("jingmo", "xinhua")
@@ -103,6 +157,7 @@ def _parse(record):
             display = None
         pinyin = {"display": display, "syllables": [], "keys": []}
     parsed = {"word": word, "ref": ref, "meaning": meaning, "pinyin": pinyin,
+              "sourceVariant": source_variant(record),
               "issues": issues, "stories": [], "origins": [], "examples": []}
     structured = ref["source"] == "jingmo"
     for source_field, target in (("source" if structured else "derivation", "origins"),
@@ -213,8 +268,8 @@ def _sense(word, signature, rows):
 def merge_records(records, exclusions, font_codepoints):
     """Account for every input row and return deterministic entries and diagnostics.
 
-    Invalid envelopes/words go to invalidRecords. A recognizable word with malformed
-    content remains a source-referenced candidate and cannot enter the game index.
+    Invalid envelopes/words go to invalidRecords. All four-Han words remain playable;
+    malformed content and disagreements are diagnostics, never word filters.
     """
     by_word = defaultdict(list)
     invalid = []
@@ -254,9 +309,11 @@ def merge_records(records, exclusions, font_codepoints):
             reasons.add("font_missing_word")
         if any(ord(c) not in font_codepoints for s in senses for c in (s["pinyin"]["display"] or "")):
             reasons.add("font_missing_pinyin")
-        eligible = not reasons
+        eligible = is_four_han(word)
+        variants = [row["sourceVariant"] for row in sorted(rows, key=_priority)]
         entries.append({"id": _id("idiom", word), "word": word, "senses": senses,
-                        "gameSenseId": senses[0]["id"] if eligible else None,
+                        "gameSenseId": game_sense_id(word, senses, variants),
+                        "sourceVariants": variants, "gameReadings": game_readings(variants),
                         "sourceRecords": sorted([r["ref"] for r in rows], key=_ref_key),
                         "quality": {"eligibleForGame": eligible, "reasons": sorted(reasons)}})
     reason_counts = Counter(reason for entry in entries for reason in entry["quality"]["reasons"])

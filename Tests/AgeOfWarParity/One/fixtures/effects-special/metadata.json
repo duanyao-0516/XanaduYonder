@@ -1,0 +1,53 @@
+{
+  "sourceSha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+  "runtime": "Ruffle 0.7.1 Web/WASM AVM1, Chrome macOS",
+  "collectedAtUtc": "2026-10-30T08:07:07.646386+00:00",
+  "originalActionArraysPreserved": 315,
+  "scenario": "After root snapshot1, create_particule(400,300,1,[20]), part4/[181], part6/[], then original game.attachMovie(special5,special5,99999); observe110 frames. This isolates the age5 ability without evolving the HUD or asserting its button eligibility.",
+  "random": "Math.random=.1 verified by trace. Built-in random(n) opcode unchanged; only part4 scale is excluded from the comparison.",
+  "fields": {
+    "Q": "frame,particle id,x,y,alpha percent,xscale percent,rotation,ymove",
+    "S": "frame,special x,y,source currentframe,cc",
+    "B": "frame,creation index,x,y,source currentframe",
+    "D": "previous snapshot frame,id,spawn x,y"
+  },
+  "results": {
+    "temporaryPatchedCopy": {
+      "common": 259,
+      "different": 0,
+      "originalOnly": 0,
+      "nativeOnly": 0
+    },
+    "beforeFixes": {
+      "common": 259,
+      "different": 181,
+      "originalOnly": 0,
+      "nativeOnly": 22
+    },
+    "productionAfterFixes": {
+      "common": 259,
+      "different": 0,
+      "originalOnly": 0,
+      "nativeOnly": 0
+    }
+  },
+  "nativeAdapter": "Temporary source copy; Next() returns .1; read-only Console.WriteLine at CreateProjectile entry. Current production is compiled without any behavior patch.",
+  "limits": [
+    "Ruffle not Adobe Flash",
+    "No damage target overlap in this short sample",
+    "Part4 scale not compared; builtin integer random is uncontrolled",
+    "Late age unit combat and other specials remain unverified at runtime"
+  ],
+  "hashes": {
+    "scripts/age-of-war-parity/one/InjectScenario.java": "dbc5f6fb42f71c0bdeaa6ffd6fa6568085764b61ca398d69941a07da94439cf2",
+    "scripts/age-of-war-parity/one/effects-special.as": "53d64e559657f7178d0a123c839b0d23751dd197e968ae4f7e2178ade16c7288",
+    "scripts/age-of-war-parity/one/scenario.html": "3a950e95ce587d734cab94d97b74ea0ab4adf3a401ab38760c42983defe5d2f7",
+    "scripts/age-of-war-parity/one/compare-effects-special.py": "b9ba3f3d261dd13c2688a7545dad82bb1f1040173d861cbf6ae97ca91b46eda7",
+    "scripts/age-of-war-parity/one/applied-effects.patch": "f1554801eedfbf2b7353864ec686f553dd52f8b9dac1fe37aded78655e7d637c",
+    "Tests/AgeOfWarParity/One/EffectsSpecial.cs": "6dad779b209471a93eb5441fc48afb6e30afd22d6aff67e43ef10aa35c014949",
+    "Tests/AgeOfWarParity/One/fixtures/effects-special/reference.csv": "e761ac9a1edbeb6c2b7639a5358042c5f8319433b0afb780e1964b214f5e0226",
+    "instrumentedSwf": "6fc74fbb495ea105bc1c6a669cd646755dfd669d6da74501155fe4b0e14ca0e3"
+  },
+  "existingSuiteWithStagedTestBoundaryCorrections": "39 passed, 0 failed; temporary copy only",
+  "productionExistingSuite": "39 passed, 0 failed"
+}

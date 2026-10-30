@@ -1,0 +1,26 @@
+{
+  "sourceSha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+  "sourceFile": "age-of-war-1-7k7k.swf",
+  "runtime": "Ruffle 0.7.1 web WASM, Chrome macOS",
+  "ffdec": "26.4.0",
+  "date": "2026-10-30",
+  "originalActionArraysPreserved": 315,
+  "instrumentedSha256": "be6ed429473403a6a54898315033cae82fb1807a92d4bc1e352e9d4c677808d3",
+  "hookHashes": {
+    "scripts/age-of-war-parity/one/InjectOne.java": "f9be83c8f357c3d419eaaf4c298ea1f11372b84d4f9efcd22328b3d341cda935",
+    "scripts/age-of-war-parity/one/observe.as": "eecccdef5a531e82c4401f1603553941999d7d5ad48d1f75637de8231485db14",
+    "scripts/age-of-war-parity/one/boot.as": "b34f874b1a3efc1569377d06757b1fd513c37e673a18121772dbf6b4fa4f9426",
+    "scripts/age-of-war-parity/one/index.html": "62effa0941f32b178a1ed3543704ff1ad2c8a7a5d5c69b85d6a6aa40d37cbd35"
+  },
+  "runtimeHashes": {
+    "878d548199cddef07035.wasm": "af9b6a13a8f5e8d305bc3ce28a4edf3f6242df1183e8576ad4ca086e9f21eaea",
+    "172de42e6619eac8f371.wasm": "1ed33b9b71a6b01b9aafafed660be343ffeb2d246c5d79e6425a32bf93e38207",
+    "core.ruffle.16d61072ac7fdc4d5013.js": "d27c6bdce2a34afb32e8dfa40970bc7e86cbcb912f92db7eb3e1ac70e943bd82",
+    "ruffle.js": "26036a94567088dfb3de88a759e8ed10a4cea07b29500af36f345eef42420098",
+    "core.ruffle.994eeef0a471a88cd0e3.js": "d89e507ee60d550629e9229aa1e4dd4f9e75ec7db271e0135cbc87dab042ea51"
+  },
+  "fixtureSha256": "5e5a14f0f44cba73461ceb67cca36b6e9a0f8bbd0f365b83c3626897c7629886",
+  "randomContract": "ASSetPropFlags(_global.Math,\"random\",0,7); _global.Math.random returns 0.1. AVM1 random(n) remains native. Native copied OneModel only substitutes floating Next() with 0.1; integer cosmetic random is not claimed identical.",
+  "inputPlan": "Normal; after frame1 callbacks call original menu.add_to_tray(1) three times. Observe root frame-end through800.",
+  "comparison": "F/U numeric fields tolerance1e-9, no frame offset, all strings exact. 6474 rows; 0 differences, 0 missing rows."
+}

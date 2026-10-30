@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "menu_sha256": "81fff4ff4b402cf935607ea10562db89bb6847e7298e0cbb5e32d03b48b893ef",
+  "font": "all-desktop/assets/fonts/HarmonyOS_Sans_SC.ttf",
+  "font_sha256": "0fa8cdb7f7a18e09a5def53879787fd7f22009df6795634b2d6e9b68dde939bc",
+  "characters_checked": 387,
+  "missing_characters": "",
+  "font_changes": "None. Reuses the byte-identical accepted playable font."
+}

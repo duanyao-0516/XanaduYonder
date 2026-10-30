@@ -1,0 +1,16 @@
+{
+  "runtime": "Ruffle 0.7.1 Chrome; independent original GameScreen subclass; original ABCs retained",
+  "scope": "Original TextField properties/getLineMetrics and BitmapData.draw at identity matrix into a fixed160x40 transparent ROI. Some fields extend beyond this ROI; no full-field or stage pixel-equivalence claim. No subpixel-phase capture was run.",
+  "originalAbcSha256": [
+    "00eff07c31dd0a4d88c99e2294d20fc63821a058fc0e62f2c9a3f384e4b47fc6",
+    "4af9d8f674ae0a8a15d4862f79fac7fd4daa361a7aec5a8a54f1e6cf3f4f764e"
+  ],
+  "referenceSha256": "ad38c0e84197cf8d33d90815854d9f582410b459ddc467023470e38cb1e90788",
+  "probeSha256": "7eb5074e6e35141d2a33f3ab82329cec0c196a7123105320f88b109b24cafe26",
+  "notes": [
+    "window-M pixel ROI is empty because right-aligned text falls outside160px after field width was set200; do not use it as baseline-pixel evidence.",
+    "The artificial TextFormat size14.05 setter reads back14. It is not an original asset size.",
+    "LineMetrics gives windows ascent11,descent2,leading2,height15; damage ascent10.75,descent3.2,leading2,height15.95."
+  ],
+  "recordedUtc": "2026-10-30T08:41:01.962Z"
+}

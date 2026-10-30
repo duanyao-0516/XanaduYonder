@@ -1,0 +1,9 @@
+patching file OneEffects.cs
+patching file AgeOfWarOneBattle.cs
+/tmp/aow-parity-one-properties/native.csv 6 rows
+PASS AVM1 original part6 first fade writes 98.828125 percent alpha
+PASS AVM1 original part6 expires on fade write86
+PASS AVM1 display rotation normalizes attachment 181 degrees
+PASS AVM1 particle attachment retains raw transform until the next frame
+PASS AVM1 reward movement quantizes each display write
+PASS AVM1 special5 attachment retains source initial transform

@@ -1,0 +1,246 @@
+{
+  "reference": "Tests/AgeOfWarParity/One/fixtures/ruffle-controlled-first800.csv",
+  "native": "/tmp/aow-parity-one/native.csv",
+  "commonRows": 6463,
+  "differentRows": 5790,
+  "onlyOriginalRows": 11,
+  "onlyNativeRows": 24,
+  "firstOnlyOriginal": [
+    [
+      "U",
+      714,
+      10
+    ],
+    [
+      "U",
+      715,
+      10
+    ],
+    [
+      "U",
+      716,
+      10
+    ],
+    [
+      "U",
+      717,
+      10
+    ],
+    [
+      "U",
+      718,
+      10
+    ],
+    [
+      "U",
+      719,
+      10
+    ],
+    [
+      "U",
+      720,
+      10
+    ],
+    [
+      "U",
+      721,
+      10
+    ],
+    [
+      "U",
+      722,
+      10
+    ],
+    [
+      "U",
+      723,
+      10
+    ]
+  ],
+  "firstOnlyNative": [
+    [
+      "U",
+      674,
+      2
+    ],
+    [
+      "U",
+      675,
+      2
+    ],
+    [
+      "U",
+      676,
+      2
+    ],
+    [
+      "U",
+      677,
+      2
+    ],
+    [
+      "U",
+      678,
+      2
+    ],
+    [
+      "U",
+      679,
+      2
+    ],
+    [
+      "U",
+      680,
+      2
+    ],
+    [
+      "U",
+      681,
+      2
+    ],
+    [
+      "U",
+      682,
+      2
+    ],
+    [
+      "U",
+      683,
+      2
+    ]
+  ],
+  "differencesByField": {
+    "F.gold": 10,
+    "F.xp": 24,
+    "F.enemyTraining": 127,
+    "F.enemyPopulation": 1,
+    "U.x": 5582,
+    "U.health": 159,
+    "U.dead": 9,
+    "U.scanCounter": 5587,
+    "U.target": 128,
+    "U.enemyDistance": 3480,
+    "U.closestDistance": 4623,
+    "U.outerAnimationFrame": 494,
+    "U.actionFrame": 5654
+  },
+  "firstByField": {
+    "F.gold": {
+      "key": [
+        "F",
+        674,
+        0
+      ],
+      "original": "150",
+      "native": "130"
+    },
+    "F.xp": {
+      "key": [
+        "F",
+        674,
+        0
+      ],
+      "original": "40",
+      "native": "0"
+    },
+    "F.enemyTraining": {
+      "key": [
+        "F",
+        674,
+        0
+      ],
+      "original": "39",
+      "native": "-365"
+    },
+    "F.enemyPopulation": {
+      "key": [
+        "F",
+        684,
+        0
+      ],
+      "original": "6",
+      "native": "5"
+    },
+    "U.x": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "150",
+      "native": "150.79999999999998"
+    },
+    "U.health": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "55"
+    },
+    "U.dead": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "false"
+    },
+    "U.scanCounter": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "2"
+    },
+    "U.target": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "0"
+    },
+    "U.enemyDistance": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "300"
+    },
+    "U.closestDistance": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "undefined",
+      "native": "300"
+    },
+    "U.outerAnimationFrame": {
+      "key": [
+        "U",
+        41,
+        1
+      ],
+      "original": "1",
+      "native": "2"
+    },
+    "U.actionFrame": {
+      "key": [
+        "U",
+        42,
+        1
+      ],
+      "original": "1",
+      "native": "2"
+    }
+  }
+}

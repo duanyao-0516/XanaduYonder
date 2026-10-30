@@ -1,0 +1,29 @@
+{
+  "Low": {
+    "clips": 912,
+    "atlases": 32,
+    "uniqueRects": 8736,
+    "pngBytes": 27564231,
+    "rgbaGpuBytes": 536870912,
+    "etc2GpuBytes": 134217728,
+    "unit2IdlePartialAlpha": 0
+  },
+  "Medium": {
+    "clips": 912,
+    "atlases": 32,
+    "uniqueRects": 8757,
+    "pngBytes": 50004951,
+    "rgbaGpuBytes": 536870912,
+    "etc2GpuBytes": 134217728,
+    "unit2IdlePartialAlpha": 270
+  },
+  "High": {
+    "clips": 912,
+    "atlases": 32,
+    "uniqueRects": 8772,
+    "pngBytes": 70472625,
+    "rgbaGpuBytes": 536870912,
+    "etc2GpuBytes": 134217728,
+    "unit2IdlePartialAlpha": 414
+  }
+}

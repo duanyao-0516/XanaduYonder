@@ -136,7 +136,7 @@ namespace XanaduYonder.Runtime
             icon.raycastTarget = false;
         }
 
-        private static Button ConfigureButton(Graphic image, Action action)
+        internal static Button ConfigureButton(Graphic image, Action action)
         {
             image.raycastTarget = true;
             var button = image.gameObject.AddComponent<Button>();

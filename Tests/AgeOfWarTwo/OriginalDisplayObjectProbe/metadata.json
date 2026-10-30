@@ -1,0 +1,26 @@
+{
+  "observedAtUTC": "2026-10-30T07:37:17.259Z..2026-10-30T07:37:17.260Z",
+  "runtime": "Ruffle0.7.1 Web/WASM Chrome macOS",
+  "tab": "636302558",
+  "url": "http://127.0.0.1:8771/",
+  "observation": "cua twoProbeTab.dev.logs({filter:AS3TWIP,limit:16}); extracted AS3TWIP token then saved verbatim CSV. Eager script executes before traceObserver can attach; console logLevel info captures trace.",
+  "columns": [
+    "kind",
+    "Number expression",
+    "Sprite.x",
+    "Sprite.y"
+  ],
+  "originalABCsha256": [
+    "00eff07c31dd0a4d88c99e2294d20fc63821a058fc0e62f2c9a3f384e4b47fc6",
+    "4af9d8f674ae0a8a15d4862f79fac7fd4daa361a7aec5a8a54f1e6cf3f4f764e"
+  ],
+  "checks": "Both original ABC serialized byte hashes retained after adding standalone ABC. Original methods are not recompiled.",
+  "hashes": {
+    "/tmp/aow-parity-two-probe/probe.as": "02eab3425acebc3da8666a33408b657758e62c446f30659c67b6e1ed46393174",
+    "/tmp/aow-parity-two-probe/InjectProbe.java": "82ef1e6009b964dd77a4344e71147c32e24cfd6eff21382ec42ea888e485d286",
+    "/tmp/aow-parity-two-probe/site/probe.swf": "45fc15ccdd3ecb4f2f3cbce83bcd429c664435ac1c431e09c44eec98a3f12d3c",
+    "/tmp/aow-parity-two-probe/reference.csv": "d5d07f221a35e7d8fb422e3c1651e133aa6dc91a68204daa39704ce6d6db1a93",
+    "/Users/bytedance/Downloads/age-of-war-research-20261030/age-of-war-2-7k7k.swf": "b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c"
+  },
+  "scope": "AS3 Sprite x/y setter probe only, not Two gameplay parity; rotation/scale/width untested."
+}

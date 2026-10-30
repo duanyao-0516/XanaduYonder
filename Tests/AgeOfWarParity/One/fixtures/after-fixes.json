@@ -1,0 +1,12 @@
+{
+  "reference": "Tests/AgeOfWarParity/One/fixtures/ruffle-controlled-first800.csv",
+  "native": "/tmp/aow-parity-one/native.csv",
+  "commonRows": 6474,
+  "differentRows": 0,
+  "onlyOriginalRows": 0,
+  "onlyNativeRows": 0,
+  "firstOnlyOriginal": [],
+  "firstOnlyNative": [],
+  "differencesByField": {},
+  "firstByField": {}
+}

@@ -1,0 +1,26 @@
+{
+  "One": {
+    "clips": 584,
+    "sourceFrames": 14242,
+    "uniqueAtlasRects": 7935,
+    "atlases": 13,
+    "originalAudioSources": 28,
+    "originalAudioFiles": 11,
+    "derivedAudioFiles": 17,
+    "soundAliases": 56,
+    "scenes": 196,
+    "sourceFiles": 1
+  },
+  "Two": {
+    "clips": 912,
+    "sourceFrames": 10328,
+    "uniqueAtlasRects": 8772,
+    "atlases": 32,
+    "originalAudioSources": 55,
+    "originalAudioFiles": 41,
+    "derivedAudioFiles": 14,
+    "soundAliases": 217,
+    "scenes": 184,
+    "sourceFiles": 31
+  }
+}

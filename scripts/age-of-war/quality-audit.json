@@ -1,0 +1,173 @@
+{
+  "status": "Three nominal quality variants are generated, validated and integrated; original-player pixel parity remains unproved.",
+  "stageQualityReference": "https://airsdk.dev/reference/actionscript/3.0/flash/display/StageQuality.html",
+  "rendererReference": "https://github.com/jindrapetrik/jpexs-decompiler/blob/version26.4.0/libsrc/ffdec_lib/src/com/jpexs/decompiler/flash/exporters/shape/BitmapExporter.java",
+  "sourcePackage": "80_net.louissi.Alpha1.Global.Ressources_AGE1_UNITS_SWF_dataClass.swf",
+  "characterId": 57,
+  "sourceFrames": [
+    1,
+    112,
+    147
+  ],
+  "current": "Java2D AA_ON, aaScale=1",
+  "lowCandidate": "All SerializableImage graphics contexts use AA_OFF, including filtered intermediate images; source bitmap smoothing disabled.",
+  "mediumCandidate": "FFDec regular 2x2 MSAA grid",
+  "highCandidate": "FFDec regular 4x4 MSAA grid",
+  "limits": [
+    "No desktop Flash reference comparison yet",
+    "Pre-rasterized sprite transforms cannot establish equality to vector rasterization after world transforms",
+    "Changing Unity texture filtering alone does not implement Flash vector quality"
+  ],
+  "pixelStatistics": {
+    "current": {
+      "1": {
+        "sha256": "010fcf88085c6178197592d7ab9333c9535d77103563c336feff4632d943688d",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 1418,
+        "nonzeroAlphaLevels": 218
+      },
+      "112": {
+        "sha256": "3797ee4baac8e82b40b2da4dd7a82d6bbf8e394763da9090dc169b0c4a19656a",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 1902,
+        "nonzeroAlphaLevels": 237
+      },
+      "147": {
+        "sha256": "c97f821dd757726b8cae4b619794ccfcffa09836e01cab07903ebda6c1ac0e0b",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 1444,
+        "nonzeroAlphaLevels": 218
+      }
+    },
+    "low": {
+      "1": {
+        "sha256": "910816a315087cfb638b4600790b0bbae82a319e43d6f923d0986df0a60ba466",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 0,
+        "nonzeroAlphaLevels": 2
+      },
+      "112": {
+        "sha256": "1933101f300e170a90175cbc682e2c5de8ce577dab0087f05b0de6445d7969b3",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 0,
+        "nonzeroAlphaLevels": 2
+      },
+      "147": {
+        "sha256": "b1f1ca9d8f76fc26bf187be5673a36f8c7a8f64953a19baf2d89cfd74631e54a",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 0,
+        "nonzeroAlphaLevels": 2
+      }
+    },
+    "medium": {
+      "1": {
+        "sha256": "071517ffa40e307dd634bff2cfe016c62cda5822ab21d61473fcdca64287d912",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 270,
+        "nonzeroAlphaLevels": 10
+      },
+      "112": {
+        "sha256": "ea932a883814399aa3d9c6420abdb29e2da2949d811865979e094c1d6d618ac2",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 397,
+        "nonzeroAlphaLevels": 10
+      },
+      "147": {
+        "sha256": "d5b5552c92b98d0397fb4f7bf458f42a1e2db8def20cdc79ceb038580eb349a0",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 280,
+        "nonzeroAlphaLevels": 12
+      }
+    },
+    "high": {
+      "1": {
+        "sha256": "da78d44ae49af6c0590e47ec02d3754493bcf7073e2e5e1439b3569fa1d888d6",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 414,
+        "nonzeroAlphaLevels": 32
+      },
+      "112": {
+        "sha256": "d6832968e7a7171b755dd21f3aac93c142f2a8846c2bd8ccd516c2ce9a85e827",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 622,
+        "nonzeroAlphaLevels": 52
+      },
+      "147": {
+        "sha256": "55a3b5235a2b9a8399f534a75a293f6be6b2664e3ceac48cbbbe85aabd02b9d6",
+        "size": [
+          185,
+          165
+        ],
+        "partialAlphaPixels": 439,
+        "nonzeroAlphaLevels": 47
+      }
+    }
+  },
+  "releaseValidation": {
+    "Low": {
+      "clips": 912,
+      "atlases": 32,
+      "uniqueRects": 8736,
+      "pngBytes": 27564231,
+      "rgbaGpuBytes": 536870912,
+      "etc2GpuBytes": 134217728,
+      "unit2IdlePartialAlpha": 0
+    },
+    "Medium": {
+      "clips": 912,
+      "atlases": 32,
+      "uniqueRects": 8757,
+      "pngBytes": 50004951,
+      "rgbaGpuBytes": 536870912,
+      "etc2GpuBytes": 134217728,
+      "unit2IdlePartialAlpha": 270
+    },
+    "High": {
+      "clips": 912,
+      "atlases": 32,
+      "uniqueRects": 8772,
+      "pngBytes": 70472625,
+      "rgbaGpuBytes": 536870912,
+      "etc2GpuBytes": 134217728,
+      "unit2IdlePartialAlpha": 414
+    }
+  },
+  "reproduction": {
+    "fileCount": 99,
+    "byteIdenticalRepeat": true,
+    "input": "Fixed original SWFs; renderer/source/job hashes checked before raw-frame reuse"
+  }
+}

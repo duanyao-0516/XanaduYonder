@@ -86,7 +86,12 @@ namespace XanaduYonder.EditorTools
                 Require(profile.GetActive() == null, "Viewing entry does not fabricate a started attempt");
                 page.Move(Direction.Up); page.Save(); page.Suspend(); page.SetForeground(false); page.SetForeground(true);
                 Require(page.Session.Game.Moves == 0 && profile.GetActive() == null && page.IsEntry, "Entry ignores movement and lifecycle saves keep fresh profile empty");
-                page.Leave(); page.Save(); page.Enter();
+                page.Leave();
+                var savedBoardSize=Get<RectTransform>(page,"surface").sizeDelta;
+                var hostCanvas=(RectTransform)f.Root.parent;hostCanvas.sizeDelta=new Vector2(height,720);
+                page.SetForeground(false);page.SetForeground(true);page.Save();
+                Require(Get<RectTransform>(page,"surface").sizeDelta==savedBoardSize&&!page.gameObject.activeSelf,"An inactive portrait game preserves its layout during another game's landscape focus callbacks");
+                hostCanvas.sizeDelta=new Vector2(720,height);page.Enter();
                 Require(profile.GetActive() == null && page.IsEntry, "Startup leave and reentry do not create an active save");
                 f.Capture("entry-new");
                 f.Click(f.Find("Continue game"));

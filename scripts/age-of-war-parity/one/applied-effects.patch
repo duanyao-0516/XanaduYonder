@@ -1,0 +1,160 @@
+--- OneEffects.cs
++++ OneEffects.cs
+@@ -14,15 +14,16 @@
+         }
+         private sealed class Particle
+         {
+-            internal long Uid;
++            internal long Uid,BornTick;
+             internal int Id,Side,Age,NativeAge,Variant,Flame;
+             internal double X,Y,Xs,Ys,Gravity,GravityFactor,Spin,Rotation,Damage,Scale=1,Alpha=1;
+-            internal bool Removed;
++            internal bool Removed,Initialized;
+         }
+         private sealed class Special
+         {
+             internal int Age,Counter,Timer,Frame=1;
+             internal long Uid;
++            internal bool Initialized;
+             internal double X,Y;
+         }
+         private readonly List<Projectile> _projectiles=new List<Projectile>();
+@@ -30,10 +31,18 @@
+         private Special _special;
+         private void StartSpecial()
+         {
+-            _special=new Special{Uid=_nextVisual++,Age=_age,Timer=_age==3?300:200,X=_age==4?-100:_age==5?150:0,Y=_age==4?200:_age==5?425:0};
+-            if(_age==3)_healing=true;
+-            Event("special",_special.X,_special.Y,_age);
+-            if(_age==4)Event("sound",_special.X,_special.Y,0,"sound/972");
++            _special=new Special{Uid=_nextVisual++,Age=_age};
++            Event("special",0,0,_age);
++        }
++        private void InitializeSpecial()
++        {
++            var special=_special;if(special==null||special.Initialized)return;
++            special.Timer=special.Age==3?300:200;
++            special.X=special.Age==4?-100:special.Age==5?150:0;
++            special.Y=special.Age==4?200:special.Age==5?425:0;
++            special.Initialized=true;
++            if(special.Age==3)_healing=true;
++            if(special.Age==4)Event("sound",special.X,special.Y,0,"sound/972");
+         }
+         private void TickSpecial()
+         {
+@@ -61,7 +70,7 @@
+         }
+         private Projectile CreateProjectile(double x,double y,double rotation,double damage,string id,int side)
+         {
+-            var p=new Projectile{Uid=_nextVisual++,BornTick=_tick,Id=id,Side=side,X=DisplayPosition(x),Y=DisplayPosition(y),Rotation=rotation,Damage=damage};
++            var p=new Projectile{Uid=_nextVisual++,BornTick=_tick,Id=id,Side=side,X=DisplayPosition(x),Y=DisplayPosition(y),Rotation=DisplayRotation(rotation),Damage=damage};
+             _projectiles.Add(p);return p;
+         }
+         private void InitializeProjectile(Projectile p)
+@@ -110,9 +119,9 @@
+                         if(n==9||p.Xs<15){p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+p.Ys);p.Xs*=1.01;p.Ys*=1.01;}
+                     }
+                     else if(p.Id=="special4"||p.Id=="special5")
+-                    {if(p.Gravity<15)p.Gravity+=.2;p.Xs/=1.02;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation+=p.Spin;}
++                    {if(p.Gravity<15)p.Gravity+=.2;p.Xs/=1.02;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation=DisplayRotation(p.Rotation+p.Spin);}
+                     else
+-                    {p.Gravity+=p.GravityFactor;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation+=p.Spin;}
++                    {p.Gravity+=p.GravityFactor;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation=DisplayRotation(p.Rotation+p.Spin);}
+                     if(p.Id=="special1")CreateParticle(p.X,p.Y,4,0,p.Rotation);
+                     if(p.Y>425){Impact(p,null,true);p.Removed=true;break;}
+                     foreach(var actor in Roster())
+@@ -146,48 +155,53 @@
+         {for(int i=0;i<count;++i)CreateParticle(actor.X,actor.Y-actor.Height/1.5,2,0,0);}
+         private Particle CreateParticle(double x,double y,int id,int side,double parameter)
+         {
+-            var p=new Particle{Uid=_nextVisual++,Id=id,Side=side,X=x,Y=y,Damage=parameter};
++            var p=new Particle{Uid=_nextVisual++,BornTick=_tick,Id=id,Side=side,X=DisplayPosition(x),Y=DisplayPosition(y),Damage=parameter};
++            _particles.Add(p);return p;
++        }
++        private void InitializeParticle(Particle p)
++        {
++            int id=p.Id;double parameter=p.Damage;
+             switch(id)
+             {
+                 case 1:p.Ys=3;break;
+                 case 2:
+-                    p.GravityFactor=.2;p.Xs=_random.Next()*2-1;p.Gravity=_random.Next()*1.5-1;p.X+=_random.Next()*6-3;p.Y+=_random.Next()*6-3;p.Spin=_random.Next(4)-1.5;
++                    p.GravityFactor=.2;p.Xs=_random.Next()*2-1;p.Gravity=_random.Next()*1.5-1;p.X=DisplayPosition(p.X+(_random.Next()*6-3));p.Y=DisplayPosition(p.Y+(_random.Next()*6-3));p.Spin=_random.Next(4)-1.5;
+                     break;
+                 case 3:case 9:case 10:
+-                    p.GravityFactor=.15;p.Scale=(_random.Next(40)+100)/100.0;p.Xs=_random.Next()*6-3;p.Gravity=-_random.Next()*3+1;p.X+=_random.Next()*9-4;p.Y+=_random.Next()*9-4;p.Spin=_random.Next(4)-1.5;
++                    p.GravityFactor=.15;p.Scale=(_random.Next(40)+100)/100.0;p.Xs=_random.Next()*6-3;p.Gravity=-_random.Next()*3+1;p.X=DisplayPosition(p.X+(_random.Next()*9-4));p.Y=DisplayPosition(p.Y+(_random.Next()*9-4));p.Spin=_random.Next(4)-1.5;
+                     break;
+                 case 4:
+-                    p.Scale=(_random.Next(20)+100)/100.0;p.Rotation=parameter;p.X+=_random.Next()*9-4;p.Y+=_random.Next()*9-4;p.Spin=_random.Next(4)-1.5;break;
++                    p.Scale=(_random.Next(20)+100)/100.0;p.Rotation=DisplayRotation(parameter);p.X=DisplayPosition(p.X+(_random.Next()*9-4));p.Y=DisplayPosition(p.Y+(_random.Next()*9-4));p.Spin=_random.Next(4)-1.5;break;
+                 case 5:case 11:
+-                    p.Rotation=-90+_random.Next(60)-30;p.Xs=7*Math.Cos(p.Rotation*Math.PI/180);p.Ys=7*Math.Sin(p.Rotation*Math.PI/180)+_random.Next();p.GravityFactor=.2;p.Spin=_random.Next(20)-10;p.Damage=id==5?10:30;break;
+-                case 6:p.X+=_random.Next()*6-3;p.Y+=_random.Next()*6-3;break;
++                    p.Rotation=-90+_random.Next(60)-30;p.Xs=7*Math.Cos(p.Rotation*0.017453292519943295);p.Ys=7*Math.Sin(p.Rotation*0.017453292519943295)+_random.Next();p.GravityFactor=.2;p.Spin=_random.Next(20)-10;p.Damage=id==5?10:30;break;
++                case 6:p.X=DisplayPosition(p.X+(_random.Next()*6-3));p.Y=DisplayPosition(p.Y+(_random.Next()*6-3));break;
+                 case 8:
+-                    p.GravityFactor=.2;p.Gravity=1;p.X+=_random.Next()*2-1;p.Y+=_random.Next()*2-1;p.Spin=_random.Next(4)-1.5;
++                    p.GravityFactor=.2;p.Gravity=1;p.X=DisplayPosition(p.X+(_random.Next()*2-1));p.Y=DisplayPosition(p.Y+(_random.Next()*2-1));p.Spin=_random.Next(4)-1.5;
+                     // part8 never initializes xs. AVM1 writes NaN to _x are ignored by the display object.
+                     break;
+             }
+             if(id==2||id==8)p.Variant=_random.Next(12);
+             if(id==7||id==12)Event("sound",p.X,p.Y,0,"sound/591");
+             if(id==6)p.Flame=NewFlame();
+-            _particles.Add(p);return p;
++            p.Initialized=true;
+         }
+         private void TickParticles()
+         {
+             int count=_particles.Count;
+             for(int i=count-1;i>=0;--i)
+             {
+-                var p=_particles[i];++p.NativeAge;if(p.Flame>0)p.Flame=NextFlame(p.Flame);
++                var p=_particles[i];if(p.BornTick>=_tick)continue;if(!p.Initialized)InitializeParticle(p);++p.NativeAge;if(p.Flame>0)p.Flame=NextFlame(p.Flame);
+                 // These two clips remove themselves on frame 28 even while PAUSED.
+                 if(p.Id==7||p.Id==12){if(++p.Age>=27)p.Removed=true;continue;}
+                 if(_paused)continue;
+                 ++p.Age;
+                 switch(p.Id)
+                 {
+-                    case 1:p.Y-=p.Ys;p.Ys/=1.1;if(p.Ys<=.2)p.Alpha-=.02;if(p.Alpha<=0)p.Removed=true;break;
+-                    case 4:p.Y-=1;p.Scale-=.04;p.Alpha-=.04;if(p.Y>425||p.Alpha<=0||p.Scale<=0)p.Removed=true;break;
+-                    case 6:p.Alpha-=.01;if(p.Alpha<=0)p.Removed=true;break;
++                    case 1:p.Y=DisplayPosition(p.Y-p.Ys);p.Ys/=1.1;if(p.Ys<=.2)p.Alpha=DisplayAlphaPercent(p.Alpha*100-2);if(p.Alpha<=0)p.Removed=true;break;
++                    case 4:p.Y=DisplayPosition(p.Y-1);p.Scale-=.04;p.Alpha=DisplayAlphaPercent(p.Alpha*100-4);if(p.Y>425||p.Alpha<=0||p.Scale<=0)p.Removed=true;break;
++                    case 6:p.Alpha=DisplayAlphaPercent(p.Alpha*100-1);if(p.Alpha<=0)p.Removed=true;break;
+                     case 5:case 11:
+-                        p.Gravity+=p.GravityFactor;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation=p.Id==11?0:p.Rotation+p.Spin;
++                        p.Gravity+=p.GravityFactor;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+(p.Ys+p.Gravity));p.Rotation=p.Id==11?0:DisplayRotation(p.Rotation+p.Spin);
+                         if(p.Ys+p.Gravity>0)
+                         {
+                             if(p.Y>425){CreateParticle(p.X,p.Y,7,0,0);CreateParticle(p.X,p.Y,6,0,0);p.Removed=true;}
+@@ -195,7 +209,7 @@
+                             {actor.Health-=p.Damage;CreateParticle(p.X,p.Y,7,0,0);Blood(actor,5);p.Removed=true;}
+                         }break;
+                     default:
+-                        p.Gravity+=p.GravityFactor;p.Xs/=1.1;p.X+=p.Xs;p.Y+=p.Gravity;p.Rotation+=p.Spin;
++                        p.Gravity+=p.GravityFactor;p.Xs/=1.1;p.X=DisplayPosition(p.X+p.Xs);p.Y=DisplayPosition(p.Y+p.Gravity);p.Rotation=DisplayRotation(p.Rotation+p.Spin);
+                         if(p.Id==8)foreach(var actor in Roster())if(actor.Side!=p.Side&&Contains(actor,p.X,p.Y))
+                         {actor.Health-=p.Damage;for(int j=0;j<3;++j)CreateParticle(p.X,p.Y,9,0,0);Blood(actor,2);p.Removed=true;}
+                         if(p.Y>425)p.Removed=true;break;
+--- AgeOfWarOneBattle.cs
++++ AgeOfWarOneBattle.cs
+@@ -105,6 +105,8 @@
+         }
+         // AVM1 DisplayObject setters store integral twips. Ordinary rule numbers remain doubles.
+         private static double DisplayPosition(double value) {return Math.Truncate(value*20)/20;}
++        private static double DisplayAlphaPercent(double value) {return Math.Truncate(value/100*256)/256;}
++        private static double DisplayRotation(double value) {value%=360;if(value>180)value-=360;else if(value< -180)value+=360;return value;}
+         private Actor Spawn(int id,int side)
+         {
+             var unit=new Actor{Uid=_nextUnit++,Id=id,Side=side,X=side==1?150:860};
+@@ -130,6 +132,7 @@
+         {
+             if(_ended)return;
+             ++_tick;
++            InitializeSpecial();
+             // Observed AVM1 phases: old-to-new frame actions, then new-to-old enterFrame.
+             // Clips attached by the menu/AI below first initialize in the following frame.
+             for(int i=0;i<_units.Count;++i)

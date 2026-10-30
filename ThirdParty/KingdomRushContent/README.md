@@ -1,12 +1,20 @@
-# Kingdom Rush playable baseline
+# Kingdom Rush playable content
 
-The active build is restored to the complete game from the previously playable **192.14 MB APK**, whose tower-defense increment was **77.30 MB**. Further code and resource reduction is deferred. The selected gameplay remains the FL first-generation campaign: 32 levels, three modes and 13 heroes, with the original integrated resources retained.
+The FL8.0.5 first-generation integration contains 32 levels, three challenge modes and 13 heroes. The user accepted the restored playable version on OPPO and authorized merging and pushing it to `master`. Further code and resource pruning remains deferred. No new GitHub Release has been published.
 
-## Exact source and resource baseline
+## Accepted baseline and allowed changes
 
-The restored game archive is **70,585,835 bytes**, SHA256 `212cb79ede90d140159d66663bf3d23eeb68d984f862b4091dbe121122a18641`. All **2,424** Lua, image, sound, font and configuration files are pinned by `profile/stable-content-manifest.json`. The previous APK is preserved locally in `artifacts/kingdom-rush-1/final-prune/baseline/previous-apk.apk`, SHA256 `247e952d9cf3b6f4732fae13bc2ddf1f289de3f7b2a8643b740a7ffb29d13a6b`.
+The accepted game archive contains **2,424 files**, **70,585,835 bytes**, SHA-256 `212cb79ede90d140159d66663bf3d23eeb68d984f862b4091dbe121122a18641`. Every baseline file is pinned in [profile/stable-content-manifest.json](profile/stable-content-manifest.json). The historical reference APK was **192.14 MB**, with a **77.30 MB** increase over the old host APK; those figures are not the size or increment of the current master integration.
 
-The original builder assembles this source and media from the user-supplied FL8.0.5 APK and the measured compression inputs. It no longer invokes the experimental final pruning pipeline. The generated `staging/` directory is the full editable source/resource tree. Before replacing `game.love`, the builder checks the exact approved archive hash and every file against the stable manifest; an unexpected change fails the build.
+This integration retains every baseline file. Its only existing-content change is the footer hook in `all-desktop/screen_slots.lua`; removing that hook must reproduce the original file exactly. The other **2,423 files must retain their original SHA-256**. The only addition is `all-desktop/xanadu_start_menu.lua`, sourced from [menu/xanadu_start_menu.lua](menu/xanadu_start_menu.lua). The resulting content has **2,425 files**, including **1,295 Lua files**. Existing fonts, gameplay, levels, textures and audio remain unchanged.
+
+The new module adds top-right help and settings buttons to the start screen. Help explains map dragging, building and upgrading towers, hero selection and movement, wave-path preview and early-call rewards, skills and challenges. Settings opens the game's existing music/sound-effects panel and retains its save behavior; it does not synchronize settings back to the Unity hall. Help uses the baseline's existing Chinese font.
+
+The builder first verifies the exact baseline, then permits only this menu change. Content validation and Android build checks must bind their reports to the resulting archive and AAR hashes. Unexpected deletions, resource changes or extra files must fail validation. Results for the current integration are recorded separately in [the verification record](../../docs/verification-kingdom-rush.md).
+
+## Reproduce
+
+The source APK and measured compression inputs are local build inputs. The original source/resource generation remains active; the experimental pruning pipeline is excluded.
 
 ```sh
 python3 scripts/kingdom-rush/build-content.py \
@@ -25,16 +33,10 @@ python3 scripts/kingdom-rush/build-runtime.py \
 scripts/build-kingdom-rush.sh
 ```
 
-The content validator compiles all 1,294 Lua files and checks the original atlas, audio, direct-file, native profile and mode data. Both Android build entry points require this passing certificate, the exact stable content, and matching content/runtime AAR hashes. They reject experimental pruned archives even if those archives have an older passing report. APK checks cover the embedded archive, ARM64 native libraries, offline permissions, CRC, signature and absence of diagnostic probes.
+The standalone preview uses `com.duanyao.xanaduyonder.kingdomrushtest`; its save identity remains `xanadu_kingdom_rush_1`. Replacement installation must preserve user data. The hall now includes Kingdom Rush as entry 19 in all three views, uses the existing castle icon for compact views, and displays the newly supplied logo unchanged in Single mode with Zuma's geometry.
 
-## Preserved reduction experiment
+## Preserved experiment and verification boundary
 
-The pre-rollback work is preserved on local Git branch `p/duanyao.0516/codex/kr1-pruning-snapshot-20261030-193034`, commit `10ce12f905c2112ec5c440b6700903ecc0a46bbe`. A complete filesystem snapshot, including ignored artifacts, native libraries and Unity caches, is stored outside the worktree at `/Users/bytedance/Desktop/code/XanaduYonder-backups/kingdom-rush-before-stable-rollback-20261030-193034/`. Its file manifest and Git bundle support independent recovery.
+The previous pruning experiment is saved on local branch `p/duanyao.0516/codex/kr1-pruning-snapshot-20261030-193034`, commit `10ce12f905c2112ec5c440b6700903ecc0a46bbe`. Its complete filesystem snapshot is at `/Users/bytedance/Desktop/code/XanaduYonder-backups/kingdom-rush-before-stable-rollback-20261030-193034/`. It is not the active build.
 
-Experimental pruning tools and evidence are not part of the active build. Continue any later reduction work from the saved snapshot after the playable baseline has been accepted. Do not relax the stable hash gate to silently package a new reduction experiment.
-
-## Device and delivery boundary
-
-The preview remains a separate offline Android package, `com.duanyao.xanaduyonder.kingdomrushtest`. Its save identity stays `xanadu_kingdom_rush_1`; replacement installation must not clear user data. The previously requested lobby logo is retained. The current request is to build and install for user acceptance, without publishing a GitHub Release or launching the game automatically.
-
-The historical stable APK passed a limited OPPO smoke test through early first-level combat and return/re-entry. This is not a claim that every level or mechanic was played to completion. Current build, artifact and installation results are recorded separately from those historical device observations.
+The user's acceptance covers the restored baseline, not every level or this later menu/lobby change. Current content verification, UI checks, APK size, installation and device results are tracked in the linked record; historical tests do not establish those results.

@@ -1,0 +1,19 @@
+{
+  "runtime": "Ruffle 0.7.1 Web/WASM AVM1",
+  "sourceSwfSha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+  "originalActionsPreserved": 315,
+  "collectedAtUtc": "2026-10-30T08:01:34.021231+00:00",
+  "source": "Original AVM1 empty MovieClip property getters; independent from the AS3 Sprite probe",
+  "random": "No random values used",
+  "files": {
+    "scripts/age-of-war-parity/one/InjectScenario.java": "dbc5f6fb42f71c0bdeaa6ffd6fa6568085764b61ca398d69941a07da94439cf2",
+    "scripts/age-of-war-parity/one/properties.as": "4db501cbc55b893c329c5bf2c4149419505acca6256d569493c61cc81bf6be50",
+    "Tests/AgeOfWarParity/One/fixtures/properties/reference.csv": "7d340ebb954f2f4a8a68883d7e587ed6988c5465833d0ca568b5f16dc1aa177f",
+    "instrumentedSwf": "d933924bd05c024a6013cac4eb7325e7da8ff821161a643b2cdd9609a5e9d6bb"
+  },
+  "assertions": {
+    "frozenProduction": "6 failed",
+    "temporaryPatchedCopy": "6 passed",
+    "productionAfterFixes": "6 passed"
+  }
+}

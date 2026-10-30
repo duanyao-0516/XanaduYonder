@@ -40,9 +40,12 @@ namespace XanaduYonder.Runtime
         private SaveData data;
         private LocalSaveStore store;
         private RectTransform canvasRoot;
-        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> zumaHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
+        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> landscapeHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
         private RectTransform frame;
         private GameObject lobbyPage;
+        private ScrollRect lobbyScroll;
+        private LobbyView lobbyView;
+        private bool startupComplete;
         private GameObject gamePage;
         private GameObject modal;
         private Action dismissModal;
@@ -50,47 +53,31 @@ namespace XanaduYonder.Runtime
         private GameFeedback feedback;
         private Text scoreText;
         private Text bestText;
-        private Text lobbyBestText;
-        private Text lobbyJumpBestText;
-        private Text lobbySheepRecordText;
-        private Text lobbySudokuRecordText;
         private JumpPage jumpPage;
         private SheepPage sheepPage;
         private IdiomPage idiomPage;
-        private Text lobbyIdiomRecordText;
         private WatermelonPage watermelonPage;
-        private Text lobbyWatermelonRecordText;
         private SudokuPage sudokuPage;
         private DinoPage dinoPage;
         private DinoSaveData dinoPreview;
-        private Text lobbyDinoRecordText;
         private MinesweeperPage minesweeperPage;
         private ZumaPage zumaPage;
-        private Text lobbyMinesweeperRecordText;
         private HappyBallPage happyBallPage;
-        private Text lobbyHappyBallRecordText;
         private long happyBallBest;
         private GomokuPage gomokuPage;
-        private Text lobbyGomokuRecordText;
         private SlidingPuzzlePage slidingPuzzlePage;
-        private Text lobbySlidingPuzzleRecordText;
         private SokobanPage sokobanPage;
-        private Text lobbySokobanRecordText;
         private LinkMatchPage linkMatchPage;
-        private Text lobbyLinkMatchRecordText;
         private GoldMinerPage goldMinerPage;
         private TetrisPage tetrisPage;
-        private Text lobbyTetrisRecordText;
-        private Button lobbyTetrisStart;
         private TetrisLoadResult tetrisPreview;
         private FlappyBirdPage flappyBirdPage;
         private Sprite flappyLobbySprite;
-        private Text lobbyFlappyRecordText;
         private long flappyBest;
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AgeOfWarOne, AgeOfWarTwo, AgeOfWarSelection }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -98,6 +85,32 @@ namespace XanaduYonder.Runtime
         private bool focused = true;
         private string saveWarning;
         private bool saveFailed;
+
+        // Startup presentation may reveal the lobby only after the actual input route
+        // and layout are ready. Reading this must not initialize pages or save again.
+        internal bool LobbyReadyForInput
+        {
+            get
+            {
+                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning ||
+                    (lobbyView != null && lobbyView.HasDisplayOptions) ||
+                    lobbyPage == null || !lobbyPage.activeInHierarchy || canvasRoot == null ||
+                    !canvasRoot.gameObject.activeInHierarchy || lobbyScroll == null || !lobbyScroll.isActiveAndEnabled ||
+                    !lobbyScroll.vertical || lobbyScroll.content == null || lobbyScroll.viewport == null)
+                    return false;
+                var canvas = canvasRoot.GetComponent<Canvas>();
+                var raycaster = canvasRoot.GetComponent<GraphicRaycaster>();
+                var group = canvasRoot.GetComponent<CanvasGroup>();
+                var events = EventSystem.current;
+                var input = events != null ? events.currentInputModule : null;
+                return canvas != null && canvas.isActiveAndEnabled && raycaster != null && raycaster.isActiveAndEnabled &&
+                    (group == null || (group.interactable && group.blocksRaycasts)) &&
+                    events != null && events.isActiveAndEnabled && events.isFocused &&
+                    input != null && input.isActiveAndEnabled && input.IsActive() &&
+                    lobbyScroll.viewport.rect.width > 0 && lobbyScroll.viewport.rect.height > 0 &&
+                    lobbyScroll.content.rect.width > 0 && lobbyScroll.content.rect.height > 0;
+            }
+        }
 
         private void Awake()
         {
@@ -131,6 +144,7 @@ namespace XanaduYonder.Runtime
             status = UiFactory.Label(statusBand, "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             ShowLobby();
             SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
+            startupComplete = true;
             Debug.Log("XanaduYonder ready; save=" + store.SavePath);
         }
 
@@ -163,201 +177,87 @@ namespace XanaduYonder.Runtime
             var root = UiFactory.Rect(frame, "Lobby", 0, 0, 720, 1320);
             UiFactory.Stretch(root);
             lobbyPage = root.gameObject;
-            var navigation = UiFactory.Band(root, "Lobby navigation", 0, 92, 0);
-            UiFactory.Label(navigation, "XANADU  /  YONDER", 56, 30, 470, 40, 22, UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 22, 58, 58, OpenSettings);
-            // Card dimensions and gaps stay fixed; additional games extend this content instead of shrinking it.
-            var viewport = UiFactory.Rect(root, "Lobby list viewport", 0, 108, 720, 1196);
-            UiFactory.Stretch(viewport);
-            viewport.offsetMin = new Vector2(0, 16);
-            viewport.offsetMax = new Vector2(0, -108);
-            var scrollSurface = viewport.gameObject.AddComponent<Image>();
-            scrollSurface.color = Color.clear;
-            scrollSurface.raycastTarget = true;
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport, "Lobby list content", 0, 0, 720, 1790);
-            content.anchorMin = content.anchorMax = new Vector2(.5f, 1);
-            content.pivot = new Vector2(.5f, 1);
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport;
-            scroll.content = content;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = .12f;
-            scroll.decelerationRate = .10f;
-            scroll.scrollSensitivity = 36;
-
-            var introduction = UiFactory.Rect(content, "Lobby introduction", 0, 0, 720, 180);
-            UiFactory.Label(introduction, "小小一局，慢慢向前。", 56, 0, 608, 92, 44, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(introduction, "把片刻空闲，留给一点简单的快乐。", 56, 100, 608, 52, 25, UiFactory.Muted);
-            var cardCount = 0;
-            var card = AddLobbyCard(content, "2048", cardCount++, UiFactory.Hex("E3E9DF"));
-            UiFactory.Label(card.transform, cardCount.ToString("00") + "   /   数字益智", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(card.transform, "2048", 28, 64, 552, 104, 82, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(card.transform, "让相同的数字相遇。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyBestText = UiFactory.Label(card.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            lobbyBestText.resizeTextForBestFit = true; lobbyBestText.resizeTextMinSize = 14; lobbyBestText.resizeTextMaxSize = 21;
-            UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterGame, true);
-            var jumpCard = AddLobbyCard(content, "Jump", cardCount++, UiFactory.Hex("E4E9D3"));
-            UiFactory.Label(jumpCard.transform, cardCount.ToString("00") + "   /   轻巧向前", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(jumpCard.transform, "跳一跳", 28, 74, 350, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(jumpCard.transform, "按住，松手，再远一点。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyJumpBestText = UiFactory.Label(jumpCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            AddJumpPreview(jumpCard.transform);
-            UiFactory.Button(jumpCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterJump, true);
-            var sheepCard = AddLobbyCard(content, "Sheep", cardCount++, UiFactory.Hex("EEE7D3"));
-            UiFactory.Label(sheepCard.transform, cardCount.ToString("00") + "   /   层层三消", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(sheepCard.transform, "旸了个旸", 28, 74, 380, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(sheepCard.transform, "翻开一层，凑齐三个。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbySheepRecordText = UiFactory.Label(sheepCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            AddSheepPreview(sheepCard.transform);
-            UiFactory.Button(sheepCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSheep, true);
-            var watermelonCard = AddLobbyCard(content, "Watermelon", cardCount++, UiFactory.Hex("F1E4C4"));
-            UiFactory.Label(watermelonCard.transform, cardCount.ToString("00") + "   /   碰碰合成", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(watermelonCard.transform, "合成大西瓜", 28, 74, 460, 90, 54, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            var fruitPreview = UiFactory.Rect(watermelonCard.transform, "Watermelon preview", 482, 72, 90, 90).gameObject.AddComponent<RawImage>();
-            fruitPreview.texture = Resources.Load<Texture2D>("Watermelon/Fruit/11");
-            fruitPreview.raycastTarget = false;
-            UiFactory.Label(watermelonCard.transform, "小小一颗，合成满满的快乐。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyWatermelonRecordText = UiFactory.Label(watermelonCard.transform, "水果 / 表情 / 校徽  ·  三种主题", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(watermelonCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterWatermelon, true);
-            var idiomCard = AddLobbyCard(content, "Idiom", cardCount++, UiFactory.Hex("E1EBDD"));
-            UiFactory.Label(idiomCard.transform, cardCount.ToString("00") + "   /   一词一世界", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(idiomCard.transform, "成语接龙", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(idiomCard.transform, "一来一往，认识更多好词。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyIdiomRecordText = UiFactory.Label(idiomCard.transform, "同字 / 同音  ·  随时收藏生词", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(idiomCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterIdiom, true);
-            var sudokuCard = AddLobbyCard(content, "Sudoku", cardCount++, UiFactory.Hex("DFE8DE"));
-            UiFactory.Label(sudokuCard.transform, cardCount.ToString("00") + "   /   九宫推理", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(sudokuCard.transform, "数独", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(sudokuCard.transform, "九宫之间，找到唯一。", 32, 166, 548, 34, 25, UiFactory.Ink);
-            lobbySudokuRecordText = UiFactory.Label(sudokuCard.transform, "", 32, 206, 548, 58, 18, UiFactory.Accent);
-            for (int i = 0; i < 9; i++)
+            var entries = new List<LobbyEntry>
             {
-                var square = UiFactory.Panel(sudokuCard.transform, "Sudoku preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, UiFactory.Paper, false);
-                UiFactory.Label(square.transform, i == 1 || i == 6 ? "" : (i + 1).ToString(), 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
-            }
-            UiFactory.Button(sudokuCard.transform, "选择关卡 / 继续  →", 32, 270, 544, 62, EnterSudoku, true);
-            var minesweeperCard = AddLobbyCard(content, "Minesweeper", cardCount++, UiFactory.Hex("DFE8DE"));
-            UiFactory.Label(minesweeperCard.transform, cardCount.ToString("00") + "   /   经典扫雷", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(minesweeperCard.transform, "扫雷", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(minesweeperCard.transform, "数字之间，步步为营。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyMinesweeperRecordText = UiFactory.Label(minesweeperCard.transform, "首击安全 · 三档挑战", 32, 216, 548, 38, 21, UiFactory.Accent);
-            for (int i = 0; i < 9; i++)
-            {
-                var square = UiFactory.Panel(minesweeperCard.transform, "Minesweeper preview " + i, 426 + i % 3 * 45, 68 + i / 3 * 39, 40, 35, i == 0 || i == 3 ? UiFactory.Paper : UiFactory.Hex("BBCBB6"), false);
-                if (i == 0 || i == 3) UiFactory.Label(square.transform, i == 0 ? "1" : "2", 0, 0, 40, 35, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
-                if (i == 4)
-                {
-                    var icon = UiFactory.Rect(square.transform, "Flag", 8, 6, 24, 24).gameObject.AddComponent<MinesweeperIconGraphic>();
-                    icon.Kind = MinesweeperIconKind.Flag; icon.color = UiFactory.Hex("B34842"); icon.ContrastFlagPole = true; icon.raycastTarget = false;
-                }
-            }
-            UiFactory.Button(minesweeperCard.transform, "选择难度 / 继续  →", 32, 270, 544, 62, EnterMinesweeper, true);
-            var zumaCard = AddLobbyCard(content, "Zuma", cardCount++, UiFactory.Hex("394F35"));
-            UiFactory.Label(zumaCard.transform, cardCount.ToString("00") + "   /   神庙弹珠", 32, 22, 450, 36, 21, UiFactory.Hex("DAD7A4"));
-            UiFactory.Label(zumaCard.transform, "Zuma", 28, 74, 540, 90, 62, UiFactory.Hex("F4E8B4"), TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(zumaCard.transform, "转动青蛙，让同色弹珠相遇。", 32, 170, 548, 40, 25, Color.white);
-            UiFactory.Label(zumaCard.transform, "横屏游玩  ·  18 张地图  ·  4 档难度", 32, 216, 548, 38, 21, UiFactory.Hex("DAD7A4"));
-            UiFactory.Button(zumaCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterZuma);
-            var dinoCard = AddLobbyCard(content, "Dino", cardCount++, UiFactory.Hex("E7E8DB"));
-            UiFactory.Label(dinoCard.transform, cardCount.ToString("00") + "   /   像素跑酷", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(dinoCard.transform, "Dino", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(dinoCard.transform, "横屏或竖屏，跑得更远一点。", 32, 166, 548, 38, 25, UiFactory.Ink);
-            lobbyDinoRecordText = UiFactory.Label(dinoCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
+                LobbyGame("sudoku", "Sudoku", "数独", "06", "逻辑策略", "九宫推理", "九宫之间，找到唯一。", "", "", EnterSudoku, LobbyPreviews.Sudoku),
+                LobbyGame("minesweeper", "Minesweeper", "扫雷", "07", "逻辑策略", "经典扫雷", "数字之间，步步为营。", "首击安全 · 三档挑战", "首击安全 · 三档挑战", EnterMinesweeper, LobbyPreviews.Minesweeper),
+                LobbyGame("sliding-puzzle", "SlidingPuzzle", "数字华容道", "14", "逻辑策略", "数字归位", "留一格空白，理顺每一步。", "", "", EnterSlidingPuzzle, LobbyPreviews.SlidingPuzzle),
+                LobbyGame("sokoban", "Sokoban", "推箱子", "12", "逻辑策略", "经典推箱", "把每一只箱子，推回它的位置。", "", "", EnterSokoban, AddSokobanPreview),
+                LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
+                LobbyGame("age-of-war", "AgeOfWar", "战争进化史", "18", "逻辑策略", "时代进化", "从石器时代，走向未来战场。", "一代 / 二代 · 横屏战斗", "一代 / 二代", ShowAgeOfWarSelection, AddAgeOfWarPreview),
+                LobbyGame("kingdom-rush", "KingdomRush", "王国保卫战", "19", "逻辑策略", "初代塔防", "守住每一条通往王国的路。", "32 关 · 三种挑战 · 13 位英雄", "32 关 · 三种挑战", EnterKingdomRush, AddKingdomRushPreview),
+                LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
+                LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
+                LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
+                LobbyGame("link-match", "LinkMatch", "连连看", "17", "合成消除", "轻松连线", "找到相同，连起快乐。", "轻松 / 挑战 · 五档棋盘", "轻松 / 挑战", EnterLinkMatch, AddLinkMatchPreview),
+                LobbyGame("zuma", "Zuma", "Zuma", "08", "合成消除", "神庙弹珠", "转动青蛙，让同色弹珠相遇。", "横屏游玩 · 18 张地图 · 4 档难度", "18 张地图", EnterZuma, LobbyPreviews.Zuma),
+                LobbyGame("tetris", "Tetris", "俄罗斯方块", "15", "合成消除", "方块慢落", "落下一块，留一点从容。", "", "", EnterTetris, LobbyPreviews.Tetris),
+                LobbyGame("jump", "Jump", "跳一跳", "02", "敏捷挑战", "轻巧向前", "按住，松手，再远一点。", "", "", EnterJump, AddJumpPreview),
+                LobbyGame("dino", "Dino", "Dino", "09", "敏捷挑战", "像素跑酷", "横屏或竖屏，跑得更远一点。", "", "", EnterDino, LobbyPreviews.Dino),
+                LobbyGame("flappy-bird", "FlappyBird", "Flappy Bird", "16", "敏捷挑战", "轻点飞行", "轻点一下，再飞远一点。", "", "", EnterFlappyBird, AddFlappyPreview),
+                LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
+                LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人竖屏 / 双人横屏合作 · 10 关挑战", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
+                LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
+            };
+            lobbyView = root.gameObject.AddComponent<LobbyView>();
+            lobbyView.Initialize(entries, OpenSettings, LobbyDisplayPreferences.Load(), LobbyDisplayPreferences.Save);
+            lobbyScroll = lobbyView.Scroll;
+            lobbyStatus = lobbyView.StatusLabel;
             RefreshDinoRecord();
-            UiFactory.Button(dinoCard.transform, "选择方向 / 开始游戏  →", 32, 270, 544, 62, EnterDino, true);
-            var gomokuCard = AddLobbyCard(content, "Gomoku", cardCount++, UiFactory.Hex("EEE7D3"));
-            UiFactory.Label(gomokuCard.transform, cardCount.ToString("00") + "   /   黑白对弈", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(gomokuCard.transform, "五子棋", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(gomokuCard.transform, "一子一步，先连成五。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyGomokuRecordText = UiFactory.Label(gomokuCard.transform, "人机 / 本地双人 · 三档难度", 32, 216, 548, 38, 21, UiFactory.Accent);
-            AddGomokuPreview(gomokuCard.transform);
-            UiFactory.Button(gomokuCard.transform, "选择模式 / 继续  →", 32, 270, 544, 62, EnterGomoku, true);
-            var happyCard = AddLobbyCard(content, "HappyBall", cardCount++, UiFactory.Hex("E4E9DC"));
-            UiFactory.Label(happyCard.transform, cardCount.ToString("00") + "   /   轻巧下落", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(happyCard.transform, "欢乐球球", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(happyCard.transform, "转动高塔，穿过层层豁口。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbyHappyBallRecordText = UiFactory.Label(happyCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(happyCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterHappyBall, true);
-            var sokobanCard = AddLobbyCard(content, "Sokoban", cardCount++, UiFactory.Hex("EAE4D4"));
-            UiFactory.Label(sokobanCard.transform, cardCount.ToString("00") + "   /   经典推箱", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(sokobanCard.transform, "推箱子", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(sokobanCard.transform, "把每一只箱子，推回它的位置。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            var cratePreview = UiFactory.Rect(sokobanCard.transform, "Sokoban crate preview", 462, 74, 90, 90).gameObject.AddComponent<RawImage>();
-            cratePreview.texture = Resources.Load<Texture2D>("Sokoban/Sprites/crate");
-            cratePreview.raycastTarget = false;
-            lobbySokobanRecordText = UiFactory.Label(sokobanCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(sokobanCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSokoban, true);
-            var goldCard = AddLobbyCard(content, "Gold Miner", cardCount++, UiFactory.Hex("EDE0BD"));
-            UiFactory.Label(goldCard.transform, cardCount.ToString("00") + "   /   一起寻宝", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(goldCard.transform, "黄金矿工", 28, 74, 380, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            var goldCover = UiFactory.Rect(goldCard.transform, "Gold Miner celebrating miner", 430, 36, 142, 138).gameObject.AddComponent<Image>();
+        }
+
+        private static LobbyEntry LobbyGame(string id, string objectName, string name, string number,
+            string category, string tagline, string description, string record, string compactRecord,
+            Action enter, Action<Transform> drawLogo)
+        {
+            return new LobbyEntry
+            {
+                Id = id, ObjectName = objectName, Name = name, Number = number,
+                Category = category, Tagline = tagline, Description = description,
+                Record = record, CompactRecord = compactRecord, Enter = enter,
+                // BirdRest's 124x112 atlas cell has asymmetric transparent padding (alpha bounds
+                // x=5..122, y=23..109 from the top). At 82x74 and 7 degrees, its visible center
+                // is (1.39,-6.57) from the image center; keep that artwork optically centered.
+                BuildLogo = drawLogo == null ? null : slot => LobbyArtwork.Build(slot, drawLogo,
+                    id == "flappy-bird" ? new Vector2(1.39f, -6.57f) : Vector2.zero)
+            };
+        }
+
+        private static void AddWatermelonPreview(Transform parent)
+        {
+            var fruit = UiFactory.Rect(parent, "Watermelon artwork", 0, 0, 90, 90).gameObject.AddComponent<RawImage>();
+            fruit.texture = Resources.Load<Texture2D>("Watermelon/Fruit/11");
+            fruit.raycastTarget = false;
+        }
+
+        private static void AddSokobanPreview(Transform parent)
+        {
+            var crate = UiFactory.Rect(parent, "Sokoban crate preview", 0, 0, 90, 90).gameObject.AddComponent<RawImage>();
+            crate.texture = Resources.Load<Texture2D>("Sokoban/Sprites/crate");
+            crate.raycastTarget = false;
+        }
+
+        private static void AddGoldMinerPreview(Transform parent)
+        {
+            var miner = UiFactory.Rect(parent, "Gold Miner celebrating miner", 0, 0, 142, 138).gameObject.AddComponent<Image>();
             foreach (var pose in Resources.LoadAll<Sprite>("GoldMiner/characters/miner-p1-states"))
-                if (pose.name == "success") { goldCover.sprite = pose; break; }
-            goldCover.preserveAspect = true;
-            goldCover.raycastTarget = false;
-            var treasure = UiFactory.Rect(goldCard.transform, "Gold Miner prize", 520, 124, 62, 54).gameObject.AddComponent<Image>();
+                if (pose.name == "success") { miner.sprite = pose; break; }
+            miner.preserveAspect = true;
+            miner.raycastTarget = false;
+            var treasure = UiFactory.Rect(parent, "Gold Miner prize", 90, 88, 62, 54).gameObject.AddComponent<Image>();
             treasure.sprite = Resources.Load<Sprite>("GoldMiner/objects/ore_gold_medium");
             treasure.preserveAspect = true;
             treasure.raycastTarget = false;
-            UiFactory.Label(goldCard.transform, "看准时机，把宝藏带回家。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            UiFactory.Label(goldCard.transform, "单人竖屏 / 双人横屏合作 · 10 关挑战", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(goldCard.transform, "选择单人 / 双人  →", 32, 270, 544, 62, EnterGoldMiner, true);
-            var slidingCard = AddLobbyCard(content, "SlidingPuzzle", cardCount++, UiFactory.Hex("DFE8DC"));
-            UiFactory.Label(slidingCard.transform, cardCount.ToString("00") + "   /   数字归位", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(slidingCard.transform, "数字华容道", 28, 74, 548, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(slidingCard.transform, "留一格空白，理顺每一步。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            lobbySlidingPuzzleRecordText = UiFactory.Label(slidingCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            UiFactory.Button(slidingCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterSlidingPuzzle, true);
-
-            var tetrisCard = AddLobbyCard(content, "Tetris", cardCount++, UiFactory.Hex("E3E9DF"));
-            UiFactory.Label(tetrisCard.transform, cardCount.ToString("00") + "   /   方块慢落", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(tetrisCard.transform, "俄罗斯方块", 28, 74, 450, 90, 60, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(tetrisCard.transform, "落下一块，留一点从容。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            foreach (var cell in TetrisPieces.GetCells(TetrisPiece.T, 0))
-                UiFactory.Panel(tetrisCard.transform, "Tetris preview block", 472 + cell.X * 26, 78 + cell.Y * 26, 24, 24, UiFactory.Accent);
-            lobbyTetrisRecordText = UiFactory.Label(tetrisCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            lobbyTetrisRecordText.resizeTextForBestFit = true; lobbyTetrisRecordText.resizeTextMinSize = 14; lobbyTetrisRecordText.resizeTextMaxSize = 21;
-            lobbyTetrisStart = UiFactory.Button(tetrisCard.transform, "开始游戏  →", 32, 270, 544, 62, EnterTetris, true);
-            var flappyCard = AddLobbyCard(content, "FlappyBird", cardCount++, UiFactory.Hex("E2EBDD"));
-            UiFactory.Label(flappyCard.transform, cardCount.ToString("00") + "   /   轻点飞行", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(flappyCard.transform, "Flappy Bird", 28, 74, 420, 90, 58, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(flappyCard.transform, "轻点一下，再飞远一点。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            var birdPreview = UiFactory.Rect(flappyCard.transform, "Flappy bird preview", 496, 60, 82, 74).gameObject.AddComponent<Image>();
-            flappyLobbySprite = FlappyArt.LoadSprite("BirdRest");
-            birdPreview.sprite = flappyLobbySprite;
-            birdPreview.raycastTarget = false;
-            birdPreview.rectTransform.localRotation = Quaternion.Euler(0, 0, 7);
-            lobbyFlappyRecordText = UiFactory.Label(flappyCard.transform, "", 32, 216, 548, 38, 21, UiFactory.Accent);
-            lobbyFlappyRecordText.resizeTextForBestFit = true;
-            lobbyFlappyRecordText.resizeTextMinSize = 13; lobbyFlappyRecordText.resizeTextMaxSize = 21;
-            var flyButton = UiFactory.Button(flappyCard.transform, "开始游戏", 32, 270, 544, 62, EnterFlappyBird, true);
-            var flyLabel = flyButton.GetComponentInChildren<Text>();
-            flyLabel.alignment = TextAnchor.MiddleLeft;
-            flyLabel.rectTransform.anchoredPosition = new Vector2(28, 0);
-            UiFactory.Label(flyButton.transform, "→", 478, 0, 38, 62, 25, UiFactory.Paper, TextAnchor.MiddleRight);
-            var linkMatchCard = AddLobbyCard(content, "LinkMatch", cardCount++, UiFactory.Hex("E8EDDD"));
-            UiFactory.Label(linkMatchCard.transform, cardCount.ToString("00") + "   /   轻松连线", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(linkMatchCard.transform, "连连看", 28, 74, 380, 90, 62, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(linkMatchCard.transform, "找到相同，连起快乐。", 32, 170, 380, 40, 25, UiFactory.Ink);
-            lobbyLinkMatchRecordText = UiFactory.Label(linkMatchCard.transform, "轻松 / 挑战 · 五档棋盘", 32, 216, 548, 38, 21, UiFactory.Accent);
-            lobbyLinkMatchRecordText.resizeTextForBestFit = true;
-            lobbyLinkMatchRecordText.resizeTextMinSize = 14;
-            lobbyLinkMatchRecordText.resizeTextMaxSize = 21;
-            AddLinkMatchPreview(linkMatchCard.transform);
-            UiFactory.Button(linkMatchCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterLinkMatch, true);
-            AddKingdomRushCard(content, ref cardCount);
-            var footerTop = 216 + cardCount * 374 + 4;
-            UiFactory.Label(content, "无需联网  ·  无广告  ·  本地记录", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
-            lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 对局或最高纪录自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
-            content.sizeDelta = new Vector2(720, footerTop + 108);
         }
 
-        private static Image AddLobbyCard(Transform parent, string name, int index, Color color)
+        private void AddFlappyPreview(Transform parent)
         {
-            return UiFactory.Panel(parent, name + " game card", 56, 216 + index * 374, 608, 350, color);
+            var bird = UiFactory.Rect(parent, "Bird artwork", 0, 0, 82, 74).gameObject.AddComponent<Image>();
+            bird.preserveAspect = true;
+            if (flappyLobbySprite == null) flappyLobbySprite = FlappyArt.LoadSprite("BirdRest");
+            bird.sprite = flappyLobbySprite;
+            bird.raycastTarget = false;
+            bird.rectTransform.localRotation = Quaternion.Euler(0, 0, 7);
         }
 
         private void EnterGoldMiner()
@@ -470,10 +370,10 @@ namespace XanaduYonder.Runtime
 
         private void RefreshDinoRecord()
         {
-            if (lobbyDinoRecordText == null) return;
+            if (lobbyView == null) return;
             long portrait = dinoPage != null ? dinoPage.PortraitBest : dinoPreview == null ? 0 : dinoPreview.BestPortraitScore;
             long landscape = dinoPage != null ? dinoPage.LandscapeBest : dinoPreview == null ? 0 : dinoPreview.BestLandscapeScore;
-            lobbyDinoRecordText.text = "竖屏最高 " + portrait + "  ·  横屏最高 " + landscape;
+            lobbyView.SetRecord("dino", "竖屏最高 " + portrait + " · 横屏最高 " + landscape, "最高 " + Math.Max(portrait, landscape) + " 分");
         }
 
         private void BuildIdiom()
@@ -498,7 +398,7 @@ namespace XanaduYonder.Runtime
 
         private void RefreshIdiomRecord()
         {
-            if (idiomPage != null) lobbyIdiomRecordText.text = idiomPage.BestLabel;
+            if (idiomPage != null) lobbyView?.SetRecord("idiom", idiomPage.BestLabel, "同字 / 同音");
         }
 
         private void EnterIdiom()
@@ -573,7 +473,7 @@ namespace XanaduYonder.Runtime
 
         private void RefreshWatermelonRecord()
         {
-            if (watermelonPage != null) lobbyWatermelonRecordText.text = "你的最高纪录   " + watermelonPage.BestScore + "  ·  三种主题";
+            if (watermelonPage != null) lobbyView?.SetRecord("watermelon", "你的最高纪录 " + watermelonPage.BestScore + " · 三种主题", "最高 " + watermelonPage.BestScore + " 分");
         }
 
         private void BuildZuma()
@@ -610,28 +510,28 @@ namespace XanaduYonder.Runtime
             Save();
             activePage = Page.Zuma;
             // Keep the lobby visible while Android rotates; the complete Zuma page hides it.
-            SetZumaHostInput(false);
+            SetLandscapeHostInput(false);
             zumaPage.Enter();
         }
 
         private void FinishZumaExit()
         {
             activePage = Page.Lobby;
-            SetZumaHostInput(true);
+            SetLandscapeHostInput(true);
             canvasRoot.gameObject.SetActive(true);
             ShowLobby();
         }
 
-        private void SetZumaHostInput(bool enabled)
+        private void SetLandscapeHostInput(bool enabled)
         {
             var interaction = canvasRoot.GetComponent<CanvasGroup>();
             if (interaction == null) interaction = canvasRoot.gameObject.AddComponent<CanvasGroup>();
             if (!enabled)
             {
-                zumaHostTransitions.Clear();
+                landscapeHostTransitions.Clear();
                 foreach (var control in canvasRoot.GetComponentsInChildren<Selectable>())
                 {
-                    zumaHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
+                    landscapeHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
                     control.transition = Selectable.Transition.None;
                 }
                 interaction.interactable = false;
@@ -640,8 +540,8 @@ namespace XanaduYonder.Runtime
             else
             {
                 interaction.interactable = true;
-                foreach (var entry in zumaHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
-                zumaHostTransitions.Clear();
+                foreach (var entry in landscapeHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
+                landscapeHostTransitions.Clear();
             }
             canvasRoot.GetComponent<GraphicRaycaster>().enabled = enabled;
         }
@@ -671,10 +571,14 @@ namespace XanaduYonder.Runtime
 
         private static void AddJumpPreview(Transform parent)
         {
-            var platform = UiFactory.Rect(parent, "Jump platform preview", 432, 66, 140, 125).gameObject.AddComponent<RawImage>();
+            var frame = LobbyPreviews.Frame(parent, "Jump");
+            var artwork = UiFactory.Rect(frame, "Jump artwork", 0, 0, 140, 167);
+            UiFactory.Center(artwork);
+            artwork.localScale = Vector3.one * .85f;
+            var platform = UiFactory.Rect(artwork, "Jump platform preview", 0, 42, 140, 125).gameObject.AddComponent<RawImage>();
             platform.texture = Resources.Load<Texture2D>("Jump/Preview/platform");
             platform.raycastTarget = false;
-            var pawn = UiFactory.Rect(parent, "Jump pawn preview", 482, 24, 25, 69).gameObject.AddComponent<RawImage>();
+            var pawn = UiFactory.Rect(artwork, "Jump pawn preview", 50, 0, 25, 69).gameObject.AddComponent<RawImage>();
             pawn.texture = Resources.Load<Texture2D>("Jump/Preview/pawn");
             pawn.raycastTarget = false;
         }
@@ -691,7 +595,7 @@ namespace XanaduYonder.Runtime
             jumpPage.Leave();
         }
 
-        private void RefreshJumpBest() { lobbyJumpBestText.text = "你的最高纪录   " + jumpPage.BestScore; }
+        private void RefreshJumpBest() { lobbyView?.SetRecord("jump", "你的最高纪录 " + jumpPage.BestScore, "最高 " + jumpPage.BestScore + " 分"); }
 
         private void BuildSheep()
         {
@@ -712,7 +616,7 @@ namespace XanaduYonder.Runtime
             return panel;
         }
 
-        private void RefreshSheepRecord() { lobbySheepRecordText.text = "通关 " + sheepPage.CompletedRuns + " 次  ·  无尽最高 " + sheepPage.EndlessBest; }
+        private void RefreshSheepRecord() { lobbyView?.SetRecord("sheep", "通关 " + sheepPage.CompletedRuns + " 次 · 无尽最高 " + sheepPage.EndlessBest, "已通关 " + sheepPage.CompletedRuns + " 次"); }
 
         private void BuildSudoku()
         {
@@ -728,9 +632,15 @@ namespace XanaduYonder.Runtime
 
         private void RefreshSudokuRecord()
         {
-            lobbySudokuRecordText.text = "四档难度 · 已完成 " + sudokuPage.CompletedCount + "/2000关\n" +
-                "入门 " + sudokuPage.CompletedCountForDifficulty(0) + " · 简单 " + sudokuPage.CompletedCountForDifficulty(1) +
-                " · 中等 " + sudokuPage.CompletedCountForDifficulty(2) + " · 困难 " + sudokuPage.CompletedCountForDifficulty(3);
+            lobbyView?.SetRecord("sudoku", SudokuSummary(sudokuPage.CompletedCount,
+                sudokuPage.CompletedCountForDifficulty(0), sudokuPage.CompletedCountForDifficulty(1),
+                sudokuPage.CompletedCountForDifficulty(2), sudokuPage.CompletedCountForDifficulty(3)), "已完成 " + sudokuPage.CompletedCount + " 关");
+        }
+
+        private static string SudokuSummary(int completed, int beginner, int easy, int medium, int hard)
+        {
+            return "已完成 " + completed + "/2000 · 入门 " + beginner + " · 简单 " + easy +
+                " · 中等 " + medium + " · 困难 " + hard;
         }
 
         private void BuildSokoban(SokobanCatalog initialCatalog = null, SokobanProfile initialProfile = null, SokobanSaveStore initialStore = null)
@@ -756,8 +666,8 @@ namespace XanaduYonder.Runtime
 
         private void RefreshSokobanRecord()
         {
-            if (sokobanPage != null && lobbySokobanRecordText != null)
-                lobbySokobanRecordText.text = "已完成 " + sokobanPage.CompletedCount + "/108 关 · 随时撤回";
+            if (sokobanPage != null && lobbyView != null)
+                lobbyView.SetRecord("sokoban", "已完成 " + sokobanPage.CompletedCount + "/108 关 · 随时撤回", "已完成 " + sokobanPage.CompletedCount + " 关");
         }
 
         private void EnterSokoban()
@@ -798,8 +708,8 @@ namespace XanaduYonder.Runtime
 
         private void RefreshSlidingPuzzleRecord()
         {
-            if (slidingPuzzlePage != null && lobbySlidingPuzzleRecordText != null)
-                lobbySlidingPuzzleRecordText.text = "自由拼图 / 解锁闯关 · 已完成 " + slidingPuzzlePage.CompletedCount + "/18 关";
+            if (slidingPuzzlePage != null && lobbyView != null)
+                lobbyView.SetRecord("sliding-puzzle", "自由拼图 / 解锁闯关 · 已完成 " + slidingPuzzlePage.CompletedCount + "/18 关", "已完成 " + slidingPuzzlePage.CompletedCount + " 关");
         }
 
         private void EnterSlidingPuzzle()
@@ -840,10 +750,10 @@ namespace XanaduYonder.Runtime
 
         private void RefreshLinkMatchRecord()
         {
-            if (linkMatchPage != null && lobbyLinkMatchRecordText != null)
-                lobbyLinkMatchRecordText.text = linkMatchPage.CompletedCount == 0
+            if (linkMatchPage != null && lobbyView != null)
+                lobbyView.SetRecord("link-match", linkMatchPage.CompletedCount == 0
                     ? "轻松 / 挑战 · 五档棋盘"
-                    : "已完成 " + linkMatchPage.CompletedCount + "/" + (LinkMatchLevel.Count * 2) + " 关 · 轻松 / 挑战";
+                    : "已完成 " + linkMatchPage.CompletedCount + "/" + (LinkMatchLevel.Count * 2) + " 关 · 轻松 / 挑战", linkMatchPage.CompletedCount == 0 ? "轻松 / 挑战" : "已完成 " + linkMatchPage.CompletedCount + " 关");
         }
 
         private void EnterLinkMatch()
@@ -942,12 +852,10 @@ namespace XanaduYonder.Runtime
 
         private void RefreshTetrisRecord()
         {
-            if (lobbyTetrisRecordText == null) return;
+            if (lobbyView == null) return;
             long best = tetrisPage != null ? tetrisPage.BestScore : tetrisPreview?.Data?.BestScore ?? 0;
-            bool active = tetrisPage != null ? tetrisPage.HasActiveGame : tetrisPreview?.Data?.Game != null && !tetrisPreview.Data.Game.GameOver;
             bool readable = tetrisPage != null ? tetrisPage.CanReadRecord : tetrisPreview != null && tetrisPreview.CanWrite;
-            lobbyTetrisRecordText.text = readable ? "你的最高纪录   " + best : "存档暂不可用 · 进入查看详情";
-            lobbyTetrisStart.GetComponentInChildren<Text>().text = !readable ? "查看存档  →" : active ? "继续游戏  →" : "开始游戏  →";
+            lobbyView.SetRecord("tetris", readable ? "你的最高纪录 " + best : "存档暂不可用 · 进入查看详情", readable ? "最高 " + best + " 分" : "存档暂不可用");
         }
 
         private void EnterFlappyBird()
@@ -981,26 +889,29 @@ namespace XanaduYonder.Runtime
 
         private void RefreshFlappyRecord()
         {
-            if (lobbyFlappyRecordText == null) return;
+            if (lobbyView == null) return;
             if (flappyBirdPage != null)
             {
                 flappyBest = Math.Max(flappyBest, flappyBirdPage.BestScore);
                 flappyLoadWarning = flappyBirdPage.SaveError;
             }
-            lobbyFlappyRecordText.text = "最高纪录  " + flappyBest + (flappyLoadWarning == null ? "" : "  ·  未保存");
+            var warning = flappyLoadWarning == null ? "" : " · 未保存";
+            // Keep a save failure visible even when an unusually long score is ellipsized in the compact view.
+            lobbyView.SetRecord("flappy-bird", "最高纪录 " + flappyBest + warning,
+                (flappyLoadWarning == null ? "" : "未保存 · ") + "最高 " + flappyBest + " 分");
         }
 
         private void RefreshHappyBallRecord()
         {
-            if (lobbyHappyBallRecordText == null) return;
+            if (lobbyView == null) return;
             if (happyBallPage != null) happyBallBest = Math.Max(happyBallBest, happyBallPage.BestScore);
-            lobbyHappyBallRecordText.text = "你的最高纪录   " + happyBallBest;
+            lobbyView.SetRecord("happy-ball", "你的最高纪录 " + happyBallBest, "最高 " + happyBallBest + " 分");
         }
 
         private void RefreshMinesweeperRecord()
         {
-            if (minesweeperPage != null && lobbyMinesweeperRecordText != null)
-                lobbyMinesweeperRecordText.text = minesweeperPage.CompletedCount == 0 ? "首击安全 · 三档挑战" : "累计胜局 " + minesweeperPage.CompletedCount + " · 三档独立纪录";
+            if (minesweeperPage != null && lobbyView != null)
+                lobbyView.SetRecord("minesweeper", minesweeperPage.CompletedCount == 0 ? "首击安全 · 三档挑战" : "累计胜局 " + minesweeperPage.CompletedCount + " · 三档独立纪录", minesweeperPage.CompletedCount == 0 ? "首击安全 · 三档挑战" : "累计胜局 " + minesweeperPage.CompletedCount);
         }
 
         private void BuildGomoku()
@@ -1017,7 +928,7 @@ namespace XanaduYonder.Runtime
 
         private void RefreshGomokuRecord()
         {
-            if (lobbyGomokuRecordText != null) lobbyGomokuRecordText.text = "人机 / 本地双人 · 三档难度";
+            lobbyView?.SetRecord("gomoku", "人机 / 本地双人 · 三档难度", "人机 / 双人");
         }
 
         private void EnterGomoku()
@@ -1199,6 +1110,8 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            if (IsAgeOfWarPage && ageOfWarPage != null && ageOfWarPage.IsVisible) { ageOfWarPage.Exit(); return; }
+            if(ageOfWarSelection!=null)ageOfWarSelection.SetActive(false);
             linkMatchPage?.Leave();
             tetrisPage?.Leave();
             LeaveGoldMiner();
@@ -1217,7 +1130,7 @@ namespace XanaduYonder.Runtime
             sheepPage.Leave();
             idiomPage?.Leave();
             watermelonPage?.Leave();
-            frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
+            frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
             if (status != null) status.gameObject.SetActive(false);
             activePage = Page.Lobby;
             gamePage.SetActive(false);
@@ -1383,7 +1296,7 @@ namespace XanaduYonder.Runtime
             Update2048Records();
             scoreText.text = game.Score.ToString();
             bestText.text = data.BestScore.ToString();
-            lobbyBestText.text = "最高纪录 " + data.BestScore + " · 最高数字 " + data.BestTile;
+            lobbyView?.SetRecord("2048", "最高纪录 " + data.BestScore + " · 最高数字 " + data.BestTile, "最高 " + data.BestScore + " 分");
             RefreshJumpBest();
             RefreshSheepRecord();
             RefreshIdiomRecord();
@@ -1463,6 +1376,7 @@ namespace XanaduYonder.Runtime
 
         private void StopAnimation()
         {
+            ageOfWarPage?.Suspend();
             tetrisPage?.Suspend();
             flappyBirdPage?.Suspend();
             happyBallPage?.Suspend();
@@ -1492,22 +1406,7 @@ namespace XanaduYonder.Runtime
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
-                if (modal != null) dismissModal?.Invoke();
-                else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
-                else if (activePage == Page.FlappyBird) flappyBirdPage.Back();
-                else if (activePage == Page.Dino) dinoPage.Back();
-                else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
-                else if (activePage == Page.Sudoku) sudokuPage.Back();
-                else if (activePage == Page.Minesweeper) minesweeperPage.Back();
-                else if (activePage == Page.Sokoban) sokobanPage.Back();
-                else if (activePage == Page.LinkMatch) linkMatchPage.Back();
-                else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.Back();
-                else if (activePage == Page.HappyBall) happyBallPage.Back();
-                else if (activePage == Page.Tetris) tetrisPage.Back();
-                else if (activePage == Page.Gomoku) gomokuPage.Back();
-                else if (activePage != Page.Lobby) ShowLobby();
-                else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
+                HandleBack();
                 return;
             }
             if (Input.GetKeyDown(KeyCode.LeftArrow)) Move(Direction.Left);
@@ -1516,11 +1415,38 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.DownArrow)) Move(Direction.Down);
         }
 
+        private void HandleBack()
+        {
+            if (IsKingdomRushRunning) return;
+            if (IsAgeOfWarPage) { ageOfWarPage.HandleBack(); return; }
+            var splash = GetComponent<BrandSplash>();
+            if (splash != null && splash.BlocksInput) return;
+            if (activePage == Page.Lobby && lobbyView != null && lobbyView.HasDisplayOptions)
+            { lobbyView.CloseDisplayOptions(); return; }
+            if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
+            if (modal != null) dismissModal?.Invoke();
+            else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
+            else if (activePage == Page.FlappyBird) flappyBirdPage.Back();
+            else if (activePage == Page.Dino) dinoPage.Back();
+            else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
+            else if (activePage == Page.Sudoku) sudokuPage.Back();
+            else if (activePage == Page.Minesweeper) minesweeperPage.Back();
+            else if (activePage == Page.Sokoban) sokobanPage.Back();
+            else if (activePage == Page.LinkMatch) linkMatchPage.Back();
+            else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.Back();
+            else if (activePage == Page.HappyBall) happyBallPage.Back();
+            else if (activePage == Page.Tetris) tetrisPage.Back();
+            else if (activePage == Page.Gomoku) gomokuPage.Back();
+            else if (activePage != Page.Lobby) ShowLobby();
+            else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
+        }
+
         private void OnApplicationPause(bool value)
         {
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
+            ageOfWarPage?.HostActivity(!paused && focused);
             if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             flappyBirdPage?.SetForeground(!paused && focused);
@@ -1540,6 +1466,7 @@ namespace XanaduYonder.Runtime
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
+            ageOfWarPage?.HostActivity(!paused && focused);
             if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             flappyBirdPage?.SetForeground(!paused && focused);
@@ -1561,8 +1488,12 @@ namespace XanaduYonder.Runtime
             else CheckEndState();
         }
 
-        private void OnDestroy() { if (flappyLobbySprite != null) Destroy(flappyLobbySprite); }
+        private void OnDestroy()
+        {
+            ReleaseKingdomRushLauncher();
+            if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
+        }
 
-        private void OnApplicationQuit() { zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
+        private void OnApplicationQuit() { ageOfWarPage?.Suspend(); zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
     }
 }

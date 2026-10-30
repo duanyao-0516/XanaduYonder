@@ -99,10 +99,10 @@ namespace XanaduYonder.EditorTools
             Require(Screen.width == 720 && Screen.height == 1320, "GameView uses the requested portrait size");
             fixture.BuildShell();
             fixture.CheckLobby();
-            yield return fixture.Click(fixture.Button("选择单人 / 双人  →", fixture.Lobby.transform));
+            yield return fixture.EnterGoldCard();
             for (int i = 0; i < 8; i++) yield return null;
             var page = fixture.Page;
-            Require(Get<bool>(page, "visible") && Get<bool>(page, "selecting"), "Real lobby button enters Gold Miner selection");
+            Require(Get<bool>(page, "visible") && Get<bool>(page, "selecting"), "Real whole-card input enters Gold Miner selection");
             Require(!fixture.Frame.gameObject.activeSelf, "Gold Miner owns a separate full-window canvas");
             fixture.Capture("01-selection");
             fixture.CheckButtonsInsideSafeArea();
@@ -360,29 +360,52 @@ namespace XanaduYonder.EditorTools
                 Set(shell, "scoreText", UiFactory.Label(inert.transform, "", 0, 0, 1, 1, 10, Color.white));
                 Set(shell, "bestText", UiFactory.Label(inert.transform, "", 0, 0, 1, 1, 10, Color.white));
                 Set(shell, "goldMinerPage", Page); Set(Page, "lobby", (Action)(() => Invoke(shell, "ShowLobby")));
-                Invoke(shell, "BuildLobby"); Lobby = Get<GameObject>(shell, "lobbyPage");
+                Invoke(shell, "BuildLobby"); LobbyDesignChecks.SetModeForCheck(shell, 2); Lobby = Get<GameObject>(shell, "lobbyPage");
                 Canvas.ForceUpdateCanvases();
             }
 
             public void CheckLobby()
             {
-                var content = (RectTransform)Lobby.transform.Find("Lobby list viewport/Lobby list content");
-                string[] names = { "2048", "Jump", "Sheep", "Watermelon", "Idiom", "Sudoku", "Minesweeper", "Zuma", "Dino", "Gomoku", "HappyBall", "Sokoban", "Gold Miner", "SlidingPuzzle", "Tetris" };
+                var content = Lobby.GetComponentInChildren<ScrollRect>().content;
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "Idiom" };
+                int[] numbers = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 5 };
+                float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
-                    var card = (RectTransform)content.Find(names[i] + " game card");
-                    Require(card != null && Mathf.Abs(card.rect.height - 350) < .1f, "Lobby preserves fixed card height: " + names[i]);
-                    Require(card.GetComponentInChildren<Text>().text.StartsWith((i + 1).ToString("00")), "Lobby ordinal " + names[i]);
-                    Require(Mathf.Abs(card.anchoredPosition.y + 216 + i * 374) < .1f, "Lobby fixed card spacing: " + names[i]);
+                    var card = LobbyDesignChecks.FindCard(content, names[i]);
+                    Require(Mathf.Abs(card.rect.height - 143) < .1f, "Lobby uses approved single-card height: " + names[i]);
+                    Require(card.GetComponentInChildren<Text>().text.StartsWith(numbers[i].ToString("00")), "Lobby retains the original ordinal for " + names[i]);
+                    float top = LobbyDesignChecks.CardTop(content, card);
+                    Require(i == 0 || Mathf.Abs(top - lastBottom - 13) < .1f, "Lobby uses approved single-card spacing: " + names[i]);
+                    lastBottom = top + card.rect.height;
                 }
-                var goldCard = content.Find("Gold Miner game card");
-                var celebrating = goldCard.Find("Gold Miner celebrating miner").GetComponent<Image>();
-                Require(celebrating.sprite != null && celebrating.sprite.name == "success", "Gold Miner lobby card uses the celebrating miner state");
-                Require(goldCard.Find("Gold Miner prize").GetComponent<Image>().sprite != null, "Celebrating miner displays his gold prize");
+                var goldRect = LobbyDesignChecks.FindCard(content, "Gold Miner");
+                Image celebrating = null, prize = null;
+                foreach (var image in goldRect.GetComponentsInChildren<Image>())
+                {
+                    if (image.name == "Gold Miner celebrating miner") celebrating = image;
+                    if (image.name == "Gold Miner prize") prize = image;
+                }
+                Require(celebrating != null && celebrating.sprite != null && celebrating.sprite.name == "success", "Gold Miner lobby card uses the celebrating miner state");
+                Require(prize != null && prize.sprite != null, "Celebrating miner displays his gold prize");
                 var viewport = (RectTransform)content.parent;
-                content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - viewport.rect.height));
-                Require(content.rect.height > viewport.rect.height, "All fifteen cards scroll without shrinking");
+                content.anchoredPosition = new Vector2(0, Mathf.Clamp(LobbyDesignChecks.CardTop(content, goldRect) - (viewport.rect.height - goldRect.rect.height) / 2,
+                    0, Mathf.Max(0, content.rect.height - viewport.rect.height)));
+                Require(content.rect.height > viewport.rect.height, "All nineteen cards remain scrollable");
                 Capture("00-lobby-gold-card");
+            }
+
+            public IEnumerator EnterGoldCard()
+            {
+                yield return null;
+                yield return null;
+                var card = LobbyDesignChecks.FindCard(Lobby.transform, "Gold Miner").GetComponent<Button>();
+                Require(card != null && card.IsInteractable(), "Gold Miner has an enabled whole-card entry");
+                LobbyInputTestDriver.CheckBinding(card, shell, "EnterGoldMiner", Require);
+                Canvas.ForceUpdateCanvases();
+                var rect = (RectTransform)card.transform;
+                var point = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+                using (var driver = new LobbyInputTestDriver(events)) driver.Tap(point);
             }
 
             public void Size(int width, int height) { sizes.Set(width, height); }

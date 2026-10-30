@@ -1,0 +1,111 @@
+{
+  "commonRows": 128,
+  "differentRows": 89,
+  "onlyOriginal": [
+    [
+      "13",
+      "12"
+    ],
+    [
+      "16",
+      "10"
+    ],
+    [
+      "16",
+      "11"
+    ]
+  ],
+  "onlyNative": [],
+  "fields": {
+    "x": 87,
+    "y": 84,
+    "xs": 11,
+    "ys": 11,
+    "gravity": 12,
+    "rotation": 3
+  },
+  "firstByField": {
+    "x": {
+      "key": [
+        "1",
+        "1"
+      ],
+      "original": "400",
+      "native": "430.3108891324554"
+    },
+    "y": {
+      "key": [
+        "1",
+        "1"
+      ],
+      "original": "400",
+      "native": "417.5"
+    },
+    "xs": {
+      "key": [
+        "1",
+        "1"
+      ],
+      "original": "undefined",
+      "native": "6.062177826491071"
+    },
+    "ys": {
+      "key": [
+        "1",
+        "1"
+      ],
+      "original": "undefined",
+      "native": "3.4999999999999996"
+    },
+    "gravity": {
+      "key": [
+        "1",
+        "1"
+      ],
+      "original": "undefined",
+      "native": "0"
+    },
+    "rotation": {
+      "key": [
+        "2",
+        "2"
+      ],
+      "original": "30",
+      "native": "27"
+    }
+  },
+  "particleCreationCountDifferences": [
+    {
+      "frame/id": [
+        "1",
+        "7"
+      ],
+      "original": 1,
+      "native": 2
+    },
+    {
+      "frame/id": [
+        "1",
+        "10"
+      ],
+      "original": 5,
+      "native": 10
+    },
+    {
+      "frame/id": [
+        "1",
+        "11"
+      ],
+      "original": 4,
+      "native": 8
+    },
+    {
+      "frame/id": [
+        "6",
+        "7"
+      ],
+      "original": 1,
+      "native": 8
+    }
+  ]
+}

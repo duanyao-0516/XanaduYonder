@@ -5,7 +5,7 @@ Outputs an auditable game.love, per-file reasons/hashes and source patch report.
 """
 import argparse, hashlib, importlib.util, io, json, re, shutil, struct, sys, zipfile
 from pathlib import Path
-from content_stable_baseline import validate_archive
+from content_stable_baseline import validate_archive, validate_baseline_archive, menu_module
 
 REPO = Path(__file__).resolve().parents[2]
 PROFILE = REPO/'ThirdParty/KingdomRushContent/profile'
@@ -271,23 +271,35 @@ def main():
     level_files=list((stage/'kr3/data/levels').rglob('*'))
     selected_level_ids=sorted({int(m.group(1)) for p in level_files if (m:=re.search(r'level(\d+)',p.name))})
     if selected_level_ids!=list(range(45,77)):raise ValueError('Level coverage mismatch: '+repr(selected_level_ids))
-    manifest=[]
     dest=out/'game.love'
     archive=out/'game.love.partial'
-    with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
-        for path in sorted(stage.rglob('*')):
-            if not path.is_file():continue
-            name=path.relative_to(stage).as_posix();data=path.read_bytes()
-            info=zipfile.ZipInfo(name,date_time=(2026,10,29,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o644<<16
-            z.writestr(info,data,compresslevel=9)
-            manifest.append({'path':name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'reasons':reasons.get(name,['generated profile source'])})
+    def write_archive(target):
+        manifest=[]
+        with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for path in sorted(stage.rglob('*')):
+                if not path.is_file():continue
+                name=path.relative_to(stage).as_posix();data=path.read_bytes()
+                info=zipfile.ZipInfo(name,date_time=(2026,10,29,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o644<<16
+                z.writestr(info,data,compresslevel=9)
+                manifest.append({'path':name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'reasons':reasons.get(name,['generated profile source'])})
+        return manifest
+    # Prove the accepted game before making the one authorized title-screen change.
+    write_archive(archive)
+    validate_baseline_archive(archive)
+    baseline=out/'playable-baseline/game.love'
+    baseline.parent.mkdir(parents=True,exist_ok=True)
+    archive.replace(baseline)
+    menu_report=menu_module().apply_menu_patch(stage)
+    for name in menu_report['modified_files']+menu_report['added_files']:
+        reasons[name]=['approved title-screen help/settings overlay; battle source and media unchanged']
+    manifest=write_archive(archive)
     with zipfile.ZipFile(archive) as z:
         if z.testzip():raise ValueError('Final ZIP CRC failed')
         for row in manifest:
             if hashlib.sha256(z.read(row['path'])).hexdigest()!=row['sha256']:raise ValueError('Final ZIP data mismatch')
     stable_baseline=validate_archive(archive)
     archive.replace(dest)
-    report={'source_apk_sha256':APK_SHA,'output':str(dest),'bytes':dest.stat().st_size,'sha256':sha(dest),'files':len(manifest),'level_ids':selected_level_ids,'missing_sound_files':missing_audio,'original_sound_filename_repairs':typo_fixes,'component_inputs':inputs,'stable_baseline':stable_baseline,'validation':'Exact reviewed stable baseline, ZIP CRC and every entry hash verified; static source/profile checks only. No game/device execution.'}
+    report={'source_apk_sha256':APK_SHA,'output':str(dest),'bytes':dest.stat().st_size,'sha256':sha(dest),'files':len(manifest),'level_ids':selected_level_ids,'missing_sound_files':missing_audio,'original_sound_filename_repairs':typo_fixes,'component_inputs':inputs,'stable_baseline':stable_baseline,'start_menu':menu_report,'validation':'Exact accepted baseline plus approved title menu, ZIP CRC and every entry hash verified; static source/profile checks only. No game/device execution.'}
     (out/'content-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
     (out/'source-patches.json').write_text(json.dumps(patches,ensure_ascii=False,indent=2))
     (out/'content-build.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))

@@ -134,6 +134,9 @@ namespace XanaduYonder.Runtime.Sokoban
         private void Layout(bool force)
         {
             if(surface==null||operations==null) return;
+            // A different game owns landscape while this portrait page is hidden.
+            // Explicit setup still lays out through LayoutNow; lifecycle saves retain its last valid view.
+            if(!force&&!visible) return;
             var size=root.rect.size; bool hasWarning=!string.IsNullOrEmpty(hostSaveWarning)||!string.IsNullOrEmpty(warning);
             Rect safeArea=Screen.safeArea;
             if(!force&&size==lastSize&&hasWarning==lastWarning&&safeArea==lastSafeArea) return;

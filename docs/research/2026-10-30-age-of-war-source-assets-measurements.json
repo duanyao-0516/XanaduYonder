@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-30",
+  "base_commit": "41a235dd81adb66c45f380f5b6c837e0a92dead0",
+  "branch": "p/duanyao.0516/feature/age-of-war-research",
+  "tools": {
+    "decompiler": "JPEXS FFDec 26.4.0 / Java 17",
+    "runtime": "Ruffle v0.7.1 / local Chrome"
+  },
+  "inputs": [
+    {
+      "game": 1,
+      "file": "/Users/bytedance/Downloads/age-of-war-research-20261030/age-of-war-1-7k7k.swf",
+      "source_page": "https://www.7k7k.com/swf/15793.htm",
+      "bytes": 3628467,
+      "sha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+      "signature": "CWS",
+      "swf_version": 9,
+      "declared_uncompressed_bytes": 4098468,
+      "actual_uncompressed_bytes": 4098468,
+      "compressed_stream_complete": true
+    },
+    {
+      "game": 2,
+      "file": "/Users/bytedance/Downloads/age-of-war-research-20261030/age-of-war-2-7k7k.swf",
+      "source_page": "https://www.7k7k.com/swf/28601.htm",
+      "bytes": 11413675,
+      "sha256": "b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c",
+      "signature": "CWS",
+      "swf_version": 10,
+      "declared_uncompressed_bytes": 11707784,
+      "actual_uncompressed_bytes": 11707784,
+      "compressed_stream_complete": true
+    }
+  ],
+  "aow1": {
+    "export": {
+      "fonts": {
+        "files": 8,
+        "bytes": 61192
+      },
+      "images": {
+        "files": 1,
+        "bytes": 330037
+      },
+      "morphshapes": {
+        "files": 9,
+        "bytes": 29197
+      },
+      "scripts": {
+        "files": 315,
+        "bytes": 79747
+      },
+      "shapes": {
+        "files": 578,
+        "bytes": 5015566
+      },
+      "sounds": {
+        "files": 28,
+        "bytes": 2507855
+      },
+      "symbolClass": {
+        "files": 1,
+        "bytes": 603
+      },
+      "texts": {
+        "files": 33,
+        "bytes": 2577
+      }
+    },
+    "numeric_reference_missing": 0,
+    "content": {
+      "ages": 5,
+      "units": 16,
+      "turrets": 15
+    },
+    "animation_sample": {
+      "unit": "Club man",
+      "walk_frames": 43,
+      "attack_frames": 40,
+      "png_files": 83,
+      "png_bytes": 660878,
+      "raw_rgba_pixel_bytes": 7230240
+    },
+    "font_limitation": "8 nonempty embedded subsets; 2 font records have no glyphs; dynamic texts use device fonts",
+    "persistent_battle_save_found": false
+  },
+  "aow2": {
+    "outer_export": {
+      "binaryData": {
+        "files": 30,
+        "bytes": 7997972
+      },
+      "fonts": {
+        "files": 0,
+        "bytes": 0
+      },
+      "images": {
+        "files": 0,
+        "bytes": 0
+      },
+      "morphshapes": {
+        "files": 0,
+        "bytes": 0
+      },
+      "scripts": {
+        "files": 231,
+        "bytes": 553554
+      },
+      "shapes": {
+        "files": 0,
+        "bytes": 0
+      },
+      "sounds": {
+        "files": 54,
+        "bytes": 3491119
+      },
+      "symbolClass": {
+        "files": 1,
+        "bytes": 9558
+      },
+      "texts": {
+        "files": 0,
+        "bytes": 0
+      }
+    },
+    "embedded_export": {
+      "packages": 30,
+      "file_counts": {
+        "symbolClass": 26,
+        "images": 151,
+        "shapes": 1111,
+        "texts": 137,
+        "scripts": 150,
+        "fonts": 25,
+        "morphshapes": 8
+      },
+      "bytes": {
+        "symbolClass": 2564,
+        "images": 7620159,
+        "shapes": 13921827,
+        "texts": 1768,
+        "scripts": 52337,
+        "fonts": 205588,
+        "morphshapes": 12314
+      },
+      "total_bytes": 21816557,
+      "error_logs": []
+    },
+    "reference_checked_swfs": 31,
+    "numeric_reference_missing": 0,
+    "dynamic_symbols_checked": [
+      "u1..u29",
+      "t1..t17"
+    ],
+    "content": {
+      "ages": 7,
+      "units": 29,
+      "turrets": 17,
+      "projectiles": 22,
+      "upgrade_entries": 18,
+      "upgrade_level_nodes": 58,
+      "specials": 7
+    },
+    "supplemental_audio": {
+      "channels": 1,
+      "sample_width": 2,
+      "sample_rate": 44100,
+      "frames": 273024,
+      "seconds": 6.191020408163265,
+      "bytes": 546092,
+      "sha256": "a71837b96f45f7b00c13659811807b5fd539f0024455f72f1222811978c6d3bf",
+      "file": "/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow2/supplemental/sponsor-stream-1.wav",
+      "method": "FFDec SoundStreamHeadTypeTag.getRanges + SoundExporter.exportSound WAV",
+      "listened": false
+    },
+    "animation_sample": {
+      "unit": "Clubman u2",
+      "animation": "first 12 idle frames",
+      "png_files": 12,
+      "png_bytes": 382562,
+      "width": 541,
+      "height": 480,
+      "unique_rgba_frames": 12
+    },
+    "persistent_battle_save_found": false,
+    "insane_mode": "MaxGames loader URL gate remains; no original SWF modification"
+  },
+  "runtime_bundle": {
+    "files": 10,
+    "raw_bytes": 44275614,
+    "zip_bytes": 25211341,
+    "zip_mib": 24.043,
+    "runtime": "Ruffle v0.7.1",
+    "contents": "HTML, local SWFs, runtime JS/WASM, licenses; no source maps",
+    "meaning": "Research bundle measurement, not Android APK/AAB delta",
+    "zip_sha256": "057dba53ff0a641b8f03c9edffded5c1c275f7f30a295bff4f7d339de497b647"
+  },
+  "runtime_validation": {
+    "network_scope": "all resources local; CSP restricted same origin; OS not in airplane mode",
+    "aow1": "Normal: startup, menu, melee/ranged training, combat, resource/HP changes, player suspend/resume",
+    "aow2": "Easy: startup, tutorial, training, tower slot/turret purchase, combat, suspend ~75s/resume, Defeat",
+    "blocked_external_request": "http://core.mochibot.com/my/core.swf",
+    "audio": "muted; not listened",
+    "not_validated": [
+      "all ages and animations",
+      "all difficulty modes",
+      "all skills and evolution",
+      "victory completion",
+      "Android WebView",
+      "Unity integration",
+      "APK delta",
+      "device memory",
+      "kill-process battle restoration"
+    ]
+  },
+  "app_changes": false,
+  "apk_built": false,
+  "original_swf_modified": false,
+  "evidence_root": "/Users/bytedance/Downloads/age-of-war-research-20261030/analysis"
+}

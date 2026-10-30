@@ -1,0 +1,17 @@
+{
+  "sourceSha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+  "runtime": "Ruffle0.7.1 Web/WASM Chrome macOS",
+  "date": "2026-10-30",
+  "originalActionArraysPreserved": 315,
+  "scenario": "After root snapshot1 call original create_bullet(400,400,30,10,id,1), id1..12; observe40 frames. Math.random=.1 verified; AVM1 random(n) stays native.",
+  "comparison": "131 B rows,0differences or missing;49 C events count per(frame,id)matches. Excludes rotation of bullet2 (uncontrolled random(6) spin). Particle positions/types-of-blood/timelines not compared.",
+  "nativeAdapter": "Copies OneModel replacing Next with.1 and OneEffects adding Console.WriteLine at CreateParticle entry. The latter is read-only logging to capture particles which also disappear in the current native Tick.",
+  "hashes": {
+    "/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/scripts/age-of-war-parity/one/InjectProjectiles.java": "a81010d178bb52515c5da98925a805f0907c667f6331c625e7bb61a0c0394730",
+    "/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/scripts/age-of-war-parity/one/projectiles.as": "72c699a90427ca169c3fd553b17700f8e4349a4973fc4167ddfddb435ad85952",
+    "/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/scripts/age-of-war-parity/one/projectiles.html": "440146f7ac1f152df1fd07c84bce189c203b409880341425ed3a9709f8246b2c",
+    "/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/scripts/age-of-war-parity/one/compare-projectiles.py": "0c33261a0ad701533c754371233f9ecebe4de4fa2be6ebfcaebee0163339316a",
+    "/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/Tests/AgeOfWarParity/One/fixtures/projectiles/reference.csv": "7845a66f3ca598e16386af3862163836544de69373ebf56b9e00975abfb54e88",
+    "/tmp/aow-parity-one-projectiles/site/one-instrumented.swf": "ee3b775c27d9c45147e60cae7cdadfe1bf8153644099a4007b46d4bec20431e9"
+  }
+}

@@ -7,30 +7,27 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private KingdomRushLauncher kingdomRushLauncher;
-        private Button kingdomRushStart;
+        private CanvasGroup kingdomRushLobbyInput;
+        private bool IsKingdomRushRunning => kingdomRushLauncher != null && kingdomRushLauncher.IsBusy;
 
-        private void AddKingdomRushCard(Transform content, ref int cardCount)
+        private static void AddKingdomRushPreview(Transform parent)
         {
-            var card = AddLobbyCard(content, "KingdomRush", cardCount++, UiFactory.Hex("E9E4D5"));
-            UiFactory.Label(card.transform, cardCount.ToString("00") + "   /   初代塔防", 32, 22, 450, 36, 21, UiFactory.Accent);
-            UiFactory.Label(card.transform, "王国保卫战", 28, 74, 450, 90, 58, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Label(card.transform, "守住每一条通往王国的路。", 32, 170, 548, 40, 25, UiFactory.Ink);
-            UiFactory.Label(card.transform, "32 关 · 三种挑战 · 13 位英雄", 32, 216, 548, 38, 21, UiFactory.Accent);
-            var logo = UiFactory.Panel(card.transform, "Kingdom Rush logo", 484, 76, 100, 102, Color.white, false);
-            logo.sprite = Resources.Load<Sprite>("KingdomRush/Logo");
-            logo.preserveAspect = true;
-            kingdomRushStart = UiFactory.Button(card.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterKingdomRush, true);
-            kingdomRushLauncher = gameObject.AddComponent<KingdomRushLauncher>();
-            kingdomRushLauncher.Returned += OnKingdomRushReturned;
+            // Match Zuma's source rectangle; LobbyArtwork fits both into the same logo slot.
+            var root = LobbyPreviews.Frame(parent, "KingdomRush");
+            var artwork = UiFactory.Rect(root, "KingdomRush artwork", 0, 0, 96, 96).gameObject.AddComponent<RawImage>();
+            UiFactory.Center(artwork.rectTransform);
+            artwork.texture = Resources.Load<Texture2D>("KingdomRush/Logo");
+            artwork.raycastTarget = false;
         }
 
         private void EnterKingdomRush()
         {
-            if (activePage != Page.Lobby || kingdomRushLauncher.IsBusy) return;
+            if (activePage != Page.Lobby || paused || !focused || IsKingdomRushRunning) return;
             CloseModal();
             Save();
             feedback?.Stop();
-            kingdomRushStart.interactable = false;
+            EnsureKingdomRushLauncher();
+            SetKingdomRushLobbyInput(false);
             if (!kingdomRushLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled))
                 OnKingdomRushReturned(KingdomRushLauncher.OpenFailureMessage);
             // The lobby stays underneath the native Activity; Android owns its focus,
@@ -39,9 +36,36 @@ namespace XanaduYonder.Runtime
 
         private void OnKingdomRushReturned(string error)
         {
-            if (kingdomRushStart != null) kingdomRushStart.interactable = true;
-            if (!string.IsNullOrEmpty(error))
+            SetKingdomRushLobbyInput(true);
+            if (activePage == Page.Lobby && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });
+        }
+
+        private void EnsureKingdomRushLauncher()
+        {
+            if (kingdomRushLauncher != null) return;
+            kingdomRushLauncher = gameObject.AddComponent<KingdomRushLauncher>();
+            kingdomRushLauncher.Returned += OnKingdomRushReturned;
+        }
+
+        private void SetKingdomRushLobbyInput(bool enabled)
+        {
+            if (lobbyPage == null) return;
+            if (kingdomRushLobbyInput == null)
+            {
+                kingdomRushLobbyInput = lobbyPage.GetComponent<CanvasGroup>();
+                // Unity missing components can be non-null managed wrappers.
+                if (kingdomRushLobbyInput == null) kingdomRushLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
+            }
+            // The stable lobby root survives display-mode rebuilds; individual cards do not.
+            kingdomRushLobbyInput.interactable = enabled;
+            kingdomRushLobbyInput.blocksRaycasts = enabled;
+        }
+
+        private void ReleaseKingdomRushLauncher()
+        {
+            if (kingdomRushLauncher != null) kingdomRushLauncher.Returned -= OnKingdomRushReturned;
+            kingdomRushLauncher = null;
         }
     }
 }

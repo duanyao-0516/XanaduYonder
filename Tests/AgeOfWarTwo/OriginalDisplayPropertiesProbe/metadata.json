@@ -1,0 +1,25 @@
+{
+  "observedAtUTC": "2026-10-30T07:47:11.489Z..2026-10-30T07:47:11.492Z",
+  "runtime": "Ruffle0.7.1 Web/WASM Chrome macOS",
+  "tab": "636302558",
+  "url": "http://127.0.0.1:8773/",
+  "observation": "cua twoProbeTab.dev.logs({filter:AS3,limit:27}), token extracted and saved verbatim CSV.",
+  "columns": [
+    "kind",
+    "Number expression",
+    "getter value",
+    "scaleY if SCALE"
+  ],
+  "originalABCsha256": [
+    "00eff07c31dd0a4d88c99e2294d20fc63821a058fc0e62f2c9a3f384e4b47fc6",
+    "4af9d8f674ae0a8a15d4862f79fac7fd4daa361a7aec5a8a54f1e6cf3f4f764e"
+  ],
+  "checks": "Both original ABC serialized byte hashes retained after adding standalone ABC. Original methods are not recompiled.",
+  "hashes": {
+    "/tmp/aow-parity-two-properties/probe.as": "c8b01db8aae96123865948bba5ef0126b601fab5cef2c0f6b054031dcab7515e",
+    "/tmp/aow-parity-two-properties/InjectProbe.java": "82ef1e6009b964dd77a4344e71147c32e24cfd6eff21382ec42ea888e485d286",
+    "/tmp/aow-parity-two-properties/site/probe.swf": "5b0c1cc4bc9d66890b641a45ded0e8eb89f672657e48b58b9e39b52bb2ef1a61",
+    "/tmp/aow-parity-two-properties/reference.csv": "c80ebfd6c780bcfe420099f062728fbe3be08fe3461c2250c55ce648b2c0f99f"
+  },
+  "scope": "AS3 Sprite alpha, rotation, scaleX/scaleY setters only. Alpha2 remains2, negative remainsnegative; alpha observed truncate(value*256)/256. No gameplay trace."
+}

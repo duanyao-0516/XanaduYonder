@@ -11,25 +11,6 @@ using XanaduYonder.Core.Idiom;
 
 namespace XanaduYonder.Runtime.Idiom
 {
-    public sealed class IdiomCitation
-    {
-        public string Text { get; set; }
-        public string Reference { get; set; }
-    }
-
-    public sealed class IdiomDefinition
-    {
-        public string Id { get; set; }
-        public string SenseId { get; set; }
-        public string Word { get; set; }
-        public string Pinyin { get; set; }
-        public string Meaning { get; set; }
-        public string[] Stories { get; set; }
-        public IdiomCitation[] Origins { get; set; }
-        public IdiomCitation[] Examples { get; set; }
-        public string SourceLabel { get; set; }
-    }
-
     // The game index loads only when this game is opened. Definitions stay in small
     // independent bundles, with a bounded four-chunk cache for browsing the notebook.
     public sealed class IdiomCatalogLoader
@@ -75,10 +56,7 @@ namespace XanaduYonder.Runtime.Idiom
                         {
                             Require(reader.TokenType == JsonToken.StartArray);
                             var row = JArray.Load(reader);
-                            Require(row.Count == 8 && row[7].Type == JTokenType.Boolean);
-                            for (var i = 0; i < 7; i++) Require(row[i].Type == JTokenType.String);
-                            entries.Add(new IdiomEntry((string)row[0], (string)row[1], (string)row[2],
-                                (string)row[3], (string)row[4], (string)row[5], (string)row[6], (bool)row[7]));
+                            entries.Add(IdiomResourceJson.ReadCatalogEntry(row));
                         }
                     }
                     catch (Exception exception) { error = exception.Message; }
@@ -127,19 +105,10 @@ namespace XanaduYonder.Runtime.Idiom
                     {
                         using (var reader = Open(asset.bytes, 16 * 1024 * 1024))
                         {
-                            var rows = new JsonSerializer().Deserialize<IdiomDefinition[]>(reader);
-                            Require(rows != null && rows.Length <= 256 && !reader.Read());
-                            chunk = new Dictionary<string, IdiomDefinition>(StringComparer.Ordinal);
-                            foreach (var row in rows)
-                            {
-                                IdiomEntry expected;
-                                Require(row != null && row.Id != null && lexicon.TryGetById(row.Id, out expected));
-                                lexicon.TryGetById(row.Id, out expected);
-                                Require(expected.DetailChunk == entry.DetailChunk && expected.SenseId == row.SenseId &&
-                                    expected.Word == row.Word && expected.Pinyin == row.Pinyin && !string.IsNullOrEmpty(row.Meaning) &&
-                                    row.Stories != null && row.Origins != null && row.Examples != null);
-                                chunk.Add(row.Id, row);
-                            }
+                            var rows = JArray.Load(reader, new JsonLoadSettings
+                            { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
+                            Require(!reader.Read());
+                            chunk = IdiomResourceJson.ReadDefinitions(rows, lexicon, entry.DetailChunk);
                         }
                     }
                     finally { Resources.UnloadAsset(asset); }

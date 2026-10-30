@@ -43,7 +43,7 @@ namespace XanaduYonder.Runtime.Idiom
         private int ActiveSlot => (IsLocal ? 2 : 0) + (int)data.ActiveMode;
         private int CompletedCount => Game == null ? 0 : IsLocal ? Game.History.Count : Game.PlayerCount;
         private string TurnName => Game != null && Game.NextActor == IdiomActor.Left ? "左方" : "右方";
-        private string HintRule => IsLocal ? "双方各 3 次提示 · 任一方用满即回顾本轮" : "本局双方不重复 · 第 3 次新提示后回顾本轮";
+        private string HintRule => IsLocal ? "双方各 3 次提示 · 用尽仍可接词或认输" : "本局双方不重复 · 3 次提示用尽仍可接词";
         private IdiomGame Game => data == null ? null : IsLocal ?
             (data.ActiveMode == IdiomMode.SameCharacter ? localCharacterGame : localSoundGame) :
             (data.ActiveMode == IdiomMode.SameCharacter ? characterGame : soundGame);
@@ -256,9 +256,7 @@ namespace XanaduYonder.Runtime.Idiom
             var follow = chat.NearBottom;
             var result = Game.Submit(input.text);
             if (!result.Success) { ShowInputError(result.Error); return; }
-            // Hand the phone to the next participant with the committed word clear
-            // and the keyboard dismissed; preserve the native draft safeguards.
-            if (IsLocal) HideKeyboard();
+            if (data.CloseKeyboardAfterSend) HideKeyboard();
             SetDraft("");
             inlineError.text = "";
             Save(); Refresh(follow); Changed?.Invoke();
@@ -323,6 +321,7 @@ namespace XanaduYonder.Runtime.Idiom
                 case IdiomError.InvalidWord: inlineError.text = "请输入一个四字成语。"; break;
                 case IdiomError.UnknownWord: inlineError.text = "词库暂未收录这个成语，换一个试试。"; break;
                 case IdiomError.RepeatedWord: inlineError.text = "这个成语本轮已经用过了，换一个试试。"; break;
+                case IdiomError.UnavailableReading: inlineError.text = "这个成语暂无可用于同音接龙的读音，可以在同字模式使用。"; break;
                 case IdiomError.WrongStart: inlineError.text = TargetLabel(); break;
                 default: inlineError.text = "请先选择开局方式，或开启新的一局。"; break;
             }

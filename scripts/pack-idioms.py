@@ -33,23 +33,25 @@ def verified_read(folder, checksums, relative):
     return data
 
 def project_detail(row):
-    sense = row['sense']
-    explanation = sense['explanation']
-    sources = {p['source'] for refs in sense['provenance'].values()
-               for item in refs for p in (item if isinstance(item, list) else [item])}
     citation = lambda x: {'Text': x['text'], 'Reference': x['reference']}
-    return {'Id': row['id'], 'SenseId': sense['id'], 'Word': row['word'],
-            'Pinyin': sense['pinyin']['display'], 'Meaning': explanation['meaning'],
-            'Stories': explanation['stories'], 'Origins': list(map(citation, explanation['origins'])),
-            'Examples': list(map(citation, sense['examples'])),
-            'SourceLabel': ' · '.join(n for k,n in [('jingmo','景墨词库'),('xinhua','新华成语词库')] if k in sources)}
+    variants = row['sourceVariants']
+    sources = [{'SourceKey': v['sourceKey'], 'SourceLabel': v['sourceLabel'],
+                'SourceRecordId': v['sourceRecordId'], 'Pinyin': v['pinyin'], 'Meaning': v['meaning'],
+                'Stories': v['stories'], 'Origins': list(map(citation, v['origins'])),
+                'Examples': list(map(citation, v['examples']))} for v in variants]
+    return {'Id': row['id'], 'SenseId': row['senseId'], 'Word': row['word'],
+            'Pinyin': row['pinyin']['display'],
+            'Meaning': '\n\n'.join('【%s】\n%s' % (v['sourceLabel'], v['meaning']) for v in variants),
+            'Stories': [], 'Origins': [], 'Examples': [], 'Sources': sources,
+            'SourceLabel': ' · '.join(dict.fromkeys(v['sourceLabel'] for v in variants))}
 
 def build_rows(entries, common):
     missing = common - {e['word'] for e in entries}
     if missing:
         raise ValueError('Recommended words absent from validated index: ' + ', '.join(sorted(missing)))
     return [[e['id'],e['word'],e['pinyin']['display'],e['firstKey'],e['lastKey'],
-             e['senseId'],Path(e['detailFile']).stem,e['word'] in common] for e in entries]
+             e['senseId'],Path(e['detailFile']).stem,e['word'] in common,
+             [[r['firstKey'], r['lastKey']] for r in e['readings']]] for e in entries]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -68,9 +70,9 @@ def main():
         projected = []
         for entry in details:
             expected = by_id[entry['id']]
-            if (entry['id'] in details_seen or expected['senseId'] != entry['sense']['id']
+            if (entry['id'] in details_seen or expected['senseId'] != entry['senseId']
                     or expected['word'] != entry['word'] or expected['detailFile'] != path
-                    or expected['pinyin']['display'] != entry['sense']['pinyin']['display']):
+                    or expected['pinyin']['display'] != entry['pinyin']['display']):
                 raise ValueError('Invalid detail reference: ' + entry['id'])
             projected.append(project_detail(entry))
             details_seen.add(entry['id'])

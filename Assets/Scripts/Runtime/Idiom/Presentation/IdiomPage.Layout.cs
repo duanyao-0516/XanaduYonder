@@ -8,7 +8,7 @@ namespace XanaduYonder.Runtime.Idiom
     internal sealed partial class IdiomPage
     {
         private RectTransform gameRoot, bookRoot, footer, inputRow, endedRow, starter, messagePanel;
-        private Text target, countText, inlineError, messageTitle, messageBody, bookCount, bookEmpty;
+        private Text countText, inlineError, messageTitle, messageBody, bookCount, bookEmpty;
         private Text pageNotice, notebookNotice, composerRule, starterRule, starterDescription;
         private Button computerMatch, localMatch, leftStart, rightStart, send, hint, bookButton, newReplies, messageAction;
         private IdiomRuleSwitch ruleSwitch;
@@ -16,6 +16,9 @@ namespace XanaduYonder.Runtime.Idiom
         private InputField input;
         private IdiomVirtualList chat, bookList;
         private float layoutWidth, layoutHeight, layoutInset = -1;
+        private float composerPosition, composerFrom, composerTarget, composerElapsed = .2f;
+        private bool composerInitialized;
+        private float chatRowHeight = 118;
 
         private void BuildLayout()
         {
@@ -32,10 +35,9 @@ namespace XanaduYonder.Runtime.Idiom
             countText.name = "Idiom centered count";
             ruleSwitch = IdiomRuleSwitch.Create(gameRoot, 552, 184, () =>
                 ChangeMode(data.ActiveMode == IdiomMode.SameCharacter ? IdiomMode.SameSound : IdiomMode.SameCharacter));
-            target = IdiomUi.Label(gameRoot, "", 32, 244, 656, 40, 23, UiFactory.Accent, TextAnchor.MiddleCenter, true);
             countText.horizontalOverflow = HorizontalWrapMode.Overflow;
             countText.verticalOverflow = VerticalWrapMode.Truncate;
-            chat = new IdiomVirtualList(gameRoot, "Idiom conversation", 164, BindChatRow, index =>
+            chat = new IdiomVirtualList(gameRoot, "Idiom conversation", chatRowHeight, BindChatRow, index =>
             {
                 if (AcceptsInput && index < Game.History.Count) ShowDefinition(Game.History[index], null, null);
             });
@@ -52,7 +54,7 @@ namespace XanaduYonder.Runtime.Idiom
             hint = IdiomUi.Button(inputRow, "提示 0/3", 0, 0, 132, 70, RequestHint, false, 21);
             var field = UiFactory.Panel(inputRow, "Idiom input", 144, 0, 368, 70, Color.white);
             field.raycastTarget = true;
-            input = field.gameObject.AddComponent<InputField>();
+            input = field.gameObject.AddComponent<IdiomInputField>();
             input.targetGraphic = field;
             var text = IdiomUi.Label(field.transform, "", 18, 0, 332, 70, 27);
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -71,6 +73,7 @@ namespace XanaduYonder.Runtime.Idiom
             input.onValueChanged.AddListener(DraftChanged);
             // Selection confirmation, endEdit and losing focus never submit a turn.
             send = IdiomUi.Button(inputRow, "发送", 524, 0, 132, 70, Submit, true, 25);
+            ((IdiomInputField)input).SendButton = send;
             composerRule = IdiomUi.Label(footer, "", 0, 122, 656, 30, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             endedRow = UiFactory.Rect(footer, "Finished composer", 0, 38, 656, 76);
             IdiomUi.Button(endedRow, "本轮小结", 0, 0, 320, 72, () => { if (AcceptsInput) ShowSummary(); });
@@ -114,22 +117,30 @@ namespace XanaduYonder.Runtime.Idiom
         private void Update()
         {
             if (!visible) return;
-            Layout();
             if (draftDirty && Time.unscaledTime >= draftSaveAt) Save();
             send.interactable = AcceptsInput && Game.IsStarted && !Game.IsEnded && !string.IsNullOrWhiteSpace(input.text);
-            chat.Tick();
-            if (notebookVisible) bookList.Tick();
             if (newReplies.gameObject.activeSelf && chat.NearBottom) newReplies.gameObject.SetActive(false);
             var notice = SaveError ?? initialWarning ?? "";
             pageNotice.text = notebookNotice.text = notice;
             pageNotice.color = notebookNotice.color = SaveError == null ? UiFactory.Muted : UiFactory.Hex("9B5143");
         }
 
+        private void LateUpdate()
+        {
+            if (!visible) return;
+            // SafeDesignFrame.Update and the IME sampler's earlier LateUpdate
+            // have now settled the geometry used by this whole page.
+            Layout();
+            AdvanceComposerTransition(Time.unscaledDeltaTime);
+            chat.Tick();
+            if (notebookVisible) bookList.Tick();
+        }
+
         private void Layout()
         {
-            // UGUI deselects InputField on pointer DOWN, dismissing the IME before
-            // Button receives pointer UP. Reflowing in between moves the hit target
-            // and cancels an otherwise valid click. Keep geometry through release.
+            if (keyboard != null && !keyboard.LayoutMeasurementReady) return;
+            // Keep a hit target stable through press and release, including when
+            // the user taps while the previous IME transition is still settling.
             if (layoutWidth > 0 && (Input.touchCount > 0 || Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))) return;
             var width = root.rect.width > 0 ? root.rect.width : 720;
             var height = root.rect.height > 0 ? root.rect.height : 1320;
@@ -143,9 +154,17 @@ namespace XanaduYonder.Runtime.Idiom
             bookRoot.offsetMin = new Vector2(left, 0); bookRoot.offsetMax = new Vector2(-left, 0);
             var bottom = Mathf.Max(64, inset + 14);
             var composerTop = Mathf.Max(0, height - bottom - 156);
-            IdiomUi.Place(footer, 32, composerTop, 656, 156);
-            IdiomUi.Place(chat.Viewport, 24, 296, 672, Mathf.Max(1, composerTop - 310));
-            IdiomUi.Place(newReplies.GetComponent<RectTransform>(), 260, composerTop - 58, 200, 48);
+            if (!composerInitialized)
+            {
+                composerInitialized = true;
+                composerPosition = composerFrom = composerTarget = composerTop;
+                ApplyComposerGeometry();
+            }
+            else if (Mathf.Abs(composerTop - composerTarget) > .1f)
+            {
+                chat.BeginViewportTransition();
+                composerFrom = composerPosition; composerTarget = composerTop; composerElapsed = 0;
+            }
             IdiomUi.Place(starter, 32, Mathf.Min(360, Mathf.Max(270, height * .27f)), 656, 320);
             IdiomUi.Place(messagePanel, 32, Mathf.Min(360, height * .28f), 656, 330);
             var recoveringBook = notebook != null && store != null && store.NeedsRecovery;
@@ -153,6 +172,25 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomUi.Place(notebookRecovery.GetComponent<RectTransform>(), 160, recoveringBook ? height - 140 : 510, 400, 70);
             IdiomUi.Place(pageNotice.rectTransform, 32, height - 48, 656, 40);
             IdiomUi.Place(notebookNotice.rectTransform, 32, height - 48, 656, 40);
+        }
+
+        private void AdvanceComposerTransition(float delta)
+        {
+            if (!composerInitialized || composerElapsed >= .2f || keyboard != null && !keyboard.LayoutMeasurementReady ||
+                Input.touchCount > 0 || Input.GetMouseButton(0) || Input.GetMouseButtonUp(0)) return;
+            composerElapsed = Mathf.Min(.2f, composerElapsed + Mathf.Max(0, delta));
+            var remaining = 1 - composerElapsed / .2f;
+            composerPosition = Mathf.Lerp(composerFrom, composerTarget, 1 - remaining * remaining * remaining);
+            ApplyComposerGeometry();
+            chat.Tick();
+            if (composerElapsed >= .2f) chat.EndViewportTransition();
+        }
+
+        private void ApplyComposerGeometry()
+        {
+            IdiomUi.Place(footer, 32, composerPosition, 656, 156);
+            IdiomUi.Place(chat.Viewport, 24, 244, 672, Mathf.Max(1, composerPosition - 258));
+            IdiomUi.Place(newReplies.GetComponent<RectTransform>(), 260, composerPosition - 58, 200, 48);
         }
 
         private void Refresh(bool bottom = false)
@@ -175,7 +213,6 @@ namespace XanaduYonder.Runtime.Idiom
             inputRow.gameObject.SetActive(ready && Game.IsStarted && !Game.IsEnded);
             endedRow.gameObject.SetActive(ready && Game.IsEnded);
             messagePanel.gameObject.SetActive(!ready);
-            target.text = ready ? TargetLabel() : "离线接龙 · 随手学成语";
             countText.text = ready ? "本轮完成 " + CompletedCount + " 个" : "";
             countText.fontSize = 23;
             if (countText.preferredWidth > countText.rectTransform.rect.width)
@@ -185,11 +222,20 @@ namespace XanaduYonder.Runtime.Idiom
                 writingDraft = true; input.SetTextWithoutNotify(ActiveSave.Draft ?? ""); writingDraft = false;
                 input.interactable = Game.IsStarted && !Game.IsEnded;
                 var hintCount = IsLocal ? Game.HintCountFor(Game.NextActor) : Game.HintCount;
-                IdiomUi.Caption(hint, Game.CurrentHint == null ? "提示 " + hintCount + "/3" : "查看提示");
+                IdiomUi.Caption(hint, Game.HintQuotaExhausted ? "认输" : Game.CurrentHint == null ? "提示 " + hintCount + "/3" : "查看提示");
                 var leftTurn = IsLocal && Game.NextActor == IdiomActor.Left;
                 IdiomUi.Place(send.GetComponent<RectTransform>(), leftTurn ? 0 : 524, 0, 132, 70);
                 IdiomUi.Place(hint.GetComponent<RectTransform>(), leftTurn ? 524 : 0, 0, 132, 70);
                 ((Text)input.placeholder).text = IsLocal ? TurnName + "输入成语…" : "输入四字成语…";
+                var rowHeight = data.ShowPinyin ? 150 : 118;
+                if (Mathf.Abs(rowHeight - chatRowHeight) > .1f)
+                {
+                    for (var i = 0; i < chatOffsets.Length; i++)
+                        chatOffsets[i] = Mathf.Floor(chatOffsets[i] / chatRowHeight) * rowHeight +
+                            Mathf.Min(chatOffsets[i] % chatRowHeight, rowHeight - 1);
+                    chatRowHeight = rowHeight;
+                    chat.SetRowHeight(rowHeight);
+                }
                 chat.SetCount(Game.History.Count, bottom);
                 if (Game.IsEnded) inlineError.text = "本轮已完成，点开成语继续学习。";
             }
@@ -220,7 +266,7 @@ namespace XanaduYonder.Runtime.Idiom
             var turn = IsLocal ? "轮到" + TurnName + " · " : "";
             if (Game.LastEntry == null) return turn + "先说一个四字成语";
             return turn + (Game.Mode == IdiomMode.SameCharacter ? "请接“" + Game.LastEntry.LastCharacter + "”字开头" :
-                "请接读音“" + Game.LastEntry.LastKey.Replace("v", "ü") + "”，声调不限");
+                "请接读音“" + string.Join(" / ", Game.CurrentSoundKeys).Replace("v", "ü") + "”，声调不限");
         }
 
         private void BindChatRow(IdiomVirtualList.Row row, int index)
@@ -228,14 +274,28 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomEntry entry;
             if (Game == null || index >= Game.History.Count || !lexicon.TryGetById(Game.History[index], out entry)) return;
             var player = index % 2 == 0 ? Game.FirstActor == IdiomActor.Player : Game.FirstActor != IdiomActor.Player;
-            var x = player ? 190 : 8;
-            IdiomUi.Place(row.Button.GetComponent<RectTransform>(), x, 27, 474, 122);
-            IdiomUi.Place(row.Actor.rectTransform, player ? 514 : 12, 0, 146, 25);
+            const float padding = 20;
+            var showPinyin = data.ShowPinyin;
+            row.Word.fontSize = 30; row.Pinyin.fontSize = 19;
+            row.Word.text = entry.Word;
+            row.Pinyin.text = IdiomDefinitionText.CompactPinyin(entry.Pinyin);
+            // Ordinary readings fit in one line. Exceptional source readings
+            // remain available in full in the definition without widening a row.
+            if (row.Pinyin.preferredWidth > 460) row.Pinyin.text = "拼音见词库资料";
+            var contentWidth = Mathf.Ceil(Mathf.Max(row.Word.preferredWidth, showPinyin ? row.Pinyin.preferredWidth : 0));
+            var bubbleWidth = contentWidth + padding * 2;
+            var x = player ? row.Root.rect.width - bubbleWidth - 8 : 8;
+            IdiomUi.Place(row.Button.GetComponent<RectTransform>(), x, 27, bubbleWidth, showPinyin ? 108 : 76);
+            IdiomUi.Place(row.Actor.rectTransform, player ? x + bubbleWidth - 150 : x + 4, 0, 146, 25);
             row.Actor.alignment = player ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
             row.Actor.text = IsLocal ? (player ? "右方" : "左方") : (player ? "你" : "APP");
             row.Button.GetComponent<Image>().color = player ? UiFactory.Accent : UiFactory.Hex("E5EDDA");
-            row.Word.text = entry.Word; row.Word.color = player ? Color.white : UiFactory.Ink;
-            row.Pinyin.text = entry.Pinyin; row.Pinyin.color = player ? UiFactory.Hex("E1EDDB") : UiFactory.Accent;
+            IdiomUi.Place(row.Word.rectTransform, padding, showPinyin ? 7 : 16, contentWidth, 44);
+            IdiomUi.Place(row.Pinyin.rectTransform, padding, 55, contentWidth, 37);
+            row.Pinyin.gameObject.SetActive(showPinyin);
+            row.Word.alignment = row.Pinyin.alignment = player ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+            row.Word.color = player ? Color.white : UiFactory.Ink;
+            row.Pinyin.color = player ? UiFactory.Hex("E1EDDB") : UiFactory.Accent;
             row.Note.gameObject.SetActive(false);
         }
 
@@ -248,7 +308,7 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomUi.Place(row.Word.rectTransform, 22, 5, 600, 50);
             IdiomUi.Place(row.Pinyin.rectTransform, 22, 55, 600, 32);
             IdiomUi.Place(row.Note.rectTransform, 22, 92, 600, 36);
-            row.Word.text = item.Word; row.Pinyin.text = item.Pinyin;
+            row.Word.text = item.Word; row.Pinyin.text = IdiomDefinitionText.CompactPinyin(item.Pinyin);
             row.Note.text = (item.Meaning ?? "").Replace("\r", " ").Replace("\n", " ");
             row.Note.gameObject.SetActive(true);
         }
