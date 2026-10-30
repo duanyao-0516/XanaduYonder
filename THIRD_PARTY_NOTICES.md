@@ -2,6 +2,12 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## Lobby icons
+
+- The compact lobby and display controls use `lucide-static@1.17.0`, with original SVG geometry and the project's green stroke color. The two reserved game icons use `castle` and `swords` from the same pinned package.
+- The complete ISC license, including the package's notice for Feather-derived icons, is retained in [the lobby asset license](docs/design/lobby-v2/lobby-ui-v2-assets/LICENSE). Source URLs, exported PNG hashes and resource mappings are recorded in [the asset map](docs/design/lobby-v2/asset-map.json).
+- The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma and Happy Ball lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
+
 ## Sokoban archived design and content sources
 
 - Kenney Sokoban: [official page](https://kenney.nl/assets/sokoban), [author's OpenGameArt upload](https://opengameart.org/content/sokoban-100-tiles). CC0, Kenney Vleugels. Original PNG sizes, spritesheets, tilesheets, vector files and license are retained in `ThirdParty/Sokoban/kenney-sokoban/`. The UI prototype references these local images.
