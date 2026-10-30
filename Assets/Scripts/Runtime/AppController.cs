@@ -27,7 +27,7 @@ using XanaduYonder.Runtime.FlappyBird;
 
 namespace XanaduYonder.Runtime
 {
-    public sealed class AppController : MonoBehaviour
+    public sealed partial class AppController : MonoBehaviour
     {
         private sealed class RandomSource : IRandomSource
         {
@@ -348,6 +348,7 @@ namespace XanaduYonder.Runtime
             lobbyLinkMatchRecordText.resizeTextMaxSize = 21;
             AddLinkMatchPreview(linkMatchCard.transform);
             UiFactory.Button(linkMatchCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterLinkMatch, true);
+            AddKingdomRushCard(content, ref cardCount);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  本地记录", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
             lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 对局或最高纪录自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);

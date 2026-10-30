@@ -1,0 +1,79 @@
+{
+  "source": "Original FL8.0.5 APK classes.dex; compared to compiled Java using dexdump and javap.",
+  "nativeMethods": {
+    "org.libsdl.app.HIDDeviceManager": [
+      "HIDDeviceConnected(ILjava/lang/String;IILjava/lang/String;ILjava/lang/String;Ljava/lang/String;IIIIZ)V",
+      "HIDDeviceDisconnected(I)V",
+      "HIDDeviceInputReport(I[B)V",
+      "HIDDeviceOpenPending(I)V",
+      "HIDDeviceOpenResult(IZ)V",
+      "HIDDeviceRegisterCallback()V",
+      "HIDDeviceReleaseCallback()V",
+      "HIDDeviceReportResponse(I[B)V"
+    ],
+    "org.libsdl.app.SDLActivity": [
+      "nativeAddTouch(ILjava/lang/String;)V",
+      "nativeAllowRecreateActivity()Z",
+      "nativeCheckSDLThreadCounter()I",
+      "nativeCleanupMainThread()V",
+      "nativeFocusChanged(Z)V",
+      "nativeGetHint(Ljava/lang/String;)Ljava/lang/String;",
+      "nativeGetHintBoolean(Ljava/lang/String;Z)Z",
+      "nativeGetVersion()Ljava/lang/String;",
+      "nativeInitMainThread()V",
+      "nativeLowMemory()V",
+      "nativePause()V",
+      "nativePermissionResult(IZ)V",
+      "nativeQuit()V",
+      "nativeResume()V",
+      "nativeRunMain(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)I",
+      "nativeSendQuit()V",
+      "nativeSetNaturalOrientation(I)V",
+      "nativeSetScreenResolution(IIIIFF)V",
+      "nativeSetenv(Ljava/lang/String;Ljava/lang/String;)V",
+      "nativeSetupJNI()I",
+      "onNativeAccel(FFF)V",
+      "onNativeClipboardChanged()V",
+      "onNativeDarkModeChanged(Z)V",
+      "onNativeDropFile(Ljava/lang/String;)V",
+      "onNativeFileDialog(I[Ljava/lang/String;I)V",
+      "onNativeInsetsChanged(IIII)V",
+      "onNativeKeyDown(I)V",
+      "onNativeKeyUp(I)V",
+      "onNativeKeyboardFocusLost()V",
+      "onNativeLocaleChanged()V",
+      "onNativeMouse(IIFFZ)V",
+      "onNativePen(IIIFFF)V",
+      "onNativeResize()V",
+      "onNativeRotationChanged(I)V",
+      "onNativeSoftReturnKey()Z",
+      "onNativeSurfaceChanged()V",
+      "onNativeSurfaceCreated()V",
+      "onNativeSurfaceDestroyed()V",
+      "onNativeTouch(IIIFFF)V"
+    ],
+    "org.libsdl.app.SDLAudioManager": [
+      "nativeAddAudioDevice(ZLjava/lang/String;I)V",
+      "nativeRemoveAudioDevice(ZI)V",
+      "nativeSetupJNI()I"
+    ],
+    "org.libsdl.app.SDLControllerManager": [
+      "nativeAddHaptic(ILjava/lang/String;)V",
+      "nativeAddJoystick(ILjava/lang/String;Ljava/lang/String;IIIIIIZ)V",
+      "nativeRemoveHaptic(I)V",
+      "nativeRemoveJoystick(I)V",
+      "nativeSetupJNI()I",
+      "onNativeHat(IIII)V",
+      "onNativeJoy(IIF)V",
+      "onNativePadDown(II)Z",
+      "onNativePadUp(II)Z"
+    ],
+    "org.libsdl.app.SDLInputConnection": [
+      "nativeCommitText(Ljava/lang/String;I)V",
+      "nativeGenerateScancodeForUnichar(C)V"
+    ],
+    "org.love2d.android.GameActivity": [
+      "nativeSetDefaultStreamValues(II)V"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "display_title": "王国保卫战 · 初代",
+  "source_apk_sha256": "ac4abdd13e162a13fad5d07234324b2e3953978b53c513b20c61a6b9de3bb0e1",
+  "patch_module": "scripts/kingdom-rush/content-branding.py",
+  "apply_after": "scripts/kingdom-rush/content-patches.py",
+  "source_attribution": {
+    "modification": "FluidLight / FL8.0.5",
+    "author": "流辉一枪349 / liuhui349",
+    "level_76_credit": "本关来自KRDove版，在此表示感谢。",
+    "original_studio": "IRONHIDE GAME STUDIO",
+    "attribution_document": "ThirdParty/KingdomRushContent/branding-audit.md"
+  },
+  "slot_menu": {
+    "replacement_background": "map_background1",
+    "required_texture_group": "screen_map_123",
+    "logical_background_size": [1920, 1080],
+    "preserve_existing_descendants": true,
+    "prune_index": "kr3-desktop/assets/images/fullhd/screen_slots.lua",
+    "prune_texture": "screen_slots-1.astc",
+    "reviewed_texture_sha256_before_pruning": "8ea04073aecbc71162f0e9c4d0729ed6c2c103e03f5824553373161431d53665",
+    "logical_atlas_size": [2048, 2048],
+    "physical_texture_size": [1536, 1536],
+    "astc_block_size": [8, 8],
+    "removed_frames": [
+      {
+        "name": "main_menu_bg",
+        "f_quad": [6, 6, 1920, 1080],
+        "evidence": "Decoded pixels show ORIGINS title and third-generation full scene."
+      },
+      {
+        "name": "main_menu_subtitle_cn",
+        "f_quad": [6, 1687, 371, 60],
+        "evidence": "Decoded pixels show the Frontiers Chinese title; source displays only for KR2."
+      }
+    ],
+    "physical_pruning_owner": "content pipeline; remove records and foreign pixels while protecting retained sampling blocks"
+  },
+  "retained_attribution_art": ["screen_splash-1.astc"],
+  "stable_internal_fields": [
+    "slot.liuhui", "liuhui_hero", "KR_GAME", "KR_TARGET", "KR_FL_VERSION",
+    "version.identity", "version.string", "version.string_short", "version.vc",
+    "version.bundle_id", "version.bundle_keywords"
+  ],
+  "validation_boundary": "Anchored source transformations, matching LuaJIT compilation, pure template geometry and input propagation checks; gameplay and final device appearance require separate verification."
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Based on Unity 6000.3.27f1 Apk/UnityManifest.xml; Activity entry mode. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <application android:extractNativeLibs="true" tools:replace="android:extractNativeLibs">
+        <activity android:name="com.unity3d.player.UnityPlayerActivity" android:theme="@style/UnityThemeSelector">
+            <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+        </activity>
+        <activity android:name="com.xanaduyonder.kingdomrush.KingdomRushLauncherActivity"
+                  android:exported="true"
+                  android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="kingdomrush.unity_activity" android:value="com.unity3d.player.UnityPlayerActivity" />
+        </activity>
+    </application>
+</manifest>

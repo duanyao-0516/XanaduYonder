@@ -1,0 +1,1993 @@
+{
+  "scope": "Bounded current game HUD constructors/late overrides, selected native powers and empty slot,13native hero portrait family,20native tower-form menus,allowed achievement notifications. No runtime/game execution.",
+  "game_gui_source_sha256": "45d0c77e7541e08c0ad6af65c273e4c8c094e5042dfc8c9da0cd8b7fe29e7d41",
+  "preload_groups": [
+    "gui_common",
+    "gui_common_123",
+    "gui_common_123mod",
+    "spell_selection_icons",
+    "gui_portraits",
+    "gui_portraits_123",
+    "gui_portraits_20260307",
+    "achievements",
+    "encyclopedia",
+    "gui_notifications_common",
+    "gui_notifications_common_123",
+    "gui_notifications_bg",
+    "gui_notifications_bg_123",
+    "view_options",
+    "white_block",
+    "gui_slices",
+    "gui_tutorial",
+    "go_towers_1-galaxy",
+    "go_barrack_pirates",
+    "go_towers_44"
+  ],
+  "binding_count": 303,
+  "excluded": {
+    "item_medical_kit_bag_0001": "unselected shop item callback",
+    "item_medical_kit_heart": "unselected shop item callback",
+    "item_medical_kit_heart_HUD_0001": "unselected shop item callback",
+    "bg_bottom_bar": "guarded by not IS_KR3; profile KR_GAME remains kr3",
+    "bg_bottom_right": "guarded by not IS_KR3; profile KR_GAME remains kr3",
+    "bg_bottom_left": "guarded by not IS_KR3; profile KR_GAME remains kr3",
+    "bg_bottom_center": "guarded by not IS_KR3; profile KR_GAME remains kr3",
+    "ico_sell_0002 / sub_icons_0003": "Tower menu check fields have no consumer in current all-desktop/game_gui.lua; actual image/halo/disabled frames included."
+  },
+  "bindings": [
+    {
+      "frame": "achievement_icons_0016",
+      "references": [
+        "allowed in-game achievement notification STARGAZER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0018",
+      "references": [
+        "allowed in-game achievement notification BONE_COLLECTOR"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0020",
+      "references": [
+        "allowed in-game achievement notification WAR_NEVER_CHANGES"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0024",
+      "references": [
+        "allowed in-game achievement notification ROCKSTAR"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0032",
+      "references": [
+        "allowed in-game achievement notification STARDUST"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0057",
+      "references": [
+        "allowed in-game achievement notification TRUTH_DARE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0059",
+      "references": [
+        "allowed in-game achievement notification VOLUNTEER_TRIBUTE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0062",
+      "references": [
+        "allowed in-game achievement notification NOT_TODAY"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0063",
+      "references": [
+        "allowed in-game achievement notification HOLDING_OUT"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0064",
+      "references": [
+        "allowed in-game achievement notification GREAT_DEFENDER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0065",
+      "references": [
+        "allowed in-game achievement notification HARD_MODE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0075",
+      "references": [
+        "allowed in-game achievement notification GREAT_DEFENDER_IRON"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0076",
+      "references": [
+        "allowed in-game achievement notification GREAT_DEFENDER_HEROIC"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0095",
+      "references": [
+        "allowed in-game achievement notification IMPOSSIBLE_MODE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0102",
+      "references": [
+        "allowed in-game achievement notification LANDOWNER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0108",
+      "references": [
+        "allowed in-game achievement notification HEROLEVELUP"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0149",
+      "references": [
+        "allowed in-game achievement notification IMPATIENT"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0203",
+      "references": [
+        "allowed in-game achievement notification EASY_TOWER_BUILDER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0204",
+      "references": [
+        "allowed in-game achievement notification FIRST_BLOOD"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0205",
+      "references": [
+        "allowed in-game achievement notification BLOODLUST"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0206",
+      "references": [
+        "allowed in-game achievement notification DARING"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0207",
+      "references": [
+        "allowed in-game achievement notification WHATS_THAT"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0208",
+      "references": [
+        "allowed in-game achievement notification ARMAGGEDON"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0211",
+      "references": [
+        "allowed in-game achievement notification MEDIUM_TOWER_BUILDER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0212",
+      "references": [
+        "allowed in-game achievement notification SPECIALIZATION"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0214",
+      "references": [
+        "allowed in-game achievement notification SLAYER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0216",
+      "references": [
+        "allowed in-game achievement notification TACTICIAN"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0218",
+      "references": [
+        "allowed in-game achievement notification HARD_TOWER_BUILDER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0219",
+      "references": [
+        "allowed in-game achievement notification FEARLESS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0220",
+      "references": [
+        "allowed in-game achievement notification MULTIKILL"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0221",
+      "references": [
+        "allowed in-game achievement notification DIE_HARD"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0222",
+      "references": [
+        "allowed in-game achievement notification GI_JOE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0223",
+      "references": [
+        "allowed in-game achievement notification CANNON_FODDER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0256",
+      "references": [
+        "allowed in-game achievement notification HERO_OF_THE_DAY"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0257",
+      "references": [
+        "allowed in-game achievement notification LEGENDARY"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0294",
+      "references": [
+        "allowed in-game achievement notification LANDMANAGER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0410",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_MOUNTAIN_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0413",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_JUGGERNAUT"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0415",
+      "references": [
+        "allowed in-game achievement notification DEATH_FROM_ABOVE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0424",
+      "references": [
+        "allowed in-game achievement notification REAL_STATE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0425",
+      "references": [
+        "allowed in-game achievement notification INDECISIVE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0427",
+      "references": [
+        "allowed in-game achievement notification MAX_ELVES"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0428",
+      "references": [
+        "allowed in-game achievement notification IMPERIAL_SAVIOUR"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0429",
+      "references": [
+        "allowed in-game achievement notification HENDERSON"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0430",
+      "references": [
+        "allowed in-game achievement notification SUN_BURNER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0431",
+      "references": [
+        "allowed in-game achievement notification CATCH_A_FISH"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0432",
+      "references": [
+        "allowed in-game achievement notification SHEPARD"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0433",
+      "references": [
+        "allowed in-game achievement notification BARBARIAN_RUSH"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0434",
+      "references": [
+        "allowed in-game achievement notification ENTANGLED"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0435",
+      "references": [
+        "allowed in-game achievement notification MEDIC"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0436",
+      "references": [
+        "allowed in-game achievement notification HOLY_CHORUS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0437",
+      "references": [
+        "allowed in-game achievement notification ACDC"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0438",
+      "references": [
+        "allowed in-game achievement notification CLUSTERED"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0439",
+      "references": [
+        "allowed in-game achievement notification ELEMENTALIST"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0440",
+      "references": [
+        "allowed in-game achievement notification ENERGY_NETWORK"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0441",
+      "references": [
+        "allowed in-game achievement notification TOXICITY"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0442",
+      "references": [
+        "allowed in-game achievement notification ROCKETEER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0443",
+      "references": [
+        "allowed in-game achievement notification SNIPER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0444",
+      "references": [
+        "allowed in-game achievement notification AXE_RAINER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0445",
+      "references": [
+        "allowed in-game achievement notification SHEEP_KILLER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0446",
+      "references": [
+        "allowed in-game achievement notification DUST_TO_DUST"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0447",
+      "references": [
+        "allowed in-game achievement notification BEAM_ME_UP"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0448",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_END_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0452",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_SARELGAZ"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0453",
+      "references": [
+        "allowed in-game achievement notification FREE_FREDO"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0454",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_GULTHAK_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0455",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_TREANT_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0456",
+      "references": [
+        "allowed in-game achievement notification HERO_MEDIUM"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0457",
+      "references": [
+        "allowed in-game achievement notification HERO_HARD"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0458",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_KINGPING_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0459",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_COOL_RUNNING"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0460",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_ACORN"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0461",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_MUSHROOM"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0462",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_TROLL_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0464",
+      "references": [
+        "allowed in-game achievement notification WE_DINE_IN_HELL"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0465",
+      "references": [
+        "allowed in-game achievement notification ARMY_OF_ONE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0466",
+      "references": [
+        "allowed in-game achievement notification HELL_O"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0467",
+      "references": [
+        "allowed in-game achievement notification SUPER_MUSHROOM"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0468",
+      "references": [
+        "allowed in-game achievement notification SPORE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0469",
+      "references": [
+        "allowed in-game achievement notification STILL_COUNTS_AS_ONE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0470",
+      "references": [
+        "allowed in-game achievement notification RATATOUILLE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0471",
+      "references": [
+        "allowed in-game achievement notification NEVERMORE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0472",
+      "references": [
+        "allowed in-game achievement notification NESSIE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0473",
+      "references": [
+        "allowed in-game achievement notification SPLINTER"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0474",
+      "references": [
+        "allowed in-game achievement notification GOC"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0475",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_COMPLETE_IMPOSSIBLE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0476",
+      "references": [
+        "allowed in-game achievement notification DEFEAT_HOBGOBLIN_BOSS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0477",
+      "references": [
+        "allowed in-game achievement notification GOLD_BAG"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0478",
+      "references": [
+        "allowed in-game achievement notification HOB_SHIELD"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0479",
+      "references": [
+        "allowed in-game achievement notification HOB_SPEAR"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0480",
+      "references": [
+        "allowed in-game achievement notification HOB_RIDERS"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0481",
+      "references": [
+        "allowed in-game achievement notification GOBLIN_BLOON"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0482",
+      "references": [
+        "allowed in-game achievement notification TIME_WIZARD_SLOW"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0483",
+      "references": [
+        "allowed in-game achievement notification ANCIENT_GUARD_TELE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0484",
+      "references": [
+        "allowed in-game achievement notification STEAM_TROOP_FREEZE"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0485",
+      "references": [
+        "allowed in-game achievement notification STEAM_TROOP_IND"
+      ]
+    },
+    {
+      "frame": "base_gui_kr3_tile",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "base_power_slot_bg",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "base_powers_bg",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "bg_bottom_nextwave",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "bloodlust_icons_0001",
+      "references": [
+        "original native tower menu g1_mage"
+      ]
+    },
+    {
+      "frame": "bloodlust_icons_0001_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state"
+      ]
+    },
+    {
+      "frame": "bloodlust_icons_0004",
+      "references": [
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "bloodlust_icons_0004_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "button_continue_chains",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "button_restart_chains",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "confirm_feedback_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "effect_powerbuy_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "error_feedback_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "fire_0001",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "glow_ico_main",
+      "references": [
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "glow_ico_sell",
+      "references": [
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu ranger",
+        "original native tower menu musketeer",
+        "original native tower menu arcane_wizard",
+        "original native tower menu sorcerer",
+        "original native tower menu bfg",
+        "original native tower menu tesla",
+        "original native tower menu paladin",
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "glow_ico_special",
+      "references": [
+        "original native tower menu ranger",
+        "original native tower menu ranger",
+        "original native tower menu musketeer",
+        "original native tower menu musketeer",
+        "original native tower menu arcane_wizard",
+        "original native tower menu arcane_wizard",
+        "original native tower menu sorcerer",
+        "original native tower menu sorcerer",
+        "original native tower menu bfg",
+        "original native tower menu bfg",
+        "original native tower menu tesla",
+        "original native tower menu tesla",
+        "original native tower menu paladin",
+        "original native tower menu paladin",
+        "original native tower menu paladin",
+        "original native tower menu barbarian",
+        "original native tower menu barbarian",
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "glow_ico_sub",
+      "references": [
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu sorcerer",
+        "original native tower menu paladin",
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "heroPortrait_0001",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "heroPortrait_0003",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0001",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0002",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0003",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0004",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0005",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0006",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0007",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0008",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0009",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0010",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0011",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0012",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_portraits_0013",
+      "references": [
+        "native13 hero original info.hero_portrait"
+      ]
+    },
+    {
+      "frame": "heroPortrait_selected",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "heroPortrait_separator",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "hero_portrait_bars_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "hero_portrait_bars_0002",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "ico_sell_0001",
+      "references": [
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu ranger",
+        "original native tower menu musketeer",
+        "original native tower menu arcane_wizard",
+        "original native tower menu sorcerer",
+        "original native tower menu bfg",
+        "original native tower menu tesla",
+        "original native tower menu paladin",
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "ico_sell_0001_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state",
+        "original native tower menu g1_mage disabled state",
+        "original native tower menu g1_mage disabled state",
+        "original native tower menu g1_engineer disabled state",
+        "original native tower menu g1_engineer disabled state",
+        "original native tower menu g1_engineer disabled state",
+        "original native tower menu g1_archer disabled state",
+        "original native tower menu g1_archer disabled state",
+        "original native tower menu g1_archer disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu ranger disabled state",
+        "original native tower menu musketeer disabled state",
+        "original native tower menu arcane_wizard disabled state",
+        "original native tower menu sorcerer disabled state",
+        "original native tower menu bfg disabled state",
+        "original native tower menu tesla disabled state",
+        "original native tower menu paladin disabled state",
+        "original native tower menu barbarian disabled state"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0001",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0002",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0003",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0004",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0005",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0006",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0007",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0008",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0009",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0010",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0011",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0012",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0013",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0014",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_hero_0015",
+      "references": [
+        "native13 hero and native summoned soldiers info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0101",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0102",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0103",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0104",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0105",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0106",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0107",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0108",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0109",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0110",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0111",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "info_portraits_towers_0112",
+      "references": [
+        "native20 tower forms info.portrait"
+      ]
+    },
+    {
+      "frame": "ingame_ui_action_icon_frame",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "main_icons_0005",
+      "references": [
+        "original native tower menu g1_mage",
+        "original native tower menu g1_mage",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_engineer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_archer",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "main_icons_0005_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state",
+        "original native tower menu g1_mage disabled state",
+        "original native tower menu g1_engineer disabled state",
+        "original native tower menu g1_engineer disabled state",
+        "original native tower menu g1_archer disabled state",
+        "original native tower menu g1_archer disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0006",
+      "references": [
+        "original native tower menu g1_mage"
+      ]
+    },
+    {
+      "frame": "main_icons_0006_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0007",
+      "references": [
+        "original native tower menu g1_mage"
+      ]
+    },
+    {
+      "frame": "main_icons_0007_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0008",
+      "references": [
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "main_icons_0008_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0009",
+      "references": [
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "main_icons_0009_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0010",
+      "references": [
+        "original native tower menu g1_archer"
+      ]
+    },
+    {
+      "frame": "main_icons_0010_disabled",
+      "references": [
+        "original native tower menu g1_archer disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0011",
+      "references": [
+        "original native tower menu g1_archer"
+      ]
+    },
+    {
+      "frame": "main_icons_0011_disabled",
+      "references": [
+        "original native tower menu g1_archer disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0012",
+      "references": [
+        "original native tower menu g1_engineer"
+      ]
+    },
+    {
+      "frame": "main_icons_0012_disabled",
+      "references": [
+        "original native tower menu g1_engineer disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0013",
+      "references": [
+        "original native tower menu g1_engineer"
+      ]
+    },
+    {
+      "frame": "main_icons_0013_disabled",
+      "references": [
+        "original native tower menu g1_engineer disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_0014",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "main_icons_0017",
+      "references": [
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "main_icons_0017_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_00cc",
+      "references": [
+        "original native tower menu g1_barrack"
+      ]
+    },
+    {
+      "frame": "main_icons_00cc_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state"
+      ]
+    },
+    {
+      "frame": "main_icons_over",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "main_tower_icons_0007",
+      "references": [
+        "original native tower menu g1_mage"
+      ]
+    },
+    {
+      "frame": "main_tower_icons_0007_disabled",
+      "references": [
+        "original native tower menu g1_mage disabled state"
+      ]
+    },
+    {
+      "frame": "nextwaveTimer_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "nextwaveTimer_0020",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "nextwaveTimer_Full",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "nextwaveTimer_glow_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "notifications_newenemy",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_area_orange_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_pirate_cannons",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_point_orange_0001",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_set_rally_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_sunray_tower",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "pointer_user_power_0001",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "pointer_user_power_0002",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "pointer_user_power_0003",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "power_button_icons_0017",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0001",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0002",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0003",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0004",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0005",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0006",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0007",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0008",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0009",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0010",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0011",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0012",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0013",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0014",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0015",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0016",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0017",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0018",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0019",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0020",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0021",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0022",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0023",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0024",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0025",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0026",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0027",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0028",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0029",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0030",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0031",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0032",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0033",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0034",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0035",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0036",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0037",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0038",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0039",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0040",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0041",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0042",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0043",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0044",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_button_mask_0045",
+      "references": [
+        "standard_power_button_animations current override at5490"
+      ]
+    },
+    {
+      "frame": "power_nbrs_0001",
+      "references": [
+        "KR_GAME kr3 constructs three power numbers"
+      ]
+    },
+    {
+      "frame": "power_nbrs_0002",
+      "references": [
+        "KR_GAME kr3 constructs three power numbers"
+      ]
+    },
+    {
+      "frame": "power_nbrs_0003",
+      "references": [
+        "KR_GAME kr3 constructs three power numbers"
+      ]
+    },
+    {
+      "frame": "power_nbrs_a",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "power_nbrs_s",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "power_rank_0001",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "power_rank_0002",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "price_tag",
+      "references": [
+        "game_gui exact literal constructor/image change",
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "price_tag_disabled",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "rally_feedback_0005",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "reinforcements_0001",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "special_icons_0001",
+      "references": [
+        "original native tower menu sorcerer"
+      ]
+    },
+    {
+      "frame": "special_icons_0001_disabled",
+      "references": [
+        "original native tower menu sorcerer disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0002",
+      "references": [
+        "original native tower menu ranger"
+      ]
+    },
+    {
+      "frame": "special_icons_0002_disabled",
+      "references": [
+        "original native tower menu ranger disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0003",
+      "references": [
+        "original native tower menu musketeer"
+      ]
+    },
+    {
+      "frame": "special_icons_0003_disabled",
+      "references": [
+        "original native tower menu musketeer disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0004",
+      "references": [
+        "original native tower menu sorcerer"
+      ]
+    },
+    {
+      "frame": "special_icons_0004_disabled",
+      "references": [
+        "original native tower menu sorcerer disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0005",
+      "references": [
+        "original native tower menu musketeer"
+      ]
+    },
+    {
+      "frame": "special_icons_0005_disabled",
+      "references": [
+        "original native tower menu musketeer disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0006",
+      "references": [
+        "original native tower menu paladin"
+      ]
+    },
+    {
+      "frame": "special_icons_0006_disabled",
+      "references": [
+        "original native tower menu paladin disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0007",
+      "references": [
+        "original native tower menu paladin"
+      ]
+    },
+    {
+      "frame": "special_icons_0007_disabled",
+      "references": [
+        "original native tower menu paladin disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0008",
+      "references": [
+        "original native tower menu ranger"
+      ]
+    },
+    {
+      "frame": "special_icons_0008_disabled",
+      "references": [
+        "original native tower menu ranger disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0009",
+      "references": [
+        "original native tower menu paladin"
+      ]
+    },
+    {
+      "frame": "special_icons_0009_disabled",
+      "references": [
+        "original native tower menu paladin disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0010",
+      "references": [
+        "original native tower menu tesla"
+      ]
+    },
+    {
+      "frame": "special_icons_0010_disabled",
+      "references": [
+        "original native tower menu tesla disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0011",
+      "references": [
+        "original native tower menu tesla"
+      ]
+    },
+    {
+      "frame": "special_icons_0011_disabled",
+      "references": [
+        "original native tower menu tesla disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0012",
+      "references": [
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "special_icons_0012_disabled",
+      "references": [
+        "original native tower menu barbarian disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0013",
+      "references": [
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "special_icons_0013_disabled",
+      "references": [
+        "original native tower menu barbarian disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0015",
+      "references": [
+        "original native tower menu arcane_wizard"
+      ]
+    },
+    {
+      "frame": "special_icons_0015_disabled",
+      "references": [
+        "original native tower menu arcane_wizard disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0016",
+      "references": [
+        "original native tower menu arcane_wizard"
+      ]
+    },
+    {
+      "frame": "special_icons_0016_disabled",
+      "references": [
+        "original native tower menu arcane_wizard disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0017",
+      "references": [
+        "original native tower menu bfg"
+      ]
+    },
+    {
+      "frame": "special_icons_0017_disabled",
+      "references": [
+        "original native tower menu bfg disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0018",
+      "references": [
+        "original native tower menu bfg"
+      ]
+    },
+    {
+      "frame": "special_icons_0018_disabled",
+      "references": [
+        "original native tower menu bfg disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_0019",
+      "references": [
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "special_icons_0019_disabled",
+      "references": [
+        "original native tower menu barbarian disabled state"
+      ]
+    },
+    {
+      "frame": "special_icons_bg",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "spell_selection_icon_empty",
+      "references": [
+        "selected native powers1/2, empty3, hidden HeroUltimate A/S fallback constructor"
+      ]
+    },
+    {
+      "frame": "sub_icons_0001",
+      "references": [
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu g1_barrack",
+        "original native tower menu sorcerer",
+        "original native tower menu paladin",
+        "original native tower menu barbarian"
+      ]
+    },
+    {
+      "frame": "sub_icons_0001_disabled",
+      "references": [
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu g1_barrack disabled state",
+        "original native tower menu sorcerer disabled state",
+        "original native tower menu paladin disabled state",
+        "original native tower menu barbarian disabled state"
+      ]
+    },
+    {
+      "frame": "tooltip_bg_small",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "tooltip_bg_standard",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "tooltip_icons_0007",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    },
+    {
+      "frame": "victoryStars_0001",
+      "references": [
+        "game_gui exact literal constructor/image change"
+      ]
+    }
+  ],
+  "source_reviewed": "all-desktop/game_gui.lua late Power1/2/3 overrides, TowerMenuButton initialize/disable, native12 menus; source literals and enumerated dynamic frames only"
+}

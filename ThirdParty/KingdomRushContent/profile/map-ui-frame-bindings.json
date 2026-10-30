@@ -1,0 +1,4814 @@
+{
+  "schema_version": 1,
+  "scope": "Reviewed finite map UI resource bindings for the first-generation profile. Checks upgrade buttons/animations,13native heroes,20native tower encyclopedia forms/powers,retained enemy entries,32level thumbnails,options/difficulty,and96original achievement rows allowed by native definition or real shared events. Internal full achievement handlers/data remain available; UI and awards are filtered by the allowlist. Not an exhaustive game script or behavioral proof.",
+  "reviewed_source": "all-desktop/screen_map.lua",
+  "reviewed_map_source_sha256": "f15c42fd540b7cf7b55a1795b0302dde54b28ca97e670e16cfa1185a507637d9",
+  "maintenance": "Keep this explicit set in sync when changing reachable UI constructors, dynamic value ranges, or data rows. Source provenance lists describe the reviewed call sites; the validator resolves current packaged preload groups.",
+  "native_upgrade_rows": [
+    {
+      "key": "archer_salvage",
+      "icon": 13,
+      "level": 1,
+      "price": 1
+    },
+    {
+      "key": "archer_eagle_eye",
+      "icon": 14,
+      "level": 2,
+      "price": 1
+    },
+    {
+      "key": "archer_piercing",
+      "icon": 15,
+      "level": 3,
+      "price": 2
+    },
+    {
+      "key": "archer_far_shots",
+      "icon": 16,
+      "level": 4,
+      "price": 2
+    },
+    {
+      "key": "archer_precision",
+      "icon": 17,
+      "level": 5,
+      "price": 3
+    },
+    {
+      "key": "barrack_survival",
+      "icon": 8,
+      "level": 1,
+      "price": 1
+    },
+    {
+      "key": "barrack_better_armor",
+      "icon": 9,
+      "level": 2,
+      "price": 1
+    },
+    {
+      "key": "barrack_improved_deployment",
+      "icon": 10,
+      "level": 3,
+      "price": 2
+    },
+    {
+      "key": "barrack_survival_2",
+      "icon": 11,
+      "level": 4,
+      "price": 2
+    },
+    {
+      "key": "barrack_barbed_armor",
+      "icon": 12,
+      "level": 5,
+      "price": 3
+    },
+    {
+      "key": "mage_spell_reach",
+      "icon": 18,
+      "level": 1,
+      "price": 1
+    },
+    {
+      "key": "mage_arcane_shatter",
+      "icon": 19,
+      "level": 2,
+      "price": 1
+    },
+    {
+      "key": "mage_hermetic_study",
+      "icon": 20,
+      "level": 3,
+      "price": 2
+    },
+    {
+      "key": "mage_empowered_magic",
+      "icon": 21,
+      "level": 4,
+      "price": 2
+    },
+    {
+      "key": "mage_slow_curse",
+      "icon": 22,
+      "level": 5,
+      "price": 3
+    },
+    {
+      "key": "engineer_concentrated_fire",
+      "icon": 23,
+      "level": 1,
+      "price": 1
+    },
+    {
+      "key": "engineer_range_finder",
+      "icon": 24,
+      "level": 2,
+      "price": 1
+    },
+    {
+      "key": "engineer_field_logistics",
+      "icon": 25,
+      "level": 3,
+      "price": 2
+    },
+    {
+      "key": "engineer_industrialization",
+      "icon": 26,
+      "level": 4,
+      "price": 3
+    },
+    {
+      "key": "engineer_efficiency",
+      "icon": 27,
+      "level": 5,
+      "price": 3
+    },
+    {
+      "key": "rain_blazing_skies",
+      "icon": 3,
+      "level": 1,
+      "price": 2
+    },
+    {
+      "key": "rain_scorched_earth",
+      "icon": 4,
+      "level": 2,
+      "price": 2
+    },
+    {
+      "key": "rain_bigger_and_meaner",
+      "icon": 5,
+      "level": 3,
+      "price": 3
+    },
+    {
+      "key": "rain_blazing_earth",
+      "icon": 6,
+      "level": 4,
+      "price": 3
+    },
+    {
+      "key": "rain_cataclysm",
+      "icon": 7,
+      "level": 5,
+      "price": 3
+    },
+    {
+      "key": "reinforcement_level_1",
+      "icon": 28,
+      "level": 1,
+      "price": 2
+    },
+    {
+      "key": "reinforcement_level_2",
+      "icon": 29,
+      "level": 2,
+      "price": 3
+    },
+    {
+      "key": "reinforcement_level_3",
+      "icon": 30,
+      "level": 3,
+      "price": 3
+    },
+    {
+      "key": "reinforcement_level_4",
+      "icon": 1,
+      "level": 4,
+      "price": 3
+    },
+    {
+      "key": "reinforcement_level_5",
+      "icon": 2,
+      "level": 5,
+      "price": 4
+    }
+  ],
+  "excluded_conservative_hits": {
+    "button_border_large_0001": "GGBorderButton has no calls in native map",
+    "button_border_large_0002": "GGBorderButton has no calls in native map",
+    "button_border_0001": "GGBorderButton has no calls in native map",
+    "button_border_0002": "GGBorderButton has no calls in native map",
+    "base": "not an image reference, ordinary string in shared helper"
+  },
+  "bindings": [
+    {
+      "frame": "Achievements_BG_notxt",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "Achievements_Box_Large",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "Achievements_page_0001",
+      "references": [
+        "map literal range 16785..17680",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "Achievements_page_0002",
+      "references": [
+        "map literal range 16785..17680",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "Achievements_page_0003",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0001",
+      "references": [
+        "reinforcement_level_4"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0002",
+      "references": [
+        "reinforcement_level_5"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0003",
+      "references": [
+        "rain_blazing_skies"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0004",
+      "references": [
+        "rain_scorched_earth"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0005",
+      "references": [
+        "rain_bigger_and_meaner"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0006",
+      "references": [
+        "rain_blazing_earth"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0007",
+      "references": [
+        "rain_cataclysm"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0008",
+      "references": [
+        "barrack_survival"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0009",
+      "references": [
+        "barrack_better_armor"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0010",
+      "references": [
+        "barrack_improved_deployment"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0011",
+      "references": [
+        "barrack_survival_2"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0012",
+      "references": [
+        "barrack_barbed_armor"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0013",
+      "references": [
+        "archer_salvage"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0014",
+      "references": [
+        "archer_eagle_eye"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0015",
+      "references": [
+        "archer_piercing"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0016",
+      "references": [
+        "archer_far_shots"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0017",
+      "references": [
+        "archer_precision"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0018",
+      "references": [
+        "mage_spell_reach"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0019",
+      "references": [
+        "mage_arcane_shatter"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0020",
+      "references": [
+        "mage_hermetic_study"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0021",
+      "references": [
+        "mage_empowered_magic"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0022",
+      "references": [
+        "mage_slow_curse"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0023",
+      "references": [
+        "engineer_concentrated_fire"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0024",
+      "references": [
+        "engineer_range_finder"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0025",
+      "references": [
+        "engineer_field_logistics"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0026",
+      "references": [
+        "engineer_industrialization"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0027",
+      "references": [
+        "engineer_efficiency"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0028",
+      "references": [
+        "reinforcement_level_1"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0029",
+      "references": [
+        "reinforcement_level_2"
+      ]
+    },
+    {
+      "frame": "Disabled_G1_Upgrades_Icons_0030",
+      "references": [
+        "reinforcement_level_3"
+      ]
+    },
+    {
+      "frame": "Disabled_Upgrades_Icons_PriceTag",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Disabled_Upgrades_Icons_PriceTag_Nm_0001",
+      "references": [
+        "archer_salvage",
+        "archer_eagle_eye",
+        "barrack_survival",
+        "barrack_better_armor",
+        "mage_spell_reach",
+        "mage_arcane_shatter",
+        "engineer_concentrated_fire",
+        "engineer_range_finder"
+      ]
+    },
+    {
+      "frame": "Disabled_Upgrades_Icons_PriceTag_Nm_0002",
+      "references": [
+        "archer_piercing",
+        "archer_far_shots",
+        "barrack_improved_deployment",
+        "barrack_survival_2",
+        "mage_hermetic_study",
+        "mage_empowered_magic",
+        "engineer_field_logistics",
+        "rain_blazing_skies",
+        "rain_scorched_earth",
+        "reinforcement_level_1"
+      ]
+    },
+    {
+      "frame": "Disabled_Upgrades_Icons_PriceTag_Nm_0003",
+      "references": [
+        "archer_precision",
+        "barrack_barbed_armor",
+        "mage_slow_curse",
+        "engineer_industrialization",
+        "engineer_efficiency",
+        "rain_bigger_and_meaner",
+        "rain_blazing_earth",
+        "rain_cataclysm",
+        "reinforcement_level_2",
+        "reinforcement_level_3",
+        "reinforcement_level_4"
+      ]
+    },
+    {
+      "frame": "Disabled_Upgrades_Icons_PriceTag_Nm_0004",
+      "references": [
+        "reinforcement_level_5"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0001",
+      "references": [
+        "reinforcement_level_4"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0002",
+      "references": [
+        "reinforcement_level_5"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0003",
+      "references": [
+        "rain_blazing_skies"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0004",
+      "references": [
+        "rain_scorched_earth"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0005",
+      "references": [
+        "rain_bigger_and_meaner"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0006",
+      "references": [
+        "rain_blazing_earth"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0007",
+      "references": [
+        "rain_cataclysm"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0008",
+      "references": [
+        "barrack_survival"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0009",
+      "references": [
+        "barrack_better_armor"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0010",
+      "references": [
+        "barrack_improved_deployment"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0011",
+      "references": [
+        "barrack_survival_2"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0012",
+      "references": [
+        "barrack_barbed_armor"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0013",
+      "references": [
+        "archer_salvage"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0014",
+      "references": [
+        "archer_eagle_eye"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0015",
+      "references": [
+        "archer_piercing"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0016",
+      "references": [
+        "archer_far_shots"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0017",
+      "references": [
+        "archer_precision"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0018",
+      "references": [
+        "mage_spell_reach"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0019",
+      "references": [
+        "mage_arcane_shatter"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0020",
+      "references": [
+        "mage_hermetic_study"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0021",
+      "references": [
+        "mage_empowered_magic"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0022",
+      "references": [
+        "mage_slow_curse"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0023",
+      "references": [
+        "engineer_concentrated_fire"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0024",
+      "references": [
+        "engineer_range_finder"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0025",
+      "references": [
+        "engineer_field_logistics"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0026",
+      "references": [
+        "engineer_industrialization"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0027",
+      "references": [
+        "engineer_efficiency"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0028",
+      "references": [
+        "reinforcement_level_1"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0029",
+      "references": [
+        "reinforcement_level_2"
+      ]
+    },
+    {
+      "frame": "G1_Upgrades_Icons_0030",
+      "references": [
+        "reinforcement_level_3"
+      ]
+    },
+    {
+      "frame": "Generation_Upgrade_Sell",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Upgrades_BG_notxt",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor"
+      ]
+    },
+    {
+      "frame": "Upgrades_Btns_notxt_0001",
+      "references": [
+        "GGUpgradesButton",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "Upgrades_Btns_notxt_0002",
+      "references": [
+        "GGUpgradesButton",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_Bought",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_PriceTag",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_PriceTag_Nm_0001",
+      "references": [
+        "archer_salvage",
+        "archer_eagle_eye",
+        "barrack_survival",
+        "barrack_better_armor",
+        "mage_spell_reach",
+        "mage_arcane_shatter",
+        "engineer_concentrated_fire",
+        "engineer_range_finder"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_PriceTag_Nm_0002",
+      "references": [
+        "archer_piercing",
+        "archer_far_shots",
+        "barrack_improved_deployment",
+        "barrack_survival_2",
+        "mage_hermetic_study",
+        "mage_empowered_magic",
+        "engineer_field_logistics",
+        "rain_blazing_skies",
+        "rain_scorched_earth",
+        "reinforcement_level_1"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_PriceTag_Nm_0003",
+      "references": [
+        "archer_precision",
+        "barrack_barbed_armor",
+        "mage_slow_curse",
+        "engineer_industrialization",
+        "engineer_efficiency",
+        "rain_bigger_and_meaner",
+        "rain_blazing_earth",
+        "rain_cataclysm",
+        "reinforcement_level_2",
+        "reinforcement_level_3",
+        "reinforcement_level_4"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_PriceTag_Nm_0004",
+      "references": [
+        "reinforcement_level_5"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0001",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0002",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0003",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0004",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0005",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0006",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0007",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0008",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0009",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0010",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0011",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0012",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0013",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0014",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0015",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0016",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0017",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_buyFx_0018",
+      "references": [
+        "purchase animation 1..18"
+      ]
+    },
+    {
+      "frame": "Upgrades_Icons_over",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Upgrades_StarContainer",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 5931..6140"
+      ]
+    },
+    {
+      "frame": "Upgrades_Tips_Star",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "Upgrades_Tips_tip",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 6194..6890"
+      ]
+    },
+    {
+      "frame": "YellowBar",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 5931..6140",
+        "map literal range 5931..6140"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0016",
+      "references": [
+        "allowlisted original achievement[14] STARGAZER; goal=15"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0018",
+      "references": [
+        "allowlisted original achievement[46] BONE_COLLECTOR; goal=100000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0020",
+      "references": [
+        "allowlisted original achievement[44] WAR_NEVER_CHANGES; goal=1500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0024",
+      "references": [
+        "allowlisted original achievement[39] ROCKSTAR; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0032",
+      "references": [
+        "allowlisted original achievement[28] STARDUST; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0057",
+      "references": [
+        "allowlisted original achievement[47] TRUTH_DARE; goal=13"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0059",
+      "references": [
+        "allowlisted original achievement[52] VOLUNTEER_TRIBUTE; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0062",
+      "references": [
+        "allowlisted original achievement[51] NOT_TODAY; goal=7"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0063",
+      "references": [
+        "allowlisted original achievement[50] HOLDING_OUT; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0064",
+      "references": [
+        "allowlisted original achievement[87] GREAT_DEFENDER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0065",
+      "references": [
+        "allowlisted original achievement[90] HARD_MODE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0075",
+      "references": [
+        "allowlisted original achievement[89] GREAT_DEFENDER_IRON; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0076",
+      "references": [
+        "allowlisted original achievement[88] GREAT_DEFENDER_HEROIC; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0095",
+      "references": [
+        "allowlisted original achievement[91] IMPOSSIBLE_MODE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0102",
+      "references": [
+        "allowlisted original achievement[94] LANDOWNER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0108",
+      "references": [
+        "allowlisted original achievement[97] HEROLEVELUP; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0149",
+      "references": [
+        "allowlisted original achievement[104] IMPATIENT; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0203",
+      "references": [
+        "allowlisted original achievement[98] EASY_TOWER_BUILDER; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0204",
+      "references": [
+        "allowlisted original achievement[92] FIRST_BLOOD; goal=1"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0205",
+      "references": [
+        "allowlisted original achievement[99] BLOODLUST; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0206",
+      "references": [
+        "allowlisted original achievement[95] DARING; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0207",
+      "references": [
+        "allowlisted original achievement[102] WHATS_THAT; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0208",
+      "references": [
+        "allowlisted original achievement[100] ARMAGGEDON; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0211",
+      "references": [
+        "allowlisted original achievement[105] MEDIUM_TOWER_BUILDER; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0212",
+      "references": [
+        "allowlisted original achievement[115] SPECIALIZATION; goal=255"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0214",
+      "references": [
+        "allowlisted original achievement[106] SLAYER; goal=2500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0216",
+      "references": [
+        "allowlisted original achievement[108] TACTICIAN; goal=200"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0218",
+      "references": [
+        "allowlisted original achievement[109] HARD_TOWER_BUILDER; goal=150"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0219",
+      "references": [
+        "allowlisted original achievement[103] FEARLESS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0220",
+      "references": [
+        "allowlisted original achievement[111] MULTIKILL; goal=10000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0221",
+      "references": [
+        "allowlisted original achievement[112] DIE_HARD; goal=50000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0222",
+      "references": [
+        "allowlisted original achievement[113] GI_JOE; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0223",
+      "references": [
+        "allowlisted original achievement[114] CANNON_FODDER; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0256",
+      "references": [
+        "allowlisted original achievement[152] HERO_OF_THE_DAY; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0257",
+      "references": [
+        "allowlisted original achievement[153] LEGENDARY; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0294",
+      "references": [
+        "allowlisted original achievement[131] LANDMANAGER; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0410",
+      "references": [
+        "allowlisted original achievement[173] DEFEAT_MOUNTAIN_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0413",
+      "references": [
+        "allowlisted original achievement[172] DEFEAT_JUGGERNAUT; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0415",
+      "references": [
+        "allowlisted original achievement[174] DEATH_FROM_ABOVE; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0424",
+      "references": [
+        "allowlisted original achievement[176] REAL_STATE; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0425",
+      "references": [
+        "allowlisted original achievement[177] INDECISIVE; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0427",
+      "references": [
+        "allowlisted original achievement[178] MAX_ELVES; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0428",
+      "references": [
+        "allowlisted original achievement[181] IMPERIAL_SAVIOUR; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0429",
+      "references": [
+        "allowlisted original achievement[179] HENDERSON; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0430",
+      "references": [
+        "allowlisted original achievement[220] SUN_BURNER; goal=20"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0431",
+      "references": [
+        "allowlisted original achievement[180] CATCH_A_FISH; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0432",
+      "references": [
+        "allowlisted original achievement[187] SHEPARD; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0433",
+      "references": [
+        "allowlisted original achievement[190] BARBARIAN_RUSH; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0434",
+      "references": [
+        "allowlisted original achievement[184] ENTANGLED; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0435",
+      "references": [
+        "allowlisted original achievement[191] MEDIC; goal=7000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0436",
+      "references": [
+        "allowlisted original achievement[192] HOLY_CHORUS; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0437",
+      "references": [
+        "allowlisted original achievement[196] ACDC; goal=300"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0438",
+      "references": [
+        "allowlisted original achievement[194] CLUSTERED; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0439",
+      "references": [
+        "allowlisted original achievement[188] ELEMENTALIST; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0440",
+      "references": [
+        "allowlisted original achievement[195] ENERGY_NETWORK; goal=4"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0441",
+      "references": [
+        "allowlisted original achievement[183] TOXICITY; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0442",
+      "references": [
+        "allowlisted original achievement[193] ROCKETEER; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0443",
+      "references": [
+        "allowlisted original achievement[182] SNIPER; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0444",
+      "references": [
+        "allowlisted original achievement[189] AXE_RAINER; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0445",
+      "references": [
+        "allowlisted original achievement[197] SHEEP_KILLER; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0446",
+      "references": [
+        "allowlisted original achievement[185] DUST_TO_DUST; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0447",
+      "references": [
+        "allowlisted original achievement[186] BEAM_ME_UP; goal=250"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0448",
+      "references": [
+        "allowlisted original achievement[175] DEFEAT_END_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0452",
+      "references": [
+        "allowlisted original achievement[199] DEFEAT_SARELGAZ; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0453",
+      "references": [
+        "allowlisted original achievement[198] FREE_FREDO; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0454",
+      "references": [
+        "allowlisted original achievement[200] DEFEAT_GULTHAK_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0455",
+      "references": [
+        "allowlisted original achievement[201] DEFEAT_TREANT_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0456",
+      "references": [
+        "allowlisted original achievement[202] HERO_MEDIUM; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0457",
+      "references": [
+        "allowlisted original achievement[203] HERO_HARD; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0458",
+      "references": [
+        "allowlisted original achievement[204] DEFEAT_KINGPING_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0459",
+      "references": [
+        "allowlisted original achievement[205] DEFEAT_COOL_RUNNING; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0460",
+      "references": [
+        "allowlisted original achievement[206] DEFEAT_ACORN; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0461",
+      "references": [
+        "allowlisted original achievement[207] DEFEAT_MUSHROOM; goal=31"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0462",
+      "references": [
+        "allowlisted original achievement[208] DEFEAT_TROLL_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0464",
+      "references": [
+        "allowlisted original achievement[209] WE_DINE_IN_HELL; goal=300"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0465",
+      "references": [
+        "allowlisted original achievement[210] ARMY_OF_ONE; goal=9"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0466",
+      "references": [
+        "allowlisted original achievement[211] HELL_O; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0467",
+      "references": [
+        "allowlisted original achievement[212] SUPER_MUSHROOM; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0468",
+      "references": [
+        "allowlisted original achievement[213] SPORE; goal=25"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0469",
+      "references": [
+        "allowlisted original achievement[214] STILL_COUNTS_AS_ONE; goal=10000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0470",
+      "references": [
+        "allowlisted original achievement[215] RATATOUILLE; goal=15"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0471",
+      "references": [
+        "allowlisted original achievement[216] NEVERMORE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0472",
+      "references": [
+        "allowlisted original achievement[217] NESSIE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0473",
+      "references": [
+        "allowlisted original achievement[218] SPLINTER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0474",
+      "references": [
+        "allowlisted original achievement[219] GOC; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0475",
+      "references": [
+        "allowlisted original achievement[221] DEFEAT_COMPLETE_IMPOSSIBLE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0476",
+      "references": [
+        "allowlisted original achievement[222] DEFEAT_HOBGOBLIN_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0477",
+      "references": [
+        "allowlisted original achievement[223] GOLD_BAG; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0478",
+      "references": [
+        "allowlisted original achievement[226] HOB_SHIELD; goal=25"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0479",
+      "references": [
+        "allowlisted original achievement[225] HOB_SPEAR; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0480",
+      "references": [
+        "allowlisted original achievement[224] HOB_RIDERS; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0481",
+      "references": [
+        "allowlisted original achievement[227] GOBLIN_BLOON; goal=99"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0482",
+      "references": [
+        "allowlisted original achievement[228] TIME_WIZARD_SLOW; goal=200"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0483",
+      "references": [
+        "allowlisted original achievement[229] ANCIENT_GUARD_TELE; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0484",
+      "references": [
+        "allowlisted original achievement[230] STEAM_TROOP_FREEZE; goal=150"
+      ]
+    },
+    {
+      "frame": "achievement_icons_0485",
+      "references": [
+        "allowlisted original achievement[231] STEAM_TROOP_IND; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0016",
+      "references": [
+        "allowlisted original achievement[14] STARGAZER; goal=15"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0018",
+      "references": [
+        "allowlisted original achievement[46] BONE_COLLECTOR; goal=100000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0020",
+      "references": [
+        "allowlisted original achievement[44] WAR_NEVER_CHANGES; goal=1500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0024",
+      "references": [
+        "allowlisted original achievement[39] ROCKSTAR; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0032",
+      "references": [
+        "allowlisted original achievement[28] STARDUST; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0057",
+      "references": [
+        "allowlisted original achievement[47] TRUTH_DARE; goal=13"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0059",
+      "references": [
+        "allowlisted original achievement[52] VOLUNTEER_TRIBUTE; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0062",
+      "references": [
+        "allowlisted original achievement[51] NOT_TODAY; goal=7"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0063",
+      "references": [
+        "allowlisted original achievement[50] HOLDING_OUT; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0064",
+      "references": [
+        "allowlisted original achievement[87] GREAT_DEFENDER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0065",
+      "references": [
+        "allowlisted original achievement[90] HARD_MODE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0075",
+      "references": [
+        "allowlisted original achievement[89] GREAT_DEFENDER_IRON; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0076",
+      "references": [
+        "allowlisted original achievement[88] GREAT_DEFENDER_HEROIC; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0095",
+      "references": [
+        "allowlisted original achievement[91] IMPOSSIBLE_MODE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0102",
+      "references": [
+        "allowlisted original achievement[94] LANDOWNER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0108",
+      "references": [
+        "allowlisted original achievement[97] HEROLEVELUP; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0149",
+      "references": [
+        "allowlisted original achievement[104] IMPATIENT; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0203",
+      "references": [
+        "allowlisted original achievement[98] EASY_TOWER_BUILDER; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0204",
+      "references": [
+        "allowlisted original achievement[92] FIRST_BLOOD; goal=1"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0205",
+      "references": [
+        "allowlisted original achievement[99] BLOODLUST; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0206",
+      "references": [
+        "allowlisted original achievement[95] DARING; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0207",
+      "references": [
+        "allowlisted original achievement[102] WHATS_THAT; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0208",
+      "references": [
+        "allowlisted original achievement[100] ARMAGGEDON; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0211",
+      "references": [
+        "allowlisted original achievement[105] MEDIUM_TOWER_BUILDER; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0212",
+      "references": [
+        "allowlisted original achievement[115] SPECIALIZATION; goal=255"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0214",
+      "references": [
+        "allowlisted original achievement[106] SLAYER; goal=2500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0216",
+      "references": [
+        "allowlisted original achievement[108] TACTICIAN; goal=200"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0218",
+      "references": [
+        "allowlisted original achievement[109] HARD_TOWER_BUILDER; goal=150"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0219",
+      "references": [
+        "allowlisted original achievement[103] FEARLESS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0220",
+      "references": [
+        "allowlisted original achievement[111] MULTIKILL; goal=10000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0221",
+      "references": [
+        "allowlisted original achievement[112] DIE_HARD; goal=50000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0222",
+      "references": [
+        "allowlisted original achievement[113] GI_JOE; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0223",
+      "references": [
+        "allowlisted original achievement[114] CANNON_FODDER; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0256",
+      "references": [
+        "allowlisted original achievement[152] HERO_OF_THE_DAY; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0257",
+      "references": [
+        "allowlisted original achievement[153] LEGENDARY; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0294",
+      "references": [
+        "allowlisted original achievement[131] LANDMANAGER; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0410",
+      "references": [
+        "allowlisted original achievement[173] DEFEAT_MOUNTAIN_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0413",
+      "references": [
+        "allowlisted original achievement[172] DEFEAT_JUGGERNAUT; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0415",
+      "references": [
+        "allowlisted original achievement[174] DEATH_FROM_ABOVE; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0424",
+      "references": [
+        "allowlisted original achievement[176] REAL_STATE; goal=30"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0425",
+      "references": [
+        "allowlisted original achievement[177] INDECISIVE; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0427",
+      "references": [
+        "allowlisted original achievement[178] MAX_ELVES; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0428",
+      "references": [
+        "allowlisted original achievement[181] IMPERIAL_SAVIOUR; goal=3"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0429",
+      "references": [
+        "allowlisted original achievement[179] HENDERSON; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0430",
+      "references": [
+        "allowlisted original achievement[220] SUN_BURNER; goal=20"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0431",
+      "references": [
+        "allowlisted original achievement[180] CATCH_A_FISH; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0432",
+      "references": [
+        "allowlisted original achievement[187] SHEPARD; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0433",
+      "references": [
+        "allowlisted original achievement[190] BARBARIAN_RUSH; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0434",
+      "references": [
+        "allowlisted original achievement[184] ENTANGLED; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0435",
+      "references": [
+        "allowlisted original achievement[191] MEDIC; goal=7000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0436",
+      "references": [
+        "allowlisted original achievement[192] HOLY_CHORUS; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0437",
+      "references": [
+        "allowlisted original achievement[196] ACDC; goal=300"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0438",
+      "references": [
+        "allowlisted original achievement[194] CLUSTERED; goal=1000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0439",
+      "references": [
+        "allowlisted original achievement[188] ELEMENTALIST; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0440",
+      "references": [
+        "allowlisted original achievement[195] ENERGY_NETWORK; goal=4"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0441",
+      "references": [
+        "allowlisted original achievement[183] TOXICITY; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0442",
+      "references": [
+        "allowlisted original achievement[193] ROCKETEER; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0443",
+      "references": [
+        "allowlisted original achievement[182] SNIPER; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0444",
+      "references": [
+        "allowlisted original achievement[189] AXE_RAINER; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0445",
+      "references": [
+        "allowlisted original achievement[197] SHEEP_KILLER; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0446",
+      "references": [
+        "allowlisted original achievement[185] DUST_TO_DUST; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0447",
+      "references": [
+        "allowlisted original achievement[186] BEAM_ME_UP; goal=250"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0448",
+      "references": [
+        "allowlisted original achievement[175] DEFEAT_END_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0452",
+      "references": [
+        "allowlisted original achievement[199] DEFEAT_SARELGAZ; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0453",
+      "references": [
+        "allowlisted original achievement[198] FREE_FREDO; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0454",
+      "references": [
+        "allowlisted original achievement[200] DEFEAT_GULTHAK_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0455",
+      "references": [
+        "allowlisted original achievement[201] DEFEAT_TREANT_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0456",
+      "references": [
+        "allowlisted original achievement[202] HERO_MEDIUM; goal=5"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0457",
+      "references": [
+        "allowlisted original achievement[203] HERO_HARD; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0458",
+      "references": [
+        "allowlisted original achievement[204] DEFEAT_KINGPING_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0459",
+      "references": [
+        "allowlisted original achievement[205] DEFEAT_COOL_RUNNING; goal=10"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0460",
+      "references": [
+        "allowlisted original achievement[206] DEFEAT_ACORN; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0461",
+      "references": [
+        "allowlisted original achievement[207] DEFEAT_MUSHROOM; goal=31"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0462",
+      "references": [
+        "allowlisted original achievement[208] DEFEAT_TROLL_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0464",
+      "references": [
+        "allowlisted original achievement[209] WE_DINE_IN_HELL; goal=300"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0465",
+      "references": [
+        "allowlisted original achievement[210] ARMY_OF_ONE; goal=9"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0466",
+      "references": [
+        "allowlisted original achievement[211] HELL_O; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0467",
+      "references": [
+        "allowlisted original achievement[212] SUPER_MUSHROOM; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0468",
+      "references": [
+        "allowlisted original achievement[213] SPORE; goal=25"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0469",
+      "references": [
+        "allowlisted original achievement[214] STILL_COUNTS_AS_ONE; goal=10000"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0470",
+      "references": [
+        "allowlisted original achievement[215] RATATOUILLE; goal=15"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0471",
+      "references": [
+        "allowlisted original achievement[216] NEVERMORE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0472",
+      "references": [
+        "allowlisted original achievement[217] NESSIE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0473",
+      "references": [
+        "allowlisted original achievement[218] SPLINTER; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0474",
+      "references": [
+        "allowlisted original achievement[219] GOC; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0475",
+      "references": [
+        "allowlisted original achievement[221] DEFEAT_COMPLETE_IMPOSSIBLE; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0476",
+      "references": [
+        "allowlisted original achievement[222] DEFEAT_HOBGOBLIN_BOSS; goal=None"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0477",
+      "references": [
+        "allowlisted original achievement[223] GOLD_BAG; goal=500"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0478",
+      "references": [
+        "allowlisted original achievement[226] HOB_SHIELD; goal=25"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0479",
+      "references": [
+        "allowlisted original achievement[225] HOB_SPEAR; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0480",
+      "references": [
+        "allowlisted original achievement[224] HOB_RIDERS; goal=50"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0481",
+      "references": [
+        "allowlisted original achievement[227] GOBLIN_BLOON; goal=99"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0482",
+      "references": [
+        "allowlisted original achievement[228] TIME_WIZARD_SLOW; goal=200"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0483",
+      "references": [
+        "allowlisted original achievement[229] ANCIENT_GUARD_TELE; goal=100"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0484",
+      "references": [
+        "allowlisted original achievement[230] STEAM_TROOP_FREEZE; goal=150"
+      ]
+    },
+    {
+      "frame": "achievement_icons_disabled_0485",
+      "references": [
+        "allowlisted original achievement[231] STEAM_TROOP_IND; goal=5"
+      ]
+    },
+    {
+      "frame": "difficulty_bg_wide_notxt",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_ilustraciones_0001",
+      "references": [
+        "difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_ilustraciones_0002",
+      "references": [
+        "difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_ilustraciones_0003",
+      "references": [
+        "difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_ilustraciones_0004",
+      "references": [
+        "difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_notxt_marco_0001",
+      "references": [
+        "map literal range 16785..17680",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_notxt_marco_0002",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "difficulty_btns_notxt_marco_0003",
+      "references": [
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "encyclopedia_bg",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0001",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0002",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0003",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0004",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0005",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_buttons_notxt_0006",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0041",
+      "references": [
+        "retained enemy enemy_screecher_bat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0101",
+      "references": [
+        "retained enemy enemy_goblin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0102",
+      "references": [
+        "retained enemy enemy_fat_orc"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0103",
+      "references": [
+        "retained enemy enemy_shaman"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0104",
+      "references": [
+        "retained enemy enemy_ogre"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0105",
+      "references": [
+        "retained enemy enemy_bandit"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0106",
+      "references": [
+        "retained enemy enemy_brigand"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0107",
+      "references": [
+        "retained enemy enemy_marauder"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0108",
+      "references": [
+        "retained enemy enemy_spider_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0109",
+      "references": [
+        "retained enemy enemy_spider_big"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0110",
+      "references": [
+        "retained enemy enemy_gargoyle"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0111",
+      "references": [
+        "retained enemy enemy_shadow_archer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0112",
+      "references": [
+        "retained enemy enemy_dark_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0113",
+      "references": [
+        "retained enemy enemy_wolf_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0114",
+      "references": [
+        "retained enemy enemy_wolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0115",
+      "references": [
+        "retained enemy enemy_golem_head"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0116",
+      "references": [
+        "retained enemy enemy_whitewolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0117",
+      "references": [
+        "retained enemy enemy_troll"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0118",
+      "references": [
+        "retained enemy enemy_troll_axe_thrower"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0119",
+      "references": [
+        "retained enemy enemy_troll_chieftain"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0120",
+      "references": [
+        "retained enemy enemy_yeti"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0121",
+      "references": [
+        "retained enemy enemy_rocketeer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0122",
+      "references": [
+        "retained enemy enemy_slayer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0123",
+      "references": [
+        "retained enemy enemy_demon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0124",
+      "references": [
+        "retained enemy enemy_demon_mage"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0125",
+      "references": [
+        "retained enemy enemy_demon_wolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0126",
+      "references": [
+        "retained enemy enemy_demon_imp"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0127",
+      "references": [
+        "retained enemy enemy_skeleton"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0128",
+      "references": [
+        "retained enemy enemy_skeleton_big"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0129",
+      "references": [
+        "retained enemy enemy_necromancer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0130",
+      "references": [
+        "retained enemy enemy_lava_elemental"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0131",
+      "references": [
+        "retained enemy enemy_sarelgaz_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0132",
+      "references": [
+        "retained enemy eb_juggernaut"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0133",
+      "references": [
+        "retained enemy eb_jt"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0134",
+      "references": [
+        "retained enemy eb_veznan"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0135",
+      "references": [
+        "retained enemy eb_sarelgaz"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0136",
+      "references": [
+        "retained enemy enemy_orc_armored"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0137",
+      "references": [
+        "retained enemy enemy_orc_rider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0138",
+      "references": [
+        "retained enemy enemy_goblin_zapper"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0139",
+      "references": [
+        "retained enemy enemy_forest_troll"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0140",
+      "references": [
+        "retained enemy eb_gulthak"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0141",
+      "references": [
+        "retained enemy enemy_zombie"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0142",
+      "references": [
+        "retained enemy enemy_spider_rotten"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0143",
+      "references": [
+        "retained enemy enemy_rotten_tree"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0144",
+      "references": [
+        "retained enemy enemy_swamp_thing"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0145",
+      "references": [
+        "retained enemy eb_greenmuck"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0146",
+      "references": [
+        "retained enemy enemy_raider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0147",
+      "references": [
+        "retained enemy enemy_pillager"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0148",
+      "references": [
+        "retained enemy eb_kingpin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0150",
+      "references": [
+        "retained enemy enemy_troll_skater"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0151",
+      "references": [
+        "retained enemy enemy_troll_brute"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0152",
+      "references": [
+        "retained enemy eb_ulgukhai"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0153",
+      "references": [
+        "retained enemy enemy_demon_gulaemon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0154",
+      "references": [
+        "retained enemy enemy_demon_flareon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0155",
+      "references": [
+        "retained enemy enemy_demon_cerberus"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0156",
+      "references": [
+        "retained enemy enemy_demon_legion"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0157",
+      "references": [
+        "retained enemy eb_moloch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0158",
+      "references": [
+        "retained enemy enemy_rotten_lesser"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0159",
+      "references": [
+        "retained enemy eb_myconid"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0161",
+      "references": [
+        "retained enemy enemy_giant_rat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0162",
+      "references": [
+        "retained enemy enemy_wererat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0163",
+      "references": [
+        "retained enemy enemy_fallen_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0164",
+      "references": [
+        "retained enemy enemy_spectral_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0166",
+      "references": [
+        "retained enemy enemy_witch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0169",
+      "references": [
+        "retained enemy eb_blackburn"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0170",
+      "references": [
+        "retained enemy enemy_hobgoblin_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0171",
+      "references": [
+        "retained enemy enemy_cursed_shaman"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0172",
+      "references": [
+        "retained enemy enemy_hobgoblin_shield"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0173",
+      "references": [
+        "retained enemy enemy_hobgoblin_rider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0174",
+      "references": [
+        "retained enemy enemy_goblin_spear"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0175",
+      "references": [
+        "retained enemy enemy_goblin_balloon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0176",
+      "references": [
+        "retained enemy enemy_cursed_golem"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0177",
+      "references": [
+        "retained enemy enemy_cursed_shard"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0178",
+      "references": [
+        "retained enemy enemy_hobgoblin_miniboss"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0179",
+      "references": [
+        "retained enemy eb_hobgoblin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0180",
+      "references": [
+        "retained enemy enemy_goblin_platform"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0250",
+      "references": [
+        "retained enemy enemy_werewolf",
+        "retained enemy enemy_werewolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0251",
+      "references": [
+        "retained enemy enemy_phantom_warrior"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0253",
+      "references": [
+        "retained enemy enemy_halloween_zombie",
+        "retained enemy enemy_halloween_zombie"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0254",
+      "references": [
+        "retained enemy enemy_abomination",
+        "retained enemy enemy_abomination"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0255",
+      "references": [
+        "retained enemy enemy_lycan",
+        "retained enemy enemy_lycan"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0370",
+      "references": [
+        "retained enemy enemy_kr4_ghost"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0371",
+      "references": [
+        "retained enemy enemy_corrosive_soul"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0373",
+      "references": [
+        "retained enemy enemy_bone_carrier"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0374",
+      "references": [
+        "retained enemy enemy_haunted_skeleton"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_0376",
+      "references": [
+        "retained enemy enemy_lich"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_over",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creep_thumbs_selected",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0041",
+      "references": [
+        "retained enemy enemy_screecher_bat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0101",
+      "references": [
+        "retained enemy enemy_goblin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0102",
+      "references": [
+        "retained enemy enemy_fat_orc"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0103",
+      "references": [
+        "retained enemy enemy_shaman"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0104",
+      "references": [
+        "retained enemy enemy_ogre"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0105",
+      "references": [
+        "retained enemy enemy_bandit"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0106",
+      "references": [
+        "retained enemy enemy_brigand"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0107",
+      "references": [
+        "retained enemy enemy_marauder"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0108",
+      "references": [
+        "retained enemy enemy_spider_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0109",
+      "references": [
+        "retained enemy enemy_spider_big"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0110",
+      "references": [
+        "retained enemy enemy_gargoyle"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0111",
+      "references": [
+        "retained enemy enemy_shadow_archer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0112",
+      "references": [
+        "retained enemy enemy_dark_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0113",
+      "references": [
+        "retained enemy enemy_wolf_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0114",
+      "references": [
+        "retained enemy enemy_wolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0115",
+      "references": [
+        "retained enemy enemy_golem_head"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0116",
+      "references": [
+        "retained enemy enemy_whitewolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0117",
+      "references": [
+        "retained enemy enemy_troll"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0118",
+      "references": [
+        "retained enemy enemy_troll_axe_thrower"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0119",
+      "references": [
+        "retained enemy enemy_troll_chieftain"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0120",
+      "references": [
+        "retained enemy enemy_yeti"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0121",
+      "references": [
+        "retained enemy enemy_rocketeer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0122",
+      "references": [
+        "retained enemy enemy_slayer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0123",
+      "references": [
+        "retained enemy enemy_demon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0124",
+      "references": [
+        "retained enemy enemy_demon_mage"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0125",
+      "references": [
+        "retained enemy enemy_demon_wolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0126",
+      "references": [
+        "retained enemy enemy_demon_imp"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0127",
+      "references": [
+        "retained enemy enemy_skeleton"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0128",
+      "references": [
+        "retained enemy enemy_skeleton_big"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0129",
+      "references": [
+        "retained enemy enemy_necromancer"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0130",
+      "references": [
+        "retained enemy enemy_lava_elemental"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0131",
+      "references": [
+        "retained enemy enemy_sarelgaz_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0132",
+      "references": [
+        "retained enemy eb_juggernaut"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0133",
+      "references": [
+        "retained enemy eb_jt"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0134",
+      "references": [
+        "retained enemy eb_veznan"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0135",
+      "references": [
+        "retained enemy eb_sarelgaz"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0136",
+      "references": [
+        "retained enemy enemy_orc_armored"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0137",
+      "references": [
+        "retained enemy enemy_orc_rider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0138",
+      "references": [
+        "retained enemy enemy_goblin_zapper"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0139",
+      "references": [
+        "retained enemy enemy_forest_troll"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0140",
+      "references": [
+        "retained enemy eb_gulthak"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0141",
+      "references": [
+        "retained enemy enemy_zombie"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0142",
+      "references": [
+        "retained enemy enemy_spider_rotten"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0143",
+      "references": [
+        "retained enemy enemy_rotten_tree"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0144",
+      "references": [
+        "retained enemy enemy_swamp_thing"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0145",
+      "references": [
+        "retained enemy eb_greenmuck"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0146",
+      "references": [
+        "retained enemy enemy_raider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0147",
+      "references": [
+        "retained enemy enemy_pillager"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0148",
+      "references": [
+        "retained enemy eb_kingpin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0150",
+      "references": [
+        "retained enemy enemy_troll_skater"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0151",
+      "references": [
+        "retained enemy enemy_troll_brute"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0152",
+      "references": [
+        "retained enemy eb_ulgukhai"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0153",
+      "references": [
+        "retained enemy enemy_demon_gulaemon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0154",
+      "references": [
+        "retained enemy enemy_demon_flareon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0155",
+      "references": [
+        "retained enemy enemy_demon_cerberus"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0156",
+      "references": [
+        "retained enemy enemy_demon_legion"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0157",
+      "references": [
+        "retained enemy eb_moloch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0158",
+      "references": [
+        "retained enemy enemy_rotten_lesser"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0159",
+      "references": [
+        "retained enemy eb_myconid"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0161",
+      "references": [
+        "retained enemy enemy_giant_rat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0162",
+      "references": [
+        "retained enemy enemy_wererat"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0163",
+      "references": [
+        "retained enemy enemy_fallen_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0164",
+      "references": [
+        "retained enemy enemy_spectral_knight"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0166",
+      "references": [
+        "retained enemy enemy_witch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0169",
+      "references": [
+        "retained enemy eb_blackburn"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0170",
+      "references": [
+        "retained enemy enemy_hobgoblin_small"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0171",
+      "references": [
+        "retained enemy enemy_cursed_shaman"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0172",
+      "references": [
+        "retained enemy enemy_hobgoblin_shield"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0173",
+      "references": [
+        "retained enemy enemy_hobgoblin_rider"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0174",
+      "references": [
+        "retained enemy enemy_goblin_spear"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0175",
+      "references": [
+        "retained enemy enemy_goblin_balloon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0176",
+      "references": [
+        "retained enemy enemy_cursed_golem"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0177",
+      "references": [
+        "retained enemy enemy_cursed_shard"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0178",
+      "references": [
+        "retained enemy enemy_hobgoblin_miniboss"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0179",
+      "references": [
+        "retained enemy eb_hobgoblin"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0180",
+      "references": [
+        "retained enemy enemy_goblin_platform"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0250",
+      "references": [
+        "retained enemy enemy_werewolf",
+        "retained enemy enemy_werewolf"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0251",
+      "references": [
+        "retained enemy enemy_phantom_warrior"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0253",
+      "references": [
+        "retained enemy enemy_halloween_zombie",
+        "retained enemy enemy_halloween_zombie"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0254",
+      "references": [
+        "retained enemy enemy_abomination",
+        "retained enemy enemy_abomination"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0255",
+      "references": [
+        "retained enemy enemy_lycan",
+        "retained enemy enemy_lycan"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0370",
+      "references": [
+        "retained enemy enemy_kr4_ghost"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0371",
+      "references": [
+        "retained enemy enemy_corrosive_soul"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0373",
+      "references": [
+        "retained enemy enemy_bone_carrier"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0374",
+      "references": [
+        "retained enemy enemy_haunted_skeleton"
+      ]
+    },
+    {
+      "frame": "encyclopedia_creeps_0376",
+      "references": [
+        "retained enemy enemy_lich"
+      ]
+    },
+    {
+      "frame": "encyclopedia_frame",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0001",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0002",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0003",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0004",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0005",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0006",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_icons_0007",
+      "references": [
+        "native encyclopedia stat switch"
+      ]
+    },
+    {
+      "frame": "encyclopedia_pageNbrOver_0001",
+      "references": [
+        "page button",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_pageNbrSelected_0001",
+      "references": [
+        "page button",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_pageNbr_0001",
+      "references": [
+        "page button",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_rightArt",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_rightPages_0001",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_rightPages_0002",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_rightPages_0004",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0101",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0102",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0103",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0104",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0105",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0106",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0107",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0108",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0109",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0110",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0111",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0112",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0113",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0114",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0115",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0116",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0117",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0118",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_specials_0124",
+      "references": [
+        "native tier4 power enc_icon"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0022",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0023",
+      "references": [
+        "map literal range 7800..9700"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0101",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0102",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0103",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0104",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0105",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0106",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0107",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0108",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0109",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0110",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0111",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0112",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0113",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0114",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0115",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0116",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0117",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0118",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0119",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_tower_thumbs_0120",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0101",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0102",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0103",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0104",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0105",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0106",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0107",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0108",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0109",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0110",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0111",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0112",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0113",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0114",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0115",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0116",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0117",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0118",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0119",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "encyclopedia_towers_0120",
+      "references": [
+        "20 native tower presentation IDs"
+      ]
+    },
+    {
+      "frame": "hero_bar_end",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "hero_bar_init",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "hero_bar_middle",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_001_notxt",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_003",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_004",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_006_notxt",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_007",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_009",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_010",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_011",
+      "references": [
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_011_disabled",
+      "references": [
+        "map literal range 15300..15820",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_012",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_013",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_014_large",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_015",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_017",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_020",
+      "references": [
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_attackIcons_0001",
+      "references": [
+        "native hero damage icon switch",
+        "map literal range 13870..14693",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_attackIcons_0002",
+      "references": [
+        "native hero damage icon switch",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_attackIcons_0003",
+      "references": [
+        "native hero damage icon switch",
+        "map literal range 14880..15260",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_attackIcons_0004",
+      "references": [
+        "native hero damage icon switch",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 14880..15260",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_btnDone_large_0001",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "heroroom_btnDone_large_0002",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "heroroom_btnReset_large_0001",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_btnReset_large_0002",
+      "references": [
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_btnSelect_0001",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_btnSelect_0002",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693",
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_btnSelect_0003",
+      "references": [
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_btnSelect_0004",
+      "references": [
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_help_abilities_notxt",
+      "references": [
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "heroroom_help_select_notxt",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_notxt_0002",
+      "references": [
+        "map literal range 13870..14693",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0001",
+      "references": [
+        "native hero levels 1..10",
+        "map literal range 13870..14693",
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0002",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0003",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0004",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0005",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0006",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0007",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0008",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0009",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_heroBadge_numbers_0010",
+      "references": [
+        "native hero levels 1..10"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0033",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0034",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0035",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0036",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0037",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0038",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0039",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0040",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0041",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0042",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0043",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0044",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_portraits_0045",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "heroroom_tooltip_coin",
+      "references": [
+        "map literal range 7800..9700",
+        "map literal range 14880..15260"
+      ]
+    },
+    {
+      "frame": "heroroom_upgradeIcons0001",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "heroroom_upgradeIcons0081",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "kr3_title_bg",
+      "references": [
+        "native UpgradeButtons/UpgradesView constructor",
+        "map literal range 13870..14693",
+        "map literal range 16785..17680",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "levelSelect_closeBtn_0001",
+      "references": [
+        "close button",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 13870..14693",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "levelSelect_closeBtn_0002",
+      "references": [
+        "close button",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 13870..14693",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "levelSelect_closeBtn_0003",
+      "references": [
+        "close button",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 7800..9700",
+        "map literal range 13870..14693",
+        "map literal range 16785..17680"
+      ]
+    },
+    {
+      "frame": "levelSelect_difficultyCompleted_0001",
+      "references": [
+        "completed difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "levelSelect_difficultyCompleted_0002",
+      "references": [
+        "completed difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "levelSelect_difficultyCompleted_0003",
+      "references": [
+        "completed difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "levelSelect_difficultyCompleted_0004",
+      "references": [
+        "completed difficulty 1..4"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0033",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0034",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0035",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0036",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0037",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0038",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0039",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0040",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0041",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0042",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0043",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0044",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapButtons_portrait_hero_0045",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0001",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0002",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0003",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0004",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0005",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0006",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0007",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0008",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0009",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0010",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "mapStarsContainer_numbers_0011",
+      "references": [
+        "star digits incl zero/slash"
+      ]
+    },
+    {
+      "frame": "options_bar",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_barBg",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_bg_notxt",
+      "references": [
+        "map literal range 15300..15820"
+      ]
+    },
+    {
+      "frame": "options_button_bg_0001",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_button_bg_0002",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal",
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0001",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0002",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0003",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0004",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0005",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "options_sounds_0006",
+      "references": [
+        "all-desktop/gg_views_custom.lua conservative shared widget literal"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0033",
+      "references": [
+        "13 native hero presentation IDs",
+        "map literal range 13870..14693"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0034",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0035",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0036",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0037",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0038",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0039",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0040",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0041",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0042",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0043",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0044",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "portrait_notxt_0045",
+      "references": [
+        "13 native hero presentation IDs"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0045",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0046",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0047",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0048",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0049",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0050",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0051",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0052",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0053",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0054",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0055",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0056",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0057",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0058",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0059",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0060",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0061",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0062",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0063",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0064",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0065",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0066",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0067",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0068",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0069",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0070",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0071",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0072",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0073",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0074",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0075",
+      "references": [
+        "native level thumbnails"
+      ]
+    },
+    {
+      "frame": "stage_thumbs_0076",
+      "references": [
+        "native level thumbnails"
+      ]
+    }
+  ],
+  "achievement_row_count": 96,
+  "achievement_names": [
+    "STARGAZER",
+    "STARDUST",
+    "ROCKSTAR",
+    "WAR_NEVER_CHANGES",
+    "BONE_COLLECTOR",
+    "TRUTH_DARE",
+    "HOLDING_OUT",
+    "NOT_TODAY",
+    "VOLUNTEER_TRIBUTE",
+    "GREAT_DEFENDER",
+    "GREAT_DEFENDER_HEROIC",
+    "GREAT_DEFENDER_IRON",
+    "HARD_MODE",
+    "IMPOSSIBLE_MODE",
+    "FIRST_BLOOD",
+    "LANDOWNER",
+    "DARING",
+    "HEROLEVELUP",
+    "EASY_TOWER_BUILDER",
+    "BLOODLUST",
+    "ARMAGGEDON",
+    "WHATS_THAT",
+    "FEARLESS",
+    "IMPATIENT",
+    "MEDIUM_TOWER_BUILDER",
+    "SLAYER",
+    "DEATH_FROM_ABOVE",
+    "TACTICIAN",
+    "HARD_TOWER_BUILDER",
+    "MULTIKILL",
+    "DIE_HARD",
+    "GI_JOE",
+    "CANNON_FODDER",
+    "SPECIALIZATION",
+    "LANDMANAGER",
+    "HERO_OF_THE_DAY",
+    "LEGENDARY",
+    "DEFEAT_JUGGERNAUT",
+    "DEFEAT_MOUNTAIN_BOSS",
+    "DEFEAT_END_BOSS",
+    "REAL_STATE",
+    "INDECISIVE",
+    "MAX_ELVES",
+    "HENDERSON",
+    "CATCH_A_FISH",
+    "IMPERIAL_SAVIOUR",
+    "SNIPER",
+    "TOXICITY",
+    "ENTANGLED",
+    "DUST_TO_DUST",
+    "BEAM_ME_UP",
+    "SHEPARD",
+    "ELEMENTALIST",
+    "AXE_RAINER",
+    "BARBARIAN_RUSH",
+    "MEDIC",
+    "HOLY_CHORUS",
+    "ROCKETEER",
+    "CLUSTERED",
+    "ENERGY_NETWORK",
+    "ACDC",
+    "SHEEP_KILLER",
+    "FREE_FREDO",
+    "DEFEAT_SARELGAZ",
+    "DEFEAT_GULTHAK_BOSS",
+    "DEFEAT_TREANT_BOSS",
+    "HERO_MEDIUM",
+    "HERO_HARD",
+    "DEFEAT_KINGPING_BOSS",
+    "DEFEAT_COOL_RUNNING",
+    "DEFEAT_ACORN",
+    "DEFEAT_MUSHROOM",
+    "DEFEAT_TROLL_BOSS",
+    "WE_DINE_IN_HELL",
+    "ARMY_OF_ONE",
+    "HELL_O",
+    "SUPER_MUSHROOM",
+    "SPORE",
+    "STILL_COUNTS_AS_ONE",
+    "RATATOUILLE",
+    "NEVERMORE",
+    "NESSIE",
+    "SPLINTER",
+    "GOC",
+    "SUN_BURNER",
+    "DEFEAT_COMPLETE_IMPOSSIBLE",
+    "DEFEAT_HOBGOBLIN_BOSS",
+    "GOLD_BAG",
+    "HOB_RIDERS",
+    "HOB_SPEAR",
+    "HOB_SHIELD",
+    "GOBLIN_BLOON",
+    "TIME_WIZARD_SLOW",
+    "ANCIENT_GUARD_TELE",
+    "STEAM_TROOP_FREEZE",
+    "STEAM_TROOP_IND"
+  ],
+  "achievement_icon_ids": [
+    16,
+    32,
+    24,
+    20,
+    18,
+    57,
+    63,
+    62,
+    59,
+    64,
+    76,
+    75,
+    65,
+    95,
+    204,
+    102,
+    206,
+    108,
+    203,
+    205,
+    208,
+    207,
+    219,
+    149,
+    211,
+    214,
+    415,
+    216,
+    218,
+    220,
+    221,
+    222,
+    223,
+    212,
+    294,
+    256,
+    257,
+    413,
+    410,
+    448,
+    424,
+    425,
+    427,
+    429,
+    431,
+    428,
+    443,
+    441,
+    434,
+    446,
+    447,
+    432,
+    439,
+    444,
+    433,
+    435,
+    436,
+    442,
+    438,
+    440,
+    437,
+    445,
+    453,
+    452,
+    454,
+    455,
+    456,
+    457,
+    458,
+    459,
+    460,
+    461,
+    462,
+    464,
+    465,
+    466,
+    467,
+    468,
+    469,
+    470,
+    471,
+    472,
+    473,
+    474,
+    430,
+    475,
+    476,
+    477,
+    480,
+    479,
+    478,
+    481,
+    482,
+    483,
+    484,
+    485
+  ]
+}

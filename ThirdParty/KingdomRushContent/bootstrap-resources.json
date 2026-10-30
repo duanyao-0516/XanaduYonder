@@ -1,0 +1,187 @@
+{
+  "scope": "Original direct-file bootstrap resources outside atlas loading. No gameplay/runtime execution.",
+  "cursor_source": "all/director.lua",
+  "cursor_root": "all-desktop/assets/cursors/",
+  "files": [
+    {
+      "path": "all-desktop/assets/cursors/crosshair.png",
+      "bytes": 3120,
+      "dimensions": [
+        32,
+        32
+      ],
+      "sha256": "c0aeb701fdbece57c4cdc48372c7516ce320aa7f11acdc317936d92a173726bf",
+      "hotspot": [
+        16,
+        16
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Small shared crosshair preserves the complete existing newCursor file contract; packaging it does not enable editor navigation."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_32_0001.png",
+      "bytes": 1774,
+      "dimensions": [
+        32,
+        32
+      ],
+      "sha256": "f88f74e32b9b1bb932cb99543caa6576b1fd269ae33779b22b1da4fefa2b452c",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Default pointer; both released and pressed states are required consecutively."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_32_0002.png",
+      "bytes": 1719,
+      "dimensions": [
+        32,
+        32
+      ],
+      "sha256": "3014b599ae286df93d3a9ccc1e506cd31d71173bd00ec6e68eb31420f8209f6d",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Default pointer; both released and pressed states are required consecutively."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_48_0001.png",
+      "bytes": 3115,
+      "dimensions": [
+        48,
+        48
+      ],
+      "sha256": "61834c2cd63c8b4042bd4dbb787491b13a3482d2aea59fa5fcc9f54a90f711b4",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Persisted large_pointer selects 48 or64 by height<1080; both released and pressed states are required."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_48_0002.png",
+      "bytes": 3066,
+      "dimensions": [
+        48,
+        48
+      ],
+      "sha256": "9366e7e9a1a2ed8fef0db0c40f4fc9a20a0f00be5658bcbea6136cf5b95df7dd",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Persisted large_pointer selects 48 or64 by height<1080; both released and pressed states are required."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_64_0001.png",
+      "bytes": 4632,
+      "dimensions": [
+        64,
+        64
+      ],
+      "sha256": "ed18669c15e1ccf0ba8d9eaacc813835f2d53467c463b5e292518ff13e3ea7d5",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Persisted large_pointer selects 48 or64 by height<1080; both released and pressed states are required."
+    },
+    {
+      "path": "all-desktop/assets/cursors/hand_64_0002.png",
+      "bytes": 4470,
+      "dimensions": [
+        64,
+        64
+      ],
+      "sha256": "d116d7171d3e4ff3e18d150a1cfcdf93e453859504eba6afaccddbf63c2b3a86",
+      "hotspot": [
+        3,
+        2
+      ],
+      "reason": "Original director:init desktop cursor branch (all/director.lua:143–160); original Android game retains KR_TARGET=desktop. Persisted large_pointer selects 48 or64 by height<1080; both released and pressed states are required."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_bands.c",
+      "bytes": 1566,
+      "sha256": "ca5fecb5a1942d0c8858222deeb42972852745e93e19b896533be7494f2645af",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_circle_focus.c",
+      "bytes": 1492,
+      "sha256": "274cf83c759f733eb8919fdced05904e107ae86200533abd33b269e46657992a",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_corrupt_reveal.c",
+      "bytes": 4654,
+      "sha256": "97e2c2b6eef39d3b5ce360ddb6e492cb5ba265a85334d4c523fabf1cf2750ef0",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_dissolve_reveal.c",
+      "bytes": 5209,
+      "sha256": "1d21268959062325e0831d3867da3ec030747f0c9b01d593d06e8f85d4b6287f",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_drop_shadow.c",
+      "bytes": 1884,
+      "sha256": "f1a1f643acb93867eb9cd87e7e2a7a74071fc6d95a0b944dd3f59ba42d32bc52",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_edge_blur.c",
+      "bytes": 1344,
+      "sha256": "949023ff0b884e0b88779db5ee62b19836a6b56bd71bfc495fba7cd6a7aee359",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_ellipse_focus.c",
+      "bytes": 1718,
+      "sha256": "9935fe0752fedf419b114f329d586e4b615ea19d59441f91da7139ca8fda245a",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_glow.c",
+      "bytes": 1488,
+      "sha256": "ec612c133481fbbc7c2153c4a2fa2cac0509b0729cc3a0c682de960b5d128875",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_none.c",
+      "bytes": 224,
+      "sha256": "11074c0fa26614522caae24aff15085251da6751e7dc13752cdb8770c7315bac",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_outline.c",
+      "bytes": 1679,
+      "sha256": "e16ff171162a1022af7632066ca5c7fde04cce429453e59722c8ebe77e519833",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_ps_alpha_mask.c",
+      "bytes": 1545,
+      "sha256": "9826d860af9d677f40a887de4f1ac09d4217e02c3325c33b9509f39d5a644b69",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "all-desktop/assets/shaders/p_tint.c",
+      "bytes": 542,
+      "sha256": "d2ddbaba308d913cf1fc9c609fb67836c310220a3e5f30852ce1363e9a042e74",
+      "reason": "director:init preloads every shader in this directory through SH:init(...,true); original shader source retained unchanged."
+    },
+    {
+      "path": "kr3-desktop/assets/sounds/files/logo_shimmer.ogg",
+      "bytes": 21199,
+      "sha256": "59f02abb5c21ec067216c3b61eb7e27881055108ee4b00a6cf152c6f11783cab",
+      "reason": "screen_splash.lua:150 directly opens this original Ogg with love.audio.newSource, bypassing the sound index."
+    }
+  ],
+  "source_roots": {
+    "KR_PATH_ALL_TARGET": "all-desktop",
+    "KR_PATH_GAME_TARGET": "kr3-desktop"
+  }
+}

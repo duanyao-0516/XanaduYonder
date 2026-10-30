@@ -46,6 +46,12 @@ local.properties
 *.apk.idsig
 *.ipa
 /artifacts/
+# Built locally from the supplied Kingdom Rush source package and runtime sources.
+/Assets/Plugins/Android/KingdomRushRuntime.aar
+/Assets/Plugins/Android/KingdomRushRuntime.aar.meta
+/Assets/Plugins/Android/KingdomRushContent.aar
+/Assets/Plugins/Android/KingdomRushContent.aar.meta
+/ThirdParty/KingdomRushRuntime/prebuilt/
 /TestResults/
 Tests/**/bin/
 Tests/**/obj/

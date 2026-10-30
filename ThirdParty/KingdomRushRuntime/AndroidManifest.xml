@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.xanaduyonder.kingdomrush">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <application>
+        <meta-data android:name="SDL_ENV.SDL_ANDROID_ALLOW_RECREATE_ACTIVITY" android:value="1" />
+        <activity android:name="com.xanaduyonder.kingdomrush.KingdomRushActivity"
+                  android:exported="false"
+                  android:screenOrientation="sensorLandscape"
+                  android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|locale|layoutDirection|fontScale|density"
+                  android:hardwareAccelerated="true"
+                  android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
+        </activity>
+    </application>
+</manifest>

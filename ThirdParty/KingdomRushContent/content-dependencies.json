@@ -1,0 +1,358 @@
+{
+  "files": [
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_towers_1-galaxy.lua",
+      "reason": "Native first-generation tower sprites; game_templates-1.lua:1139–1147"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_towers_1-galaxy.astc",
+      "reason": "Native first-generation tower sprites; game_templates-1.lua:1139–1147"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-1.lua",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-11.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-12.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-13.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-14.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-15.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-16.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-17.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-18.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations-19.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/screen_map_animations_bloodlust-1.astc",
+      "reason": "First-generation MapView:2952 load_map_animations(1); map_data.map_animations1:9756–11157"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_barrack_pirates.lua",
+      "reason": "Original pirateTower_bomb sprite reused by goblin_balloon_bomb and bomb_steam_troop in game_templates-1.lua:16345 and12492"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_barrack_pirates-0.astc",
+      "reason": "Original pirateTower_bomb sprite reused by goblin_balloon_bomb and bomb_steam_troop in game_templates-1.lua:16345 and12492"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_towers_44.lua",
+      "reason": "Source metadata for required level facilities; filtered overlay preserves entries for exactly go_towers_bloodlust-1.astc",
+      "atlas_texture_filter": [
+        "go_towers_bloodlust-1.astc"
+      ]
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/go_towers_bloodlust-1.astc",
+      "reason": "Actual first-gen extension facilities tower_time_wizard/soldier_ancient_guardian, steam troops, holder_lozagon, barbarian net; all matching original go_towers_44 entries map to this shared sheet"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/kr5_level_thumbs.lua",
+      "reason": "Original first-generation levels71–76 require stage_thumbs_0071..0076, LevelSelectView source constructs these global IDs. Only six records/physical sampling blocks retained; all53-source-group other47 records cleared.",
+      "preserve": true
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/kr5_level_thumbs.astc",
+      "reason": "Original first-generation levels71–76 require stage_thumbs_0071..0076, LevelSelectView source constructs these global IDs. Only six records/physical sampling blocks retained; all53-source-group other47 records cleared.",
+      "preserve": true
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/spell_selection_icons.lua",
+      "reason": "Power3Button constructs the empty third spell slot before hiding it; retain actual original empty icon",
+      "literal_atlas_overlay": "atlas/spell_selection_icons.lua",
+      "original_sha256": "a4d3c5a2a3b7042bda9fea8c1bf440a12a38c599b56184f51732c4622b470b9d"
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/spell_selection_icons.astc",
+      "preserve": true,
+      "reason": "Original empty spell slot icon; physically retain only its sampled blocks"
+    }
+  ],
+  "game_texture_groups": [
+    "go_towers_1-galaxy",
+    "go_barrack_pirates",
+    "go_towers_44"
+  ],
+  "map_texture_groups": [
+    "screen_map_animations-1",
+    "kr5_level_thumbs"
+  ],
+  "exoskeletons": [],
+  "scope": "Source-backed mandatory additions. Shared-sheet frames preserved; no gameplay/runtime verification.",
+  "enemy_names": [
+    "eb_blackburn",
+    "eb_greenmuck",
+    "eb_gulthak",
+    "eb_hobgoblin",
+    "eb_hobgoblin_two",
+    "eb_jt",
+    "eb_juggernaut",
+    "eb_kingpin",
+    "eb_moloch",
+    "eb_myconid",
+    "eb_sarelgaz",
+    "eb_ulgukhai",
+    "eb_veznan",
+    "eb_veznan_soul_ik",
+    "eb_veznan_soul_re",
+    "enemy_KR5",
+    "enemy_abomination",
+    "enemy_bandit",
+    "enemy_bone_carrier",
+    "enemy_brigand",
+    "enemy_corrosive_soul",
+    "enemy_curse_aura",
+    "enemy_cursed_golem",
+    "enemy_cursed_shaman",
+    "enemy_cursed_shard",
+    "enemy_dark_knight",
+    "enemy_demon",
+    "enemy_demon_cerberus",
+    "enemy_demon_flareon",
+    "enemy_demon_gulaemon",
+    "enemy_demon_imp",
+    "enemy_demon_legion",
+    "enemy_demon_mage",
+    "enemy_demon_wolf",
+    "enemy_fallen_knight",
+    "enemy_fat_orc",
+    "enemy_forest_troll",
+    "enemy_gargoyle",
+    "enemy_giant_rat",
+    "enemy_goblin",
+    "enemy_goblin_balloon",
+    "enemy_goblin_platform",
+    "enemy_goblin_spear",
+    "enemy_goblin_zapper",
+    "enemy_golem_head",
+    "enemy_greenmuck",
+    "enemy_halloween_zombie",
+    "enemy_haunted_skeleton",
+    "enemy_hobboss_swap",
+    "enemy_hobgoblin_miniboss",
+    "enemy_hobgoblin_rider",
+    "enemy_hobgoblin_shield",
+    "enemy_hobgoblin_small",
+    "enemy_kr4_ghost",
+    "enemy_lava_elemental",
+    "enemy_lich",
+    "enemy_lycan",
+    "enemy_lycan_werewolf",
+    "enemy_marauder",
+    "enemy_necromancer",
+    "enemy_ogre",
+    "enemy_orc_armored",
+    "enemy_orc_rider",
+    "enemy_phantom_warrior",
+    "enemy_pillager",
+    "enemy_raider",
+    "enemy_rocketeer",
+    "enemy_rotten_lesser",
+    "enemy_rotten_tree",
+    "enemy_sarelgaz_small",
+    "enemy_screecher_bat",
+    "enemy_shadow_archer",
+    "enemy_shaman",
+    "enemy_sheep_fly",
+    "enemy_sheep_ground",
+    "enemy_skeleton",
+    "enemy_skeleton_big",
+    "enemy_skeleton_blackburn",
+    "enemy_slayer",
+    "enemy_spectral_knight",
+    "enemy_spectral_knight_spawn",
+    "enemy_spider_big",
+    "enemy_spider_egg",
+    "enemy_spider_rotten",
+    "enemy_spider_rotten_egg",
+    "enemy_spider_rotten_tiny",
+    "enemy_spider_small",
+    "enemy_spider_tiny",
+    "enemy_swamp_thing",
+    "enemy_tp_aura",
+    "enemy_troll",
+    "enemy_troll_axe_thrower",
+    "enemy_troll_brute",
+    "enemy_troll_chieftain",
+    "enemy_troll_skater",
+    "enemy_wererat",
+    "enemy_werewolf",
+    "enemy_whitewolf",
+    "enemy_witch",
+    "enemy_wolf",
+    "enemy_wolf_small",
+    "enemy_yeti",
+    "enemy_zombie"
+  ],
+  "excluded_sound_ids": [
+    "ElvesHeroAlleriaDeath",
+    "ElvesHeroAlleriaShoot",
+    "ElvesHeroAlleriaTaunt",
+    "ElvesHeroAlleriaTauntIntro",
+    "ElvesHeroEldritchBlade",
+    "ElvesHeroEldritchDeath",
+    "ElvesHeroEldritchSlash",
+    "ElvesHeroEldritchTaunt",
+    "ElvesHeroEldritchTauntIntro",
+    "ElvesHeroEldritchTauntSelect",
+    "ElvesHeroEldritchVindicator",
+    "HeroDracolichAttack",
+    "HeroDracolichBoneRain",
+    "HeroDracolichDeath",
+    "HeroDracolichKamikaze",
+    "HeroDracolichRespawn",
+    "HeroDracolichSoulsPlague",
+    "HeroDracolichSpawnDog",
+    "HeroDracolichTaunt",
+    "HeroDracolichTauntIntro",
+    "HeroDracolichTauntSelect",
+    "HeroReinforcementHit_g3",
+    "HeroReinforcementJump_g3",
+    "HeroReinforcementSpecial_g3"
+  ],
+  "excluded_sound_evidence": "Previous graph reached hero_dracolich through phantom_warrior_aura.banned_templates (game_templates-2.lua:12237–12254). Corrected selected levels/native hero graph has no spawn path; preserve shared Level_up.ogg referenced by retained heroes. Stage75 explicitly declares its texture group but has no Dracolich sound declarations or literal spawns. Native sources have no hero_alleria_g3 or hero_baby_malik spawn references; hero_regson appears only in explode_excluded_templates game_templates-1.lua:12562–12567. Retain shared original Malik sound files; remove only g3 aliases and foreign-only files.",
+  "excluded_sound_groups": [
+    "hero_dracolich",
+    "hero_alleria_g3",
+    "hero_regson",
+    "hero_baby_malik"
+  ],
+  "excluded_files": [
+    {
+      "path": "kr3-desktop/assets/images/fullhd/gui_common_4.lua",
+      "reason": "Only krv_main_icons/towerselect_powers for22 foreign tower menu blocks twilight_elves_barrack..shaolin at kr3/data/tower_menus_data.lua:994–4469; no native13/native20/retained level facility reference. gui_common.lua import and merge removed."
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/gui_common_4.astc",
+      "reason": "Only krv_main_icons/towerselect_powers for22 foreign tower menu blocks twilight_elves_barrack..shaolin at kr3/data/tower_menus_data.lua:994–4469; no native13/native20/retained level facility reference. gui_common.lua import and merge removed."
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/gui_common_5_D.astc",
+      "reason": "Only tower_dragon_wardens_mage and tower_dragon_wardens_mage_over: foreign generation5 tower excluded by profile. Shared gui_common-5.astc retains actual game_gui HUD/boss-bar resources."
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/loading_elven_woods.lua",
+      "reason": "Only the overwritten Origins default/foreign level rows reference this loading scene. First-generation default is loading_grass; original45–76 rows use grass/ice/wasteland/blackburn/fa/desktop14."
+    },
+    {
+      "path": "kr3-desktop/assets/images/fullhd/loading_elven_woods-1.astc",
+      "reason": "Only the overwritten Origins default/foreign level rows reference this loading scene. First-generation default is loading_grass; original45–76 rows use grass/ice/wasteland/blackburn/fa/desktop14."
+    }
+  ],
+  "atlas_excluded_textures": [
+    {
+      "path": "kr3-desktop/assets/images/fullhd/gui_common_5.lua",
+      "textures": [
+        "gui_common_5_D.astc"
+      ],
+      "reason": "Only tower_dragon_wardens_mage and tower_dragon_wardens_mage_over: foreign generation5 tower excluded by profile. Shared gui_common-5.astc retains actual game_gui HUD/boss-bar resources."
+    }
+  ],
+  "atlas_record_merges": [
+    {
+      "source": "rebbborn_fig",
+      "target": "achievements",
+      "frames": [
+        "achievement_icons_0475",
+        "achievement_icons_disabled_0475",
+        "achievement_icons_0476",
+        "achievement_icons_disabled_0476",
+        "achievement_icons_0477",
+        "achievement_icons_disabled_0477",
+        "achievement_icons_0478",
+        "achievement_icons_disabled_0478",
+        "achievement_icons_0479",
+        "achievement_icons_disabled_0479",
+        "achievement_icons_0480",
+        "achievement_icons_disabled_0480",
+        "achievement_icons_0481",
+        "achievement_icons_disabled_0481",
+        "achievement_icons_0482",
+        "achievement_icons_disabled_0482",
+        "achievement_icons_0483",
+        "achievement_icons_disabled_0483",
+        "achievement_icons_0484",
+        "achievement_icons_disabled_0484",
+        "achievement_icons_0485",
+        "achievement_icons_disabled_0485"
+      ],
+      "reason": "Original reborn11 achievement rows dynamically request these22 normal/disabled icons; both originalmetadata andachievements-1 sheet already exist, but original map preload omits their source group."
+    },
+    {
+      "source": "go_stage50",
+      "target": "go_enemies_common",
+      "frames": [
+        "bossJuggernaut_smoke_0001",
+        "bossJuggernaut_smoke_0003",
+        "bossJuggernaut_smoke_0005",
+        "bossJuggernaut_smoke_0007",
+        "bossJuggernaut_smoke_0009",
+        "bossJuggernaut_smoke_0011",
+        "bossJuggernaut_smoke_0013"
+      ],
+      "reason": "Native kingpin boss in61/76 reuses fx_juggernaut_smoke: 7 original records plus7 aliases cover14 frames on already packaged stage50 texture"
+    },
+    {
+      "source": "cp_go_towers_1",
+      "target": "go_towers_1",
+      "frames": [
+        "build_terrain_0014",
+        "build_terrain_0014_over"
+      ],
+      "allow_original_alias_extension": true,
+      "reason": "Level71/72 root-blocked holders use build_terrain_blocked_0014/_over; original cp_go_towers_1 defines those aliases on geometry-identical terrain14 frames"
+    }
+  ],
+  "native_animation_overrides": {
+    "desintegrate_enemy_big": {
+      "prefix": "states_big",
+      "to": 47,
+      "from": 33
+    },
+    "desintegrate_enemy_small": {
+      "prefix": "states_small",
+      "to": 47,
+      "from": 33
+    },
+    "blood_splat_violet": {
+      "prefix": "fx_blood_splat_violet",
+      "to": 10,
+      "from": 1
+    },
+    "blood_splat_green": {
+      "prefix": "fx_blood_splat_green",
+      "to": 10,
+      "from": 1
+    },
+    "blood_splat_red": {
+      "prefix": "fx_blood_splat_red",
+      "to": 10,
+      "from": 1
+    }
+  }
+}

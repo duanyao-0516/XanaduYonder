@@ -1,0 +1,58 @@
+{
+  "scope": "All literal mega_spawner load_file fields in selected32 level sources, recursively checked against original data; no generated substitutes",
+  "references": [
+    {
+      "source": "kr3/data/levels/level72_data.lua",
+      "path": "kr3/data/levels/level72_campaign_spawner.lua"
+    },
+    {
+      "source": "kr3/data/levels/level68_data.lua",
+      "path": "kr3/data/levels/level68_spawner.lua"
+    },
+    {
+      "source": "kr3/data/levels/level67_data.lua",
+      "path": "kr3/data/levels/level67_spawner.lua"
+    },
+    {
+      "source": "kr3/data/levels/level70_data.lua",
+      "path": "kr3/data/levels/level70_spawner.lua"
+    }
+  ],
+  "files": [
+    {
+      "path": "kr3/data/levels/level67_spawner.lua",
+      "bytes": 42568,
+      "sha256": "4f81d72422ade2bc5df6116bac62f00243ad6b954488678b360b1c141f88c1b3",
+      "mode_wave_counts": {
+        "1": 12,
+        "2": 12
+      }
+    },
+    {
+      "path": "kr3/data/levels/level68_spawner.lua",
+      "bytes": 40818,
+      "sha256": "6dba801bece9aac7529e53decf8b4a0451fb8064e183dfd31c3891923d619b78",
+      "mode_wave_counts": {
+        "1": 12,
+        "2": 12
+      }
+    },
+    {
+      "path": "kr3/data/levels/level70_spawner.lua",
+      "bytes": 21178,
+      "sha256": "2c5a46f7fe2bf0ce0b0e3a8730b62c749c77afb791a8e3e138b3b4955435531b",
+      "mode_wave_counts": {
+        "1": 13,
+        "2": 4
+      }
+    },
+    {
+      "path": "kr3/data/levels/level72_campaign_spawner.lua",
+      "bytes": 20155,
+      "sha256": "3cb09e77ad46904853001913380ca6b0b42a2ac444dbcf7611c2ad28d7b9ba7f",
+      "mode_wave_counts": {
+        "1": 14
+      }
+    }
+  ]
+}
