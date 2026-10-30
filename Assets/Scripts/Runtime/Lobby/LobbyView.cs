@@ -10,6 +10,8 @@ namespace XanaduYonder.Runtime
     internal sealed class LobbyView : MonoBehaviour
     {
         private const float LogicalWidth = 390;
+        private const float PageInset = 18;
+        private const float PageContentWidth = LogicalWidth - PageInset * 2;
         private const int TextSampling = 2;
         private const float CardsTop = 201.4f;
         private static readonly Color SecondaryText = UiFactory.Hex("5D7468");
@@ -26,8 +28,6 @@ namespace XanaduYonder.Runtime
         private RectTransform logicalFrame;
         private RectTransform content;
         private RectTransform cards;
-        private RectTransform header;
-        private RectTransform toolbar;
         private Text footer;
         private Text modeLabel;
         private CanvasGroup backgroundInteraction;
@@ -84,9 +84,9 @@ namespace XanaduYonder.Runtime
             Scroll.scrollSensitivity = 20;
 
             BuildHeader(openSettings);
-            footer = Label(content, "Lobby footer", "全部游戏 · 无需联网 · 无广告", 18, 0, 354, 18.15f,
+            footer = Label(content, "Lobby footer", "全部游戏 · 无需联网 · 无广告", PageInset, 0, PageContentWidth, 18.15f,
                 11, SecondaryText, TextAnchor.MiddleCenter);
-            StatusLabel = Label(content, "Lobby status", "", 18, 0, 354, 18, 11,
+            StatusLabel = Label(content, "Lobby status", "", PageInset, 0, PageContentWidth, 18, 11,
                 UiFactory.Accent, TextAnchor.MiddleCenter);
             initialized = true;
             RebuildCards();
@@ -115,40 +115,31 @@ namespace XanaduYonder.Runtime
 
         private void BuildHeader(Action openSettings)
         {
-            header = UiFactory.Rect(content, "Lobby header", 18, 20, 354, 116.4f);
+            var header = UiFactory.Rect(content, "Lobby header", PageInset, 20, PageContentWidth, 116.4f);
             Label(header, "Lobby brand", "XANADU / YONDER", 0, 0, 300, 40, 14,
                 UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            var settings = RoundedPanel(header, "Lobby settings", 314, 0, 40, 40, ControlColor, 12);
+            var settings = RoundedPanel(header, "Lobby settings", PageContentWidth - 40, 0, 40, 40, ControlColor, 12);
             UiFactory.ConfigureButton(settings, openSettings);
             Icon(settings.transform, "Settings icon", "settings", 10, 10, 20);
-            Label(header, "Lobby title", "小小一局，慢慢向前。", 0, 60, 354, 32.2f, 23,
+            Label(header, "Lobby title", "小小一局，慢慢向前。", 0, 60, PageContentWidth, 32.2f, 23,
                 UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            Label(header, "Lobby subtitle", "把片刻空闲，留给一点简单的快乐。", 0, 97.2f, 354, 19.2f,
+            Label(header, "Lobby subtitle", "把片刻空闲，留给一点简单的快乐。", 0, 97.2f, PageContentWidth, 19.2f,
                 12, SecondaryText);
 
-            toolbar = UiFactory.Rect(content, "Lobby toolbar", 18, 145.4f, 354, 44);
+            var toolbar = UiFactory.Rect(content, "Lobby toolbar", PageInset, 145.4f, PageContentWidth, 44);
             Label(toolbar, "Lobby game count", "全部游戏 · " + entries.Count + " 款", 0, 0, 210, 36,
                 12, SecondaryText);
-            var selector = RoundedPanel(toolbar, "Display options button", 266, 0, 88, 36, ControlColor, 9);
+            var selector = RoundedPanel(toolbar, "Display options button", PageContentWidth - 88, 0, 88, 36, ControlColor, 9);
             displayButton = UiFactory.ConfigureButton(selector, OpenDisplayOptions);
             Icon(selector.transform, "Display mode icon", "sliders-horizontal", 9, 10, 16);
             modeLabel = Label(selector.transform, "Display mode label", ModeTitles[(int)Mode], 31, 0, 48, 36,
                 12, UiFactory.Accent);
-            UiFactory.Panel(toolbar, "Toolbar rule", 0, 43, 354, 1, UiFactory.Hex("D6DFD2"), false);
+            UiFactory.Panel(toolbar, "Toolbar rule", 0, 43, PageContentWidth, 1, UiFactory.Hex("D6DFD2"), false);
         }
 
         private void RebuildCards()
         {
-            var inset = Mode == LobbyDisplayMode.Directory ? 16 : 18;
-            var width = LogicalWidth - inset * 2;
-            header.anchoredPosition = new Vector2(inset, -20);
-            header.sizeDelta = new Vector2(width, 116.4f);
-            var settings = (RectTransform)header.Find("Lobby settings");
-            settings.anchoredPosition = new Vector2(width - 40, 0);
-            toolbar.anchoredPosition = new Vector2(inset, -145.4f);
-            toolbar.sizeDelta = new Vector2(width, 44);
-            displayButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(width - 88, 0);
-            toolbar.Find("Toolbar rule").GetComponent<RectTransform>().sizeDelta = new Vector2(width, 1);
+            var width = PageContentWidth;
             modeLabel.text = ModeTitles[(int)Mode];
 
             recordLabels.Clear();
@@ -158,7 +149,7 @@ namespace XanaduYonder.Runtime
                 cards.gameObject.SetActive(false);
                 Destroy(cards.gameObject);
             }
-            cards = UiFactory.Rect(content, "Lobby cards", inset, CardsTop, width, 0);
+            cards = UiFactory.Rect(content, "Lobby cards", PageInset, CardsTop, width, 0);
             float top = 0;
             bool single = Mode == LobbyDisplayMode.Single;
             foreach (var category in Categories)
@@ -198,10 +189,8 @@ namespace XanaduYonder.Runtime
             cards.sizeDelta = new Vector2(width, top);
             // The last section's margin collapses with the larger footer margin in the approved CSS.
             float footerTop = CardsTop + top + 20;
-            footer.rectTransform.anchoredPosition = new Vector2(inset, -footerTop);
-            footer.rectTransform.sizeDelta = new Vector2(width, 18.15f) * TextSampling;
-            StatusLabel.rectTransform.anchoredPosition = new Vector2(inset, -footerTop - 27.15f);
-            StatusLabel.rectTransform.sizeDelta = new Vector2(width, 18) * TextSampling;
+            footer.rectTransform.anchoredPosition = new Vector2(PageInset, -footerTop);
+            StatusLabel.rectTransform.anchoredPosition = new Vector2(PageInset, -footerTop - 27.15f);
             content.sizeDelta = new Vector2(LogicalWidth, footerTop + 65.15f);
             Scroll.StopMovement();
             content.anchoredPosition = Vector2.zero;

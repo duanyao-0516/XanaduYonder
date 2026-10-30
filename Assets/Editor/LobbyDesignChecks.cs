@@ -232,14 +232,27 @@ namespace XanaduYonder.EditorTools
                 var subtitleBottom = f.Scroll.content.InverseTransformPoint(subtitle.TransformPoint(new Vector3(subtitle.rect.xMin, subtitle.rect.yMin)));
                 Near(-toolbar.anchoredPosition.y + subtitleBottom.y, 9, "Toolbar keeps the approved nine-unit upper gap");
                 var first = (RectTransform)cards[0].transform;
-                var firstInLogical = Named(f.View.transform, "Lobby logical frame").InverseTransformPoint(first.TransformPoint(new Vector3(first.rect.xMin, first.rect.yMax)));
-                Near(firstInLogical.x, mode == 1 ? 16 : 18, "Approved outer card margin in mode " + mode);
+                var logicalFrame = Named(f.View.transform, "Lobby logical frame");
+                var firstBounds = HorizontalBounds(first, logicalFrame);
+                Near(firstBounds.x, 18, "All modes share the same left card margin in mode " + mode);
+                foreach (var name in new[] { "Lobby header", "Lobby toolbar", "Toolbar rule", "Lobby cards", "Lobby footer", "Lobby status" })
+                {
+                    var bounds = HorizontalBounds(Named(f.View.transform, name), logicalFrame);
+                    Near(bounds.x, firstBounds.x, name + " aligns with the left card edge in mode " + mode);
+                    Near(bounds.y, logicalFrame.rect.width - 18, name + " retains the shared right margin in mode " + mode);
+                }
+                foreach (var name in new[] { "Lobby settings", "Display options button" })
+                    Near(HorizontalBounds(Named(f.View.transform, name), logicalFrame).y,
+                        logicalFrame.rect.width - 18, name + " keeps its right edge when switching modes");
                 if (mode < 2)
                 {
                     var second = (RectTransform)cards[1].transform;
                     Near(second.anchoredPosition.x - first.anchoredPosition.x - first.rect.width, 10, "Two-column gap stays ten units");
                     Near(second.anchoredPosition.y, first.anchoredPosition.y, "First pair shares the same row");
+                    Near(HorizontalBounds(second, logicalFrame).y, logicalFrame.rect.width - 18,
+                        "Second-column cards retain the shared right margin");
                 }
+                else Near(firstBounds.y, logicalFrame.rect.width - 18, "Single cards retain the shared right margin");
                 f.Scroll.content.anchoredPosition = Vector2.zero; f.Flush();
                 f.Capture("mode-" + mode + "-top");
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
@@ -333,6 +346,13 @@ namespace XanaduYonder.EditorTools
             Require(!(bool)Property(f.View, "HasDisplayOptions"), "Disabling the lobby clears options and restores modal input ownership");
             f.Tap(trigger); Invoke(f.View, "CloseDisplayOptions"); Invoke(f.View, "CloseDisplayOptions");
             Require(!(bool)Property(f.View, "HasDisplayOptions"), "Repeated display close is safe");
+        }
+
+        private static Vector2 HorizontalBounds(RectTransform item, RectTransform frame)
+        {
+            return new Vector2(
+                frame.InverseTransformPoint(item.TransformPoint(new Vector3(item.rect.xMin, 0))).x,
+                frame.InverseTransformPoint(item.TransformPoint(new Vector3(item.rect.xMax, 0))).x);
         }
 
         private static void Near(float actual, float expected, string context)
