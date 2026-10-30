@@ -1,0 +1,75 @@
+{
+  "version": "lobby-ui-v2",
+  "status": "UI proposal only; app implementation unchanged",
+  "appearance": "fixed-light-matches-current-app",
+  "colors": {
+    "paper": "#F6F4EC",
+    "ink": "#173D35",
+    "accent": "#276653",
+    "secondaryText": "#5D7468",
+    "card": "#E3E9DF",
+    "logicCard": "#DFE8DE",
+    "mergeCard": "#EEE7D3",
+    "actionCard": "#E4E9DC"
+  },
+  "icons": {
+    "logicalCanvas": 24,
+    "strokeWidth": 2,
+    "linecap": "round",
+    "linejoin": "round",
+    "color": "#276653",
+    "pngCanvas": 96,
+    "fallback": "icons/png/fallback-controller.png"
+  },
+  "layout": {
+    "referencePreviewWidth": 390,
+    "supportedPreviewMinimumWidth": 320,
+    "cardGap": 10,
+    "double": {
+      "titleAndIcon": "same row",
+      "icon": 20,
+      "fontSize": 14,
+      "recordFontSize": 11,
+      "minimumHeight": 66,
+      "cornerRadius": 14,
+      "padding": 10,
+      "iconOpticalOffsetY": 1,
+      "titleLineHeight": 20
+    },
+    "directory": {
+      "icon": 20,
+      "fontSize": 13,
+      "minimumHeight": 48,
+      "cornerRadius": 12,
+      "padding": 10,
+      "horizontalPageInset": 16
+    },
+    "single": {
+      "titleSmallIcon": false,
+      "largeLogo": 63,
+      "minimumHeight": 143,
+      "titleFontSize": 24,
+      "cornerRadius": 14,
+      "captionFormat": "existing number / category / existing gameplay label"
+    }
+  },
+  "content": {
+    "records": "illustrative data, not player saves",
+    "double": "selected examples from all four groups",
+    "directory": "all 17 games",
+    "single": "selected existing logos and an idiom card without logo"
+  },
+  "implementation": "Reuse exported PNGs; implement approved layout in native Unity UI. HTML is a design reference.",
+  "ordering": {
+    "mode": "fixed-category",
+    "manualReorder": false,
+    "customSort": "removed from current scope"
+  },
+  "toolbar": {
+    "left": "static game count",
+    "right": "clickable display-mode selector",
+    "topMargin": 9,
+    "bottomMargin": 12,
+    "bottomPadding": 7
+  }
+}

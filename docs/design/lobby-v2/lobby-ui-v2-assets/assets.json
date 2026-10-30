@@ -1,0 +1,813 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "lucide-static",
+    "version": "1.17.0",
+    "license": "ISC",
+    "source": "https://unpkg.com/lucide-static@1.17.0/",
+    "licenseFile": "LICENSE",
+    "licenseUrl": "https://unpkg.com/lucide-static@1.17.0/LICENSE",
+    "licenseSha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+    "originalPackageJson": "source/package.json",
+    "appliesTo": "22 exported Lucide assets (21 unique Lucide source icons); excludes custom idiom and fallback-controller"
+  },
+  "status": "UI proposal: fixed category ordering only; custom ordering removed from scope; app unchanged.",
+  "counts": {
+    "assets": 23,
+    "gameIcons": 17,
+    "fallbackIcons": 1,
+    "controlIcons": 5,
+    "uniqueSourceIcons": 21,
+    "uniqueLucideSourceIcons": 20,
+    "uniqueCustomSourceIcons": 1,
+    "lucideAssets": 21,
+    "customAssets": 2
+  },
+  "style": {
+    "stroke": "#276653",
+    "viewBox": [
+      0,
+      0,
+      24,
+      24
+    ],
+    "strokeWidth": 2,
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "fill": "none",
+    "png": {
+      "width": 96,
+      "height": 96,
+      "format": "RGBA8",
+      "background": "transparent"
+    }
+  },
+  "originalChanges": [
+    "For the 22 Lucide assets only, root SVG stroke changes from currentColor to #276653; official geometry, viewBox, line width and round caps/joins remain unchanged.",
+    "idiom and fallback-controller use the same original custom Switch / Joy-Con style controller SVG designed from the user specification; these are not Lucide originals."
+  ],
+  "sharedArtwork": [
+    {
+      "ids": [
+        "jump",
+        "dino"
+      ],
+      "lucideIcon": "footprints"
+    },
+    {
+      "ids": [
+        "idiom",
+        "fallback-controller"
+      ],
+      "customIcon": "switch-controller",
+      "provenance": "custom: original SVG based on the user specification"
+    }
+  ],
+  "unityImportRecommendations": {
+    "textureType": "Sprite (2D and UI)",
+    "spriteMode": "Single",
+    "meshType": "Full Rect",
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "pixelsPerUnit": 100,
+    "sRGB": true,
+    "alphaSource": "Input Texture Alpha",
+    "alphaIsTransparency": true,
+    "generateMipMaps": false,
+    "wrapMode": "Clamp",
+    "filterMode": "Bilinear",
+    "textureCompression": "None",
+    "maxTextureSize": 128,
+    "nonPowerOfTwo": "None",
+    "readWriteEnabled": false
+  },
+  "assets": [
+    {
+      "id": "sudoku",
+      "kind": "game",
+      "lucideIcon": "grid-3x3",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/grid-3x3.svg",
+      "originalSvg": "source/grid-3x3.svg",
+      "originalSha256": "fdbe57454d50751ef0335993f470641a3b256fc8d87585eb35bde2a12140882f",
+      "svg": "svg/sudoku.svg",
+      "svgSha256": "349a1360e3af4410d6d34b8614c4989be8a7b01c249c91f17dc22e85b2a3c78b",
+      "png": "png/sudoku.png",
+      "pngSha256": "4de9804001256d1490cbc94a2d7eeac2eb6560da16f2bb27d943cba441a321f1",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5180,
+        "partialAlphaPixels": 120,
+        "opaquePixels": 3916,
+        "nonzeroAlphaPixels": 4036
+      }
+    },
+    {
+      "id": "minesweeper",
+      "kind": "game",
+      "lucideIcon": "flag",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/flag.svg",
+      "originalSvg": "source/flag.svg",
+      "originalSha256": "320d195ee969cbbdf3486fdbe3406eae62aa90f6e6d534150eeeb36cac427f10",
+      "svg": "svg/minesweeper.svg",
+      "svgSha256": "b946d1b0f07a7b8889063eeb217dae528f0db2dad2eb2b79d302c005a73e5f32",
+      "png": "png/minesweeper.png",
+      "pngSha256": "1eb2d0fb83309869f8201db46c37cb84e52054b14046a6168af7c76a636a6219",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 7049,
+        "partialAlphaPixels": 325,
+        "opaquePixels": 1842,
+        "nonzeroAlphaPixels": 2167
+      }
+    },
+    {
+      "id": "sliding-puzzle",
+      "kind": "game",
+      "lucideIcon": "move",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/move.svg",
+      "originalSvg": "source/move.svg",
+      "originalSha256": "c5902fa0d6359c53dc0fa6cdb1036ef92ae0ed604c96a8ec8723c08bc8ead373",
+      "svg": "svg/sliding-puzzle.svg",
+      "svgSha256": "42bc8e0619254ee305887091bb7a959c2c5f32f7769bff8e7f0d32796703dd34",
+      "png": "png/sliding-puzzle.png",
+      "pngSha256": "780b3f11eac8e24f9577ecbccad8d09a66aca69294aa747fd820aed6989ed585",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6808,
+        "partialAlphaPixels": 416,
+        "opaquePixels": 1992,
+        "nonzeroAlphaPixels": 2408
+      }
+    },
+    {
+      "id": "sokoban",
+      "kind": "game",
+      "lucideIcon": "package",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/package.svg",
+      "originalSvg": "source/package.svg",
+      "originalSha256": "8df5420c0ba776f5246df8457b8a481c63c9dd7412f6c2e1e88e20f7d9d7aee4",
+      "svg": "svg/sokoban.svg",
+      "svgSha256": "e27d132b6684c7693e8dbdba003440812433cb9f9c6c588475ae7d6ebd217115",
+      "png": "png/sokoban.png",
+      "pngSha256": "80aa6bd002a4d6e20c71f74dbd9d2502a5bd7ff62ba5e9eec9cc40c8aa090a22",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5875,
+        "partialAlphaPixels": 639,
+        "opaquePixels": 2702,
+        "nonzeroAlphaPixels": 3341
+      }
+    },
+    {
+      "id": "gomoku",
+      "kind": "game",
+      "lucideIcon": "circle-dot",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/circle-dot.svg",
+      "originalSvg": "source/circle-dot.svg",
+      "originalSha256": "95339a8fb19b741feda7e513ac1e955bab22de507236b872878e637e0fd2fb2c",
+      "svg": "svg/gomoku.svg",
+      "svgSha256": "1d72ec6298047b7273e9dde6f3c8b7f926b2c22893fb36f19ba202f75cf6e19c",
+      "png": "png/gomoku.png",
+      "pngSha256": "86805d46eb16e13a6d1b57b8f657d6147196ecac95c3f51c8992ddeb6633ba69",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6663,
+        "partialAlphaPixels": 677,
+        "opaquePixels": 1876,
+        "nonzeroAlphaPixels": 2553
+      }
+    },
+    {
+      "id": "2048",
+      "kind": "game",
+      "lucideIcon": "grid-2x2",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/grid-2x2.svg",
+      "originalSvg": "source/grid-2x2.svg",
+      "originalSha256": "98f4b29694e4f389ac5763c466cc2fc0fcfc908a526b5e66e7733e2c3064933e",
+      "svg": "svg/2048.svg",
+      "svgSha256": "0f61920b1602e9b63b675a3b5139b128568bd027d83c80b7f1c4e13d66cfcca5",
+      "png": "png/2048.png",
+      "pngSha256": "c0a9e26f3932270ce471f220b45232376f4c4a5e8940e0e53acd01cde105becb",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6012,
+        "partialAlphaPixels": 120,
+        "opaquePixels": 3084,
+        "nonzeroAlphaPixels": 3204
+      }
+    },
+    {
+      "id": "watermelon",
+      "kind": "game",
+      "lucideIcon": "circle",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/circle.svg",
+      "originalSvg": "source/circle.svg",
+      "originalSha256": "bf1479c5c55992b40eeb08c661b56de55bbb1a0712fa40f9b00e9319cf9eab9e",
+      "svg": "svg/watermelon.svg",
+      "svgSha256": "a86a6aeb32d6fe2c48a426d8d373d76c6c58581cf1a1830fa4d2142be590fb5b",
+      "png": "png/watermelon.png",
+      "pngSha256": "fad08a1b28c4f7a0fc90088069a2778e1f33fe2926b10d7944054215f2ddf221",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6887,
+        "partialAlphaPixels": 617,
+        "opaquePixels": 1712,
+        "nonzeroAlphaPixels": 2329
+      }
+    },
+    {
+      "id": "sheep",
+      "kind": "game",
+      "lucideIcon": "layers",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/layers.svg",
+      "originalSvg": "source/layers.svg",
+      "originalSha256": "440c3ea32c22d08d6e800f0ee6024bcca2283c41d37ebca7622bee37326cf319",
+      "svg": "svg/sheep.svg",
+      "svgSha256": "439eaab4541c3a12da50bd8a53650cdcfa501cdece57e1726d72ab098e571154",
+      "png": "png/sheep.png",
+      "pngSha256": "5d7c4d51d8de9faa14a429ecb5db4651642e398c95cac4688591b7eebae0bc58",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5736,
+        "partialAlphaPixels": 954,
+        "opaquePixels": 2526,
+        "nonzeroAlphaPixels": 3480
+      }
+    },
+    {
+      "id": "link-match",
+      "kind": "game",
+      "lucideIcon": "link",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/link.svg",
+      "originalSvg": "source/link.svg",
+      "originalSha256": "06a12849eed172bf92c5c97f4a37c9a83d73949ab374eb3bfc5a2dea2e3a4732",
+      "svg": "svg/link-match.svg",
+      "svgSha256": "6961a9c5147c47de0e9991264763a70dca22047937413424c37e14fc101b5d70",
+      "png": "png/link-match.png",
+      "pngSha256": "7f52ffbd9e47b871c092a0675c12ab4e38fec23e061956439bc16f7793feb721",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6841,
+        "partialAlphaPixels": 636,
+        "opaquePixels": 1739,
+        "nonzeroAlphaPixels": 2375
+      }
+    },
+    {
+      "id": "zuma",
+      "kind": "game",
+      "lucideIcon": "target",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/target.svg",
+      "originalSvg": "source/target.svg",
+      "originalSha256": "b3b67fe28937d73f7897a1409fdfdb0989a3ea74d9b29f1dcfa2e33e0e5fcff5",
+      "svg": "svg/zuma.svg",
+      "svgSha256": "0c08aae988067b09dd87526882ada7c5265a9c92f20562b79594050025b123e8",
+      "png": "png/zuma.png",
+      "pngSha256": "7ded3edfbf1655c515f763b4dbfe7482b9871bfee5bffd644c5e1ea93f87d27c",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5051,
+        "partialAlphaPixels": 1097,
+        "opaquePixels": 3068,
+        "nonzeroAlphaPixels": 4165
+      }
+    },
+    {
+      "id": "tetris",
+      "kind": "game",
+      "lucideIcon": "blocks",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/blocks.svg",
+      "originalSvg": "source/blocks.svg",
+      "originalSha256": "eea499fca03c746b844d43596f3a5bb26c2b59930a9d3c64f15a9a696ce02b72",
+      "svg": "svg/tetris.svg",
+      "svgSha256": "e3450f4b59fedc7294afcaa7b49a6022c38e856d638718ed4e179b208524bbfc",
+      "png": "png/tetris.png",
+      "pngSha256": "e3f993165ab7d348abb964aa90d804adbcc755c0d707b5fb1b57245b6cf0518f",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5853,
+        "partialAlphaPixels": 180,
+        "opaquePixels": 3183,
+        "nonzeroAlphaPixels": 3363
+      }
+    },
+    {
+      "id": "jump",
+      "kind": "game",
+      "lucideIcon": "footprints",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/footprints.svg",
+      "originalSvg": "source/footprints.svg",
+      "originalSha256": "4fe156e52381a167017f4d51ecb9ccdccfc637ab5e1d84f8720610c36c1a7c29",
+      "svg": "svg/jump.svg",
+      "svgSha256": "3e5c537c34aff88d8fb0feb592f9878fce37660d1db3023389a4dfcf15e7ec94",
+      "png": "png/jump.png",
+      "pngSha256": "80d194c01b2fcaaff976d49801469a93b95cb3264df8b0685131143c85ecd128",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6347,
+        "partialAlphaPixels": 582,
+        "opaquePixels": 2287,
+        "nonzeroAlphaPixels": 2869
+      }
+    },
+    {
+      "id": "dino",
+      "kind": "game",
+      "lucideIcon": "footprints",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/footprints.svg",
+      "originalSvg": "source/footprints.svg",
+      "originalSha256": "4fe156e52381a167017f4d51ecb9ccdccfc637ab5e1d84f8720610c36c1a7c29",
+      "svg": "svg/dino.svg",
+      "svgSha256": "3e5c537c34aff88d8fb0feb592f9878fce37660d1db3023389a4dfcf15e7ec94",
+      "png": "png/dino.png",
+      "pngSha256": "80d194c01b2fcaaff976d49801469a93b95cb3264df8b0685131143c85ecd128",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6347,
+        "partialAlphaPixels": 582,
+        "opaquePixels": 2287,
+        "nonzeroAlphaPixels": 2869
+      }
+    },
+    {
+      "id": "flappy-bird",
+      "kind": "game",
+      "lucideIcon": "bird",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/bird.svg",
+      "originalSvg": "source/bird.svg",
+      "originalSha256": "f2de57f9446f4d2cc9dc7259227597762e4a3f027bd69a9b3c5cc8d0bfc202f0",
+      "svg": "svg/flappy-bird.svg",
+      "svgSha256": "7e2dcc4d159a68474be9a488741c64952321cf3871ff6e6f844edffcf3ff2dd7",
+      "png": "png/flappy-bird.png",
+      "pngSha256": "8e4e84ec31a4f3967c1ba168b5769f89664eb276d303bcf34c338645a44ea461",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6630,
+        "partialAlphaPixels": 574,
+        "opaquePixels": 2012,
+        "nonzeroAlphaPixels": 2586
+      }
+    },
+    {
+      "id": "happy-ball",
+      "kind": "game",
+      "lucideIcon": "circle-arrow-down",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/circle-arrow-down.svg",
+      "originalSvg": "source/circle-arrow-down.svg",
+      "originalSha256": "15689d7f9b77d1b334cca016d9a553d644f20d9db07cf34c47d1b3ac26d45444",
+      "svg": "svg/happy-ball.svg",
+      "svgSha256": "37b3e7a4fb5f0570b29ea89cb0438679c8265e668da90e8b6916503e95088a92",
+      "png": "png/happy-ball.png",
+      "pngSha256": "f114b3ff0eb29e8ea586a25c842fa40d0749cd972a9ee78845b6e93623d61291",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6199,
+        "partialAlphaPixels": 767,
+        "opaquePixels": 2250,
+        "nonzeroAlphaPixels": 3017
+      }
+    },
+    {
+      "id": "gold-miner",
+      "kind": "game",
+      "lucideIcon": "pickaxe",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/pickaxe.svg",
+      "originalSvg": "source/pickaxe.svg",
+      "originalSha256": "6918e9a4c3d5fbbcf54f5b7a3ac3bec3efc03be6f5aa87ddc771d46579537dc6",
+      "svg": "svg/gold-miner.svg",
+      "svgSha256": "19a1fc0c5471baadfa1d8d136de09b2dabb2ed9855aa488bc0544c7b230f9712",
+      "png": "png/gold-miner.png",
+      "pngSha256": "4a4887fe797ccddfa431ea23c6af5c79978d9bc9d85a878b216584e7da133fb8",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 5775,
+        "partialAlphaPixels": 907,
+        "opaquePixels": 2534,
+        "nonzeroAlphaPixels": 3441
+      }
+    },
+    {
+      "id": "idiom",
+      "kind": "game",
+      "originalSvg": "source/custom-switch-controller.svg",
+      "originalSha256": "f8af48ca130917324d4ae549c21d5b30583d0b2fd51732d5a1e381c0846cf9a4",
+      "svg": "svg/idiom.svg",
+      "svgSha256": "f8af48ca130917324d4ae549c21d5b30583d0b2fd51732d5a1e381c0846cf9a4",
+      "png": "png/idiom.png",
+      "pngSha256": "9bf0f0919f6f6910fe8f2cf6ef4b44c91bf96c463b56875abb6a63d0291cbeda",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6004,
+        "partialAlphaPixels": 300,
+        "opaquePixels": 2912,
+        "nonzeroAlphaPixels": 3212
+      },
+      "customIcon": "switch-controller",
+      "provenance": {
+        "type": "custom",
+        "origin": "Original native SVG designed from the user specification",
+        "designSpecification": "Switch / Joy-Con style horizontal controller: rounded rectangular outer frame, separated side controls, empty center, left joystick, right buttons; no branding or text; 24 viewBox, #276653 stroke, 2-unit rounded strokes; legible at 22px.",
+        "lucideDerived": false,
+        "licenseScope": "The Lucide LICENSE applies to Lucide assets only; this custom asset is original work created for this project."
+      }
+    },
+    {
+      "id": "fallback-controller",
+      "kind": "fallback",
+      "originalSvg": "source/custom-switch-controller.svg",
+      "originalSha256": "f8af48ca130917324d4ae549c21d5b30583d0b2fd51732d5a1e381c0846cf9a4",
+      "svg": "svg/fallback-controller.svg",
+      "svgSha256": "f8af48ca130917324d4ae549c21d5b30583d0b2fd51732d5a1e381c0846cf9a4",
+      "png": "png/fallback-controller.png",
+      "pngSha256": "9bf0f0919f6f6910fe8f2cf6ef4b44c91bf96c463b56875abb6a63d0291cbeda",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6004,
+        "partialAlphaPixels": 300,
+        "opaquePixels": 2912,
+        "nonzeroAlphaPixels": 3212
+      },
+      "customIcon": "switch-controller",
+      "provenance": {
+        "type": "custom",
+        "origin": "Original native SVG designed from the user specification",
+        "designSpecification": "Switch / Joy-Con style horizontal controller: rounded rectangular outer frame, separated side controls, empty center, left joystick, right buttons; no branding or text; 24 viewBox, #276653 stroke, 2-unit rounded strokes; legible at 22px.",
+        "lucideDerived": false,
+        "licenseScope": "The Lucide LICENSE applies to Lucide assets only; this custom asset is original work created for this project."
+      }
+    },
+    {
+      "id": "settings",
+      "kind": "control",
+      "lucideIcon": "settings",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/settings.svg",
+      "originalSvg": "source/settings.svg",
+      "originalSha256": "41efbe5469695dc0b17e02ff9e8c9a51eee31be3f94adf6816177b778f6e79b6",
+      "svg": "svg/settings.svg",
+      "svgSha256": "fad72c481d6a5f5b805cdae00b6c829870de0660db088e623f8a4a41b5dd8bc6",
+      "png": "png/settings.png",
+      "pngSha256": "658250d2dc3b2886e8cb133d40673081ce179e42098b39b709c9e273232b379b",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 6037,
+        "partialAlphaPixels": 837,
+        "opaquePixels": 2342,
+        "nonzeroAlphaPixels": 3179
+      }
+    },
+    {
+      "id": "sliders-horizontal",
+      "kind": "control",
+      "lucideIcon": "sliders-horizontal",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/sliders-horizontal.svg",
+      "originalSvg": "source/sliders-horizontal.svg",
+      "originalSha256": "fc896555436b17133131d8fdbb6a3d0d07686ef0241e85c6d4d5dd96f33e7a26",
+      "svg": "svg/sliders-horizontal.svg",
+      "svgSha256": "70c0697ad97e550810d5678861be3fb3e6fb9f14697a06db5d679ea11d739b90",
+      "png": "png/sliders-horizontal.png",
+      "pngSha256": "e36422df911a3099decdb21f892e6c9f4ea4c97851e303397dde9c53bb907202",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 7134,
+        "partialAlphaPixels": 210,
+        "opaquePixels": 1872,
+        "nonzeroAlphaPixels": 2082
+      }
+    },
+    {
+      "id": "chevron-down",
+      "kind": "control",
+      "lucideIcon": "chevron-down",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/chevron-down.svg",
+      "originalSvg": "source/chevron-down.svg",
+      "originalSha256": "bd10b85e83f5da2470024a10eb812b5554d796cc8f76ae2dea6ae5b1ea418a92",
+      "svg": "svg/chevron-down.svg",
+      "svgSha256": "2675491348f9226bba1b199797e470165fd26aec1f24dd0f47b08f10a4536f4f",
+      "png": "png/chevron-down.png",
+      "pngSha256": "215d029d2eca56ef7413653d6424a80def98248a5531aa53cec507aa00bb9ea6",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 8538,
+        "partialAlphaPixels": 216,
+        "opaquePixels": 462,
+        "nonzeroAlphaPixels": 678
+      }
+    },
+    {
+      "id": "check",
+      "kind": "control",
+      "lucideIcon": "check",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/check.svg",
+      "originalSvg": "source/check.svg",
+      "originalSha256": "e258712676bfb048077cef6ac8b96c603ebdc07e0c67c21314ab07446c598ad6",
+      "svg": "svg/check.svg",
+      "svgSha256": "9b57cd71cd6a12e28d26df3a58f29ec434d8b69385e3d2351d0a2b0b159c3511",
+      "png": "png/check.png",
+      "pngSha256": "7ac50a84960d8b0b242cce72e359c83f1b801f5dbc8b3d8531bb945b56e201d7",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 8330,
+        "partialAlphaPixels": 280,
+        "opaquePixels": 606,
+        "nonzeroAlphaPixels": 886
+      }
+    },
+    {
+      "id": "x",
+      "kind": "control",
+      "lucideIcon": "x",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/x.svg",
+      "originalSvg": "source/x.svg",
+      "originalSha256": "ffce86dfb4b38ff475f3b79e354d255eab7bc90a491f29e63444cff8e2c37223",
+      "svg": "svg/x.svg",
+      "svgSha256": "9c88afc4aa73134557f979220659d7d744d01464051c5cb63002e36dea624a3f",
+      "png": "png/x.png",
+      "pngSha256": "7629600e6b4d3cfe36d8c373054af88a7f235be4f4458ef2cba1e4dd2aec63ed",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "channels": 4,
+        "hasAlpha": true,
+        "transparentPixels": 7932,
+        "partialAlphaPixels": 396,
+        "opaquePixels": 888,
+        "nonzeroAlphaPixels": 1284
+      }
+    }
+  ]
+}

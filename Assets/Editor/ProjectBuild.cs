@@ -327,6 +327,24 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidStartupValidation()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".startuptest");
+                    PlayerSettings.productName = "Xanadu 启动测试";
+                    BuildApk("-startup-validation.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         // Called by build-release.sh. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()

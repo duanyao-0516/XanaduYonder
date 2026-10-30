@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$PROJECT_ROOT/scripts/startup-unity-environment.sh"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/dino-page-checks.log"
 REPORT_FILE="$PROJECT_ROOT/artifacts/logs/dino-page-checks.txt"
@@ -23,7 +24,7 @@ trap 'rmdir "$LOCK_DIR"' EXIT
 rm -f "$REPORT_FILE"
 printf 'Running actual Dino page / UGUI state checks.\nLog: %s\n' "$LOG_FILE"
 # The executeMethod enters play mode and owns the exit code. Do not use -quit or run beside a build.
-if ADB_SERVER_SOCKET=tcp:localhost:5039 "$UNITY_EDITOR" -batchmode -projectPath "$PROJECT_ROOT" -buildTarget Android \
+if "$UNITY_EDITOR" -batchmode -projectPath "$PROJECT_ROOT" -buildTarget Android \
   -executeMethod XanaduYonder.EditorTools.DinoPageValidation.Run -logFile "$LOG_FILE"; then
   if [[ ! -s "$REPORT_FILE" ]] || ! rg -q '^DINO_PAGE_CHECKS_PASS:' "$REPORT_FILE"; then
     printf 'Unity exited without a passing Dino page check report.\n' >&2

@@ -68,15 +68,20 @@ namespace XanaduYonder.EditorTools
                 typeof(AppController).GetField("frame",Flags).SetValue(shell,frame);
                 typeof(AppController).GetField("canvasRoot",Flags).SetValue(shell,frame);
                 Invoke(shell,"BuildLobby");
-                var cards = frame.GetComponentsInChildren<RectTransform>(true).Where(r=>r.name.EndsWith(" game card")).ToArray();
-                Require(cards.Length==15,"Lobby contains 15 independent game cards");
-                Require(cards.Last().name=="Tetris game card","Tetris appended after current master games");
-                Require(cards.Last().GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("15")),"Card number follows dynamic cardCount");
-                Require(cards.Last().GetComponentsInChildren<TetrisPage>(true).Length==0,"Lobby preview creates no live session");
-                Require(frame.GetComponentsInChildren<ScrollRect>(true).Single().content.rect.height>15*374,"Lobby content grows for new card");
+                LobbyDesignChecks.SetModeForCheck(shell,2);
+                var cards = frame.GetComponentsInChildren<RectTransform>(true).Where(r=>r.name.EndsWith(" game card") && LobbyDesignChecks.ActiveWithin(frame,r)).ToArray();
+                Require(cards.Length==17 && cards.Last().name=="Idiom game card","Lobby retains all seventeen entries in category order");
+                var tetrisCard=cards.Single(r=>r.name=="Tetris game card");
+                Require(cards[10]==tetrisCard && tetrisCard.GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("15")),"Tetris preserves ordinal 15 within the synthesis category");
+                Require(tetrisCard.GetComponentsInChildren<TetrisPage>(true).Length==0,"Lobby preview creates no live session");
+                Require(tetrisCard.GetComponent<Button>()!=null && tetrisCard.GetComponentsInChildren<Button>(true).Length==1,
+                    "Tetris uses its whole card as the sole entry");
+                LobbyInputTestDriver.CheckBinding(tetrisCard.GetComponent<Button>(),shell,"EnterTetris",Require);
+                var content=frame.GetComponentsInChildren<ScrollRect>(true).Single().content;
+                Require(content.rect.height>LobbyDesignChecks.CardTop(content,cards.Last())+cards.Last().rect.height,"Lobby content includes the last compact card and footer");
                 typeof(AppController).GetField("tetrisPreview",Flags).SetValue(shell,new TetrisLoadResult{Status=TetrisLoadStatus.UnsupportedVersion,CanWrite=false});
                 Invoke(shell,"RefreshTetrisRecord");
-                Require(((Text)Get(shell,"lobbyTetrisRecordText")).text.Contains("存档暂不可用"),"Lobby preserves unreadable record semantics");
+                Require(LobbyDesignChecks.RecordForCheck(shell,"Tetris").text.Contains("存档暂不可用"),"Lobby preserves unreadable record semantics");
                 typeof(AppController).GetField("tetrisPreview",Flags).SetValue(shell,new TetrisLoadResult{Status=TetrisLoadStatus.Missing,CanWrite=true,Data=new TetrisSaveData()});
                 Invoke(shell,"RefreshTetrisRecord");
                 CaptureLobby(frame);
@@ -107,7 +112,10 @@ namespace XanaduYonder.EditorTools
             {
                 frame.SetParent(rect,false);UiFactory.Stretch(frame);
                 SetLayerForRender(rect);Canvas.ForceUpdateCanvases();
-                frame.GetComponentInChildren<ScrollRect>().verticalNormalizedPosition=0;
+                var scroll=frame.GetComponentInChildren<ScrollRect>();
+                var card=LobbyDesignChecks.FindCard(scroll.content,"Tetris");
+                scroll.content.anchoredPosition=new Vector2(0,Mathf.Clamp(LobbyDesignChecks.CardTop(scroll.content,card)-(scroll.viewport.rect.height-card.rect.height)/2,
+                    0,Mathf.Max(0,scroll.content.rect.height-scroll.viewport.rect.height)));
                 Canvas.ForceUpdateCanvases();camera.Render();
                 var previous=RenderTexture.active;RenderTexture.active=texture;
                 var image=new Texture2D(388,784,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,388,784),0,0);image.Apply();

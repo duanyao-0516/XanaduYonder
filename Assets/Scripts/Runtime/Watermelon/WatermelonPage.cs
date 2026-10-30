@@ -327,7 +327,8 @@ namespace XanaduYonder.Runtime.Watermelon
             Suspend(); Save();
             Action close = () => { closeModal(); CheckEndState(); };
             var panel = openModal("合成图鉴 · " + WatermelonArtwork.ThemeNames[data.Theme], 870, close);
-            UiFactory.Label(panel, "拖动选位置，松手投放；点击也能投放。\n同级碰撞升一级，加合并前的等级分。\n初始随机 1–5 级，合到 11 级达成目标。", 32, 110, 532, 134, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, "拖动选位置，松手投放；点击也能投放。\n同级碰撞升一级，加合并前的等级分。\n初始随机 1–5 级，合到 11 级达成目标。", 32, 108, 532, 100, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, "左右越界仍然可以投放，上下越界不可投放", 32, 214, 532, 38, 21, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             for (int i = 0; i < 11; i++)
             {
                 int column = i % 4, row = i / 4;

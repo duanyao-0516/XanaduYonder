@@ -1,0 +1,7 @@
+<!-- Original custom design based on the user's Switch / Joy-Con style controller specification. Not a Lucide icon. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#276653" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="1.5" y="5.5" width="21" height="13" rx="3" />
+  <path d="M8 5.5v13M16 5.5v13" />
+  <circle cx="4.75" cy="10" r="1" />
+  <path d="M18.25 10h2M19.25 9v2" />
+</svg>
