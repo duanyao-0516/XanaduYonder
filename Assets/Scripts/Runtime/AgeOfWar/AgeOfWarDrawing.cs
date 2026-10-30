@@ -70,7 +70,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private readonly HashSet<int> suppressedLayers=new HashSet<int>(),suppressedIds=new HashSet<int>();
         private readonly HashSet<string> suppressedActions=new HashSet<string>();
         private readonly Dictionary<int,Vector2> layerOffsets=new Dictionary<int,Vector2>(),textOffsets=new Dictionary<int,Vector2>();
-        private sealed class MobileButton {internal AgeOfWarHotspot Hit;internal Text Text;internal Color Color;}
+        private sealed class MobileButton {internal AgeOfWarHotspot Hit;internal Text Text;internal Color Color;internal bool Enabled=true;}
         private readonly List<MobileButton> mobileButtons=new List<MobileButton>();
         internal AgeOfWarSceneView(Transform parent,AgeOfWarAssets source,string key,float x=0,float y=0)
         {
@@ -101,6 +101,16 @@ namespace XanaduYonder.Runtime.AgeOfWar
             var shadow=text.gameObject.AddComponent<Shadow>();shadow.effectColor=new Color(0,0,0,.75f);shadow.effectDistance=new Vector2(1,-1);
             mobileButtons.Add(new MobileButton{Hit=new AgeOfWarHotspot{action=action??"",name=action??"",id=-100-mobileButtons.Count,x=rect.x,y=rect.y,w=rect.width,h=rect.height},Text=text,Color=color});
         }
+        internal void SetTextButtonEnabled(string action,bool enabled)
+        {
+            foreach(var button in mobileButtons)
+            {
+                if(button.Hit.action!=action)continue;
+                button.Enabled=enabled;
+                button.Text.color=enabled?button.Color:DisabledTextColor(button.Color);
+            }
+        }
+        private static Color DisabledTextColor(Color original){return new Color(.5f,.5f,.5f,original.a);}
         internal void SetLayerOffset(int index,Vector2 offset)
         {
             if(index<0||index>=Images.Count)return;Vector2 previous;layerOffsets.TryGetValue(index,out previous);
@@ -125,7 +135,11 @@ namespace XanaduYonder.Runtime.AgeOfWar
         {
             var offset=Root.anchoredPosition;point-=new Vector2(offset.x,-offset.y);
             for(int i=mobileButtons.Count-1;i>=0;i--)
-            {var h=mobileButtons[i].Hit;if(h.action.Length>0&&new Rect(h.x,h.y,h.w,h.h).Contains(point))return h;}
+            {
+                var button=mobileButtons[i];var h=button.Hit;
+                // A disabled row retains its space and cannot fall through to overlapping source hits.
+                if(h.action.Length>0&&new Rect(h.x,h.y,h.w,h.h).Contains(point))return button.Enabled?h:null;
+            }
             var hotspots=Definition.hotspots;
             for(int i=hotspots.Length-1;i>=0;i--)
             {
@@ -139,7 +153,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         internal void Hover(AgeOfWarHotspot hit,bool down)
         {
             foreach(var button in mobileButtons)
-            {var c=button.Color;if(hit==button.Hit)c=down?c*.75f:Color.Lerp(c,Color.yellow,.3f);button.Text.color=c;}
+            {var c=button.Color;if(!button.Enabled)c=DisabledTextColor(c);else if(hit==button.Hit)c=down?c*.75f:Color.Lerp(c,Color.yellow,.3f);button.Text.color=c;}
             for(int i=0;i<Images.Count;i++)
             {
                 var l=Definition.layers[i];if(!Images[i].Root.gameObject.activeSelf)continue;

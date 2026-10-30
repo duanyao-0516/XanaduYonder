@@ -32,6 +32,7 @@ namespace XanaduYonder.Core.AgeOfWar.One
     internal sealed class OneRandom
     {
         private uint _state;
+        internal uint State { get { return _state; } }
         internal OneRandom(uint seed) { _state=seed==0?0x6D2B79F5u:seed; }
         internal double Next() {uint x=_state;x^=x<<13;x^=x>>17;x^=x<<5;_state=x;return x/4294967296.0;}
         internal int Next(int maximum) {return (int)(Next()*maximum);}

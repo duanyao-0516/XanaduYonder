@@ -65,6 +65,7 @@ namespace XanaduYonder.Core.AgeOfWar
         bool Execute(AgeOfWarCommand command);
         void Tick();
         AgeOfWarFrame Capture();
+        byte[] SaveState();
         AgeOfWarEvent[] DrainEvents();
     }
 }

@@ -57,8 +57,10 @@ namespace XanaduYonder.Runtime.AgeOfWar
             }
             for (int id = 1019; id <= 1023; ++id) scene.SuppressHotspot(id);
             AddMenuButton(scene, 1019, "mobile-play", "Play", 197.25f);
-            AddMenuButton(scene, 1020, "mobile-instructions", "Instructions", 234.25f);
-            AddMenuButton(scene, 1021, "mobile-exit", "Exit", 272.25f);
+            AddMenuButton(scene, 1020, "mobile-continue", "Continue", 234.25f);
+            AddMenuButton(scene, 1021, "mobile-instructions", "Instructions", 272.25f);
+            AddMenuButton(scene, 1022, "mobile-exit", "Exit", 309.25f);
+            scene.SetTextButtonEnabled("mobile-continue", false);
         }
 
         private static void AddMenuButton(AgeOfWarSceneView scene, int originalId, string action, string label, float fallbackY)
@@ -85,8 +87,11 @@ namespace XanaduYonder.Runtime.AgeOfWar
                 new Rect(-260, textTop - 42, 520, 36), Color.white, true);
             scene.AddTextButton("mobile-resume", "Press Screen to resume", FontKey, 20,
                 new Rect(-260, textTop, 520, 36), Color.white, true);
+            // The original embedded subset contains lowercase r, but not uppercase R.
+            scene.AddTextButton("mobile-main-menu", "return to Main Menu", FontKey, 20,
+                new Rect(-260, textTop + 42, 520, 36), Color.white, true);
             scene.AddTextButton("mobile-exit", "Exit", FontKey, 20,
-                new Rect(-110, textTop + 42, 220, 36), Color.white, true);
+                new Rect(-110, textTop + 84, 220, 36), Color.white, true);
         }
 
         private static void EndScreen(AgeOfWarSceneView scene)

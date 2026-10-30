@@ -20,6 +20,14 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private AgeOfWarWideHud wideHud;
         private RectTransform pauseButton;
         private Image pauseButtonBackground;
+        private RectTransform menuHelpButton,menuSettingsButton;
+        private Image menuHelpBackground,menuSettingsBackground;
+        private bool continueAvailable;
+        private readonly AgeOfWarHotspot menuHelpHit=new AgeOfWarHotspot{action="mobile-help",name="mobile-help",id=-210};
+        private readonly AgeOfWarHotspot menuSettingsHit=new AgeOfWarHotspot{action="mobile-settings",name="mobile-settings",id=-211};
+        private RectTransform saveWarningRoot;
+        private Text saveWarningLabel;
+        private readonly AgeOfWarHotspot saveWarningHit=new AgeOfWarHotspot{action="mobile-save-retry",name="save-warning",id=-201};
         private readonly AgeOfWarHotspot pauseButtonHit=new AgeOfWarHotspot{action="mobile-pause",name="mobile-pause",id=-200};
         private readonly int[] resourceIndices={-1,-1,-1};
         private readonly float[] resourceWidths=new float[3];
@@ -44,6 +52,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private readonly Dictionary<long,AgeOfWarSceneView> textObjects=new Dictionary<long,AgeOfWarSceneView>();
         private readonly Dictionary<long,AgeOfWarHealthBar> healthObjects=new Dictionary<long,AgeOfWarHealthBar>();
         private string mode="main",titleOverride;
+        internal string MenuMode{get{return mode;}}
         private int buttonAge;
         private bool sell,pointerVisible,pointerDown;
         private Vector2 pointer;
@@ -63,13 +72,25 @@ namespace XanaduYonder.Runtime.AgeOfWar
         {
             ClearUi();sceneTime=0;world.gameObject.SetActive(false);scene=new AgeOfWarSceneView(ui,assets,key);SceneKey=key;frame=null;
             if(assets.Edition==2){menuEffects=new AgeOfWarTwoMenuEffects(scene);if(key=="difficulty")scene.Named("btnInsane",false);}
+            if(key=="menu")
+            {
+                scene.SetTextButtonEnabled("mobile-continue",continueAvailable);
+                CreateMenuControls();
+            }
             ApplyLayout();
+        }
+        internal void SetContinueAvailable(bool value)
+        {
+            continueAvailable=value;
+            if(scene!=null&&SceneKey=="menu")scene.SetTextButtonEnabled("mobile-continue",value);
+            if(pointerVisible)ApplyHover();
         }
         private void ClearUi()
         {
             if(menuEffects!=null){menuEffects.Dispose();menuEffects=null;}
             if(twoControls!=null){twoControls.Dispose();twoControls=null;}
             AgeOfWarDrawing.Clear(ui);AgeOfWarDrawing.Clear(dynamicHud);AgeOfWarDrawing.Clear(overlay);scene=hud=buttons=pause=tooltip=tutorial=null;oneHud=null;twoHud=null;wideHud=null;pauseButton=null;pauseButtonBackground=null;tutorialActive=false;
+            menuHelpButton=menuSettingsButton=null;menuHelpBackground=menuSettingsBackground=null;
         }
         internal void StartBattle(AgeOfWarFrame value,IAgeOfWarBattle source=null)
         {
@@ -130,7 +151,31 @@ namespace XanaduYonder.Runtime.AgeOfWar
             if(wideHud!=null)wideHud.SetWidth(extra);
             if(oneHud!=null)oneHud.SetViewportWidth(logicalWidth);
             if(twoHud!=null)twoHud.SetViewportWidth(logicalWidth);
+            LayoutMenuControls();
             LayoutPauseButton();
+            LayoutSaveWarning();
+        }
+        internal void SaveWarning(string message,bool retry=true)
+        {
+            if(string.IsNullOrEmpty(message)){if(saveWarningRoot!=null)saveWarningRoot.gameObject.SetActive(false);return;}
+            if(saveWarningRoot==null)
+            {
+                saveWarningRoot=UiFactory.Panel(stage,"Save notice",0,0,560,58,new Color(.12f,.15f,.13f,.97f)).rectTransform;
+                saveWarningLabel=UiFactory.Label(saveWarningRoot,"",12,4,536,50,14,Color.white,TextAnchor.MiddleCenter);
+                saveWarningLabel.supportRichText=false;
+            }
+            saveWarningHit.action=retry?"mobile-save-retry":"mobile-save-dismiss";
+            saveWarningLabel.text=message+(retry?"\n点按重试":"\n点按关闭");
+            saveWarningRoot.gameObject.SetActive(true);LayoutSaveWarning();
+        }
+        private void LayoutSaveWarning()
+        {
+            if(saveWarningRoot==null||!saveWarningRoot.gameObject.activeSelf)return;
+            float width=Mathf.Min(560,logicalWidth-24),top=assets.Stage.height-92;
+            saveWarningRoot.sizeDelta=new Vector2(width,58);saveWarningRoot.anchoredPosition=new Vector2((logicalWidth-width)/2,-top);
+            saveWarningLabel.rectTransform.sizeDelta=new Vector2(width-24,50);
+            saveWarningHit.x=(logicalWidth-width)/2;saveWarningHit.y=top;saveWarningHit.w=width;saveWarningHit.h=58;
+            saveWarningRoot.SetAsLastSibling();
         }
         private static int ResourceIndex(string name)
         {return name=="popTXT"?0:name=="xpTXT"?1:name=="moneyTXT"?2:-1;}
@@ -174,6 +219,37 @@ namespace XanaduYonder.Runtime.AgeOfWar
             var border=pauseButton.gameObject.AddComponent<Outline>();border.effectColor=new Color(.8f,.65f,.33f,.9f);border.effectDistance=new Vector2(1,-1);
             AgeOfWarDrawing.Text(pauseButton,assets,new AgeOfWarTextField{name="mobile-pause",variable="",initial="PAUSE",font=assets.Edition==1?"font/one/962":"font/windows/2",
                 size=assets.Edition==1?14:10,x=0,y=2,w=76,h=26,color="#fff2cf",align=2,bold=true});
+        }
+        private void CreateMenuControls()
+        {
+            menuHelpBackground=CreateMenuIcon("Menu help",UiIconKind.Book);
+            menuSettingsBackground=CreateMenuIcon("Menu settings",UiIconKind.Settings);
+            menuHelpButton=menuHelpBackground.rectTransform;menuSettingsButton=menuSettingsBackground.rectTransform;
+        }
+        private Image CreateMenuIcon(string name,UiIconKind kind)
+        {
+            // Match UiFactory.IconButton's artwork, while Page remains the sole input dispatcher.
+            var image=UiFactory.Panel(ui,name,0,0,40,40,UiFactory.Hex("E7EDE4"));image.raycastTarget=false;
+            var iconRect=UiFactory.Rect(image.transform,name+" icon",0,0,22,22);UiFactory.Center(iconRect);
+            var icon=iconRect.gameObject.AddComponent<UiIconGraphic>();icon.Kind=kind;icon.color=UiFactory.Ink;icon.raycastTarget=false;
+            return image;
+        }
+        private void LayoutMenuControls()
+        {
+            if(menuHelpButton==null||menuSettingsButton==null)return;
+            bool visible=SceneKey=="menu";
+            menuHelpButton.gameObject.SetActive(visible);menuSettingsButton.gameObject.SetActive(visible);
+            if(!visible)return;
+            float settingsX=logicalWidth-52,helpX=settingsX-50;
+            menuHelpButton.anchoredPosition=new Vector2(helpX,-12);menuSettingsButton.anchoredPosition=new Vector2(settingsX,-12);
+            menuHelpHit.x=helpX;menuHelpHit.y=12;menuHelpHit.w=menuHelpHit.h=40;
+            menuSettingsHit.x=settingsX;menuSettingsHit.y=12;menuSettingsHit.w=menuSettingsHit.h=40;
+        }
+        private void HoverMenuControls(AgeOfWarHotspot hit,bool down)
+        {
+            Color normal=UiFactory.Hex("E7EDE4"),highlight=UiFactory.Hex(down?"B7C9B4":"D6E2D2");
+            if(menuHelpBackground!=null)menuHelpBackground.color=hit==menuHelpHit?highlight:normal;
+            if(menuSettingsBackground!=null)menuSettingsBackground.color=hit==menuSettingsHit?highlight:normal;
         }
         private void LayoutPauseButton()
         {
@@ -313,7 +389,13 @@ namespace XanaduYonder.Runtime.AgeOfWar
         }
         internal AgeOfWarHotspot Hit(Vector2 point)
         {
+            if(saveWarningRoot!=null&&saveWarningRoot.gameObject.activeSelf&&new Rect(saveWarningHit.x,saveWarningHit.y,saveWarningHit.w,saveWarningHit.h).Contains(point))return saveWarningHit;
             if(Transitioning)return null;
+            if(SceneKey=="menu")
+            {
+                if(menuSettingsButton!=null&&menuSettingsButton.gameObject.activeSelf&&new Rect(menuSettingsHit.x,menuSettingsHit.y,menuSettingsHit.w,menuSettingsHit.h).Contains(point))return menuSettingsHit;
+                if(menuHelpButton!=null&&menuHelpButton.gameObject.activeSelf&&new Rect(menuHelpHit.x,menuHelpHit.y,menuHelpHit.w,menuHelpHit.h).Contains(point))return menuHelpHit;
+            }
             if(tutorialActive)return new AgeOfWarHotspot{action="dismiss-tutorial"};
             if(pause!=null)
             {
@@ -355,6 +437,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             }
             var hit=Hit(point);if(scene!=null)scene.Hover(hit,down);if(buttons!=null)buttons.Hover(hit,down);if(hud!=null)hud.Hover(hit,down);if(pause!=null)pause.Hover(hit,down);
             HoverPauseButton(hit,down);
+            HoverMenuControls(hit,down);
             if(menuEffects!=null)menuEffects.Hover(hit);
             Hovered?.Invoke(hit);
         }
@@ -362,6 +445,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         {
             var hit=Hit(pointer);if(scene!=null)scene.Hover(hit,pointerDown);if(buttons!=null)buttons.Hover(hit,pointerDown);if(hud!=null)hud.Hover(hit,pointerDown);if(pause!=null)pause.Hover(hit,pointerDown);
             HoverPauseButton(hit,pointerDown);
+            HoverMenuControls(hit,pointerDown);
         }
         internal void Click(Vector2 point){var hit=Hit(point);if(hit!=null)Activated?.Invoke(hit);}
         internal void Tooltip(string kind,Dictionary<string,string> values,float x,float y)
@@ -419,7 +503,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             ApplyLayout();
             if(screenTransition!=null){screenTransition.Advance(dt);if(screenTransition.Done){screenTransition.Dispose();screenTransition=null;}}
         }
-        internal void HidePointer(){pointerVisible=false;HoverPauseButton(null,false);if(scene!=null)scene.Hover(null,false);if(buttons!=null)buttons.Hover(null,false);if(hud!=null)hud.Hover(null,false);if(pause!=null)pause.Hover(null,false);if(menuEffects!=null)menuEffects.Hover(null);if(twoControls!=null)twoControls.HidePointer();if(oneHud!=null)oneHud.Pointer(Vector2.zero,false);if(battle is AgeOfWarTwoBattle)((AgeOfWarTwoBattle)battle).HoverUnit(0);ClearHover();}
+        internal void HidePointer(){pointerVisible=false;HoverPauseButton(null,false);HoverMenuControls(null,false);if(scene!=null)scene.Hover(null,false);if(buttons!=null)buttons.Hover(null,false);if(hud!=null)hud.Hover(null,false);if(pause!=null)pause.Hover(null,false);if(menuEffects!=null)menuEffects.Hover(null);if(twoControls!=null)twoControls.HidePointer();if(oneHud!=null)oneHud.Pointer(Vector2.zero,false);if(battle is AgeOfWarTwoBattle)((AgeOfWarTwoBattle)battle).HoverUnit(0);ClearHover();}
         internal void Dispose(){if(menuEffects!=null){menuEffects.Dispose();menuEffects=null;}if(screenTransition!=null){screenTransition.Dispose();screenTransition=null;}AgeOfWarDrawing.Clear(stage);objects.Clear();textObjects.Clear();healthObjects.Clear();}
     }
 }

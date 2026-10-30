@@ -77,7 +77,9 @@ namespace XanaduYonder.Runtime
             AddAgeOfWarHelpSection(content,ref top,"二代 · 七个时代",
                 "除了招募士兵、建造炮塔和时代进化，还可升级兵种能力。根据当前资源与敌军阵容调整组合。\n\n特殊技能开局充能 60 游戏秒，每次使用后也需冷却 60 游戏秒；暂停时不计时，倍速会加快充能。第一时代的落石还需 2000 经验。\n\n敌方技能按独立时序发动，不会重置你的冷却。后续时代技能的效果和经验消耗，请查看技能提示。");
             AddAgeOfWarHelpSection(content,ref top,"手机操作",
-                "横屏游玩，点按按钮训练、建造或进化；建造炮塔时，先选型号，再点空炮位。\n\n在战场空白处左右拖动，可查看双方基地和战线。\n\n点击顶部中央暂停按钮；手机返回也可打开暂停页（沉浸式可能需先唤出导航）。一代点暂停页空白处恢复，点 Exit 返回大厅；二代点 Return 恢复，或先返回游戏菜单，再点 Exit 返回大厅。");
+                "横屏游玩，点按按钮训练、建造或进化；建造炮塔时，先选型号，再点空炮位。\n\n在战场空白处左右拖动，可查看双方基地和战线。\n\n点击顶部中央暂停按钮；手机返回也可打开暂停页（沉浸式可能需先唤出导航）。一代点暂停页空白处恢复，点 Return to Main Menu 返回游戏入口，点 Exit 返回大厅；二代点 Return 恢复，或先返回游戏菜单，再点 Exit 返回大厅。两代入口右上角均有本代玩法说明和共用设置。");
+            AddAgeOfWarHelpSection(content,ref top,"自动保存与继续",
+                "两代各自保留一局未完成战场。对战中自动保存，暂停、退出游戏或切到后台时也会保存。选择版本进入游戏主菜单，再点 Continue（继续游戏）恢复；没有未完成战场时，该项置灰。\n\n恢复后先停在暂停页，点击恢复才会继续战斗；离线期间不会推进。胜利或失败后清除该局进度，重新选择难度开始新局会替换该版本的旧进度。");
             content.sizeDelta=new Vector2(532,top);
             UiFactory.Button(panel,"知道了",32,height-100,532,74,CloseModal,true);
             dismissModal=CloseModal;
@@ -94,13 +96,13 @@ namespace XanaduYonder.Runtime
         }
         private void EnterAgeOfWar(int edition)
         {
-            if(activePage!=Page.AgeOfWarSelection||paused||!focused)return;
+            if(activePage!=Page.AgeOfWarSelection||paused||!focused||modal!=null)return;
             StopAnimation();CloseModal();Save();
             if(ageOfWarPage==null)
             {
                 var host=new GameObject("Age of War session host");host.transform.SetParent(transform,false);
                 ageOfWarPage=host.AddComponent<AgeOfWarPage>();
-                ageOfWarPage.Initialize(FinishAgeOfWarExit,()=>data.SoundEnabled,SetAgeOfWarSound);
+                ageOfWarPage.Initialize(FinishAgeOfWarExit,()=>data.SoundEnabled,SetAgeOfWarSound,()=>data.HapticsEnabled,SetAgeOfWarHaptics);
                 ageOfWarPage.PresentationReady+=()=>{if(IsAgeOfWarPage){ageOfWarSelection.SetActive(false);canvasRoot.gameObject.SetActive(false);}};
             }
             activePage=edition==1?Page.AgeOfWarOne:Page.AgeOfWarTwo;
@@ -113,5 +115,7 @@ namespace XanaduYonder.Runtime
         }
         private void SetAgeOfWarSound(bool enabled)
         {data.SoundEnabled=enabled;if(!enabled)feedback.Stop();Save();}
+        private void SetAgeOfWarHaptics(bool enabled)
+        {data.HapticsEnabled=enabled;Save();}
     }
 }

@@ -11,7 +11,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
             foreach(var u in Units) { double distance=(u.X-x)*multi; if(distance>0&&distance<limit&&u.Health>0&&(!enemiesOnly||u.Side!=side)) { found=u; limit=distance; } }
             return found;
         }
-        internal sealed class Unit
+        internal sealed partial class Unit : IAnimationOwner
         {
             readonly AgeOfWarTwoBattle game;
             internal readonly int TypeId,Side,Multi,Pop,Reward,DamageMin,DamageMax;
@@ -40,7 +40,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
                 Range=Round(N(d,"range")*(1+(Type=="Support"?game.Bonus("Support Range",side):0)));
                 DamageMin=I(d,"damageMin"); DamageMax=I(d,"damageMax"); Scale=N(d,"scale"); shootProjectile=I(d,"shootProjectile")==1; ProjectileName=S(d,"projectileName");
                 meleeSound=S(d,"hitMeleeSound"); rangedSound=S(d,"hitRangedSound"); deathSound=S(d,"deathSound");
-                X=side==1?-580:580; Animation=new Animation("u"+id); Animation.Play("idle"); game.Animations.Add(Animation);
+                X=side==1?-580:580; Animation=new Animation("u"+id,this); Animation.Play("idle"); game.Animations.Add(Animation);
             }
             internal void Render(double dt)
             {
@@ -96,25 +96,39 @@ namespace XanaduYonder.Core.AgeOfWar.Two
                 if(state==desired) return;
                 switch(desired)
                 {
-                    case "walk": Animation.Play("walkStart",false,()=>Animation.Play("walkCycle")); break;
+                    case "walk": Animation.Play("walkStart",false,CallbackForLabel("walkStart")); break;
                     case "attackMelee": OnMelee=false; PlayMelee(false); break;
                     case "attackRanged": OnMelee=false; PlayRanged(); break;
                     case "walkAttack": PlayWalkAttack(); break;
                     case "idle": Animation.Play("idle"); break;
-                    case "die": Animation.Play("die",false,()=>Alive=false); break;
+                    case "die": Animation.Play("die",false,CallbackForLabel("die")); break;
                 }
                 state=desired;
             }
             void PlayMelee(bool alternate)
             {
                 string label=alternate?"attackMelee2":"attackMelee";
-                Animation.Play(label,false,()=> { OnMelee=true; HitMelee(); Animation.Play(label+"Hit",false,()=> { OnMelee=false; CheckMelee(); }); });
+                Animation.Play(label,false,CallbackForLabel(label));
             }
             void CheckMelee() { OnMelee=false; double n=game.Random(); PlayMelee(Animation.Has("attackMelee2")&&n>=.5); }
-            void PlayRanged() { Animation.Play("attackRanged",false,()=> { HitRanged(); Animation.Play("attackRangedHit",false,PlayRanged); }); }
-            void PlayWalkAttack()
+            void PlayRanged() { Animation.Play("attackRanged",false,CallbackForLabel("attackRanged")); }
+            void PlayWalkAttack() { Animation.Play("walkAttack",false,CallbackForLabel("walkAttack")); }
+            public Action CallbackForLabel(string label)
             {
-                Animation.Play("walkAttack",false,()=> { HitRanged(); Animation.Play("walkAttackHit1",false,()=> { if(Animation.Has("walkAttackHit2")) { HitRanged(); Animation.Play("walkAttackHit2",false,PlayWalkAttack); } else PlayWalkAttack(); }); });
+                switch(label)
+                {
+                    case "walkStart": return ()=>Animation.Play("walkCycle");
+                    case "die": return ()=>Alive=false;
+                    case "attackMelee": case "attackMelee2":
+                        return ()=> { OnMelee=true; HitMelee(); Animation.Play(label+"Hit",false,CallbackForLabel(label+"Hit")); };
+                    case "attackMeleeHit": case "attackMelee2Hit": return ()=> { OnMelee=false; CheckMelee(); };
+                    case "attackRanged": return ()=> { HitRanged(); Animation.Play("attackRangedHit",false,CallbackForLabel("attackRangedHit")); };
+                    case "attackRangedHit": return PlayRanged;
+                    case "walkAttack": return ()=> { HitRanged(); Animation.Play("walkAttackHit1",false,CallbackForLabel("walkAttackHit1")); };
+                    case "walkAttackHit1": return ()=> { if(Animation.Has("walkAttackHit2")) { HitRanged(); Animation.Play("walkAttackHit2",false,CallbackForLabel("walkAttackHit2")); } else PlayWalkAttack(); };
+                    case "walkAttackHit2": return PlayWalkAttack;
+                    default:return null;
+                }
             }
             void HitBase() { game.DamageBase(Side,game.Damage(Type,"base",DamageMin,DamageMax,Side)); }
             void HitMelee()
@@ -142,7 +156,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
             internal AgeOfWarVisual Visual() { return new AgeOfWarVisual {InstanceId=InstanceId,Clip="unit/"+TypeId,Animation=Animation.Label,Frame=Animation.Frame,X=X,Y=0,ScaleX=-Multi*Scale,ScaleY=Scale,Depth=100,HealthFraction=DisplayHealthFraction,HealthAlpha=HealthAlpha,HealthY=-Height-7,HitWidth=Width*2,HitHeight=Height}; }
             internal void Destroy() { game.Animations.Remove(Animation); }
         }
-        internal sealed class Turret
+        internal sealed partial class Turret : IAnimationOwner
         {
             readonly AgeOfWarTwoBattle game;
             internal readonly int TypeId,Side,Spot,Multi;
@@ -162,7 +176,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
                 X=side==1?-624:620; Y=-146-(spot-1)*47;
                 XElement d=game.Definition("turrets",id); Range=Round(N(d,"range")*(1+game.Bonus("Turret Range",side)));
                 Scale=N(d,"scale"); min=I(d,"damageMin"); max=I(d,"damageMax"); projectile=S(d,"projectileName"); sounds=S(d,"shootSound");
-                Animation=new Animation("t"+id); Animation.Play("idle"); game.Animations.Add(Animation); Rotation=side==1?0:180;
+                Animation=new Animation("t"+id,this); Animation.Play("idle"); game.Animations.Add(Animation); Rotation=side==1?0:180;
             }
             internal void Render()
             {
@@ -172,10 +186,16 @@ namespace XanaduYonder.Core.AgeOfWar.Two
                 string desired=inRange?"shoot":"idle";
                 if(state!=desired)
                 {
-                    if(desired=="shoot") Animation.Play("shoot",false,()=> { Hit(); Animation.Play("shootLaunch",false,()=>state="idle"); });
+                    if(desired=="shoot") Animation.Play("shoot",false,CallbackForLabel("shoot"));
                     else Animation.Play("idle");
                     state=desired;
                 }
+            }
+            public Action CallbackForLabel(string label)
+            {
+                if(label=="shoot")return ()=> { Hit(); Animation.Play("shootLaunch",false,CallbackForLabel("shootLaunch")); };
+                if(label=="shootLaunch")return ()=>state="idle";
+                return null;
             }
             void Hit()
             {

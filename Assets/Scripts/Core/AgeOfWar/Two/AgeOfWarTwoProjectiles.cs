@@ -12,7 +12,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
             foreach(var u in Units) if(Math.Abs(u.X-x)<u.Width*widthFactor&&Math.Abs(y)<u.Height&&u.Health>0&&u.Side!=side) result=u;
             return result;
         }
-        internal sealed class Projectile
+        internal sealed partial class Projectile
         {
             readonly AgeOfWarTwoBattle game;
             internal readonly string Name,Type;
@@ -54,7 +54,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
         internal void CreateSpecial(int side,int age) { Effects.Add(new Effect(this,age,side)); Emit("special",0,0,age); }
         internal Effect CreateStrike(int age,int side,double x,double y) { var e=new Effect(this,age,side,x,y); Effects.Add(e); return e; }
         internal void CreateCosmetic(string clip,double x,double y,double scale,double rotation) { Effects.Add(new Effect(this,clip,x,y,scale,rotation)); }
-        internal sealed class Effect
+        internal sealed partial class Effect : IAnimationOwner
         {
             readonly AgeOfWarTwoBattle game;
             internal readonly long InstanceId;
@@ -95,7 +95,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
                     XSpeed=Math.Cos(angle*Math.PI/180)*velocity*3; YSpeed=Math.Sin(angle*Math.PI/180)*velocity*3;
                     // Meteor's display does not follow its trajectory; FireBall/Arrow/CanonBall do.
                     Rotation=age==1||age==6?0:angle; Interval=angle;
-                    if(age==3) { Animation=new Animation("special3"); Animation.Play("anim"); game.Animations.Add(Animation); }
+                    if(age==3) { Animation=new Animation("special3",this); Animation.Play("anim"); game.Animations.Add(Animation); }
                 }
             }
             internal Effect(AgeOfWarTwoBattle battle,double x,double y,int amount,bool critical)
@@ -105,9 +105,10 @@ namespace XanaduYonder.Core.AgeOfWar.Two
             internal Effect(AgeOfWarTwoBattle battle,string clip,double x,double y,double scale,double rotation)
             {
                 game=battle; InstanceId=game.Id(); Clip=clip; X=x; Y=y; Scale=scale; Rotation=rotation;
-                Animation=new Animation(clip); Animation.Play("anim",false,()=>Alive=false); game.Animations.Add(Animation);
+                Animation=new Animation(clip,this); Animation.Play("anim",false,CallbackForLabel("anim")); game.Animations.Add(Animation);
                 if(clip=="explosion") game.Emit("sound",X,Y,0,"explosion6");
             }
+            public Action CallbackForLabel(string label) { return Age==0&&!DamageText&&label=="anim"?(Action)(()=>Alive=false):null; }
             internal void Render(double dt)
             {
                 if(DamageText) { Timer-=dt; Y-=Timer*dt*20; Alpha=Timer/2; if(Timer<=0) Alive=false; return; }

@@ -42,8 +42,20 @@ namespace XanaduYonder.Runtime.AgeOfWar
             }
             if(definition.key=="menu")
             {
-                // Reuse the removed Play More Games row and a complete original embedded font.
-                // The original game UI font keeps the new label independent of baked menu lettering.
+                // Keep GAME in its source row. Continue takes Credits' old row;
+                // Credits moves to the removed How To Play row without replacing its original artwork.
+                float continueY=193.35f,creditsY=230.35f;
+                foreach(var hit in definition.hotspots)
+                {
+                    if(hit.action=="btnCredits")continueY=hit.y;
+                    if(hit.action=="btnHowToPlay")creditsY=hit.y;
+                }
+                for(int index=0;index<definition.layers.Length;index++)
+                    if(definition.layers[index].name=="btnCredits")scene.SetLayerOffset(index,new Vector2(0,continueY-creditsY));
+                scene.AddTextButton("mobile-continue","Continue","font/windows/2",24,
+                    new Rect(221,continueY,278,31),Color.white,true);
+                scene.SetTextButtonEnabled("mobile-continue",false);
+                // Reuse the removed Play More Games row and the same complete original font.
                 scene.AddTextButton("mobile-exit","Exit","font/windows/2",24,
                     new Rect(221,295.35f,278,39),Color.white,true);
             }

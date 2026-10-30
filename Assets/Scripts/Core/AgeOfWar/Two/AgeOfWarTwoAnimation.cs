@@ -18,9 +18,15 @@ namespace XanaduYonder.Core.AgeOfWar.Two
         }
         static double D(string s) { return double.Parse(s,CultureInfo.InvariantCulture); }
     }
-    internal sealed class Animation
+    internal interface IAnimationOwner
+    {
+        Action CallbackForLabel(string label);
+    }
+    internal sealed partial class Animation
     {
         internal readonly Timeline Timeline;
+        internal readonly string Key;
+        internal IAnimationOwner Owner;
         internal string Label="";
         internal int Frame;
         internal double Current;
@@ -28,7 +34,7 @@ namespace XanaduYonder.Core.AgeOfWar.Two
         Timeline.Section section;
         Action callback;
         bool loop, stopped=true;
-        internal Animation(string key) { Timeline=SourceTimelines.All[key]; }
+        internal Animation(string key,IAnimationOwner owner=null) { Key=key; Owner=owner; Timeline=SourceTimelines.All[key]; }
         internal bool Has(string label) { return Timeline.Labels.ContainsKey(label); }
         internal void Play(string label,bool looping=true,Action end=null)
         {
