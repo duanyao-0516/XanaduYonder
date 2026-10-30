@@ -1,0 +1,406 @@
+{
+  "measurement_date": "2026-10-30",
+  "base_commit": "41a235dd81adb66c45f380f5b6c837e0a92dead0",
+  "scope": "Static public artifact measurements only; no execution, Unity import, APK build or device test. MB=1000000 bytes; MiB=1048576 bytes.",
+  "swf": [
+    {
+      "name": "age-of-war-1",
+      "url": "http://farm.maxgames.com/ageofwarupdate1MzYx.swf",
+      "bytes": 3628478,
+      "mib": 3.46,
+      "sha256": "d4ae4734842d9d874b009d9097fa9635d424df26128a1a22177126e8e869c4ac",
+      "signature": "CWS",
+      "swf_version": 9,
+      "declared_uncompressed_bytes": 4098898,
+      "frame_rate": 40.0,
+      "actionscript3": false,
+      "top_level_DoABC_count": 0,
+      "top_level_DoAction_count": 6
+    },
+    {
+      "name": "age-of-war-2",
+      "url": "https://farm.maxgames.com/age-of-war-2-publicOTM3.swf",
+      "bytes": 11413675,
+      "mib": 10.885,
+      "sha256": "b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c",
+      "signature": "CWS",
+      "swf_version": 10,
+      "declared_uncompressed_bytes": 11707784,
+      "frame_rate": 30.0,
+      "actionscript3": true,
+      "top_level_DoABC_count": 2,
+      "top_level_DoAction_count": 0
+    }
+  ],
+  "ruffle_release": {
+    "url": "https://github.com/ruffle-rs/ruffle/releases/download/v0.7.1/ruffle-0.7.1-web-selfhosted.zip",
+    "zip_bytes": 10527427,
+    "sha256": "ef12edbee135d581a9cd523837d746da30a07a64dbf1cf472d2e472c656f4b5e",
+    "uncompressed_bytes": 30739514,
+    "files": [
+      {
+        "name": "LICENSE_MIT",
+        "bytes": 1097,
+        "zip_bytes": 648
+      },
+      {
+        "name": "core.ruffle.16d61072ac7fdc4d5013.js.map",
+        "bytes": 386183,
+        "zip_bytes": 73654
+      },
+      {
+        "name": "172de42e6619eac8f371.wasm",
+        "bytes": 14302754,
+        "zip_bytes": 5028530
+      },
+      {
+        "name": "core.ruffle.16d61072ac7fdc4d5013.js",
+        "bytes": 108322,
+        "zip_bytes": 27664
+      },
+      {
+        "name": "core.ruffle.994eeef0a471a88cd0e3.js.map",
+        "bytes": 413483,
+        "zip_bytes": 75150
+      },
+      {
+        "name": "core.ruffle.994eeef0a471a88cd0e3.js",
+        "bytes": 114743,
+        "zip_bytes": 28229
+      },
+      {
+        "name": "ruffle.js",
+        "bytes": 465885,
+        "zip_bytes": 102571
+      },
+      {
+        "name": "LICENSE_APACHE",
+        "bytes": 9723,
+        "zip_bytes": 3536
+      },
+      {
+        "name": "README.md",
+        "bytes": 2328,
+        "zip_bytes": 1010
+      },
+      {
+        "name": "878d548199cddef07035.wasm",
+        "bytes": 14227884,
+        "zip_bytes": 5001407
+      },
+      {
+        "name": "ruffle.js.map",
+        "bytes": 706694,
+        "zip_bytes": 182683
+      },
+      {
+        "name": "package.json",
+        "bytes": 418,
+        "zip_bytes": 255
+      }
+    ]
+  },
+  "packaging_model": {
+    "method": "Python zipfile ZIP_DEFLATED compresslevel=6; retain all .js/.wasm and LICENSE*; drop .map, README and package metadata; include SWFs unchanged. Both WASM variants retained. Not an APK measurement.",
+    "retained_runtime_bytes": 29230408,
+    "experiments": [
+      {
+        "games": [],
+        "deflate_level_6_bytes": 10164154,
+        "raw_payload_bytes": 29230408
+      },
+      {
+        "games": [
+          "age-of-war-1"
+        ],
+        "deflate_level_6_bytes": 13793103,
+        "raw_payload_bytes": 32858886
+      },
+      {
+        "games": [
+          "age-of-war-2"
+        ],
+        "deflate_level_6_bytes": 21580638,
+        "raw_payload_bytes": 40644083
+      },
+      {
+        "games": [
+          "age-of-war-1",
+          "age-of-war-2"
+        ],
+        "deflate_level_6_bytes": 25209587,
+        "raw_payload_bytes": 44272561
+      }
+    ]
+  },
+  "user_reference_screenshots": [
+    {
+      "filename": "1-13420.png",
+      "sha256": "8a78eb2610cdd082faeaabb27d3c539761ad8a6762b011bfe9225207f592661f",
+      "bytes": 2890891
+    },
+    {
+      "filename": "2-13421.png",
+      "sha256": "ab26e8c6fc4e0c3d7e4845bc3ab5f69f00223004af32f261cb1beaddb7d6d0f1",
+      "bytes": 7943683
+    }
+  ],
+  "repository_snapshot": {
+    "method": "Authenticated GitHub read-only API: repository metadata, latest default-branch commit, recursive Git tree at that commit. All trees returned truncated=false. Sum blob sizes counts tracked files, not history, dependencies, compressed downloads or APK. Extension-based image/audio counts may include previews/vendor content and are not a gameplay asset inventory. Selected source and license files read via raw GitHub; none executed or imported.",
+    "repositories": [
+      {
+        "repo": "erupturatis/Age-of-war-unity-clone",
+        "head": "c6a2999193ab162298c76ca92279b4a5cc92bfd4",
+        "commit_date": "2023-07-19T14:34:55Z",
+        "license_detected": "MIT",
+        "tree_truncated": false,
+        "tracked_blob_bytes": 1332795522,
+        "files": 1257,
+        "licenses": [
+          "LICENSE"
+        ],
+        "project_versions": [
+          "ProjectSettings/ProjectVersion.txt"
+        ],
+        "code_samples": [
+          "Assets/scripts/GameManager.cs",
+          "Assets/scripts/Troop.cs"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 1183,
+            "bytes": 1332169250
+          },
+          "images": {
+            "files": 63,
+            "bytes": 530850
+          },
+          "code": {
+            "files": 11,
+            "bytes": 95422
+          }
+        }
+      },
+      {
+        "repo": "Thommynator/AgeOfWarGame",
+        "head": "57f3a790a114c35e62d614f7274f3e7e460c89c3",
+        "commit_date": "2021-03-28T13:16:43Z",
+        "license_detected": null,
+        "tree_truncated": false,
+        "tracked_blob_bytes": 45110330,
+        "files": 1157,
+        "licenses": [
+          "AgeOfWarGame/Assets/LeanTween/License.txt",
+          "AgeOfWarGame/Assets/LeanTween/License.txt.meta"
+        ],
+        "project_versions": [
+          "AgeOfWarGame/ProjectSettings/ProjectVersion.txt"
+        ],
+        "code_samples": [
+          "AgeOfWarGame/Assets/LeanTween/Editor/LeanTweenDocumentationEditor.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Archived/OldGUIExamplesCS.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Archived/TestingPunch.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Archived/TestingRigidbodyCS.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/Following.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralAdvancedTechniques.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralBasic.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralBasics2d.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralCameraShake.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralEasingTypes.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralEventsListeners.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralSequencer.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralSimpleUI.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/GeneralUISpace.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/LogoCinematic.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/PathBezier.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/PathBezier2d.cs",
+          "AgeOfWarGame/Assets/LeanTween/Examples/Scripts/PathSpline.cs"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 937,
+            "bytes": 30153070
+          },
+          "code": {
+            "files": 85,
+            "bytes": 509719
+          },
+          "images": {
+            "files": 123,
+            "bytes": 9461249
+          },
+          "audio": {
+            "files": 12,
+            "bytes": 4986292
+          }
+        }
+      },
+      {
+        "repo": "MrPio/AgeOfWarRemake",
+        "head": "6237603d1cbb0b5a08cd67f5b97de706739f70b6",
+        "commit_date": "2026-04-19T09:52:07Z",
+        "license_detected": null,
+        "tree_truncated": false,
+        "tracked_blob_bytes": 177710304,
+        "files": 1388,
+        "licenses": [
+          "Assets/Resources/ThirdParty.meta"
+        ],
+        "project_versions": [
+          "ProjectSettings/ProjectVersion.txt"
+        ],
+        "code_samples": [
+          "Assets/Plugins/PoseEditor/Editor/PoseEditorManagerInspector.cs",
+          "Assets/Plugins/PoseEditor/Runtime/PoseEditorManager.cs",
+          "Assets/Scripts/Debug/UnitDebug.cs",
+          "Assets/Scripts/Managers/GameManager.cs",
+          "Assets/Scripts/Managers/PowerupManager.cs",
+          "Assets/Scripts/Managers/RelayManager.cs",
+          "Assets/Scripts/Managers/SceneManager.cs",
+          "Assets/Scripts/Managers/Serializer/BinarySerializer.cs",
+          "Assets/Scripts/Managers/Serializer/ISerializer.cs",
+          "Assets/Scripts/Managers/Serializer/JsonSerializer.cs",
+          "Assets/Scripts/Managers/Singletons/MusicManager.cs",
+          "Assets/Scripts/Managers/Singletons/NetworkManagerGuard.cs",
+          "Assets/Scripts/Managers/Singletons/SettingsManager.cs",
+          "Assets/Scripts/Managers/Singletons/ToastManager.cs",
+          "Assets/Scripts/Managers/SpecialAttackManager.cs",
+          "Assets/Scripts/Managers/Statics/DataManager.cs",
+          "Assets/Scripts/Managers/Utils/Debouncer.cs",
+          "Assets/Scripts/Model/UnitState.cs"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 1142,
+            "bytes": 109166019
+          },
+          "code": {
+            "files": 80,
+            "bytes": 244823
+          },
+          "images": {
+            "files": 122,
+            "bytes": 63374177
+          },
+          "audio": {
+            "files": 44,
+            "bytes": 4925285
+          }
+        }
+      },
+      {
+        "repo": "apiotrowski255/age-of-war",
+        "head": "c6f2d0f6954a5e83e28e0809115b3b3a2af04a39",
+        "commit_date": "2025-04-18T12:35:39Z",
+        "license_detected": null,
+        "tree_truncated": false,
+        "tracked_blob_bytes": 133375851,
+        "files": 10187,
+        "licenses": [],
+        "project_versions": [],
+        "code_samples": [
+          "UI/in_game_menu.gd",
+          "globals/music_manager.gd",
+          "main_game.gd",
+          "range_unit.gd",
+          "scenes/game_over.gd",
+          "scripts/melee_unit.gd",
+          "unit.gd",
+          "units/cave/melee/cave_melee.gd",
+          "units/cave/range/cave_range.gd",
+          "units/cave/tank/cave_tank.gd",
+          "units/future/melee/future_melee.gd",
+          "units/future/range/future_range.gd",
+          "units/future/super_soldier/future_super_soldier.gd",
+          "units/future/tank/future_tank.gd",
+          "units/knight/melee/knight_melee.gd",
+          "units/knight/range/knight_range.gd",
+          "units/knight/tank/knight_tank.gd",
+          "units/medival/melee/medival_melee.gd"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 5108,
+            "bytes": 8640453
+          },
+          "code": {
+            "files": 70,
+            "bytes": 118679
+          },
+          "audio": {
+            "files": 30,
+            "bytes": 3280365
+          },
+          "images": {
+            "files": 4979,
+            "bytes": 121336354
+          }
+        }
+      },
+      {
+        "repo": "lawoflarge/age-of-war",
+        "head": "36dee40fa0467ff231538162da2959adab9c1898",
+        "commit_date": "2026-10-10T07:00:58Z",
+        "license_detected": null,
+        "tree_truncated": false,
+        "tracked_blob_bytes": 235802,
+        "files": 65,
+        "licenses": [
+          "LICENSES.md",
+          "public/assets/LICENSES.md"
+        ],
+        "project_versions": [],
+        "code_samples": [
+          "src/data/units.ts",
+          "src/entities/Unit.ts",
+          "src/scenes/GameOverScene.ts",
+          "src/scenes/GameScene.ts",
+          "src/types/game.ts"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 13,
+            "bytes": 133226
+          },
+          "images": {
+            "files": 1,
+            "bytes": 208
+          },
+          "code": {
+            "files": 51,
+            "bytes": 102368
+          }
+        }
+      },
+      {
+        "repo": "ataberkus/age-of-war-clone",
+        "head": "f986be20a689da243981af1a7b37b8447bc6def0",
+        "commit_date": "2026-07-18T10:51:27Z",
+        "license_detected": null,
+        "tree_truncated": false,
+        "tracked_blob_bytes": 229906,
+        "files": 36,
+        "licenses": [],
+        "project_versions": [],
+        "code_samples": [
+          "src/game/audio.ts",
+          "src/game/data.ts",
+          "src/game/engine.ts",
+          "src/game/production-engine.ts",
+          "src/game/renderer.ts",
+          "src/game/types.ts"
+        ],
+        "static_file_categories": {
+          "other": {
+            "files": 19,
+            "bytes": 82008
+          },
+          "code": {
+            "files": 17,
+            "bytes": 147898
+          }
+        }
+      }
+    ]
+  }
+}

@@ -228,3 +228,12 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 - `Runtime/FlappyBird`：独立 UGUI 页面、单一 EventSystem 指针入口、画面/合成音效和纪录存储。场地与导航共享触点所有权；触摸释放不提交操作。公共设置由 AppController 提供，页面不复制声音/触感字段。
 - `FlappySaveStore`：真实 Newtonsoft 严格解析独立 `flappy-bird-v1.json`，仅 schema/gameId/十进制字符串 bestScore；临时文件 flush 后原子替换，保存合法备份。页面区分内存最高分与已落盘分数，失败重试不改变场地尺寸。
 - `AppController`：第 16 张卡片（合并最新 master 后），延迟建立页面，统一 Back/进入其他游戏/后台/焦点/设置保存；大厅显示真实最高纪录与待保存状态。构造大厅只读取已加载的数据，UI 夹具不访问正式玩家存档。
+
+
+## 战争进化史的独立边界
+
+`Core/AgeOfWar/One` 与 `Core/AgeOfWar/Two` 分别移植两代原规则，只共享命令、显示快照和音频事件 DTO。一代固定 40 Hz 并保留 AVM1 帧事件顺序；二代每个实际 stage 事件读取整数毫秒差，再按原 Moon 顺序推进相机、弹体、单位和 UI。二代的帧率设置改变实际刷新目标，速度倍数作用于原 elapsed-time 路径。两者不能交换成同一套简化战斗循环。
+
+`AgeOfWarPage` 拥有横屏进入/退出、导航 token、输入、时间和音频；`AgeOfWarView` 只渲染快照及原界面。`AgeOfWarAssets` 按代持有图集、字体与音频，离页释放；原始 SWF 只参加离线提取与运行对照，APP 没有 SWF/Ruffle/WebView 依赖。点击通过原 stage 坐标映射；触屏空白战场拖动镜头。方向稳定之前不交出宿主输入，返回大厅在竖屏稳定后完成。后台取消正在进行的触摸，冻结模拟与声音；恢复时重新取时，不能补跑后台经过的时间。
+
+两代没有新增跨进程战场存档，保持固定原版入口和战场生命周期。共享声音开关由现有宿主持久化，不改写其他游戏的存档协议。推箱子在自身页面隐藏时不响应其它横屏游戏触发的布局刷新；显式初始化仍使用强制布局，保存模型不受影响。真实验证范围见[接入记录](verification-age-of-war.md)。

@@ -1,0 +1,42 @@
+{
+  "frameNumbering": "Source frames are one-based; clip ticks and scene birthFrame are zero-based.",
+  "One": {
+    "fps": 40,
+    "background": "#000000",
+    "loading": { "scene": "preloader", "progressScene": "preloader-progress", "rule": "984.lb scaleX = actual loaded bytes / total bytes; root loaded label reached only at 100 percent" },
+    "loaded": { "scene": "loaded", "sourceRootFrame": 4, "advance": "button 996 on press calls root.play()" },
+    "afterPressRootFrames": [5, 6, 7],
+    "lead": { "scene": "intro-lead", "sourceRootFrame": 6 },
+    "intro": {
+      "backgroundScene": "intro-background",
+      "frameScenes": "intro/{1..160}",
+      "characterId": 1008,
+      "x": 321.15,
+      "y": 228.45,
+      "rootFrame": 7,
+      "onLoad": "root.stop()",
+      "lastFrameAction": "stop(); root.play() -> root frame 8 menuframe",
+      "randomFire": { "instances": 26, "clipPattern": "nested/intro/{27|53}/{odd child depth 1..25}", "clock": "Each source589 instance chooses random(25), then source frame31 jumps to3; separate phases and birthFrame per instance", "frame26Stop": "Each source1001 animation is clamped at source frame26" },
+      "sounds": [ { "key": "sound/1002", "sourceFrames": [1, 5, 14, 18, 22] }, { "key": "intro-stream", "sourceFirstFrame": 9, "sourceLastFrame": 160, "seekSamples": 1633 } ],
+      "skip": "No skip action in source; button992 opens original MaxGames URL only"
+    }
+  },
+  "Two": {
+    "fps": 30,
+    "background": "#ffffff",
+    "loading": { "scene": "preloader", "rule": "loadingBar scaleX tracks actual loaded bytes / total bytes. btnPlay appears only when all bytes and GlobalVars.nextScreen are ready; then loadingBar/loadingFrame are hidden.", "advance": "btnPlay loads Sponsor with Transition_Checkers(1,24,16,0.3)" },
+    "sponsor": {
+      "initialScene": "sponsor-initial",
+      "scene": "sponsor",
+      "timeline": "root frame1 sets done false; root frame2 stops and owns character58; character58 frame186 calls parent.play(); root frame3 sets done true and stops",
+      "animationLayerCharacterId": 58,
+      "animationClipKey": "ui/sponsor/instance-0-2-2-58/58",
+      "sourceFrames": 186,
+      "nestedStop": { "characterId": 57, "sourceFrame": 14 },
+      "sounds": [ { "key": "music/2", "start": "Sponsor constructor; continues across Author and MainMenu" }, { "key": "sponsor-stream", "childSourceFirstFrame": 2, "childSourceLastFrame": 186, "seekSamples": 1633 } ],
+      "done": "Load Author with Transition_Fade(0.2)",
+      "skip": "No skip action in source; btnLink opens original MaxGames URL only"
+    },
+    "author": { "frameScenes": "author/{1..66}", "done": "root frame66 sets done true and stops; load MainMenu with Transition_Fade(0.2)", "skip": "No skip action in source; btnLink opens original interactive-pixels URL only" }
+  }
+}

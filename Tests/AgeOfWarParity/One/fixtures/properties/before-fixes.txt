@@ -1,0 +1,7 @@
+/tmp/aow-parity-one-properties/native.csv 6 rows
+FAIL AVM1 original part6 first fade writes 98.828125 percent alpha: expected 0.98828125, actual 0.99
+FAIL AVM1 original part6 expires on fade write86: expected 0.00390625, actual 0.14999999999999925
+FAIL AVM1 display rotation normalizes attachment 181 degrees: expected -179, actual 181
+FAIL AVM1 particle attachment retains raw transform until the next frame: expected 400, actual 396.9
+FAIL AVM1 reward movement quantizes each display write: expected 294.25, actual 294.27272727272725
+FAIL AVM1 special5 attachment retains source initial transform: expected 0, actual 150

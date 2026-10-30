@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>AoW1 runtime parity observer</title>
+<style>body{background:#17202b;color:#eee;font:14px monospace}#game{width:650px;height:450px}ruffle-player{width:100%;height:100%}button{padding:8px;margin:8px}pre{white-space:pre-wrap}</style>
+<script>window.RufflePlayer={config:{autoplay:'on',unmuteOverlay:'hidden',splashScreen:false,openUrlMode:'deny',allowScriptAccess:true,allowNetworking:'internal',logLevel:'warn'}};</script>
+<script src="ruffle/ruffle.js"></script>
+<h1>AoW1 isolated runtime scenario</h1><p>Use the original Play → Play → Normal controls. The read-only observer saves the selected scenario trace after its last sample.</p><div id="status">Loading</div><div id="game"></div><pre id="events"></pre>
+<script>
+const rows=[];const status=document.getElementById('status'),events=document.getElementById('events');
+const player=window.RufflePlayer.newest().createPlayer();document.getElementById('game').appendChild(player);
+(async()=>{await player.ruffle().load({url:'one-instrumented.swf'});player.ruffle().volume=0;
+player.ruffle().traceObserver=(message)=>{if(!message.startsWith('AOW|'))return;rows.push(message.substring(4));if(rows.length<16)events.textContent+=message+'\n';if(message.startsWith('AOW|F,'))status.textContent='Recorded frame '+message.split(',')[1]+'; '+rows.length+' trace lines';if(message.startsWith('AOW|DONE')){player.ruffle().suspend();fetch('/trace',{method:'POST',body:rows.join('\n')+'\n'}).then(r=>r.text()).then(s=>{status.textContent=s;events.textContent+='Sample saved; runtime suspended.\n';});}};
+status.textContent='Ready: float RNG is controlled after entering battle; built-in random(n) remains native.';})();
+</script>

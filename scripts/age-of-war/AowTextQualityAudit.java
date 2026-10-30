@@ -1,0 +1,6 @@
+import java.nio.file.*;import java.util.*;import com.eclipsesource.json.*;import com.jpexs.decompiler.flash.*;import com.jpexs.decompiler.flash.tags.*;import com.jpexs.decompiler.flash.tags.base.*;
+public class AowTextQualityAudit {
+ static Map<Integer,CSMSettingsTag> settings=new HashMap<>();
+ static void scan(Iterable<Tag> tags){for(Tag t:tags){if(t instanceof CSMSettingsTag s)settings.put(s.textID,s);if(t instanceof DefineSpriteTag s)scan(s.getTags());}}
+ public static void main(String[] args)throws Exception{JsonArray all=new JsonArray();for(String path:args){SWF s=new SWF(Files.newInputStream(Path.of(path)),false);settings.clear();scan(s.getTags());JsonArray fields=new JsonArray();for(CharacterTag c:s.getCharacters(false).values())if(c instanceof DefineEditTextTag text){JsonObject f=new JsonObject().add("characterId",text.characterID).add("fontId",text.fontId).add("useOutlines",text.useOutlines).add("variable",text.variableName==null?"":text.variableName).add("csmPresent",settings.containsKey(text.characterID));CSMSettingsTag cfg=settings.get(text.characterID);if(cfg!=null)f.add("useFlashType",cfg.useFlashType).add("gridFit",cfg.gridFit).add("thickness",cfg.thickness).add("sharpness",cfg.sharpness);fields.add(f);}all.add(new JsonObject().add("source",Path.of(path).getFileName().toString()).add("fields",fields));}System.out.println(all);}
+}

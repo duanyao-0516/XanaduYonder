@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>AoW2 original battle differential</title>
+<style>body{background:#17202b;color:#eee;font:14px monospace}ruffle-player{display:block;width:720px;height:480px}pre{max-height:200px;overflow:auto}</style>
+<script>window.RufflePlayer={config:{autoplay:'on',unmuteOverlay:'hidden',splashScreen:false,openUrlMode:'deny',allowScriptAccess:true,allowNetworking:'internal',logLevel:'info'}};</script><script src="ruffle/ruffle.js"></script>
+<h1>Original AoW2 methods + independent battle subclass probe</h1><div id="game"></div><pre id="trace"></pre>
+<script>
+const rows=[];const player=window.RufflePlayer.newest().createPlayer();document.getElementById('game').appendChild(player);
+const observe=m=>{if(!m.startsWith('AOW|'))return;rows.push(m.slice(4));document.getElementById('trace').textContent+=(m.startsWith('AOW|PIXELS')?m.slice(0,100)+'...':m)+'\n';if(m.startsWith('AOW|DONE'))fetch('/trace',{method:'POST',body:rows.join('\n')+'\n'}).then(()=>player.ruffle().suspend());};player.ruffle().volume=0;player.ruffle().load({url:'probe.swf'}).then(()=>{player.ruffle().traceObserver=observe;});
+</script>

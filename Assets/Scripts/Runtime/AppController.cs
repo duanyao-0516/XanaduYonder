@@ -27,7 +27,7 @@ using XanaduYonder.Runtime.FlappyBird;
 
 namespace XanaduYonder.Runtime
 {
-    public sealed class AppController : MonoBehaviour
+    public sealed partial class AppController : MonoBehaviour
     {
         private sealed class RandomSource : IRandomSource
         {
@@ -40,7 +40,7 @@ namespace XanaduYonder.Runtime
         private SaveData data;
         private LocalSaveStore store;
         private RectTransform canvasRoot;
-        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> zumaHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
+        private readonly List<KeyValuePair<Selectable, Selectable.Transition>> landscapeHostTransitions = new List<KeyValuePair<Selectable, Selectable.Transition>>();
         private RectTransform frame;
         private GameObject lobbyPage;
         private GameObject gamePage;
@@ -90,7 +90,7 @@ namespace XanaduYonder.Runtime
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AgeOfWarOne, AgeOfWarTwo, AgeOfWarSelection }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -348,6 +348,7 @@ namespace XanaduYonder.Runtime
             lobbyLinkMatchRecordText.resizeTextMaxSize = 21;
             AddLinkMatchPreview(linkMatchCard.transform);
             UiFactory.Button(linkMatchCard.transform, "开始 / 继续游戏  →", 32, 270, 544, 62, EnterLinkMatch, true);
+            AddAgeOfWarCards(content, ref cardCount);
             var footerTop = 216 + cardCount * 374 + 4;
             UiFactory.Label(content, "无需联网  ·  无广告  ·  本地记录", 56, footerTop, 608, 46, 22, UiFactory.Accent, TextAnchor.MiddleCenter);
             lobbyStatus = UiFactory.Label(content, "所有玩法离线可用 · 对局或最高纪录自动保存", 56, footerTop + 46, 608, 38, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -609,28 +610,28 @@ namespace XanaduYonder.Runtime
             Save();
             activePage = Page.Zuma;
             // Keep the lobby visible while Android rotates; the complete Zuma page hides it.
-            SetZumaHostInput(false);
+            SetLandscapeHostInput(false);
             zumaPage.Enter();
         }
 
         private void FinishZumaExit()
         {
             activePage = Page.Lobby;
-            SetZumaHostInput(true);
+            SetLandscapeHostInput(true);
             canvasRoot.gameObject.SetActive(true);
             ShowLobby();
         }
 
-        private void SetZumaHostInput(bool enabled)
+        private void SetLandscapeHostInput(bool enabled)
         {
             var interaction = canvasRoot.GetComponent<CanvasGroup>();
             if (interaction == null) interaction = canvasRoot.gameObject.AddComponent<CanvasGroup>();
             if (!enabled)
             {
-                zumaHostTransitions.Clear();
+                landscapeHostTransitions.Clear();
                 foreach (var control in canvasRoot.GetComponentsInChildren<Selectable>())
                 {
-                    zumaHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
+                    landscapeHostTransitions.Add(new KeyValuePair<Selectable, Selectable.Transition>(control, control.transition));
                     control.transition = Selectable.Transition.None;
                 }
                 interaction.interactable = false;
@@ -639,8 +640,8 @@ namespace XanaduYonder.Runtime
             else
             {
                 interaction.interactable = true;
-                foreach (var entry in zumaHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
-                zumaHostTransitions.Clear();
+                foreach (var entry in landscapeHostTransitions) if (entry.Key != null) entry.Key.transition = entry.Value;
+                landscapeHostTransitions.Clear();
             }
             canvasRoot.GetComponent<GraphicRaycaster>().enabled = enabled;
         }
@@ -1198,6 +1199,8 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            if (IsAgeOfWarPage && ageOfWarPage != null && ageOfWarPage.IsVisible) { ageOfWarPage.Exit(); return; }
+            if(ageOfWarSelection!=null)ageOfWarSelection.SetActive(false);
             linkMatchPage?.Leave();
             tetrisPage?.Leave();
             LeaveGoldMiner();
@@ -1462,6 +1465,7 @@ namespace XanaduYonder.Runtime
 
         private void StopAnimation()
         {
+            ageOfWarPage?.Suspend();
             tetrisPage?.Suspend();
             flappyBirdPage?.Suspend();
             happyBallPage?.Suspend();
@@ -1491,6 +1495,7 @@ namespace XanaduYonder.Runtime
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                if (IsAgeOfWarPage) { ageOfWarPage.HandleBack(); return; }
                 if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
                 if (modal != null) dismissModal?.Invoke();
                 else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
@@ -1520,6 +1525,7 @@ namespace XanaduYonder.Runtime
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
+            ageOfWarPage?.HostActivity(!paused && focused);
             if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             flappyBirdPage?.SetForeground(!paused && focused);
@@ -1539,6 +1545,7 @@ namespace XanaduYonder.Runtime
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
+            ageOfWarPage?.HostActivity(!paused && focused);
             if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch)) CloseModal();
             tetrisPage?.SetForeground(!paused && focused);
             flappyBirdPage?.SetForeground(!paused && focused);
@@ -1562,6 +1569,6 @@ namespace XanaduYonder.Runtime
 
         private void OnDestroy() { if (flappyLobbySprite != null) Destroy(flappyLobbySprite); }
 
-        private void OnApplicationQuit() { zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
+        private void OnApplicationQuit() { ageOfWarPage?.Suspend(); zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
     }
 }

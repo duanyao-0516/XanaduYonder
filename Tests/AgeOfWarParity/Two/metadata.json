@@ -1,0 +1,22 @@
+{
+  "recordedUtc": "2026-10-30T08:29:28.275Z",
+  "runtime": "Ruffle 0.7.1 (local runtime-preview), Chrome",
+  "scope": "One player unit2: actual tutorial click and btnU2 click, original HUD creation queue, spawn wait, idle/walkStart/walkCycle animation and x/y twip writes. No combat/random-AI parity claim.",
+  "originalMethodsChanged": false,
+  "addedAbcBodies": 5,
+  "originalAbcSha256": [
+    "00eff07c31dd0a4d88c99e2294d20fc63821a058fc0e62f2c9a3f384e4b47fc6",
+    "4af9d8f674ae0a8a15d4862f79fac7fd4daa361a7aec5a8a54f1e6cf3f4f764e"
+  ],
+  "framesThroughFirstDone": 597,
+  "elapsedSeconds": 4.004999999999977,
+  "comparisons": 4788,
+  "mismatches": 0,
+  "sha256": {
+    "originalSwf": "b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c",
+    "instrumentedSwf": "05b1ee21fe475f86761cf363d52410f9d37c6f7076142f9546b7f4163fb0a264",
+    "probe": "1d42a72f494487487a8577777ca2a6a9c08fbbda22fe4fb67b66b711a76bba02",
+    "injector": "3a0817155b63a4d6fe02e1e312d307ef5ec0405f6173b6ae5d30847d26dfef26",
+    "fixture": "d28879a0df81490f85058a1ea266f601ddad9222796f6edc549afcaa5aa05bc6"
+  }
+}

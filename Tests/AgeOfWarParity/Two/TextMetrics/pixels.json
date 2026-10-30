@@ -1,0 +1,193 @@
+[
+  {
+    "quality": "LOW",
+    "field": "hud-money",
+    "partialAlpha": 0,
+    "opaque": 145,
+    "bounds": [
+      35,
+      5,
+      77,
+      11
+    ],
+    "rgbaSha256": "149e77fa8f41af4202ba50f76fb0e24d9185d3b7e86b05b21e2df655cab8127d",
+    "png": "LOW-hud-money.png"
+  },
+  {
+    "quality": "LOW",
+    "field": "hud-error",
+    "partialAlpha": 0,
+    "opaque": 87,
+    "bounds": [
+      0,
+      5,
+      31,
+      11
+    ],
+    "rgbaSha256": "b74a6d055781d5bb73d48a5d587f16404a86dc23cc26097de7cfd143ea3ad9d8",
+    "png": "LOW-hud-error.png"
+  },
+  {
+    "quality": "LOW",
+    "field": "window-cost",
+    "partialAlpha": 0,
+    "opaque": 134,
+    "bounds": [
+      39,
+      5,
+      76,
+      11
+    ],
+    "rgbaSha256": "821b0bf4fed166e31e3fe3702521a9a3ee7da36d3dc5421ec593a709312f7188",
+    "png": "LOW-window-cost.png"
+  },
+  {
+    "quality": "LOW",
+    "field": "damage",
+    "partialAlpha": 0,
+    "opaque": 211,
+    "bounds": [
+      115,
+      3,
+      159,
+      10
+    ],
+    "rgbaSha256": "41e3ccf397c4cf0912d9e7d61d680d1ae986159c4739d5b90dbbd8ea56cfffa1",
+    "png": "LOW-damage.png"
+  },
+  {
+    "quality": "MEDIUM",
+    "field": "hud-money",
+    "partialAlpha": 0,
+    "opaque": 145,
+    "bounds": [
+      35,
+      5,
+      77,
+      11
+    ],
+    "rgbaSha256": "149e77fa8f41af4202ba50f76fb0e24d9185d3b7e86b05b21e2df655cab8127d",
+    "png": "MEDIUM-hud-money.png"
+  },
+  {
+    "quality": "MEDIUM",
+    "field": "hud-error",
+    "partialAlpha": 0,
+    "opaque": 87,
+    "bounds": [
+      0,
+      5,
+      31,
+      11
+    ],
+    "rgbaSha256": "b74a6d055781d5bb73d48a5d587f16404a86dc23cc26097de7cfd143ea3ad9d8",
+    "png": "MEDIUM-hud-error.png"
+  },
+  {
+    "quality": "MEDIUM",
+    "field": "window-cost",
+    "partialAlpha": 0,
+    "opaque": 134,
+    "bounds": [
+      39,
+      5,
+      76,
+      11
+    ],
+    "rgbaSha256": "821b0bf4fed166e31e3fe3702521a9a3ee7da36d3dc5421ec593a709312f7188",
+    "png": "MEDIUM-window-cost.png"
+  },
+  {
+    "quality": "MEDIUM",
+    "field": "damage",
+    "partialAlpha": 139,
+    "opaque": 148,
+    "bounds": [
+      115,
+      2,
+      159,
+      10
+    ],
+    "rgbaSha256": "e0803000821c31d816ec94e9c5a6c4bab1d4ee937337db91aed4ed8e6040a520",
+    "png": "MEDIUM-damage.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "hud-money",
+    "partialAlpha": 0,
+    "opaque": 145,
+    "bounds": [
+      35,
+      5,
+      77,
+      11
+    ],
+    "rgbaSha256": "149e77fa8f41af4202ba50f76fb0e24d9185d3b7e86b05b21e2df655cab8127d",
+    "png": "HIGH-hud-money.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "hud-error",
+    "partialAlpha": 0,
+    "opaque": 87,
+    "bounds": [
+      0,
+      5,
+      31,
+      11
+    ],
+    "rgbaSha256": "b74a6d055781d5bb73d48a5d587f16404a86dc23cc26097de7cfd143ea3ad9d8",
+    "png": "HIGH-hud-error.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "window-cost",
+    "partialAlpha": 0,
+    "opaque": 134,
+    "bounds": [
+      39,
+      5,
+      76,
+      11
+    ],
+    "rgbaSha256": "821b0bf4fed166e31e3fe3702521a9a3ee7da36d3dc5421ec593a709312f7188",
+    "png": "HIGH-window-cost.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "damage",
+    "partialAlpha": 187,
+    "opaque": 120,
+    "bounds": [
+      115,
+      2,
+      159,
+      10
+    ],
+    "rgbaSha256": "ae04008ef47b830eb472d83d2089e2d5d71105ff662254ea43d40edb88b1592e",
+    "png": "HIGH-damage.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "window-M",
+    "partialAlpha": 0,
+    "opaque": 0,
+    "bounds": null,
+    "rgbaSha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+    "png": "HIGH-window-M.png"
+  },
+  {
+    "quality": "HIGH",
+    "field": "damage-fractional-size-probe",
+    "partialAlpha": 187,
+    "opaque": 120,
+    "bounds": [
+      115,
+      2,
+      159,
+      10
+    ],
+    "rgbaSha256": "ae04008ef47b830eb472d83d2089e2d5d71105ff662254ea43d40edb88b1592e",
+    "png": "HIGH-damage-fractional-size-probe.png"
+  }
+]

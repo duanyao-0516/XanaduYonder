@@ -1,0 +1,32 @@
+{
+  "runtime": "Ruffle 0.7.1 Web/WASM AVM1",
+  "sourceSha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+  "originalActionArraysPreserved": 315,
+  "date": "2026-10-30",
+  "input": "Original preloader Play press; no skip or altered timeline. Probe logs root and nested currentframes and adds observation-only identity markers.",
+  "records": {
+    "rootFrames": 163,
+    "fireRows": 4160,
+    "fireIdentities": 156,
+    "birthSourceFrames": [
+      1,
+      2,
+      6,
+      14,
+      18,
+      22
+    ]
+  },
+  "nativeReplay": "Native receives the observed initial phase at each post-first-frame birth as its controlled random input. This tests clock progression and birth boundaries, not RNG seed equivalence or unused pre-birth draws.",
+  "limits": [
+    "Ruffle, not Adobe Flash",
+    "No pixel or audio waveform comparison",
+    "Two opening has source-backed, not original-runtime, validation"
+  ],
+  "hashes": {
+    "reference.csv": "86766cc228fbfc54046c5bc105408668dcd3cb5a8a9e017cbbba3604b5e7b52e",
+    "InjectOpening.java": "f979ec25366aa028e53b86d9d57af708826d1241b1145728ab4bf2da70a04d1d",
+    "boot.as": "15938c272a906bbcfe40a566cbdf667dec6004570ee27657dd9740430ca3b386",
+    "opening.as": "5097bc72985e3190b9fbf4ca7d8bbccbdcffb3fa09e8194ec8f25c81a7280c7f"
+  }
+}
