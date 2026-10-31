@@ -3,7 +3,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-dino.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.9.0-dino-validation.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.9.1-dino-validation.apk"
 mkdir -p "$PROJECT_ROOT/artifacts/locks" "$(dirname "$LOG_FILE")"
 LOCK_DIR="$PROJECT_ROOT/artifacts/locks/dino-build"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then

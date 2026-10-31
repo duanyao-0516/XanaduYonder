@@ -3,7 +3,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-link-match-validation.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.9.0-link-match-validation.apk"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.9.1-link-match-validation.apk"
 source "$PROJECT_ROOT/scripts/link-match-unity-environment.sh"
 if [[ ! -x "$UNITY_EDITOR" ]]; then
     printf 'Unity Editor not found: %s\n' "$UNITY_EDITOR" >&2
