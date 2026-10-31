@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry",
+  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game",
   "counts": {
-    "pngAssets": 25,
+    "pngAssets": 26,
     "approvedAssets": 23,
-    "existingGameIcons": 18,
+    "existingGameIcons": 19,
     "preparedGameIcons": 1,
     "fallbackIcons": 1,
     "controlIcons": 5,
     "lucideAssets": 23,
-    "customAssets": 2,
+    "customAssets": 3,
     "uniqueLucideSourceIcons": 22,
-    "uniqueCustomSourceIcons": 1
+    "uniqueCustomSourceIcons": 2
   },
   "package": {
     "name": "lucide-static",
@@ -1037,6 +1037,32 @@
         "partialAlphaPixels": 850,
         "opaquePixels": 2258
       }
+    },
+    {
+      "id": "aircraft-fire",
+      "name": "飞机大战",
+      "kind": "game",
+      "status": "connected-entry",
+      "origin": "Original XanaduYonder top-down aircraft line drawing; no third-party vector paths",
+      "svg": "additional-icons/svg/aircraft-fire.svg",
+      "svgSha256": "ff78930eab189e6b302d9a7183e7d7cdaa75a4a5fabb9d23b531cde15d866468",
+      "png": "additional-icons/png/aircraft-fire.png",
+      "pngSha256": "b5fbb85637ef1dfbde6acc3a2865d54e9502699312704b7da52ad6906de6a7fc",
+      "resourcePath": "Lobby/Icons/aircraft-fire",
+      "unityAsset": "Assets/Resources/Lobby/Icons/aircraft-fire.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8"
     }
   ]
 }

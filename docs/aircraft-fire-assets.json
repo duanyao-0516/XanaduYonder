@@ -1,0 +1,321 @@
+{
+  "reference": "Aircraft Fire 2.5 (czh.aircraftwar, versionCode 11)",
+  "apkSha256": "052519b7cd43722a99eb079a349fb85b2218234c7e77594a8125e2a1160ed142",
+  "extraction": "Atlas rotation and trimming restored; original standalone icon/title/audio bytes retained.",
+  "excluded": [
+    "native binaries",
+    "DEX",
+    "advertising",
+    "purchases",
+    "GameCenter",
+    "more recommendations",
+    "loading graphics"
+  ],
+  "files": [
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/background_2.png",
+      "source": "assets/GameArts.png#background_2.png",
+      "sha256": "1886c454837c452a18be80ac220f78b31dd3d08b73bb36f716278746231d0e67",
+      "width": 640,
+      "height": 1136
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/bomb.png",
+      "source": "assets/GameArts.png#bomb.png",
+      "sha256": "c5cd96f9afe5494fb783dcd4ea82c75506cb67db2462bb3426fa0c5118e3e1d8",
+      "width": 84,
+      "height": 76
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/bullet1.png",
+      "source": "assets/GameArts.png#bullet1.png",
+      "sha256": "52c908a962a279a452043a9ee24eebc7f169c2b979493889a0e00b8f62acb021",
+      "width": 12,
+      "height": 28
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/bullet2.png",
+      "source": "assets/GameArts.png#bullet2.png",
+      "sha256": "c47a2e58bbdb9a31fd9a6733b30cec9cff16006598e813a20fe55ba684e7de38",
+      "width": 96,
+      "height": 28
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy1_blowup_1.png",
+      "source": "assets/GameArts.png#enemy1_blowup_1.png",
+      "sha256": "2742510bbed043584036926553868bd7db8fb1fa8eec383b1a0cd4c1ab34b466",
+      "width": 76,
+      "height": 68
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy1_blowup_2.png",
+      "source": "assets/GameArts.png#enemy1_blowup_2.png",
+      "sha256": "49ac815b2579ff424724b53b67c55c5591a5bb63371001995c6d124066caf4de",
+      "width": 76,
+      "height": 68
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy1_blowup_3.png",
+      "source": "assets/GameArts.png#enemy1_blowup_3.png",
+      "sha256": "12432305098c3720a4370ce69e75458c90c8c1816cc6087dcf2c2d5752034140",
+      "width": 76,
+      "height": 68
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy1_blowup_4.png",
+      "source": "assets/GameArts.png#enemy1_blowup_4.png",
+      "sha256": "56c953cc8c08eefc150f8ba225bf81bfebe3e61bfb3d27aa77d653ca8be1d61f",
+      "width": 76,
+      "height": 68
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy1_fly_1.png",
+      "source": "assets/GameArts.png#enemy1_fly_1.png",
+      "sha256": "559b79434fe9d4696dd08dd5bf5335bfd76604156998e0d19b940ca65c0645b6",
+      "width": 76,
+      "height": 56
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_1.png",
+      "source": "assets/GameArts.png#enemy2_blowup_1.png",
+      "sha256": "4f5f1b12985eb52dbc153e93fc9ea866944f35e46166a29742808906201b735c",
+      "width": 220,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_2.png",
+      "source": "assets/GameArts.png#enemy2_blowup_2.png",
+      "sha256": "9a67430c19fed357c9a238054541d6c1678b3c9d551a595cda92b3c0c7ea01bd",
+      "width": 220,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_3.png",
+      "source": "assets/GameArts.png#enemy2_blowup_3.png",
+      "sha256": "b75116d2d9511406d1de853cbad7ceff127bb433ff2877384e6e9e44b0fafc42",
+      "width": 220,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_4.png",
+      "source": "assets/GameArts.png#enemy2_blowup_4.png",
+      "sha256": "df7e12b1d423ecbd45d3628d10abe3860b8c220d0019d4951fc6abe8460bb599",
+      "width": 220,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_5.png",
+      "source": "assets/GameArts.png#enemy2_blowup_5.png",
+      "sha256": "04871e70b0e73289148ffe6779c54db5bfb24b9434cdcd116f5045944e379ae2",
+      "width": 221,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_6.png",
+      "source": "assets/GameArts.png#enemy2_blowup_6.png",
+      "sha256": "d1cb0897730503305a4b49ac0964fad0db1101bb014ccd4ee8beb863d38e8db8",
+      "width": 221,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_blowup_7.png",
+      "source": "assets/GameArts.png#enemy2_blowup_7.png",
+      "sha256": "0202f7d0ea816f0193750f9eda205a39db87adf5491362ae7ec54219555feaa8",
+      "width": 221,
+      "height": 347
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_fly_1.png",
+      "source": "assets/GameArts.png#enemy2_fly_1.png",
+      "sha256": "32f834620073c6d450a8c8a9d9693b46431d8f05465c21196b064643f6106f31",
+      "width": 225,
+      "height": 344
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_fly_2.png",
+      "source": "assets/GameArts.png#enemy2_fly_2.png",
+      "sha256": "a64cd8cf344eef7ca43453d27cad8b7c3dc073b6d905c8cf220bf45d46a70b4d",
+      "width": 225,
+      "height": 344
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy2_hit_1.png",
+      "source": "assets/GameArts.png#enemy2_hit_1.png",
+      "sha256": "464241331f0af09dd9f95eaf1d7bab53534a05647691446af9b79438f0416620",
+      "width": 225,
+      "height": 344
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_blowup_1.png",
+      "source": "assets/GameArts.png#enemy3_blowup_1.png",
+      "sha256": "f33563009b1b24ff0f7ba55e04fac97a246e10c1fd25501678dc45f59972e759",
+      "width": 92,
+      "height": 124
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_blowup_2.png",
+      "source": "assets/GameArts.png#enemy3_blowup_2.png",
+      "sha256": "7be820b7aabc383b6f9cd0293a0a262faccf611714aa403d78bc268d8633c6f3",
+      "width": 92,
+      "height": 124
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_blowup_3.png",
+      "source": "assets/GameArts.png#enemy3_blowup_3.png",
+      "sha256": "cd843c2460e7b177b39227e74e748f8f1154223cc27b0fec7dd3d6d4f1266865",
+      "width": 92,
+      "height": 124
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_blowup_4.png",
+      "source": "assets/GameArts.png#enemy3_blowup_4.png",
+      "sha256": "efc9af2716ed1f57350bb66c1b144fe6f8c2fbab3a993526ff5b42f3ed922ac5",
+      "width": 92,
+      "height": 124
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_fly_1.png",
+      "source": "assets/GameArts.png#enemy3_fly_1.png",
+      "sha256": "4037381aa68feec7ec4c444876234be9962b1d0f85b8e00b58056f3c45e7427d",
+      "width": 92,
+      "height": 132
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy3_hit_1.png",
+      "source": "assets/GameArts.png#enemy3_hit_1.png",
+      "sha256": "5583597b62b5708f69beb6201bb850aa5dd97860977891788fc02ac6d99e7a90",
+      "width": 92,
+      "height": 132
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy4_fly_1.png",
+      "source": "assets/GameArts.png#enemy4_fly_1.png",
+      "sha256": "8ed4af309c9fc2e2b2d5b8604518f069b45e3bbc29093e71bed253741caeae67",
+      "width": 79,
+      "height": 141
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy5_fly_1.png",
+      "source": "assets/GameArts.png#enemy5_fly_1.png",
+      "sha256": "c1b351724179f68584224cc958c49c7d849fff11a65daf1ae69835276f2fb5af",
+      "width": 76,
+      "height": 116
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/game_pause.png",
+      "source": "assets/GameArts.png#game_pause.png",
+      "sha256": "95ca0a7ca54cc65f5ab50b6de72a2aeb0b4ab53570295d55cbfa31621a379458",
+      "width": 80,
+      "height": 60
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/game_pause_hl.png",
+      "source": "assets/GameArts.png#game_pause_hl.png",
+      "sha256": "fcca4472390dde23e91f46cea716d4fbebb0cff34290dbc3ee4ad6de2731dae0",
+      "width": 80,
+      "height": 60
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_blowup_1.png",
+      "source": "assets/GameArts.png#hero_blowup_1.png",
+      "sha256": "d8e13c9c91c329bdc5c6d5210188585a09cc4560f9853c183738fddb1ad46b3b",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_blowup_2.png",
+      "source": "assets/GameArts.png#hero_blowup_2.png",
+      "sha256": "20d9cf0ffb2cbfa5dad64bb4747b8a1518199d9bea41417cec8a08590285917f",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_blowup_3.png",
+      "source": "assets/GameArts.png#hero_blowup_3.png",
+      "sha256": "bc768b4b34f59633e0ef38cfdb8af7ec124a239b677133506a229b7491975b9a",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_blowup_4.png",
+      "source": "assets/GameArts.png#hero_blowup_4.png",
+      "sha256": "a5d6053925ef961a26aa4754ec07b1e479117ee65d7c9e87c4bd098a890517b7",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_fly_1.png",
+      "source": "assets/GameArts.png#hero_fly_1.png",
+      "sha256": "f68c4f7b8d4907fefd413bac7ea00f8cd08c6a38ebd8c352a6c3c064aa980ae9",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/hero_fly_2.png",
+      "source": "assets/GameArts.png#hero_fly_2.png",
+      "sha256": "1cb270985b469f43e6307d3fd48a2e86692c38cd0533eb054d33178ac57b8f89",
+      "width": 136,
+      "height": 168
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/enemy_bullet.png",
+      "source": "assets/enemy_bullet.png",
+      "sha256": "850b0741353e4d6c1885498e96def4f58f27eae0b447c74e19dc61d5cec0101c",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/button_normal.png",
+      "source": "assets/button_normal.png",
+      "sha256": "853fa8cacb51a6325a8dfd0e8143cf94692c9e15a5e6936c07a11b12c41153d1",
+      "width": 108,
+      "height": 70
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Sprites/button_highlight.png",
+      "source": "assets/button_highlight.png",
+      "sha256": "95ff005e15e4b2209fec77cda01e4c42716b7b44dc84b13749b55e5addb6de6a",
+      "width": 108,
+      "height": 70
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Logo.png",
+      "source": "res/mipmap-xhdpi-v4/icon.png",
+      "sha256": "57d7b7a279786257f7a79f652d1ea5bd047ac45df2ca43af6e5cc2e47caa0ce1",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Title.png",
+      "source": "assets/logo.png",
+      "sha256": "e5954eecb9ae7f74fd9a123e8a203cc5ed09f67a471a9c17ac018edbe2b6a205",
+      "width": 512,
+      "height": 128
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Audio/bg_music.mp3",
+      "source": "assets/bg_music.mp3",
+      "sha256": "34bd7e1976c64fed9ce9ca79bc580c5cc199972aa157b1c1338001ab220e88ef"
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Audio/boss_appear.mp3",
+      "source": "assets/boss_appear.mp3",
+      "sha256": "3242900f2b26a9c813bf1502b7e0eea1cc6c499793dafa044562cd6962bed544"
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Audio/boss_blowup.mp3",
+      "source": "assets/boss_blowup.mp3",
+      "sha256": "29947d51ad9e7c6ccb465e68d288b12050b91cca1ee778a94d6fd0b2b35b2ef6"
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Audio/enemy_blowup.mp3",
+      "source": "assets/enemy_blowup.mp3",
+      "sha256": "e354da354943461819197b9380346534c1a6ae7a9c1fb1b6fc6444bafc04665a"
+    },
+    {
+      "path": "Assets/Resources/AircraftFire/Audio/hero_blowup.mp3",
+      "source": "assets/hero_blowup.mp3",
+      "sha256": "bd58599d508e6d665e0f718c36667a1c26b4e5c1e74fd3a0c1a032e976056115"
+    }
+  ]
+}

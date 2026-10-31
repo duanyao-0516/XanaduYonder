@@ -8,6 +8,13 @@ The project's original code is licensed under MIT. Third-party software and asse
 - The complete ISC license, including the package's notice for Feather-derived icons, is retained in [the lobby asset license](docs/design/lobby-v2/lobby-ui-v2-assets/LICENSE). Source URLs, exported PNG hashes and resource mappings are recorded in [the asset map](docs/design/lobby-v2/asset-map.json).
 - The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma, Happy Ball and Kingdom Rush lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
 
+## Aircraft Fire 2.5 (20 · 飞机大战, development preview)
+
+- Source: the user-provided local `Aircraft+Fire_2.5_APKPure.apk`, package `czh.aircraftwar`, version code 11. APK SHA-256: `052519b7cd43722a99eb079a349fb85b2218234c7e77594a8125e2a1160ed142`. This APK is the local reference for gameplay recovery and artwork/audio extraction; it is not included in the repository.
+- Included under `Assets/Resources/AircraftFire/`: restored gameplay atlas frames, the standalone enemy projectile, the actual application icon, title artwork, and five original gameplay MP3s. Atlas rotation and trimming are restored; standalone image and audio bytes are retained. Exact source entries and output hashes are recorded in [the asset manifest](docs/aircraft-fire-assets.json); the reproducible importer and recovered behavior are described in [the reference record](docs/aircraft-fire-reference.md).
+- The APK's artwork and audio retain their original rights; the repository's MIT license does not apply to these assets. This local reference does not establish an open-source license or redistribution authorization for those materials. The new C# implementation and compact lobby aircraft icon are local project work.
+- No original native binary, DEX, advertising/purchase SDK, online account or leaderboard integration, notification service, recommendation link, or unrelated menu asset is imported.
+
 ## Kingdom Rush / FL8.0.5 (19 · 王国保卫战)
 
 - Source: the project owner's downloaded `FL8.0.5手机Lite版-一键安装直玩，更新自动接档.apk`, pinned by SHA-256 in [runtime provenance](ThirdParty/KingdomRushRuntime/provenance.json). Kingdom Rush game content remains attributable to Ironhide and the FL modification's respective contributors; the repository's MIT license does not relicense their game code, artwork, fonts or audio. This integration was requested for personal offline learning and play.

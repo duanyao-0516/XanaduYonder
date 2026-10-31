@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前版本为 0.7.0、Android versionCode 7，发布范围为十七款游戏。相比 v0.6.0 的十三款新增数字华容道、俄罗斯方块、Flappy Bird 与连连看，见[v0.7.0 发布记录](releases/v0.7.0.md)；历史 v0.6.0 范围保留在[对应记录](releases/v0.6.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录。
+已发布版本为 0.9.1、Android versionCode 10，包含 19 个大厅入口，见[v0.9.1 发布记录](releases/v0.9.1.md)。当前开发分支加入第 20 个入口飞机大战，属于未发布预览；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -21,6 +21,7 @@
 | 俄罗斯方块 | `Core/Tetris`、`TetrisSession`、`TetrisPage`、`TetrisView` | `tetris-v1.json` | 完整棋盘/活动块、七袋/RNG、Next/Hold、规则计时、分数与最高分、结果标记；`game: null` 表示未开始 |
 | Flappy Bird | `Core/FlappyBird` / `FlappySession`、`FlappyBirdPage` | `flappy-bird-v1.json` | 最高纪录；不跨进程保存对局 |
 | 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v2.json` | 轻松／挑战 × 五关共十槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩；严格迁移 v1 六槽 |
+| 飞机大战（预览） | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -229,6 +230,18 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 - `FlappySaveStore`：真实 Newtonsoft 严格解析独立 `flappy-bird-v1.json`，仅 schema/gameId/十进制字符串 bestScore；临时文件 flush 后原子替换，保存合法备份。页面区分内存最高分与已落盘分数，失败重试不改变场地尺寸。
 - `AppController`：第 16 张卡片（合并最新 master 后），延迟建立页面，统一 Back/进入其他游戏/后台/焦点/设置保存；大厅显示真实最高纪录与待保存状态。构造大厅只读取已加载的数据，UI 夹具不访问正式玩家存档。
 
+
+## 飞机大战的独立边界
+
+`Core/AircraftFire/AircraftGame` 独占飞机、敌机、弹体、补给、碰撞、分数、生命与模式进度，固定 120 Hz 推进。场地宽 640 设计单位，高度由独立页面映射；纯 C# 不依赖 Unity、原 APK 或网络。经典模式分普通／疯狂，闯关模式按恢复的七关参数生成敌机与 Boss。原生双发保留为一枚 96×28、伤害 1 的宽弹体；Boss 计分修正、一次免费复活及普通损命后的 3 秒保护与原版差异在[参考记录](aircraft-fire-reference.md)单列说明。
+
+`AircraftFirePage` 负责拖动输入、页面前台与弹窗门禁、暂停/继续、规则推进和成绩保存；`AircraftScene` 与 `AircraftAudio` 只呈现模型、爆炸和原游戏音效。`AppController.AircraftFire` 延迟构造独立全屏根节点并接入大厅第 20 张卡片、公共设置、返回、后台与销毁。触摸位移移动飞机，松手不提交额外操作；多指、弹窗、离页和后台取消旧触点。公共声音／触感通过宿主读取，不复制偏好字段。APK 的广告、购买、账户、通知和联网服务均不接入。
+
+`AircraftFireSaveCodec` 仅处理 `aircraft-fire-v1.json`：精确字段为整数 `schemaVersion=1`、字符串 `gameId="aircraft-fire"`、十进制字符串 `classicBestScore`／`crazyBestScore`／`levelBestScore`，以及整数 `highestStage`。分数范围为非负 Int64；最高关卡 0 表示尚无闯关纪录，实际到达为 1–7。`BestScore` 在内存中由三个模式最大值派生，不重复存储。缺失／未知／重复字段、null、错误类型、负数、溢出、非法关卡及超过 4 KiB 的记录均拒绝。对局、触点、动画与公共设置不落入该文件。
+
+`AircraftFireSaveStore.Load` 仅读取主档与 `.bak`，按每个模式分数和关卡分别合并最大值，不在加载时修盘。`TrySave` 拒绝任一字段倒退，将之前主备与已知纪录的分字段最大值先原子写入备份，再通过已 flush 的独立临时文件替换主档；损坏内容不成为备份。主备均不可读时保留文件，0 分默认值不能直接覆盖未知纪录，新的正分成绩可以开始新纪录。页面在成绩变化后标记 dirty，运行期间每 2 秒尝试保存，并在暂停、帮助／设置、离页、后台／失焦、结果显示与销毁边界补写；失败保留内存纪录与重试提示。主动离开或进程重启后重新开始战场。
+
+资源仅包含恢复的游戏图像、原应用图标、标题及五个 MP3，逐文件散列和来源见[资源清单](aircraft-fire-assets.json)。`scripts/test-aircraft-fire.sh` 检查生产规则，`scripts/test-aircraft-fire-persistence.sh` 检查真实 JSON 与临时目录主备恢复。源码、资源检查与独立测试不代表 Unity、APK 或真机验证已通过。
 
 ## 战争进化史的独立边界
 

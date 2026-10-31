@@ -99,11 +99,11 @@ namespace XanaduYonder.EditorTools
         }
 
         private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush",
-            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "Idiom" };
+            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "Idiom" };
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush",
-            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 18 ? "敏捷挑战" : "文字语言"; }
+            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterIdiom" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
+        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 19 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -185,7 +185,7 @@ namespace XanaduYonder.EditorTools
                 SetModeForCheck(f.Host, mode); f.Flush();
                 Require(ReferenceEquals(scroll, f.Scroll) && ReferenceEquals(status, Property(f.View, "StatusLabel")), "Changing mode keeps the scroll and status owners stable");
                 var cards = f.View.GetComponentsInChildren<Button>().Where(b => b.name.EndsWith(" game card", StringComparison.Ordinal)).ToArray();
-                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all nineteen actual entries");
+                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty actual entries");
                 for (int i = 0; i < cards.Length; i++)
                 {
                     var card = (RectTransform)cards[i].transform;
@@ -228,6 +228,7 @@ namespace XanaduYonder.EditorTools
                         if (decoration.transform != card) Require(!decoration.raycastTarget, "Decorative children cannot steal taps: " + decoration.name);
                 }
                 CheckKingdomRushArtwork(f, mode);
+                CheckAircraftFireArtwork(f, mode);
                 var groupTitles = f.View.GetComponentsInChildren<Text>().Where(t => t.name == "Group title").ToArray();
                 Require(groupTitles.Length == (mode == 2 ? 0 : 4), "Single has no redundant category headers; compact modes retain four groups");
                 var subtitle = Named(f.View.transform, "Lobby subtitle");
@@ -259,6 +260,7 @@ namespace XanaduYonder.EditorTools
                 f.Scroll.content.anchoredPosition = Vector2.zero; f.Flush();
                 f.Capture("mode-" + mode + "-top");
                 f.ShowCard(FindCard(f.View.transform, "KingdomRush")); f.Capture("mode-" + mode + "-kingdom-rush");
+                f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
                 if (mode == 2) { f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma"); }
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
                 foreach (var card in cards)
@@ -267,6 +269,39 @@ namespace XanaduYonder.EditorTools
                     LobbyInputTestDriver.CheckGestures(f.Events, f.Camera, f.Scroll, card, f.Flush, Require);
                 }
                 f.ShowCard((RectTransform)cards.Last().transform); f.Capture("mode-" + mode + "-bottom");
+            }
+        }
+
+        private static void CheckAircraftFireArtwork(Fixture f, int mode)
+        {
+            Require(Property(f.Host, "aircraftFirePage") == null,
+                "Building and switching lobby views never creates an Aircraft Fire session");
+            var card = FindCard(f.View.transform, "AircraftFire");
+            Require(Named(card, "Game name").GetComponent<Text>().text == "飞机大战", "Aircraft Fire retains its Chinese title in every view");
+            if (mode != 2)
+            {
+                var icon = Named(card, "Game icon").GetComponent<Image>();
+                var approvedIcon = Resources.Load<Sprite>("Lobby/Icons/aircraft-fire");
+                Require(approvedIcon != null && icon.sprite == approvedIcon, "Compact Aircraft Fire views use the supplied aircraft line icon");
+                return;
+            }
+            var slot = Named(card, "Game logo");
+            Near(slot.rect.width, 63, "Aircraft Fire shares the 63-unit logo width");
+            Near(slot.rect.height, 63, "Aircraft Fire shares the 63-unit logo height");
+            var artwork = slot.GetComponentsInChildren<RawImage>().Single();
+            var approvedLogo = Resources.Load<Texture2D>("AircraftFire/Logo");
+            Require(approvedLogo != null && artwork.texture == approvedLogo, "Single Aircraft Fire view uses the original launcher icon");
+            Require(artwork.uvRect == new Rect(0, 0, 1, 1), "Aircraft Fire preserves the original logo composition");
+            var mask = slot.GetComponentsInChildren<Mask>().Single();
+            Require(!mask.showMaskGraphic && mask.GetComponent<Image>().type == Image.Type.Sliced,
+                "Aircraft Fire clips its square launcher icon with a rounded mask");
+            var corners = new Vector3[4]; artwork.rectTransform.GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                var point = slot.InverseTransformPoint(corner);
+                Require(point.x >= slot.rect.xMin - .1f && point.x <= slot.rect.xMax + .1f &&
+                    point.y >= slot.rect.yMin - .1f && point.y <= slot.rect.yMax + .1f,
+                    "Aircraft Fire original logo fits its shared slot");
             }
         }
 
@@ -383,6 +418,17 @@ namespace XanaduYonder.EditorTools
                 Require(((string)Property(flappy, "CompactRecord")).StartsWith("未保存"), "Compact record prioritizes the unsaved warning over a long score");
                 if (mode == 0) Require(RecordForCheck(f.Host, "FlappyBird").text.Contains("未保存"),
                     "The visible compact record keeps its warning even when the long score is ellipsized");
+            }
+            typeof(AppController).GetField("aircraftFireBest", Members).SetValue(f.Host, 123456L);
+            typeof(AppController).GetField("aircraftFireLoadWarning", Members).SetValue(f.Host, "测试纪录待保存");
+            Invoke(f.Host, "RefreshAircraftFireRecord");
+            foreach (int mode in new[] { 0, 1, 2, 0 })
+            {
+                SetModeForCheck(f.Host, mode); f.Flush();
+                if (mode == 1) continue;
+                var record = RecordForCheck(f.Host, "AircraftFire");
+                Require(record.text.Contains("未保存") && record.text.Contains("123456"),
+                    "Aircraft Fire saved record and write warning survive mode switches");
             }
         }
 

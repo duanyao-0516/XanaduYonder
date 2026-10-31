@@ -349,6 +349,25 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAircraftFirePreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    // An offline, locally signed validation app, without the Development
+                    // Player's profiler/debug-network permissions or release signing.
+                    EditorUserBuildSettings.development = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".aircrafttest");
+                    PlayerSettings.productName = "Xanadu 飞机大战";
+                    PlayerSettings.bundleVersion = "0.9.4";
+                    PlayerSettings.Android.bundleVersionCode = 13;
+                    BuildApk(".apk", BuildOptions.StrictMode, version: "0.9.4");
+                }
+            });
+        }
+
         public static void BuildKingdomRushPreview()
         {
             RunOrFail(() =>
@@ -440,11 +459,11 @@ namespace XanaduYonder.EditorTools
             });
         }
 
-        private static void BuildApk(string suffix, BuildOptions options, Action<BuildReport> completed = null)
+        private static void BuildApk(string suffix, BuildOptions options, Action<BuildReport> completed = null, string version = null)
         {
             if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
                 throw new InvalidOperationException("Install this Editor's Android Build Support, SDK/NDK and OpenJDK modules.");
-            var output = Path.GetFullPath("artifacts/builds/XanaduYonder-" + Version + suffix);
+            var output = Path.GetFullPath("artifacts/builds/XanaduYonder-" + (version ?? Version) + suffix);
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
