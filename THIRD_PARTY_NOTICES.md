@@ -196,6 +196,14 @@ SOFTWARE.
 - The native C# implementations under `Assets/Scripts/Core/AgeOfWar` are ports of the fixed originals' decompiled rules and animation callbacks. The Unity host, input mapping, asset loader and lifecycle adapter are project integration code. Original quirks are retained where supported by source and runtime evidence.
 - FFDec and Ruffle are offline conversion/reference tools only. Original SWF files, the Flash runtime and Ruffle/WebAssembly are not included in the Android player. Their use for verification does not turn these proprietary game resources into open-source assets. See [asset provenance](docs/age-of-war-assets.md) and [verification scope](docs/verification-age-of-war.md).
 
+## Level Devil / 只有一道门 2.1
+
+- Fixed release: [4399 game 243372](https://www.4399.com/flash/243372.htm), retrieved 2026-11-01. The original JavaScript SHA-256 is `5af62be64b44d294acec64c695ad1afe933856d581749992b98924e4cff7217f`. Source file identities are retained in `ThirdParty/LevelDevil/source-manifest.json`.
+- Original gameplay code, levels, graphics, fonts, animation and audio remain attributable to their original creators, including Unept and the Haxe/OpenFL/Stencyl runtime contributors. This repository's MIT license does not relicense the original game materials. Existing upstream notices in the source are retained.
+- The original `lib/default.pak` and 19 MP3 files are retained byte for byte. Local integration patches remove platform SDKs, advertising/telemetry and external navigation, and adapt input, lifecycle and persistence for the Android collection. Poki SDK files and research fixtures are not included in the production game package.
+- `Assets/Resources/LevelDevil/Logo.png` is the user-supplied 72×72 yellow game logo, preserved unchanged (SHA-256 `1c5a296e47ca21413919f479df696b5373fd34f769c6f5e87c65d9d786a06b58`). The small green line door icon is original project artwork matching the existing lobby style; see [artwork provenance](docs/level-devil-lobby-art.md).
+- The host uses the device's system WebView and AndroidX WebKit 1.18.0. AndroidX is distributed under the Apache License 2.0; the WebView browser engine is supplied by the device and is not bundled in this APK.
+
 ## Cut the Rope (21 · 割绳子)
 
 - Source: [4399 割绳子 H5 版](https://www.4399.com/flash/142014_2.htm), retrieved on 2026-11-01. The source package identifies game version 1.1.4 and contains 17 boxes with 25 ordinary levels each. Original game code, characters, artwork, fonts and audio remain attributable to their respective creators and publishers, including ZeptoLab and Famobi. The repository's code license does not relicense these materials or grant independent redistribution rights.

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game; Cut the Rope uses the matching scissors line icon",
+  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game; Cut the Rope uses the matching scissors line icon; Level Devil uses an original matching door line icon",
   "counts": {
-    "pngAssets": 27,
+    "pngAssets": 28,
     "approvedAssets": 23,
-    "existingGameIcons": 20,
+    "existingGameIcons": 21,
     "preparedGameIcons": 1,
     "fallbackIcons": 1,
     "controlIcons": 5,
     "lucideAssets": 24,
-    "customAssets": 3,
+    "customAssets": 4,
     "uniqueLucideSourceIcons": 23,
-    "uniqueCustomSourceIcons": 2
+    "uniqueCustomSourceIcons": 3
   },
   "package": {
     "name": "lucide-static",
@@ -1107,6 +1107,32 @@
         "partialAlphaPixels": 684,
         "opaquePixels": 1759
       }
+    },
+    {
+      "id": "level-devil",
+      "name": "只有一道门",
+      "kind": "game",
+      "status": "connected-entry",
+      "origin": "Original project door line drawing",
+      "svg": "additional-icons/svg/level-devil.svg",
+      "svgSha256": "1c09bcc876e291a65af403123edd20b31fa5db30237648ecc5efe52f0bc4854e",
+      "png": "additional-icons/png/level-devil.png",
+      "pngSha256": "9af0e671afc091d4e2cd1cab3566d85a9281ad7e5ac398f6c8971e111c047257",
+      "resourcePath": "Lobby/Icons/level-devil",
+      "unityAsset": "Assets/Resources/Lobby/Icons/level-devil.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8"
     }
   ]
 }

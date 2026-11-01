@@ -1,0 +1,131 @@
+{
+  "sourcePage": "https://www.4399.com/flash/243372.htm",
+  "files": [
+    {
+      "path": "Level Devil.js",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/Level%20Devil.js",
+      "bytes": 3498572,
+      "sha256": "5af62be64b44d294acec64c695ad1afe933856d581749992b98924e4cff7217f"
+    },
+    {
+      "path": "lib/default.pak",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/lib/default.pak",
+      "bytes": 1436395,
+      "sha256": "4116ad388016c60ccdbedb2b077aa30fadcc06c043b64cc83ae22fef516de754"
+    },
+    {
+      "path": "assets/sfx/sound-565.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-565.mp3",
+      "bytes": 3134,
+      "sha256": "70c19b43081c722ab26833b49046054ac3626c6f3b15a596dfafabde6b6d4d27"
+    },
+    {
+      "path": "assets/sfx/sound-566.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-566.mp3",
+      "bytes": 8150,
+      "sha256": "9e60d8b131b558d82234a40060005c608322edb4bb2e8b17b4d1ddae0b25c7a2"
+    },
+    {
+      "path": "assets/sfx/sound-568.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-568.mp3",
+      "bytes": 16300,
+      "sha256": "00e021690ee9d5f52b98f235b4d1e28bb5261cf9a0ede643568fb37f7dba90c5"
+    },
+    {
+      "path": "assets/sfx/sound-720.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-720.mp3",
+      "bytes": 1567,
+      "sha256": "abf4ec239a237cb5855b298589a7a728b6bc00dc469e91c45fb6b8fbaaab9083"
+    },
+    {
+      "path": "assets/sfx/sound-721.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-721.mp3",
+      "bytes": 1880,
+      "sha256": "209fa4c05b98590220b66a350728bbf63f024aac2f465dc717648b56bad2e91d"
+    },
+    {
+      "path": "assets/sfx/sound-726.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-726.mp3",
+      "bytes": 5955,
+      "sha256": "104be40c1df598283037787215e849ddab83b2ee919651d7116c6158461d6407"
+    },
+    {
+      "path": "assets/sfx/sound-727.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-727.mp3",
+      "bytes": 2821,
+      "sha256": "5f252ed834becc8a6c3db87fa889ec9aa6978c407884aef332f7deae25920b3a"
+    },
+    {
+      "path": "assets/sfx/sound-730.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-730.mp3",
+      "bytes": 9090,
+      "sha256": "1b59ad130bce76cfe054127425db5465e38aea8b38122458c90428b96989da9c"
+    },
+    {
+      "path": "assets/sfx/sound-731.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-731.mp3",
+      "bytes": 3134,
+      "sha256": "93c960fb6c8bbcdbae80b1e6243f0bbc077adf2f1f7f432c3c35a1a9fe118eb6"
+    },
+    {
+      "path": "assets/sfx/sound-732.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-732.mp3",
+      "bytes": 3134,
+      "sha256": "93c960fb6c8bbcdbae80b1e6243f0bbc077adf2f1f7f432c3c35a1a9fe118eb6"
+    },
+    {
+      "path": "assets/sfx/sound-733.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-733.mp3",
+      "bytes": 5015,
+      "sha256": "8c8a961de00384545390c7df43004c1f06a800fbe142a397f339ad1f30e7d454"
+    },
+    {
+      "path": "assets/sfx/sound-734.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-734.mp3",
+      "bytes": 9717,
+      "sha256": "5749473edf0afb2bfe81b7527fec6729786f5d75f3f14cdcd06a7e1bb6ba8bbf"
+    },
+    {
+      "path": "assets/sfx/sound-735.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-735.mp3",
+      "bytes": 4075,
+      "sha256": "06da1252861f36d74f95646d8004a902196a97ca86872cf5534520f745e00b5a"
+    },
+    {
+      "path": "assets/sfx/sound-736.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-736.mp3",
+      "bytes": 10971,
+      "sha256": "b66c16703d79b96a6d03a11120db78ab04c8002b01f67e9c6782d5909ac7b5c8"
+    },
+    {
+      "path": "assets/sfx/sound-741.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-741.mp3",
+      "bytes": 2507,
+      "sha256": "cef942121c665cc21a5399d14ae5f124c146634cdb71efde5fdc10f0c2d309de"
+    },
+    {
+      "path": "assets/sfx/sound-742.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-742.mp3",
+      "bytes": 11284,
+      "sha256": "54c466334e79b72f18ddf777bbef35e6bce33bfbe5a427a910d29562ed3886a8"
+    },
+    {
+      "path": "assets/sfx/sound-858.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-858.mp3",
+      "bytes": 5850,
+      "sha256": "32d01eeb52a5b6b3c54368912f498bb0c413628ec89262ff69cbe71451debfb0"
+    },
+    {
+      "path": "assets/sfx/sound-889.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-889.mp3",
+      "bytes": 9194,
+      "sha256": "a74727b381a97915930780dd3541fbf0cbd85baf3f91da3f55862e90e57e206c"
+    },
+    {
+      "path": "assets/sfx/sound-890.mp3",
+      "url": "https://szhong.4399.com/4399swf/upload_swf/ftp50/liuxinyu/20250415/11/assets/sfx/sound-890.mp3",
+      "bytes": 4178,
+      "sha256": "0c334be63309e46518b88dd13dfda7d7fe45bdbb9149e23777415577ec2f1185"
+    }
+  ]
+}

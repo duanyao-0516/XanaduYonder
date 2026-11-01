@@ -51,6 +51,9 @@ local.properties
 /Assets/Plugins/Android/KingdomRushRuntime.aar.meta
 /Assets/Plugins/Android/KingdomRushContent.aar
 /Assets/Plugins/Android/KingdomRushContent.aar.meta
+/Assets/Plugins/Android/LevelDevilContent.aar
+/Assets/Plugins/Android/LevelDevilContent.aar.meta
+/ThirdParty/LevelDevil/generated/
 /ThirdParty/KingdomRushRuntime/prebuilt/
 # Built locally from the pinned Cut the Rope content and Android host sources.
 /Assets/Plugins/Android/CutTheRopeRuntime.aar

@@ -30,7 +30,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterCutTheRope()
         {
-            if (activePage != Page.Lobby || paused || !focused || IsKingdomRushRunning || IsCutTheRopeRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             lobbyView?.CloseDisplayOptions();
             CloseModal();
             Save();
