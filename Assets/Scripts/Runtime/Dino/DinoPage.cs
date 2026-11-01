@@ -495,12 +495,19 @@ namespace XanaduYonder.Runtime.Dino
             PanelButton(panel,"结束并选择方向",230,()=>{Save();BeginTurn(false,Destination.Selection);},true);
             PanelButton(panel,"继续当前游戏",318,ShowPauseMenu);overlayBack=ShowPauseMenu;
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if(!active)return;
             if(overlay!=null) { overlayBack?.Invoke();return; }
-            if(phase==Phase.Turning) {BeginTurn(false,destination == Destination.Selection ? Destination.Lobby : Destination.Selection);return;}
-            if(game==null) {BeginTurn(false,Destination.Lobby);return;}
+            if(phase==Phase.Turning)
+            {
+                var target=destination == Destination.Selection ? Destination.Lobby : Destination.Selection;
+                if(target==Destination.Lobby&&confirmExit!=null&&!confirmExit())return;
+                BeginTurn(false,target);return;
+            }
+            if(game==null) {if(confirmExit==null||confirmExit())BeginTurn(false,Destination.Lobby);return;}
             if(!game.IsStarted || game.IsGameOver) {BeginTurn(false,Destination.Selection);return;}
             RequestExit();
         }

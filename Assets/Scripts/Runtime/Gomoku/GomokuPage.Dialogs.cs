@@ -10,6 +10,7 @@ namespace XanaduYonder.Runtime.Gomoku
         private GameObject dialog;
         private Action dismissDialog;
         private bool dialogResume;
+        private bool dialogBackLeavesGame;
 
         private RectTransform Overlay(string title, float height)
         {
@@ -26,6 +27,7 @@ namespace XanaduYonder.Runtime.Gomoku
         }
         private void CloseDialog(bool resume = true)
         {
+            dialogBackLeavesGame = false;
             if (dialog == null) return;
             dialog.SetActive(false); Destroy(dialog); dialog = null; dismissDialog = null;
             session?.SetBlocked(false);
@@ -43,6 +45,7 @@ namespace XanaduYonder.Runtime.Gomoku
             if (secondary != null) UiFactory.Button(panel, secondary, 32, 414, 532, 64, () => finish(cancel));
             if (tertiary != null) UiFactory.Button(panel, tertiary, 32, 498, 532, 64, () => finish(third));
             dismissDialog = () => finish(cancel);
+            dialogBackLeavesGame = cancel != null && cancel == returnLobby;
         }
         private void ShowSetup(bool rematch)
         {

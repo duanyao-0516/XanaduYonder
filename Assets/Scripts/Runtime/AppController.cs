@@ -114,6 +114,7 @@ namespace XanaduYonder.Runtime
 
         private void Awake()
         {
+            Input.backButtonLeavesApp = false;
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
@@ -396,7 +397,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenIdiomModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height, back);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -473,7 +474,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenGameModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -619,7 +620,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenSheepModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -1129,6 +1130,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            ResetBackExitConfirmation();
             if (IsAgeOfWarPage && ageOfWarPage != null && ageOfWarPage.IsVisible) { ageOfWarPage.Exit(); return; }
             if(ageOfWarSelection!=null)ageOfWarSelection.SetActive(false);
             LeaveAircraftFire();
@@ -1267,6 +1269,7 @@ namespace XanaduYonder.Runtime
                 if (secondaryAction != null) secondaryAction();
                 else CheckEndState();
             };
+            modalBackReturnsToLobby = secondaryAction == (Action)ShowLobby;
         }
 
         private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
@@ -1309,6 +1312,7 @@ namespace XanaduYonder.Runtime
                 modal = null;
             }
             dismissModal = null;
+            modalBackReturnsToLobby = false;
         }
 
         private void RefreshScores()
@@ -1427,6 +1431,7 @@ namespace XanaduYonder.Runtime
 
         private void Update()
         {
+            if (backExitPage != activePage) { ResetBackExitConfirmation(); backExitPage = activePage; }
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -1439,35 +1444,39 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.DownArrow)) Move(Direction.Down);
         }
 
-        private void HandleBack()
+        private void HandleBackCore()
         {
             if (IsKingdomRushRunning) return;
-            if (IsAgeOfWarPage) { ageOfWarPage.HandleBack(); return; }
+            if (IsAgeOfWarPage) { ageOfWarPage.HandleSystemBack(ConfirmSystemBackExit); return; }
             var splash = GetComponent<BrandSplash>();
             if (splash != null && splash.BlocksInput) return;
             if (activePage == Page.Lobby && lobbyView != null && lobbyView.HasDisplayOptions)
             { lobbyView.CloseDisplayOptions(); return; }
-            if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
-            if (modal != null) dismissModal?.Invoke();
-            else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
-            else if (activePage == Page.AircraftFire) aircraftFirePage.Back();
-            else if (activePage == Page.FlappyBird) flappyBirdPage.Back();
-            else if (activePage == Page.Dino) dinoPage.Back();
+            if (activePage == Page.Zuma) { zumaPage.HandleSystemBack(ConfirmSystemBackExit); return; }
+            if (modal != null)
+            {
+                if (!modalBackReturnsToLobby || ConfirmSystemBackExit()) dismissModal?.Invoke();
+            }
+            else if (activePage == Page.GoldMiner && goldMinerPage.HandleSystemBack(ConfirmSystemBackExit)) { }
+            else if (activePage == Page.AircraftFire) aircraftFirePage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.FlappyBird) flappyBirdPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Dino) dinoPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
-            else if (activePage == Page.Sudoku) sudokuPage.Back();
-            else if (activePage == Page.Minesweeper) minesweeperPage.Back();
-            else if (activePage == Page.Sokoban) sokobanPage.Back();
-            else if (activePage == Page.LinkMatch) linkMatchPage.Back();
-            else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.Back();
-            else if (activePage == Page.HappyBall) happyBallPage.Back();
-            else if (activePage == Page.Tetris) tetrisPage.Back();
-            else if (activePage == Page.Gomoku) gomokuPage.Back();
-            else if (activePage != Page.Lobby) ShowLobby();
+            else if (activePage == Page.Sudoku) sudokuPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Minesweeper) minesweeperPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Sokoban) sokobanPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.LinkMatch) linkMatchPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.HappyBall) happyBallPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Tetris) tetrisPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Gomoku) gomokuPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage != Page.Lobby) { if (ConfirmSystemBackExit()) ShowLobby(); }
             else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
         }
 
         private void OnApplicationPause(bool value)
         {
+            if (value) ResetBackExitConfirmation();
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
@@ -1489,6 +1498,7 @@ namespace XanaduYonder.Runtime
 
         private void OnApplicationFocus(bool value)
         {
+            if (!value) ResetBackExitConfirmation();
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
@@ -1517,6 +1527,7 @@ namespace XanaduYonder.Runtime
 
         private void OnDestroy()
         {
+            ResetBackExitConfirmation();
             ReleaseAircraftFire();
             ReleaseKingdomRushLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);

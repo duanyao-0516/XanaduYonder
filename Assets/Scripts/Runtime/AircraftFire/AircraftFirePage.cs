@@ -101,7 +101,9 @@ namespace XanaduYonder.Runtime.AircraftFire
             }
         }
         public void SetHostSaveWarning(string warning) { hostSaveWarning = warning; RefreshWarning(); }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if (!visible || settingsBlocked) return;
             if (dialogKind == DialogKind.Help || dialogKind == DialogKind.Records)
@@ -109,7 +111,7 @@ namespace XanaduYonder.Runtime.AircraftFire
                 CloseDialog();
                 return;
             }
-            if (game == null) { Exit(); return; }
+            if (game == null) { if (confirmExit == null || confirmExit()) Exit(); return; }
             if (dialogKind == DialogKind.Pause || dialogKind == DialogKind.Result) { ShowMenu(); return; }
             PauseGame();
         }
