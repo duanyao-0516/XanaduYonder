@@ -27,6 +27,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private readonly Dictionary<string,Window> windows=new Dictionary<string,Window>();
         private Vector2 pointer;
         private float viewportWidth=720;
+        private float rightControlInset;
         private readonly RectTransform statuses;
         private readonly AgeOfWarAssets assets;
         private readonly Dictionary<string,AgeOfWarSceneLayer> placements=new Dictionary<string,AgeOfWarSceneLayer>();
@@ -74,11 +75,12 @@ namespace XanaduYonder.Runtime.AgeOfWar
             return value;
         }
         private float PlacementX(AgeOfWarSceneLayer placement)
-        {return placement.x+(placement.x>=230?viewportWidth-720:0);}
-        internal void SetViewportWidth(float width)
+        {return placement.x+(placement.x>=230?viewportWidth-720-rightControlInset:0);}
+        internal void SetViewportWidth(float width,float rightInset=0)
         {
             if(disposed)return;
             viewportWidth=Mathf.Max(720,width);
+            rightControlInset=rightInset;
             foreach(var item in unavailable)
             {
                 var placement=Placement(item.Key);

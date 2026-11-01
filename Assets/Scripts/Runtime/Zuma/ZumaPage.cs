@@ -322,13 +322,19 @@ namespace XanaduYonder.Runtime.Zuma
             if(game==null)return;
             game.AcknowledgeResult();data.AcknowledgeResult();Save();ShowSelection();
         }
-        public void HandleBack()
+        public void HandleBack() { HandleSystemBack(null); }
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
-            if(!visible)return;
-            if(transition){Exit();return;}
-            CancelAim();
-            if(view!=null&&view.HasDialog){dialogBack?.Invoke();return;}
-            if(game!=null)ShowPause();else Exit();
+            if(!visible||leaving)return;
+            if(transition){if(confirmExit==null||confirmExit())Exit();return;}
+            if(view!=null&&view.HasDialog)
+            {
+                // A failed-save dialog returns directly to the lobby on Back.
+                if(dialogBack==Exit&&confirmExit!=null&&!confirmExit())return;
+                CancelAim();dialogBack?.Invoke();return;
+            }
+            if(game==null){if(confirmExit==null||confirmExit())Exit();return;}
+            CancelAim();ShowPause();
         }
         public void Suspend()
         {

@@ -2,6 +2,13 @@
 <!-- Based on Unity 6000.3.27f1 Apk/UnityManifest.xml; Activity entry mode. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application android:extractNativeLibs="true" tools:replace="android:extractNativeLibs">
+        <activity android:name="com.xanaduyonder.leveldevil.LevelDevilActivity"
+                  android:exported="false"
+                  android:screenOrientation="sensorLandscape"
+                  android:configChanges="orientation|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale|layoutDirection|locale"
+                  android:hardwareAccelerated="true"
+                  android:enableOnBackInvokedCallback="true"
+                  android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
         <activity android:name="com.unity3d.player.UnityPlayerActivity" android:theme="@style/UnityThemeSelector">
             <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
             <!-- Xiaomi content capture otherwise rewrites a held touch UP to CANCEL. -->

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use subagent-driven-development with explicit file ownership, followed by independent spec and quality review. User approved the WebView design and full-screen double-system-back interaction.
 
-**Goal:** 第21个大厅入口打开完全离线的全屏竖屏原版游戏，连续两次系统返回回大厅，去除广告/联网/导流并验证小屏交互和持久化。
+**Goal:** 第23个大厅入口（合并最新 master 后）打开完全离线的全屏竖屏原版游戏，连续两次系统返回回大厅，去除广告/联网/导流并验证小屏交互和持久化。
 
 **Architecture:** Unity shell负责大厅与外部Activity互斥；专属Android Activity提供严格本地HTTPS资源与系统生命周期；固定SHA原版Laya包通过一处窄导出接入可读离线适配层。内容转换和纯Java AAR由可复现脚本生成，所有Android构建校验当前输入与产物一致。
 
@@ -29,10 +29,10 @@
 
 ## 3. Unity大厅与构建门禁（主任务）
 
-- [x] `AppController.cs` 添加第21条LobbyEntry；新增 `AppController.ZhaoyunAdou.cs` 和 `Runtime/ZhaoyunAdou/ZhaoyunAdouLauncher.cs` 采用现有bridge轮询契约。
+- [x] `AppController.cs` 添加第23条LobbyEntry；新增 `AppController.ZhaoyunAdou.cs` 和 `Runtime/ZhaoyunAdou/ZhaoyunAdouLauncher.cs` 采用现有bridge轮询契约。
 - [x] `AppController.ExternalGames.cs` 收敛外部游戏busy+稳定大厅CanvasGroup锁；调整KR/Aircraft入口与HandleBack/OnDestroy，仅改共同宿主归属范围。
-- [x] 从本包现有素材生成/复用大厅大图和小图，保存正确Unity meta；不得使用fallback图标冒充完成。
-- [x] 扩展 `LobbyDesignChecks.cs` 为21入口，验证三视图真实路由与不提前加载游戏。
+- [x] 使用用户指定原图作为大 Logo，制作统一线条风格小图，保存正确Unity meta；不得使用fallback图标冒充完成。
+- [x] 扩展 `LobbyDesignChecks.cs` 为23入口；原21入口基线已验证三视图真实路由与不提前加载游戏，合并后按用户要求不重跑。
 - [x] 新增Editor构建gate、`verify-build-input.py`、非Development隔离预览构建方法及 `scripts/build-zhaoyun-adou.sh`；保持正式版版本/签名/包名不变，预览包名后缀 `.zhaoyunadoupreview`。
 - [x] 复用已验证KR依赖并核对内容与运行库hash，不能绕过现有KR构建门禁；生成物加入ignore。
 

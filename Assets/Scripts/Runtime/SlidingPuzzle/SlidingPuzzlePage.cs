@@ -73,10 +73,12 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             if (!value) { CloseDialog(); settingsBlocked = false; resultDismissed = false; }
             Session?.SetForeground(value); SynchronizeGate(); Save(); if (value) CheckEndState();
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if (dialog != null) { DismissDialog(); return; }
-            if (profile.SelectedMode == 1 && !choosing) ShowLevels(); else Home();
+            if (profile.SelectedMode == 1 && !choosing) ShowLevels(); else if (confirmExit == null || confirmExit()) Home();
         }
         private void Home() { CancelInput(); Save(); returnLobby(); }
         internal void SelectMode(int mode)

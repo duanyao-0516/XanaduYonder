@@ -35,7 +35,7 @@ namespace XanaduYonder.Runtime
 
         private void OnKingdomRushReturned(string error)
         {
-            SetExternalGameLobbyInput(true);
+            SetExternalGameLobbyInput(!IsExternalGameRunning);
             if (activePage == Page.Lobby && !IsExternalGameRunning && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });
         }

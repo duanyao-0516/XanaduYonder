@@ -20,6 +20,10 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private AgeOfWarWideHud wideHud;
         private RectTransform pauseButton;
         private Image pauseButtonBackground;
+        private RectTransform battleHelpButton;
+        private Text battleHelpLabel;
+        private const float TwoControlInset=28;
+        private readonly AgeOfWarHotspot battleHelpHit=new AgeOfWarHotspot{action="mobile-battle-help",name="mobile-battle-help",id=-212};
         private RectTransform menuHelpButton,menuSettingsButton;
         private Image menuHelpBackground,menuSettingsBackground;
         private bool continueAvailable;
@@ -90,6 +94,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             if(menuEffects!=null){menuEffects.Dispose();menuEffects=null;}
             if(twoControls!=null){twoControls.Dispose();twoControls=null;}
             AgeOfWarDrawing.Clear(ui);AgeOfWarDrawing.Clear(dynamicHud);AgeOfWarDrawing.Clear(overlay);scene=hud=buttons=pause=tooltip=tutorial=null;oneHud=null;twoHud=null;wideHud=null;pauseButton=null;pauseButtonBackground=null;tutorialActive=false;
+            battleHelpButton=null;battleHelpLabel=null;
             menuHelpButton=menuSettingsButton=null;menuHelpBackground=menuSettingsBackground=null;
         }
         internal void StartBattle(AgeOfWarFrame value,IAgeOfWarBattle source=null)
@@ -120,6 +125,8 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private void ApplyLayout()
         {
             float extra=logicalWidth-assets.Stage.width;
+            // Do not spend the left troop panel's space when the stage has no added width.
+            float rightInset=assets.Edition==2?Mathf.Min(TwoControlInset,extra):0;
             if(scene!=null){scene.Root.anchoredPosition=new Vector2(extra/2,0);FillSceneBackground(scene,extra);}
             if(pause!=null)
             {
@@ -132,7 +139,10 @@ namespace XanaduYonder.Runtime.AgeOfWar
                 for(int i=0;i<hud.Images.Count;i++)
                 {
                     var layer=hud.Definition.layers[i];bool right=assets.Edition==1?layer.x>=430:layer.x>=230;
-                    hud.SetLayerOffset(i,new Vector2(right?extra:0,0));
+                    // These are the three headings of the original right control group.
+                    // Other right-anchored layers include bottom HP art even when their source y is zero.
+                    bool topHeading=assets.Edition==2&&(layer.key=="ui/hud/35"||layer.key=="ui/hud/36"||layer.key=="ui/hud/37");
+                    hud.SetLayerOffset(i,new Vector2((right?extra:0)-(topHeading?rightInset:0),0));
                     if(assets.Edition==2&&layer.key=="ui/hud/9")hud.Images[i].Root.localScale=new Vector3(logicalWidth/assets.Stage.width,layer.scaleY,1);
                 }
                 for(int i=0;i<hud.Texts.Count;i++)
@@ -146,11 +156,16 @@ namespace XanaduYonder.Runtime.AgeOfWar
             if(buttons!=null)
             {
                 if(assets.Edition==1)buttons.Root.anchoredPosition=new Vector2(buttonSourceX+extra,-40.5f);
-                else for(int i=0;i<buttons.Images.Count;i++)buttons.SetLayerOffset(i,new Vector2(buttons.Definition.layers[i].x>=230?extra:0,0));
+                else for(int i=0;i<buttons.Images.Count;i++)
+                {
+                    var layer=buttons.Definition.layers[i];
+                    // Cancel is a full-stage 720px bar, not a member of the right control group.
+                    buttons.SetLayerOffset(i,new Vector2(layer.x>=230?extra-(layer.name=="btnCancel"?0:rightInset):0,0));
+                }
             }
-            if(wideHud!=null)wideHud.SetWidth(extra);
+            if(wideHud!=null)wideHud.SetWidth(extra,rightInset);
             if(oneHud!=null)oneHud.SetViewportWidth(logicalWidth);
-            if(twoHud!=null)twoHud.SetViewportWidth(logicalWidth);
+            if(twoHud!=null)twoHud.SetViewportWidth(logicalWidth,rightInset);
             LayoutMenuControls();
             LayoutPauseButton();
             LayoutSaveWarning();
@@ -219,6 +234,9 @@ namespace XanaduYonder.Runtime.AgeOfWar
             var border=pauseButton.gameObject.AddComponent<Outline>();border.effectColor=new Color(.8f,.65f,.33f,.9f);border.effectDistance=new Vector2(1,-1);
             AgeOfWarDrawing.Text(pauseButton,assets,new AgeOfWarTextField{name="mobile-pause",variable="",initial="PAUSE",font=assets.Edition==1?"font/one/962":"font/windows/2",
                 size=assets.Edition==1?14:10,x=0,y=2,w=76,h=26,color="#fff2cf",align=2,bold=true});
+            battleHelpButton=AgeOfWarDrawing.Rect(ui,"Battle help",0,0,52,30);
+            battleHelpLabel=UiFactory.Label(battleHelpButton,"说明",0,0,52,30,assets.Edition==1?14:12,UiFactory.Hex("FFF2CF"),TextAnchor.MiddleCenter,FontStyle.Bold);
+            var helpShadow=battleHelpLabel.gameObject.AddComponent<Shadow>();helpShadow.effectColor=new Color(0,0,0,.75f);helpShadow.effectDistance=new Vector2(1,-1);
         }
         private void CreateMenuControls()
         {
@@ -255,19 +273,28 @@ namespace XanaduYonder.Runtime.AgeOfWar
         {
             if(pauseButton==null)return;
             bool visible=SceneKey=="battle"&&frame!=null&&!frame.Paused&&!frame.Ended&&!tutorialActive;
-            pauseButton.gameObject.SetActive(visible);if(!visible)return;
+            pauseButton.gameObject.SetActive(visible);battleHelpButton.gameObject.SetActive(visible);if(!visible)return;
+            const float controlsWidth=136;
+            float rightInset=assets.Edition==2?Mathf.Min(TwoControlInset,logicalWidth-assets.Stage.width):0;
             float gapLeft=assets.Edition==1?410:230,gapRight=logicalWidth-(assets.Edition==1?240:490);
-            bool fits=gapRight-gapLeft>=92;
-            float x=fits?(gapLeft+gapRight-76)/2:(logicalWidth-76)/2;
-            float y=fits?20:assets.Edition==1?112:80;
+            gapRight-=rightInset;
+            bool cancelBar=assets.Edition==2&&(frame.PendingTurretId>0||sell);
+            bool fits=!cancelBar&&gapRight-gapLeft>=controlsWidth+16;
+            bool stacked=!cancelBar&&!fits&&gapRight-gapLeft>=92;
+            float x=fits?(gapLeft+gapRight-controlsWidth)/2:stacked?(gapLeft+gapRight-76)/2:(logicalWidth-controlsWidth)/2;
+            float y=fits||stacked?20:assets.Edition==1?112:80;
+            float helpX=stacked?x+12:x+84,helpY=stacked?y+36:y;
             pauseButton.anchoredPosition=new Vector2(x,-y);
             pauseButtonHit.x=x;pauseButtonHit.y=y;pauseButtonHit.w=76;pauseButtonHit.h=30;
+            battleHelpButton.anchoredPosition=new Vector2(helpX,-helpY);
+            battleHelpHit.x=helpX;battleHelpHit.y=helpY;battleHelpHit.w=52;battleHelpHit.h=30;
         }
         private void HoverPauseButton(AgeOfWarHotspot hit,bool down)
         {
             if(pauseButtonBackground!=null)pauseButtonBackground.color=hit==pauseButtonHit
                 ?(down?new Color(.2f,.14f,.06f,.95f):new Color(.3f,.22f,.1f,.95f))
                 :new Color(.12f,.09f,.04f,.9f);
+            if(battleHelpLabel!=null)battleHelpLabel.color=hit==battleHelpHit?UiFactory.Hex(down?"CDBB8C":"FFFFFF"):UiFactory.Hex("FFF2CF");
         }
         private void FillSceneBackground(AgeOfWarSceneView source,float extra)
         {
@@ -404,6 +431,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             }
             if(scene!=null)return scene.Hit(point);
             if(frame==null)return null;
+            if(battleHelpButton!=null&&battleHelpButton.gameObject.activeSelf&&new Rect(battleHelpHit.x,battleHelpHit.y,battleHelpHit.w,battleHelpHit.h).Contains(point))return battleHelpHit;
             if(pauseButton!=null&&pauseButton.gameObject.activeSelf&&new Rect(pauseButtonHit.x,pauseButtonHit.y,pauseButtonHit.w,pauseButtonHit.h).Contains(point))return pauseButtonHit;
             var h=buttons==null||!buttons.Root.gameObject.activeSelf?null:buttons.Hit(point);
             if(h!=null)

@@ -5,7 +5,7 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private CanvasGroup externalGameLobbyInput;
-        private bool IsExternalGameRunning => IsKingdomRushRunning || IsZhaoyunAdouRunning;
+        private bool IsExternalGameRunning => IsKingdomRushRunning || IsLevelDevilRunning || IsCutTheRopeRunning || IsZhaoyunAdouRunning;
 
         private void SetExternalGameLobbyInput(bool enabled)
         {
@@ -13,10 +13,11 @@ namespace XanaduYonder.Runtime
             if (externalGameLobbyInput == null)
             {
                 externalGameLobbyInput = lobbyPage.GetComponent<CanvasGroup>();
-                if (externalGameLobbyInput == null) externalGameLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
+                if (externalGameLobbyInput == null)
+                    externalGameLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
             }
-            // The stable lobby root survives display-mode rebuilds. A late return from
-            // one host must not unlock the lobby while another native session owns it.
+            // The lobby root survives orientation and display-mode changes underneath
+            // an external Activity. A late return must not unlock another host's session.
             bool available = enabled && !IsExternalGameRunning;
             externalGameLobbyInput.interactable = available;
             externalGameLobbyInput.blocksRaycasts = available;

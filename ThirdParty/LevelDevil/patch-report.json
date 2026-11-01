@@ -1,0 +1,140 @@
+[
+  {
+    "name": "local boot",
+    "matches": 1,
+    "originalSha256": "50a0b63b8e8961300b8823ecaa2f6cae79a57cc1e6b7af4185bbf561d1ab1830",
+    "replacementSha256": "7abfc20c0b2b92ec998ba046b4dfa15fd4a000ef9a410164cee92da927bca106"
+  },
+  {
+    "name": "retain preloaded image scale on screen reload",
+    "matches": 1,
+    "originalSha256": "ca2cfdeb083c42b100045bff8877d615caae4b619c926b9e2d8957a35f6d6fec",
+    "replacementSha256": "dd911b44d0fd5fca83adcc18251cae626d275de5323104d13a7f829795bfa2f5"
+  },
+  {
+    "name": "preload selected image scale",
+    "matches": 1,
+    "originalSha256": "ec4719b315161f7eb2f5e4481897f73a9a0ece7eaf3bed3df60cd68704bb95bf",
+    "replacementSha256": "3aaca2d011618004b276fa16a4c61648ef46d4ca9d8dd6ae69a70994b8063f40"
+  },
+  {
+    "name": "preload completion timing",
+    "matches": 1,
+    "originalSha256": "443c5ab622f5ed3be83a7126573ca46868f9b51d4bbeaf5e0a975725641461bf",
+    "replacementSha256": "10e021fab8b38ef58f14053722edeab94fe530037c014f3ad77ba7bdb53e865e"
+  },
+  {
+    "name": "engine startup timing",
+    "matches": 1,
+    "originalSha256": "e2fce7e8aea7043a968e518729387a668ce0507275aee6dc125490e7f46fcf52",
+    "replacementSha256": "0b059abb53a982de5c9fa8fdaea4ef727fbbe0c98a096c05489eaccaa2c11ae5"
+  },
+  {
+    "name": "skip first boot wait",
+    "matches": 1,
+    "originalSha256": "51a38af9eca339e3f9ec35f66c9e46d324999929d8a6dce9f595aa4ac73fd5e8",
+    "replacementSha256": "61e284dd181bad5ed2a23022e292aca227557d09df6e779869cbe7aee24926e3"
+  },
+  {
+    "name": "skip first boot fades",
+    "matches": 1,
+    "originalSha256": "77dfd109e71a111318622f2e97bb263cdc35a7563afb62e3f68982bb0a3eff48",
+    "replacementSha256": "e8c39f1157b2f74d78b94c0c5719dd381d15f10f8383811820756202545ba832"
+  },
+  {
+    "name": "skip initial menu curtains",
+    "matches": 1,
+    "originalSha256": "9f4d4fb8d37ef38ca5aa9f1f02ecbb611cb66c78c9b7c2e1af9d27534c6fe472",
+    "replacementSha256": "2af51f6548adc9cf102e66915b2418ed6a4df4875864538a4c52ac2bc59ba56e"
+  },
+  {
+    "name": "remove platform SDK boundary",
+    "matches": 1,
+    "originalSha256": "c97b3a47f70e9b76be6d54b0f6f8b47d3a305f20072cdc5c1245a4de412676bd",
+    "replacementSha256": "cd7c6f16ceb5aa1158d6c659699d7f261dca74a13970e1c42dbf571017cee60e"
+  },
+  {
+    "name": "remove loading telemetry",
+    "matches": 1,
+    "originalSha256": "790ce28611659d5ce36c6db3612517a5bdd55c0a18b74f541ca3b265b971ef86",
+    "replacementSha256": "bb122785179c96613f3f0ef4946afaefd64ffbea3f3b40044b2f7862575e9ae8"
+  },
+  {
+    "name": "local transition continuation",
+    "matches": 4,
+    "originalSha256": "af36ccb88918ceaea03eec43b4e2bd19dff25f4782664a1357c395063e45532f",
+    "replacementSha256": "4d823afc3ada0e3ec8e2613f6a153aad522fe96ca4351ae3a370b63f9b2a8bd2"
+  },
+  {
+    "name": "explicit speedrun unlock",
+    "matches": 2,
+    "originalSha256": "accc4e6460c2e766cf08f168eb884aad60216ff3f40d8447e206b0607bdee9c1",
+    "replacementSha256": "d8e566b0271ee1f45649f49c18fa40aa3747e7e254b1c798d569b062281f5251"
+  },
+  {
+    "name": "explicit optional skip",
+    "matches": 1,
+    "originalSha256": "50ac26f18ac04468ea8fd5cd5fee0ad5cba336834f808b7a72daa70a5b0979da",
+    "replacementSha256": "cef1bb5ce215db09deeabc9f4a4735a1ef20efe743d772498dc03ff8f2d2c690"
+  },
+  {
+    "name": "completion transactions",
+    "matches": 2,
+    "originalSha256": "3f2ee80438d541147d7b00268d49e7fe264d1bb4a8141ce37c7a021f7650b71c",
+    "replacementSha256": "39123f56748e4a03365435c1cd4f3bf8472af0fd7bd8d219a174f3a7abeb7f77"
+  },
+  {
+    "name": "completion save result 1",
+    "matches": 1,
+    "originalSha256": "b71745b6cc750e72350757b5de7b08640e8cdd07ebd3eebd795fa7ada23a4143",
+    "replacementSha256": "574246f1134934b6012052bda42485560dbf5f0b3d40ff93564899895adae771"
+  },
+  {
+    "name": "completion save result 2",
+    "matches": 1,
+    "originalSha256": "8ab7349f7dddc5daaf499f01c1ac36dc5e8c363cf0ffdd459b1401e4fd303a0b",
+    "replacementSha256": "574246f1134934b6012052bda42485560dbf5f0b3d40ff93564899895adae771"
+  },
+  {
+    "name": "remove unused web helpers",
+    "matches": 1,
+    "originalSha256": "360a54e79a963d0f6e0bc01460c6b9358a6f31cdb2ecb7fa38e7de66a8a49eb5",
+    "replacementSha256": "7bc4b65774dac1285e25bf445f3be4b17eb8da08345baa35d557d5a213e607cc"
+  },
+  {
+    "name": "remove social navigation",
+    "matches": 1,
+    "originalSha256": "dadc814f3588350161469bc9b5f6edb356256ba5e95d83cd06fd5a7cd3e0ee37",
+    "replacementSha256": "d140bc2089ebc740f86267aee1891fdf1e55d98408779bd35c11c9343317b528"
+  },
+  {
+    "name": "remove remote image helper",
+    "matches": 1,
+    "originalSha256": "29fcb3ace918877305b796149be5092e2897fc1e204a5acf0b2e4983f53a91a9",
+    "replacementSha256": "dfd9af928b89192df2586d4857de3b08a6870f8e2bb9e447e250d69945fa46a1"
+  },
+  {
+    "name": "remove external navigation",
+    "matches": 1,
+    "originalSha256": "792f024c45d14bf1996573760b9960aea6f29ed01d5cb011e548a9a98d1f8166",
+    "replacementSha256": "3fa04efc7dbd54a5867ff4fbb42e589335b7f1c448765dee0488718046634699"
+  },
+  {
+    "name": "remove unused motion listener",
+    "matches": 1,
+    "originalSha256": "16440d881329d6dcb9021fb4dc0fa3a8d3cd813ff2fa1909695aa6136a14a78d",
+    "replacementSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "remove unused export library",
+    "matches": 1,
+    "originalSha256": "50ea66bc32f6b619d9b0b3e1c4d8f0917ab3933aa1645af3f70938311294dab6",
+    "replacementSha256": "8e36f24888a0549d2684d96015661b7e8d44a9af072573b12be2ba3c597201f6"
+  },
+  {
+    "name": "private adapter install",
+    "matches": 1,
+    "originalSha256": "51fdbf335d9bdc83714bd655d66be400863042829552698c364ad00f707733ae",
+    "replacementSha256": "45624b29358d8921bdb3d275422e81318a57688d3600da0ad20021ee0b42be7c"
+  }
+]

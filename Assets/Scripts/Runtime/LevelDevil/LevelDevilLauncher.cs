@@ -1,0 +1,72 @@
+using System;
+using UnityEngine;
+
+namespace XanaduYonder.Runtime.LevelDevil
+{
+    // Owns only the Android boundary. Original gameplay and saves remain in the
+    // bundled runtime, with a fixed per-game origin maintained by the Activity.
+    public sealed class LevelDevilLauncher : MonoBehaviour
+    {
+        public const string OpenFailureMessage = "只有一道门暂时无法打开，请稍后重试。";
+        private const string BridgeClass = "com.xanaduyonder.leveldevil.LevelDevilBridge";
+        public event Action<string> Returned;
+        public bool IsBusy { get; private set; }
+        private float nextStatusCheck;
+
+        public bool TryOpen(bool soundEnabled)
+        {
+            if (IsBusy) return true;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var bridge = new AndroidJavaClass(BridgeClass))
+                {
+                    if (!bridge.CallStatic<bool>("open", activity, soundEnabled))
+                    {
+                        Debug.LogError("Level Devil launch rejected: " + bridge.CallStatic<string>("getLastError"));
+                        return false;
+                    }
+                }
+                IsBusy = true;
+                nextStatusCheck = Time.unscaledTime + .25f;
+                return true;
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                return false;
+            }
+#else
+            Debug.LogWarning("Level Devil requires the bundled Android WebView host.");
+            return false;
+#endif
+        }
+
+        private void Update()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (!IsBusy || Time.unscaledTime < nextStatusCheck) return;
+            nextStatusCheck = Time.unscaledTime + .25f;
+            string failure;
+            try
+            {
+                using (var bridge = new AndroidJavaClass(BridgeClass))
+                {
+                    if (bridge.CallStatic<bool>("isRunning")) return;
+                    failure = bridge.CallStatic<string>("getLastError");
+                }
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                failure = error.Message;
+            }
+            IsBusy = false;
+            if (!string.IsNullOrEmpty(failure)) Debug.LogError("Level Devil: " + failure);
+            Returned?.Invoke(string.IsNullOrEmpty(failure) ? null : OpenFailureMessage);
+#endif
+        }
+    }
+}

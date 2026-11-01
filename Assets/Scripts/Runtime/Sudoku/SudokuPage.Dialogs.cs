@@ -44,11 +44,13 @@ namespace XanaduYonder.Runtime.Sudoku
             if (gameInput != null) gameInput.interactable = true;
             if (selectionInput != null) selectionInput.interactable = true;
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if (difficultyDropdown.IsExpanded) { difficultyDropdown.Hide(); return; }
             if (dialog != null) { dismissDialog?.Invoke(); return; }
-            if (choosing) returnLobby(); else ReturnToSelection();
+            if (choosing) { if (confirmExit == null || confirmExit()) returnLobby(); } else ReturnToSelection();
         }
         private void Pause()
         {
