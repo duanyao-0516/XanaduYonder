@@ -1,0 +1,9 @@
+[
+  {
+    "name": "icon",
+    "source_url": "https://imga2.5054399.com/upload_pic/minilogo/235576.jpg",
+    "sha256": "2cd3a90ecb0d94cdb749a826a1b344b8e1d647d10b6fa45113e9aa36d558b595",
+    "bytes": 2356,
+    "target": "Assets/Resources/Lobby/Icons/fruit-slice-logo.jpg"
+  }
+]

@@ -99,11 +99,11 @@ namespace XanaduYonder.EditorTools
         }
 
         private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush",
-            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "Idiom" };
+            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "FruitSlice", "Idiom" };
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush",
-            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 19 ? "敏捷挑战" : "文字语言"; }
+            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterFruitSlice", "EnterIdiom" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 21, 5 };
+        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 20 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -185,7 +185,7 @@ namespace XanaduYonder.EditorTools
                 SetModeForCheck(f.Host, mode); f.Flush();
                 Require(ReferenceEquals(scroll, f.Scroll) && ReferenceEquals(status, Property(f.View, "StatusLabel")), "Changing mode keeps the scroll and status owners stable");
                 var cards = f.View.GetComponentsInChildren<Button>().Where(b => b.name.EndsWith(" game card", StringComparison.Ordinal)).ToArray();
-                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty actual entries");
+                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty-one actual entries");
                 for (int i = 0; i < cards.Length; i++)
                 {
                     var card = (RectTransform)cards[i].transform;

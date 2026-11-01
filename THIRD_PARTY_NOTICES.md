@@ -8,6 +8,13 @@ The project's original code is licensed under MIT. Third-party software and asse
 - The complete ISC license, including the package's notice for Feather-derived icons, is retained in [the lobby asset license](docs/design/lobby-v2/lobby-ui-v2-assets/LICENSE). Source URLs, exported PNG hashes and resource mappings are recorded in [the asset map](docs/design/lobby-v2/asset-map.json).
 - The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma, Happy Ball and Kingdom Rush lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
 
+## Fruit Slice (21 · 切水果大师, development preview)
+
+- Source: [4399 game 235576](https://www.4399.com/flash/235576.htm), retrieved on 2026-11-01. The original Laya game scripts, engine libraries, models, textures, scenes, levels and audio retain their original rights; the repository's license does not relicense this content.
+- Fixed original inputs and the download manifest are tracked in `ThirdParty/FruitSliceSource/`; the complete offline runtime is tracked in `Assets/StreamingAssets/fruit-slice/`. `ThirdParty/FruitSliceContent/provenance.json` retains the original acquisition identity. `scripts/fruit-slice/` generates and validates the offline package. [Content notes](ThirdParty/FruitSliceContent/README.md) describe the removal of advertising, telemetry, platform navigation, consent UI and the currency system, plus touch/persistence/lifecycle adaptation.
+- The unchanged large lobby logo uses the small icon from the game's 4399 listing; provenance is recorded in `ThirdParty/FruitSliceHost/artwork.json`. The compact sliced-watermelon line icon is original project artwork matching the existing green rounded-stroke icons.
+- The Unity lobby adapter, Android WebView host, offline entry and content transformation scripts are project integration code. Download completeness, removed files and validation limits are documented in [resource research](docs/research/2026-11-01-fruit-slice-package.md) and [integration verification](docs/verification-fruit-slice.md).
+
 ## Aircraft Fire 2.5 (20 · 飞机大战, development preview)
 
 - Source: the user-provided local `Aircraft+Fire_2.5_APKPure.apk`, package `czh.aircraftwar`, version code 11. APK SHA-256: `052519b7cd43722a99eb079a349fb85b2218234c7e77594a8125e2a1160ed142`. This APK is the local reference for gameplay recovery and artwork/audio extraction; it is not included in the repository.

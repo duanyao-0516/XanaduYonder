@@ -22,7 +22,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterKingdomRush()
         {
-            if (activePage != Page.Lobby || paused || !focused || IsKingdomRushRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || IsKingdomRushRunning || IsFruitSliceRunning) return;
             CloseModal();
             Save();
             feedback?.Stop();

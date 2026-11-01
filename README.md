@@ -8,6 +8,8 @@
 
 本次正式版本为 **0.9.4**，Android versionCode 为 **13**，包含 **20 个大厅入口**。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；交付范围与本轮未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
 
+**21 · 切水果大师**：独立全屏离线 WebView，2 秒内两次系统返回回到大厅。27 款刀光首击装备，取消钻石与领取计时，复活免费，切水果首次按下立即响应；去除广告及联网调用。单列大 Logo 使用原游戏小图标，双列与目录使用统一绿色线稿切西瓜图标。固定原始输入和完整离线资源随仓库交付。构建入口 `scripts/build-fruit-slice.sh`，测试包名 `com.duanyao.xanaduyonder.fruitslicetest`；用户已验收，验证范围见[接入记录](docs/verification-fruit-slice.md)。
+
 **20 · 飞机大战（Aircraft Fire）**：独立 Unity C# 离线玩法，从原游戏入口菜单选择经典模式、关卡模式或查看历史成绩，说明与设置仅在入口显示；实战支持拖动飞机、自动射击、炸弹和双发补给，经典模式可在暂停页切换普通／疯狂进攻，关卡模式共七关。三种成绩与最高到达关卡单独保存，每局可免费复活一次。单列大厅使用用户提供 APK 的真实图标，双列和目录使用统一风格飞机图标。仅保留离线游戏内容，无广告、购买、通知或联网服务。原始参数、素材与移植调整见[APK 参考记录](docs/aircraft-fire-reference.md)；正式交付与初版历史验证分开记录在[飞机大战接入记录](docs/verification-aircraft-fire.md)。
 
 **19 · 王国保卫战**：接入 FL8.0.5 初代 32 关、三种挑战和 13 位初代英雄，内容离线内置，由独立 Android Activity 承载。回退后的可玩基线已由用户在 OPPO 验收，本轮保留其全部 2,424 个内容文件，只修改开始页接入点并新增独立说明模块，提供玩法说明与原生音乐／音效设置入口；复用原字体，暂缓资源裁剪。大厅适配三种视图，单列使用用户新提供的 Logo 原图，与 Zuma 同位置、同显示尺寸；双列与目录使用已有城堡小图标。内容与运行库先按[内容构建说明](ThirdParty/KingdomRushContent/README.md)和[Android 运行库说明](ThirdParty/KingdomRushRuntime/README.md)生成，再执行 `scripts/build-kingdom-rush.sh`。本轮测试和用户验收见[王国保卫战验证记录](docs/verification-kingdom-rush.md)，正式产物见[v0.9.0 发布记录](docs/releases/v0.9.0.md)。

@@ -92,7 +92,7 @@ namespace XanaduYonder.Runtime
         {
             get
             {
-                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning ||
+                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning || IsFruitSliceRunning ||
                     (lobbyView != null && lobbyView.HasDisplayOptions) ||
                     lobbyPage == null || !lobbyPage.activeInHierarchy || canvasRoot == null ||
                     !canvasRoot.gameObject.activeInHierarchy || lobbyScroll == null || !lobbyScroll.isActiveAndEnabled ||
@@ -199,6 +199,7 @@ namespace XanaduYonder.Runtime
                 LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
                 LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人竖屏 / 双人横屏合作 · 10 关挑战", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
+                LobbyGame("fruit-slice", "FruitSlice", "切水果大师", "21", "敏捷挑战", "指尖切果", "划出一道刀光，切开缤纷水果。", "三种模式 · 免费刀光 · 离线畅玩", "三种模式 · 离线畅玩", EnterFruitSlice, AddFruitSlicePreview),
                 LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
             };
             lobbyView = root.gameObject.AddComponent<LobbyView>();
@@ -1441,7 +1442,7 @@ namespace XanaduYonder.Runtime
 
         private void HandleBack()
         {
-            if (IsKingdomRushRunning) return;
+            if (IsKingdomRushRunning || IsFruitSliceRunning) return;
             if (IsAgeOfWarPage) { ageOfWarPage.HandleBack(); return; }
             var splash = GetComponent<BrandSplash>();
             if (splash != null && splash.BlocksInput) return;
@@ -1519,6 +1520,7 @@ namespace XanaduYonder.Runtime
         {
             ReleaseAircraftFire();
             ReleaseKingdomRushLauncher();
+            ReleaseFruitSliceLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
         }
 

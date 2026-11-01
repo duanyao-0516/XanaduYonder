@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game",
+  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game; original fruit-slice line icon added",
   "counts": {
-    "pngAssets": 26,
+    "pngAssets": 27,
     "approvedAssets": 23,
-    "existingGameIcons": 19,
+    "existingGameIcons": 20,
     "preparedGameIcons": 1,
     "fallbackIcons": 1,
     "controlIcons": 5,
     "lucideAssets": 23,
-    "customAssets": 3,
+    "customAssets": 4,
     "uniqueLucideSourceIcons": 22,
-    "uniqueCustomSourceIcons": 2
+    "uniqueCustomSourceIcons": 3
   },
   "package": {
     "name": "lucide-static",
@@ -1050,6 +1050,32 @@
       "pngSha256": "b5fbb85637ef1dfbde6acc3a2865d54e9502699312704b7da52ad6906de6a7fc",
       "resourcePath": "Lobby/Icons/aircraft-fire",
       "unityAsset": "Assets/Resources/Lobby/Icons/aircraft-fire.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8"
+    },
+    {
+      "id": "fruit-slice",
+      "name": "Fruit Slice",
+      "kind": "game",
+      "status": "connected-entry",
+      "origin": "Original XanaduYonder sliced watermelon line drawing",
+      "svg": "additional-icons/svg/fruit-slice.svg",
+      "svgSha256": "f325f11960c1196dabb42cab9f2d3afe320eea60ff08c8052ef12318c9e8149e",
+      "png": "additional-icons/png/fruit-slice.png",
+      "pngSha256": "b9fa50d736bc191c795f4dadf77fc5c0ac53071275619738a5fb6d71eb0a883a",
+      "resourcePath": "Lobby/Icons/fruit-slice",
+      "unityAsset": "Assets/Resources/Lobby/Icons/fruit-slice.png",
       "stroke": "#276653",
       "viewBox": [
         0,

@@ -349,6 +349,26 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildFruitSlicePreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    EditorUserBuildSettings.buildAppBundle = false;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".fruitslicetest");
+                    PlayerSettings.productName = "Xanadu 切水果大师";
+                    BuildApk("-fruit-slice-preview.apk", BuildOptions.StrictMode, version: Version);
+                }
+            });
+        }
+
         public static void BuildAircraftFirePreview()
         {
             RunOrFail(() =>
