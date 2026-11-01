@@ -90,3 +90,7 @@ Desktop.ini
 *.swo
 *.blend1
 *.blend1.meta
+
+# Generated from tracked classic H5 resources and system-WebView Java sources.
+/Assets/Plugins/Android/ClassicGoldMiner.aar
+/Assets/Plugins/Android/ClassicGoldMiner.aar.meta

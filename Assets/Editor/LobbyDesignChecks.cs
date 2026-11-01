@@ -15,6 +15,7 @@ using XanaduYonder.Core;
 using XanaduYonder.Core.Sudoku;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.KingdomRush;
+using XanaduYonder.Runtime.ClassicGoldMiner;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Sudoku;
 using Object = UnityEngine.Object;
@@ -74,6 +75,7 @@ namespace XanaduYonder.EditorTools
                     CheckRecords(fixture);
                     CheckOptions(fixture);
                     CheckKingdomRushLifecycle(fixture);
+                    CheckClassicGoldMinerLifecycle(fixture);
                     report.AppendLine("PASS production lobby at 720x" + height);
                 }
                 report.AppendLine("LOBBY_DESIGN_CHECKS_PASS: " + checks + " assertions");
@@ -99,11 +101,11 @@ namespace XanaduYonder.EditorTools
         }
 
         private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush",
-            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "Idiom" };
+            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "ClassicGoldMiner", "AircraftFire", "Idiom" };
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush",
-            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 19 ? "敏捷挑战" : "文字语言"; }
+            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterAircraftFire", "EnterIdiom" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 21, 20, 5 };
+        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 20 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -185,7 +187,7 @@ namespace XanaduYonder.EditorTools
                 SetModeForCheck(f.Host, mode); f.Flush();
                 Require(ReferenceEquals(scroll, f.Scroll) && ReferenceEquals(status, Property(f.View, "StatusLabel")), "Changing mode keeps the scroll and status owners stable");
                 var cards = f.View.GetComponentsInChildren<Button>().Where(b => b.name.EndsWith(" game card", StringComparison.Ordinal)).ToArray();
-                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty actual entries");
+                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty-one actual entries");
                 for (int i = 0; i < cards.Length; i++)
                 {
                     var card = (RectTransform)cards[i].transform;
@@ -261,6 +263,7 @@ namespace XanaduYonder.EditorTools
                 f.Capture("mode-" + mode + "-top");
                 f.ShowCard(FindCard(f.View.transform, "KingdomRush")); f.Capture("mode-" + mode + "-kingdom-rush");
                 f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
+                f.ShowCard(FindCard(f.View.transform, "ClassicGoldMiner")); f.Capture("mode-" + mode + "-classic-gold-miner");
                 if (mode == 2) { f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma"); }
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
                 foreach (var card in cards)
@@ -379,6 +382,44 @@ namespace XanaduYonder.EditorTools
                 "A delayed native error cannot replace another active page or its dialog");
             pageField.SetValue(f.Host, lobbyPage);
             Invoke(f.Host, "ReleaseKingdomRushLauncher");
+            Require(returnedField.GetValue(launcher) == null, "Host teardown releases the native return subscription");
+        }
+
+        private static void CheckClassicGoldMinerLifecycle(Fixture f)
+        {
+            var pageField = typeof(AppController).GetField("activePage", Members);
+            object lobbyPage = pageField.GetValue(f.Host);
+            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
+            Invoke(f.Host, "EnterClassicGoldMiner");
+            Require(f.Host.GetComponent<ClassicGoldMinerLauncher>() == null, "A stale Classic Gold Miner action cannot launch from another page");
+            pageField.SetValue(f.Host, lobbyPage);
+
+            Invoke(f.Host, "EnsureClassicGoldMinerLauncher");
+            Invoke(f.Host, "EnsureClassicGoldMinerLauncher");
+            var launcher = f.Host.GetComponent<ClassicGoldMinerLauncher>();
+            Require(launcher != null && f.Host.GetComponents<ClassicGoldMinerLauncher>().Length == 1, "Repeated lazy initialization owns one launcher");
+            var returnedField = typeof(ClassicGoldMinerLauncher).GetField("Returned", Members);
+            Require(((Delegate)returnedField.GetValue(launcher)).GetInvocationList().Length == 1, "The native return callback is subscribed once");
+            typeof(ClassicGoldMinerLauncher).GetProperty("IsBusy").SetValue(launcher, true);
+            Invoke(f.Host, "SetClassicGoldMinerLobbyInput", false);
+            SetModeForCheck(f.Host, 0); f.Flush();
+            Require(!FindCard(f.View.transform, "ClassicGoldMiner").GetComponent<Button>().IsInteractable(),
+                "A lobby rebuild cannot reactivate cards while the native game is opening");
+            var modalBefore = Property(f.Host, "modal");
+            Invoke(f.Host, "EnterClassicGoldMiner"); Invoke(f.Host, "HandleBack");
+            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) && launcher.IsBusy,
+                "Repeated entry and Back do not open a second session or a lobby dialog during a native session");
+            typeof(ClassicGoldMinerLauncher).GetProperty("IsBusy").SetValue(launcher, false);
+            ((Action<string>)returnedField.GetValue(launcher))(null);
+            Require(FindCard(f.View.transform, "ClassicGoldMiner").GetComponent<Button>().IsInteractable(),
+                "The actual native return callback restores the rebuilt lobby card");
+            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
+            ((Action<string>)returnedField.GetValue(launcher))(ClassicGoldMinerLauncher.OpenFailureMessage);
+            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) &&
+                pageField.GetValue(f.Host).Equals(Enum.Parse(pageField.FieldType, "Game2048")),
+                "A delayed native error cannot replace another active page or its dialog");
+            pageField.SetValue(f.Host, lobbyPage);
+            Invoke(f.Host, "ReleaseClassicGoldMinerLauncher");
             Require(returnedField.GetValue(launcher) == null, "Host teardown releases the native return subscription");
         }
 

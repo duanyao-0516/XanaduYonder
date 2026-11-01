@@ -1,0 +1,62 @@
+{
+	"textures": [
+		{
+			"image": "hook.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 52,
+				"h": 30
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "hook00",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 40,
+						"h": 28
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 36,
+						"h": 21
+					},
+					"frame": {
+						"x": 0,
+						"y": 0,
+						"w": 36,
+						"h": 21
+					}
+				},
+				{
+					"filename": "hook01",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 40,
+						"h": 28
+					},
+					"spriteSourceSize": {
+						"x": 13,
+						"y": 0,
+						"w": 14,
+						"h": 28
+					},
+					"frame": {
+						"x": 36,
+						"y": 0,
+						"w": 14,
+						"h": 28
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:2e0bcda9dec0d40ff6bae36fafe06e08:87c35d4c28d4de935deba4c4174f84b4:532410d6a0ed9bae538455ba1c705e96$"
+	}
+}

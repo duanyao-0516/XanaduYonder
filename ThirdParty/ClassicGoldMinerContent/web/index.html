@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>经典黄金矿工</title>
+  <link rel="stylesheet" href="shared/host.css">
+  <script src="shared/host.js" defer></script>
+  <script src="shared/menu.js" defer></script>
+</head>
+<body class="classic-menu">
+  <main class="classic-shell">
+    <div class="classic-heading"><h1>经典黄金矿工</h1><p class="classic-hint">单人寻宝，也能双人合作</p></div>
+    <div class="classic-modes">
+      <section class="classic-card" aria-labelledby="solo-title">
+        <h2 id="solo-title">单人模式</h2><p>看准方向，轻点放钩。<br>买好道具，向下一关出发。</p>
+        <div class="classic-status" id="solo-status">正在读取进度…</div>
+        <div class="classic-actions"><button data-mode="solo" data-action="resume" disabled>继续游戏</button><button class="classic-secondary" data-mode="solo" data-action="new">新游戏</button></div>
+      </section>
+      <section class="classic-card" aria-labelledby="duo-title">
+        <h2 id="duo-title">双人模式</h2><p>一人一边，同时出钩。<br>合力攒够金币，一起过关。</p>
+        <div class="classic-status" id="duo-status">正在读取进度…</div>
+        <div class="classic-actions"><button data-mode="duo" data-action="resume" disabled>继续游戏</button><button class="classic-secondary" data-mode="duo" data-action="new">新游戏</button></div>
+      </section>
+    </div>
+    <p class="classic-footer">进度分别自动保存 · 2 秒内连续两次系统返回可回到大厅</p>
+  </main>
+  <dialog id="new-confirm"><h2>开始新游戏？</h2><p id="new-description"></p><div class="classic-actions"><button id="new-cancel" class="classic-secondary">保留进度</button><button id="new-start">重新开始</button></div></dialog>
+</body>
+</html>

@@ -388,6 +388,24 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildClassicGoldMinerPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".classicgoldminertest");
+                    PlayerSettings.productName = "Xanadu 经典矿工";
+                    BuildApk("-classic-gold-miner-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidStartupValidation()
         {
             RunOrFail(() =>

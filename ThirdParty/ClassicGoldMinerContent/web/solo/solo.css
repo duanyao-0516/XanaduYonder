@@ -1,0 +1,12 @@
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17120b;color:#ffe8a3;font-family:system-ui,sans-serif;touch-action:none;overscroll-behavior:none}
+#solo-shell,#gameContainer{position:absolute;inset:0;overflow:hidden}
+#gameContainer{display:flex;align-items:center;justify-content:center}
+#gameContainer canvas{display:block;touch-action:none;margin:0!important;flex:none}
+#solo-bomb-guard{position:fixed;right:max(12px,var(--classic-safe-right));bottom:max(12px,var(--classic-safe-bottom));z-index:10;touch-action:none}
+#solo-bomb{position:relative;width:58px;height:58px;min-height:58px;padding:3px 5px 4px 32px;border:2px solid #f6cb5e;border-radius:50%;background:#5b3915e8;color:#fff2bb;font-size:15px;font-weight:bold;touch-action:none;box-shadow:0 2px 5px #0008}
+#solo-bomb::before{content:"";position:absolute;left:4px;top:2px;width:25px;height:50px;background:url(assets/atlas.png) -995px -558px;transform:rotate(12deg) scale(.8);transform-origin:center}
+#solo-bomb:disabled{opacity:.45}
+#solo-bomb[hidden],#solo-drop[hidden]{display:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#solo-error{position:fixed;inset:15%;padding:24px;background:#24170f;border:2px solid #eac668;border-radius:16px;z-index:1000;white-space:pre-wrap}
+#solo-error a{color:#ffe8a3}button:focus-visible{outline:3px solid white;outline-offset:2px}
