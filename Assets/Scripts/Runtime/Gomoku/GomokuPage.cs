@@ -149,9 +149,16 @@ namespace XanaduYonder.Runtime.Gomoku
             if (!value) Save();
             if (visible) Refresh();
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
-            if (dialog != null) { dismissDialog?.Invoke(); return; }
+            if (dialog != null)
+            {
+                if (dialogBackLeavesGame && confirmExit != null && !confirmExit()) return;
+                dismissDialog?.Invoke(); return;
+            }
+            if (confirmExit != null && !confirmExit()) return;
             RequestLeave();
         }
         private void RequestLeave()

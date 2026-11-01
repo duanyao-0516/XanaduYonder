@@ -91,12 +91,14 @@ namespace XanaduYonder.Runtime.Minesweeper
             if(!foreground) Save();
             if(visible&&!choosing) Refresh();
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if(dialog!=null) { dismissDialog?.Invoke(); return; }
             if(!choosing&&viewport!=null&&viewport.IsOverview) { CancelInput(); ExitOverview(); Save(); Refresh(); return; }
             if(!choosing&&fullscreen) { ToggleFullscreen(); return; }
-            if(!choosing) ReturnToSelection(); else returnLobby();
+            if(!choosing) ReturnToSelection(); else if(confirmExit==null||confirmExit()) returnLobby();
         }
         private void ReturnToSelection()
         {

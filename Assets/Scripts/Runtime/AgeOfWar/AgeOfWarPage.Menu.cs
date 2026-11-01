@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using XanaduYonder.Core.AgeOfWar;
 
 namespace XanaduYonder.Runtime.AgeOfWar
 {
@@ -10,6 +11,8 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private Func<bool> hapticsEnabled=()=>false;
         private Action<bool> setHaptics=_=>{};
         private int suppressMenuInputUntilFrame=-1;
+        private IAgeOfWarBattle battleHelpOwner;
+        private bool resumeAfterBattleHelp;
 
         private void ShowMainMenu()
         {
@@ -61,9 +64,29 @@ namespace XanaduYonder.Runtime.AgeOfWar
             if(help)menuDialog.ShowHelp();else menuDialog.ShowSettings();
         }
 
+        private void OpenBattleHelp()
+        {
+            if(battle==null||view.SceneKey!="battle"||view.Transitioning||view.HasTutorial||menuDialog==null||menuDialog.IsOpen)return;
+            var frame=battle.Capture();if(frame.Ended)return;
+            CancelPointer();view.HidePointer();view.ClearHover();
+            battleHelpOwner=battle;resumeAfterBattleHelp=!frame.Paused;
+            if(resumeAfterBattleHelp&&!Command(AgeOfWarAction.Pause))
+            {battleHelpOwner=null;resumeAfterBattleHelp=false;return;}
+            stageClock.Reset();clock?.Reset();
+            menuDialog.ShowBattleHelp(assets,battle,battle.Capture());
+        }
+
         private void MenuDialogClosed()
         {
+            var owner=battleHelpOwner;bool resume=resumeAfterBattleHelp;
+            battleHelpOwner=null;resumeAfterBattleHelp=false;
+            if(resume&&owner!=null&&battle==owner&&!leaving)
+            {
+                var frame=battle.Capture();
+                if(frame.Paused&&!frame.Ended)Command(AgeOfWarAction.Pause);
+            }
             CancelPointer();view?.HidePointer();stageClock.Reset();
+            clock?.Reset();
             // UGUI may close during its Update before this page observes the same release.
             suppressMenuInputUntilFrame=Time.frameCount+1;
             audioPlayer?.Refresh();

@@ -51,7 +51,18 @@ local.properties
 /Assets/Plugins/Android/KingdomRushRuntime.aar.meta
 /Assets/Plugins/Android/KingdomRushContent.aar
 /Assets/Plugins/Android/KingdomRushContent.aar.meta
+/Assets/Plugins/Android/LevelDevilContent.aar
+/Assets/Plugins/Android/LevelDevilContent.aar.meta
+/ThirdParty/LevelDevil/generated/
 /ThirdParty/KingdomRushRuntime/prebuilt/
+# Built from the hash-pinned local web content and Android host sources.
+/Assets/Plugins/Android/ZhaoyunAdouRuntime.aar
+/Assets/Plugins/Android/ZhaoyunAdouRuntime.aar.meta
+# Built locally from the pinned Cut the Rope content and Android host sources.
+/Assets/Plugins/Android/CutTheRopeRuntime.aar
+/Assets/Plugins/Android/CutTheRopeRuntime.aar.meta
+/Assets/Plugins/Android/CutTheRopeContent.aar
+/Assets/Plugins/Android/CutTheRopeContent.aar.meta
 /TestResults/
 Tests/**/bin/
 Tests/**/obj/

@@ -59,3 +59,5 @@ Temporary verification programs are under ignored `artifacts/`. Existing lobby-c
 ## Delivery revision
 
 After the preview was installed on the user's OPPO, the user supplied a 72×72 image for the classic entry's large lobby logo and requested commit/merge to remote master with no further tests or compilation. The image is preserved byte-for-byte as `Assets/Resources/Lobby/ClassicGoldMinerLogo.png` and is loaded by the classic entry's own preview callback. The earlier APK and validation above predate this logo revision and subsequent master integration; no rebuilt APK or runtime validation is claimed for this delivery revision.
+
+Master integration preserves its Cut the Rope, Level Devil and Zhaoyun Adou entries and existing system-Back handling. Classic Gold Miner uses item number 24 and joins master's shared external-game busy/input guard. Existing lobby-check expectations were reconciled to 24 entries without executing them.

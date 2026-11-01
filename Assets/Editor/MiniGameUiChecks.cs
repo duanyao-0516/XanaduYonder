@@ -146,8 +146,8 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = LobbyDesignChecks.RecordForCheck(shell, "Sudoku").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "ClassicGoldMiner", "AircraftFire", "Idiom" };
-                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterAircraftFire", "EnterIdiom" };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "Idiom" };
+                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterIdiom" };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -166,7 +166,7 @@ namespace XanaduYonder.EditorTools
                 int cardCount = 0;
                 foreach (var button in content.GetComponentsInChildren<Button>())
                     if (button.name.EndsWith(" game card", StringComparison.Ordinal)) cardCount++;
-                Require(cardCount == names.Length, "Lobby contains exactly twenty-one ordered game cards");
+                Require(cardCount == names.Length, "Lobby contains exactly " + names.Length + " ordered game cards");
                 var fruit = LobbyDesignChecks.FindCard(content, "LinkMatch").GetComponentsInChildren<RawImage>();
                 Require(fruit.Length == 4, "Link Match lobby preview shows four fruit tiles");
                 foreach (var tile in fruit) Require(tile.texture != null && !tile.raycastTarget, "Decorative Link Match fruit loads without intercepting input");

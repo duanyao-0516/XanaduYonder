@@ -54,3 +54,11 @@ image.preserveAspect = true;
 [完整 LICENSE](lobby-ui-v2-assets/LICENSE) 保留 Lucide 的 ISC 许可证及原包附带的 Feather MIT 说明，适用于 Lucide 资产；原创手柄的来源和适用范围在统一映射中单独标为 custom，不冒称官方图形。
 
 本次资源验证覆盖：批准稿和原图 SHA-256、25 张 PNG 的解码尺寸／RGBA8／sRGB／透明与抗锯齿像素、新图标与官方源 SVG 的几何一致性、导入元数据和 Resources 目录内容。Unity 实际导入、程序集、UI 交互和真机表现由大厅主任务统一验证。
+
+## 割绳子补充图标
+
+割绳子使用同版本 Lucide `scissors`，维持 `#276653`、2 单位线宽、圆头圆角和 96×96 透明 PNG，运行路径为 `Lobby/Icons/cut-the-rope`。双列和目录走统一的小图标加载路径，不再缩小彩色大 Logo。单列大 Logo 原样使用用户提供的图片并保持比例，详见 [割绳子美术来源](../../cut-the-rope-lobby-art.md)。当前完整资产数量及哈希以 `asset-map.json` 为准。
+
+## 赵云与阿斗补充图标
+
+双列与目录使用原创长枪护盾线条图标，沿用 `#276653`、2 单位圆头线条、24×24 viewBox 和 96×96 透明 PNG。单列大 Logo 原样使用用户指定附件；见[美术来源](../../zhaoyun-adou-lobby-art.md)。

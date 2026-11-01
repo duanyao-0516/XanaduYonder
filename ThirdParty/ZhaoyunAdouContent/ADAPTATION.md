@@ -1,0 +1,81 @@
+# 赵云与阿斗：离线内容适配
+
+此目录是固定上游客户端的可审阅适配源码。游戏引擎、战斗规则、AI 和素材保留原发行版；构建不会执行或交付解混淆产物。
+
+## 构建输入与产物
+
+- `upstream-lock.json` 固定 308 个公开客户端输入的相对路径、长度与 SHA-256。
+- 原 `js/bundle.js` SHA-256 为 `249945e2ac02d62f259336b049751de805d913c252169111cbda2c684eaebf0e`。
+- 构建仅在唯一 `})();function _0x2d19` 锚点前插入 `bundle-export.js`，并验证删除插入文本即可还原原 bundle。原始函数体不做字符串替换或批量重写。
+- `offline-adapter.js` 在 `js/index.js` 初始化前覆盖明确的业务入口。注册场景 ID、闭包变量名和方法名绑定此上游哈希；升级上游必须重新审查。
+- `host-bridge.js` 在游戏异步初始化前建立宿主 API。`index.html` 只加载本地文件，CSP 限制资源到同源。
+
+从仓库根目录执行：
+
+```sh
+python3 scripts/zhaoyun-adou/build-content.py
+# 隔离候选构建，避免覆盖正在打包的内容：
+python3 scripts/zhaoyun-adou/build-content.py --output artifacts/zhaoyun-adou-next/content
+```
+
+默认读取 `artifacts/4399-262277/source` 的已下载原始输入。构建本身不联网，输入缺失或哈希不符即失败。输出必须是 `artifacts` 下与源目录互不包含的专用目录；该目录会被替换。默认产物为 `artifacts/zhaoyun-adou/content`，报告在其父目录 `content-build.json`。
+
+报告 `files` 是按路径排序的 `{path,bytes,sha256}` 列表；`contentDigest` 为 Python `json.dumps(files,sort_keys=True,separators=(',',':'))` UTF-8 字节的 SHA-256。`sourceFiles` 固定本目录所有输入文件及构建脚本。Android 打包和 Unity gate 分别核对实际内容、输入源码与报告，避免源码已变化而 AAR 仍旧。
+
+## 离线产品规则
+
+- 无体力开局门槛、体力扣减和恢复入口；商店移除无用途的体力药丸。
+- 保留原版普通胜/负金币（20/5）、武器碎片、武将/武器成长、地图、段位和本地 AI。
+- 去除广告双倍、广告抽奖、分享奖励及其点击路径；不提供虚假成功的广告或登录 SDK。商店按原品类/等级金币价格购买。原抽奖池与普通商品池相同，移除抽奖不切断独占物品获取。
+- 铲子、推土机各按原战局使用标志限用一次，显示“本局援助”；保留原出现条件和实际效果，动画开始前占用使用标志。
+- “个人段位”只显示本机进度。“每日段位奖励”沿用原 `lastStar` 奖励表和资格标志；原版新档也具备首笔基础领取资格。金币和已领标志通过一个 JSON 写入并读回确认，失败不先扣资格或增加金币。
+- 不初始化平台 SDK、远端登录/排名/统计/配置，不显示 UID、导流、平台隐私/授权。游戏对手由原本机 AI 生成与控制。
+
+## 缺资源处理
+
+龙胆亮银枪枪头特效使用已有普通长枪特效；伤害/碰撞数值保持原定义。商店光效只使用现有 light1/light2，关闭不影响业务的描边 shader。结算包和碎片背景使用已存在且语义相同的素材。构建移除未使用 shader 注册、缺失 splash 入口、调试场景和平台专用对话框加载路径。
+
+## 宿主接口与保存
+
+固定 origin 为 `https://zhaoyun-adou.xanadu.invalid/`，资源均使用相对路径。接口仅由宿主 `evaluateJavascript` 调用，无 JS→Native bridge：
+
+- `configure({soundEnabled:boolean})`
+- `setActive(boolean)`
+- `exit()`
+- `status()` → `{ready,scene,battle,paused,error,...}`
+
+前三个接口同步返回 `{ok:true}` 或 `{ok:false,error}`；暂停/退出失败附带实际 `paused` 状态。初始 inactive 且总静音，宿主必须明确配置并激活。后台先暂停真实 TimeMgr/Laya timer 并静音，即使保存失败也不会继续对局；回到战斗需点击“继续游戏”。原游戏暂停状态与音效/音乐偏好分别保留。
+
+存档 key 为 `xanadu.zhaoyun-adou.player.v1`。所有原 `PlayerData.setData()` 写入均读回核对；已有损坏 JSON 保留并报告错误。退出使用原暂停菜单结束当前局的语义，幂等执行一次，并保存长期进度；不会宣称支持战斗快照恢复。
+
+## 验证
+
+`test-content.cjs` 使用真实 Chrome/Chromium、原游戏 bundle 和触摸事件；需要可解析的 `playwright-core` 依赖，可通过 `NODE_PATH` 提供安装位置，浏览器可通过 `CHROMIUM_PATH` 指定：
+
+```sh
+node scripts/zhaoyun-adou/test-content.cjs
+node scripts/zhaoyun-adou/test-content.cjs --source artifacts/zhaoyun-adou-next/content
+node scripts/zhaoyun-adou/content-gestures.cjs
+node scripts/zhaoyun-adou/content-progression.cjs
+```
+
+测试在固定虚拟 origin 供应文件并阻断/记录所有外域请求，记录缺失资源和未捕获异常。新档开局是真实触摸；为可重复验证胜利奖励/高级商店，测试会通过原 GameMgr 注入明确结算结果并设置成长夹具，不能据此声称自然打通所有关卡。Android 实际手势、安全区、系统返回和 Unity 回调需另做设备验证。
+
+`content-gestures.cjs` 为 360×640、320×568 各创建独立新档，以真实 Chromium touchStart/move/end 完成征兵、棋盘拖放和同字合成，校验原单位容器迁移、目标等级提升与触点处于视口内。若随机抽牌需继续征兵，补足局内招募货币的测试夹具会逐笔记录；不会注入兵种或伪造合成结果。
+
+Android WebView 直接全屏显示，保留原画布和控件布局；没有通用安全区缩进或额外布局接口。系统返回由宿主处理。
+
+## 首日开放的功能
+
+专用天数门槛不再要求跨天等待，所有全局日期与统计仍使用真实本机时间：
+
+- `WeaponMgr.Em` 从 3 改为 1，统一提前背包入口、普通武器碎片掉落和季节装备转换。原 `MainScene.onOpened → Im()` 只发原有 4 类普通起始武器，原 `Im()` 在临时数据副本上计算，全部碎片、新武器通知与 `weaponFree` 标志经一次写入读回验证提交，避免原版多次写入间中断造成重复赠送；写入失败保持 `ready:false` 和真实错误，宿主重新载入后再试。碎片获取、武器解锁、装备与替换仍走原实现，不发全套武器或额外金币。
+- `AvatarMgr.X0` 仅将头像 3（和尚）和 5（采花女）的连续登录条件改为开局可用。其他连胜、段位、收集、合成条件不变，真实 `consecutiveLoginDays` 不被改写。
+- `SpecialGeneralMgr.GL` 从 3 改为 1，只移除 AI 专属武将池的日期限制。`YL` 的对手段位至少 50 和原四档概率保持；玩家武将仍需原大帝段位及碎片条件。
+- 地图改为用 `PlayerData.round`（持久化累计 `_win + _lose`）每 7 局轮换 `[0,1,2,3]`。前 21 局仍按原首日地图 0、1、2 顺序；第 22 局起可进入地图 3，无需等星期。没有使用每日重置的 `roundDay`。
+
+道具系统 `openProps` 的门槛是段位，未作为日期限制移除。每日段位奖励、赛季、道具次日过期、商店刷新、新手保护、AI 难度和 AI 道具数量均保留原时间/进度语义。不会修改 `registerTime`、`TimeMgr.vr()` 或日期差计算函数。
+
+本发行版武器界面没有独立的等级升级按钮；装备提升通过获得原配置中攻击力更高的武器并换装完成。测试将分别验证士兵拖动合成等级提升、武器获取与换装的实际攻击提升，不新增伪造的升级流程。
+
+`content-progression.cjs` 验证首日背包、原礼包领取、真实拖动装备及攻击提升、日期头像选择、旧存档重载、地图 3 实际开局与首次礼包写失败恢复。故障夹具只拒绝带 `_weaponFree=true` 的存储提交：修复前可重现碎片已写但标志未写、重载重复；事务版必须保持未就绪和原存档，恢复后恰好提交一次完整礼包。测试中的更高武器碎片、累计 21 局等夹具会单独记录，不能视为自然游玩获取。

@@ -7,7 +7,6 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private KingdomRushLauncher kingdomRushLauncher;
-        private CanvasGroup kingdomRushLobbyInput;
         private bool IsKingdomRushRunning => kingdomRushLauncher != null && kingdomRushLauncher.IsBusy;
 
         private static void AddKingdomRushPreview(Transform parent)
@@ -22,12 +21,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterKingdomRush()
         {
-            if (activePage != Page.Lobby || paused || !focused || IsKingdomRushRunning || IsClassicGoldMinerRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             CloseModal();
             Save();
             feedback?.Stop();
             EnsureKingdomRushLauncher();
-            SetKingdomRushLobbyInput(false);
+            SetExternalGameLobbyInput(false);
             if (!kingdomRushLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled))
                 OnKingdomRushReturned(KingdomRushLauncher.OpenFailureMessage);
             // The lobby stays underneath the native Activity; Android owns its focus,
@@ -36,8 +35,8 @@ namespace XanaduYonder.Runtime
 
         private void OnKingdomRushReturned(string error)
         {
-            SetKingdomRushLobbyInput(true);
-            if (activePage == Page.Lobby && !string.IsNullOrEmpty(error))
+            SetExternalGameLobbyInput(!IsExternalGameRunning);
+            if (activePage == Page.Lobby && !IsExternalGameRunning && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });
         }
 
@@ -46,20 +45,6 @@ namespace XanaduYonder.Runtime
             if (kingdomRushLauncher != null) return;
             kingdomRushLauncher = gameObject.AddComponent<KingdomRushLauncher>();
             kingdomRushLauncher.Returned += OnKingdomRushReturned;
-        }
-
-        private void SetKingdomRushLobbyInput(bool enabled)
-        {
-            if (lobbyPage == null) return;
-            if (kingdomRushLobbyInput == null)
-            {
-                kingdomRushLobbyInput = lobbyPage.GetComponent<CanvasGroup>();
-                // Unity missing components can be non-null managed wrappers.
-                if (kingdomRushLobbyInput == null) kingdomRushLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
-            }
-            // The stable lobby root survives display-mode rebuilds; individual cards do not.
-            kingdomRushLobbyInput.interactable = enabled;
-            kingdomRushLobbyInput.blocksRaycasts = enabled;
         }
 
         private void ReleaseKingdomRushLauncher()

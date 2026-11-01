@@ -1,0 +1,1546 @@
+{
+  "schemaVersion": 1,
+  "baseUrl": "https://sda.4399.com/4399swf/upload_swf/ftp56/huangcijin/20261016/12/",
+  "files": [
+    {
+      "path": "data/agreement-1.txt",
+      "bytes": 31834,
+      "sha256": "6da6d97a170afe37acd12fa958c8bd97a95e6ed85053bcff98797fd1cf2553c2"
+    },
+    {
+      "path": "data/agreement-2.txt",
+      "bytes": 29191,
+      "sha256": "3f89c4b0f564a5aca9274e43cdd83971b0c259dcb01c560855cd36ce201cb881"
+    },
+    {
+      "path": "data/agreement-3.txt",
+      "bytes": 439,
+      "sha256": "b3de8284841b83406dd453c1bc35268fac55132cd773c12dba6f361432a2ae26"
+    },
+    {
+      "path": "data/agreement.txt",
+      "bytes": 1276,
+      "sha256": "f5563e4b123d95db532157f58e127401f1edf3e89724690f8a997ee45ba18f9a"
+    },
+    {
+      "path": "data/rank.json",
+      "bytes": 18189,
+      "sha256": "e059c18f3931664ea0f05ef3f0011263b8ae5bd563a98019541108761dd648c0"
+    },
+    {
+      "path": "data/weapon.json",
+      "bytes": 11172,
+      "sha256": "688871f0ed1827fc198882af1fd560fcc27a9649133184b2e178e91ae7a7349c"
+    },
+    {
+      "path": "data/weaponTxt.json",
+      "bytes": 4581,
+      "sha256": "f2c13418c8c072de141cbc6dd293f5102cd8c9d295d0e5da43a28940dde87d4a"
+    },
+    {
+      "path": "dialog/AddDeskDialog.lh",
+      "bytes": 1962,
+      "sha256": "e3c75db637462e36b7edb73d67b6f86e1f7380c34daddee7a354c2a55ab1114c"
+    },
+    {
+      "path": "dialog/AuthorizeDialog.lh",
+      "bytes": 1171,
+      "sha256": "07dec967b4717e66db12a09b466890abb0a9b762c732930f69bc518cc66b5004"
+    },
+    {
+      "path": "dialog/BossTipDialog.lh",
+      "bytes": 3128,
+      "sha256": "95ccaaa1424fbd8999cdbac83cde6112f941c2e51e3cbb5d845c996e2dcf61f4"
+    },
+    {
+      "path": "dialog/DeckDialog.lh",
+      "bytes": 7468,
+      "sha256": "cbef662421534d3748ebfcd9b9df895446d8c4dd2857d229ea634b99cde20977"
+    },
+    {
+      "path": "dialog/DeletePropsTipDialog.lh",
+      "bytes": 1448,
+      "sha256": "ec894a0256bf6c223e93a7741196b81f2302ac6ed11e7e11103a11ca1f6e6b19"
+    },
+    {
+      "path": "dialog/GMDialog.lh",
+      "bytes": 9100,
+      "sha256": "2d52b9bdf27348f0f4b445cd7f8688bc058ce10f0f27d6fc8d395efdb553b569"
+    },
+    {
+      "path": "dialog/GetStaminaDialog.lh",
+      "bytes": 3941,
+      "sha256": "95666ecb1d1a42ede47518eb0726183dc6c32320dabb7c14001c42eed31c6e19"
+    },
+    {
+      "path": "dialog/NewSeasonDialog.lh",
+      "bytes": 4671,
+      "sha256": "85b3fcc4ed19ded7ef58212271a6d07174272d2b1ead2a50249764c970e592a9"
+    },
+    {
+      "path": "dialog/NewWeaponDialog.lh",
+      "bytes": 1870,
+      "sha256": "f0fbe60777a547fbf37a398513f4470f507ee656b8164c9c2fbddd0a02f1788f"
+    },
+    {
+      "path": "dialog/NoticeDialog.lh",
+      "bytes": 1630,
+      "sha256": "f22220d5c33e8087a6e1a6b02debb1a3d59fef80c63f6fba783da838dcbd8ec0"
+    },
+    {
+      "path": "dialog/PauseDialog.lh",
+      "bytes": 4685,
+      "sha256": "e6abce2496b77c40ae294de2d2bbdc78bc9d52ea13e9b3abe53375b6014c6c8e"
+    },
+    {
+      "path": "dialog/PrivacyPolicyDialog.lh",
+      "bytes": 2796,
+      "sha256": "c77216eaec17b9f2921fbbc464069e2a78731ae2f79cba4524a7432f95c8e984"
+    },
+    {
+      "path": "dialog/RankRewardDialog.lh",
+      "bytes": 3641,
+      "sha256": "6e0ecd09e3feed527483ea37110e0f3b03c6abb3e653fb5794a44b50e5732bd6"
+    },
+    {
+      "path": "dialog/RecycleWeaponDialog.lh",
+      "bytes": 4480,
+      "sha256": "72c91915c59a86fed2ea8825a6281165c6275299c1fc64c5a75dc850637eef06"
+    },
+    {
+      "path": "dialog/ReplacePropsTipDialog.lh",
+      "bytes": 4279,
+      "sha256": "7e0d8c6a8618c9eca9658bf6453ba0a6535c8a1abd16c7d5bf2b3b918d7f1d7e"
+    },
+    {
+      "path": "dialog/ShareLpDialog.lh",
+      "bytes": 1968,
+      "sha256": "db0bb1707c48f7d20f79a117c934e2dd1d3e0323b683a774b1dd89da528249ce"
+    },
+    {
+      "path": "dialog/SidebarDialog.lh",
+      "bytes": 3734,
+      "sha256": "b8e15c0c63e28ce6647611626f0e3a7838208876ff3148234b2276d45e569578"
+    },
+    {
+      "path": "dialog/SmoothModeTipDialog.lh",
+      "bytes": 1533,
+      "sha256": "fb396b09bcaf5e821f0f6e2d50f5fd36a14402be46e780fd7f74b863b39fa67c"
+    },
+    {
+      "path": "dialog/TipDialog.lh",
+      "bytes": 554,
+      "sha256": "f3a900d0b022767900bbdbcc009e71bd7c20a1f31955350fad3f37a7372677d7"
+    },
+    {
+      "path": "dialog/UnitInfoDialog.lh",
+      "bytes": 8988,
+      "sha256": "9446409ffaefade65c5f473a62089dd717553bf56bcfc7956e725fdecdfb8263"
+    },
+    {
+      "path": "dialog/WeaponIntroDialog.lh",
+      "bytes": 2301,
+      "sha256": "f4e4fdd6bfa494936340f68a520232af4ea037fe55dcbab918df70f714c28c1e"
+    },
+    {
+      "path": "dialog/WeaponResetTipDialog.lh",
+      "bytes": 1240,
+      "sha256": "e17eabb64362c037ff74e714224eac1bc2f8ebfb6f82627aee8eaa83afd74cf6"
+    },
+    {
+      "path": "fileconfig.json",
+      "bytes": 611,
+      "sha256": "bf7beb31215d7f3d88a4bcdd19c83653a6c1f8b6ef5ae2d34e0ab221a94a3e2a"
+    },
+    {
+      "path": "gameIndex.html",
+      "bytes": 4678,
+      "sha256": "defbbcacb2b8e167c86a5c162449cbd606091aa67761975401feab726c5f7126"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1132,
+      "sha256": "4efd5723c63015ef8b6fb0c7df9333df6422849b4c38eb663db2e31dcfa6493d"
+    },
+    {
+      "path": "js/bundle.js",
+      "bytes": 4484372,
+      "sha256": "249945e2ac02d62f259336b049751de805d913c252169111cbda2c684eaebf0e"
+    },
+    {
+      "path": "js/index.js",
+      "bytes": 4707,
+      "sha256": "d04e5e0907e139955609a02d7d2cbb00fd7afdd3bef0efd7fa0dc8d4bfee16ca"
+    },
+    {
+      "path": "libs/laya.core.js",
+      "bytes": 1677340,
+      "sha256": "178508f17170600852efc9e3cabf34ff596e687bb8d7516d6b8ccda868e5b987"
+    },
+    {
+      "path": "libs/laya.spine.js",
+      "bytes": 205073,
+      "sha256": "5e768a3b08bf12329f0d025ca27a0796cb8edb4bd1a185bb5b74571be4a867ea"
+    },
+    {
+      "path": "libs/laya.trail2D.js",
+      "bytes": 8916,
+      "sha256": "4703db980f5a4dd2acd70f7ead610b4c2fe84735428a9ceaae8c4729b202e4c4"
+    },
+    {
+      "path": "libs/laya.trailCommon.js",
+      "bytes": 21881,
+      "sha256": "53f2d370472bec5086c57e3ece465b0cc0a19ec09297c961211350ff873e39c8"
+    },
+    {
+      "path": "libs/laya.ui.js",
+      "bytes": 220726,
+      "sha256": "90d34474801a8ca4b2d612e169e027b4506878ea9cd9bc7fe9239cead173b3a2"
+    },
+    {
+      "path": "libs/laya.webgl_2D.js",
+      "bytes": 392391,
+      "sha256": "e564c5423c8ab17ed68c3f7bf6d1a39981b6368d15335fe0cbd265e4ac7ae6c2"
+    },
+    {
+      "path": "libs/spine-core-3.7.js",
+      "bytes": 304323,
+      "sha256": "5bbca5220c71a8bff159f99540783814d2d030c34448cde075e703572c3c0c7c"
+    },
+    {
+      "path": "prefab/attChangeTip.lh",
+      "bytes": 803,
+      "sha256": "02168f1f7ad2811ee03b6d399e66e75a349cea4411abbad0ffa35f9ebcc41974"
+    },
+    {
+      "path": "prefab/boss.lh",
+      "bytes": 945,
+      "sha256": "092f61a58bb7fc0edd0da98ee7601777db67d90f8a669062e1f2d12762e4e702"
+    },
+    {
+      "path": "prefab/bulletTrail/arrowTrail.lh",
+      "bytes": 871,
+      "sha256": "b493aca1493c9db6afdef7f5b242ea7b79c52ded35fd54214a3cb72d42c0ba5d"
+    },
+    {
+      "path": "prefab/bulletTrail/daoqiTrail.lh",
+      "bytes": 854,
+      "sha256": "2ed22e03175fbbbb83c541fb6d67679ebb49b7c319b3b55f93cb52dfc1e07bea"
+    },
+    {
+      "path": "prefab/bulletTrail/fireArrowTrail.lh",
+      "bytes": 806,
+      "sha256": "d41986813ad9561d52de11e7e427ea5cc8717f482684d939cfe00fe81fe62c51"
+    },
+    {
+      "path": "prefab/bulletTrail/fireDragonTrail.lh",
+      "bytes": 1460,
+      "sha256": "f85434b33b9cb44750af1bf7cb763a7022c2b858679260a60231ac319a1379ac"
+    },
+    {
+      "path": "prefab/bulletTrail/knifeTrail.lh",
+      "bytes": 857,
+      "sha256": "a23177338b5418e257afd955d1251d9d20cd7cac908dd06431f5d0b9588afe28"
+    },
+    {
+      "path": "prefab/crackEff.lh",
+      "bytes": 1786,
+      "sha256": "9b6dc9e731b33aeaf56964ee95f70135ee573fd95cbd4018cf19d5feccd4ae84"
+    },
+    {
+      "path": "prefab/damageNum.lh",
+      "bytes": 262,
+      "sha256": "8dd261a498de8cecfdadbed0f550214a586231f7c4b123c6c164a07967ff28ff"
+    },
+    {
+      "path": "prefab/goldUp.lh",
+      "bytes": 369,
+      "sha256": "6c4cd732b06aa825250653c7818ef6a92fe72816e1d60fdc1b39787e6079a144"
+    },
+    {
+      "path": "prefab/heart.lh",
+      "bytes": 608,
+      "sha256": "c283d3309fff8824553e77b129a6aa359d702da996fe726d2aac8044c93c5768"
+    },
+    {
+      "path": "prefab/lotteryItem.lh",
+      "bytes": 497,
+      "sha256": "431c890f450d66c6baae594513cd1b603afc182088e55c6c22816de15d26e711"
+    },
+    {
+      "path": "prefab/loveHeart.lh",
+      "bytes": 778,
+      "sha256": "ea5d2be07d6c3fd73ab6d1c81249c08f89e8d822abb462fa2054d6a7a74f6c0d"
+    },
+    {
+      "path": "prefab/lvlDownEff.lh",
+      "bytes": 482,
+      "sha256": "28e1f99820323ab52751103cd49a18570cea71d7feef767fcc75cbd7fc02119c"
+    },
+    {
+      "path": "prefab/lvlUpEff.lh",
+      "bytes": 495,
+      "sha256": "7d09bfb44144ccb757c51a82b479ad177c11c336c7a696ece3eb810d9fff5aac"
+    },
+    {
+      "path": "prefab/maChaoPike.lh",
+      "bytes": 227,
+      "sha256": "5628802a1101cbdf17c7d31a53811634d7a379d543482b040a06d7c31c226699"
+    },
+    {
+      "path": "prefab/mapBg0.lh",
+      "bytes": 1729,
+      "sha256": "e47aa4eb63b5b75624dd9f8cb6c12e9862cd585b1a665168b6a79a5775e6be1e"
+    },
+    {
+      "path": "prefab/mapBg1.lh",
+      "bytes": 1644,
+      "sha256": "8b88d093dd5725eadfb01cfc248116bdcffe6f3d48e21e3288928a695bc92396"
+    },
+    {
+      "path": "prefab/mapBg2.lh",
+      "bytes": 511,
+      "sha256": "9588592bb2d82c03a2b78e55144d86d23532f5726f84f1c0dfa847dc34fffb42"
+    },
+    {
+      "path": "prefab/mapBg3.lh",
+      "bytes": 1925,
+      "sha256": "7a394e94249499c64d6d19f6e820f0a34226e6f3a98b141390880be8a207bea2"
+    },
+    {
+      "path": "prefab/mapItem.lh",
+      "bytes": 525,
+      "sha256": "fb1554253155f33ce03dfbd8ad4fd53b3d0b7675095d922b0d389476a6efce43"
+    },
+    {
+      "path": "prefab/mob.lh",
+      "bytes": 754,
+      "sha256": "04eb97b37b0f92de6741b7e145b6cd8cab4916c1d7de87415d21a40820d97b05"
+    },
+    {
+      "path": "prefab/rankItem.lh",
+      "bytes": 2690,
+      "sha256": "2a39fc7cd8b70657aa933f8e1809f4261fbdc15bef8f87d06eea85c77b07b75d"
+    },
+    {
+      "path": "prefab/setSoldierEff.lh",
+      "bytes": 534,
+      "sha256": "4ed40e93f7458c559685dfbbc91908b39b01a97b8a096d88b5e007c48553458d"
+    },
+    {
+      "path": "prefab/shopItem.lh",
+      "bytes": 2591,
+      "sha256": "df338f0e6fd59531e5028797e444c1c730e7dbb4894fcce4dfeb2717c9a69e36"
+    },
+    {
+      "path": "prefab/shopPropsItem.lh",
+      "bytes": 640,
+      "sha256": "43164c7e70825afd10830f03570fc2cc4d0ca10233fe19f8e8b127d5fcba55ac"
+    },
+    {
+      "path": "prefab/shovelGrass.lh",
+      "bytes": 669,
+      "sha256": "39acd6a69863f005608dc47e40e4560a96dab7a3d285c4495854dca043e8adfc"
+    },
+    {
+      "path": "prefab/talkBox.lh",
+      "bytes": 457,
+      "sha256": "74cd920c87adea4c16be8b5371c5d15bb75b10c3abf820154b9f1ada8c38e61e"
+    },
+    {
+      "path": "prefab/trail.lh",
+      "bytes": 959,
+      "sha256": "b6ffe084f4e23bad921fbc173ca647dd0da52a6e1979f003f06aaaef9968309c"
+    },
+    {
+      "path": "prefab/treasure.lh",
+      "bytes": 2561,
+      "sha256": "bf97c9243fffead97d54dce9b9718e13311e75e1c173933dc5ed2b7c55fbfa35"
+    },
+    {
+      "path": "prefab/weaponFragment.lh",
+      "bytes": 486,
+      "sha256": "94bf6d82edb1c43ebc13443a85fe942c02874e8a80406d198df9fc508e9facef"
+    },
+    {
+      "path": "prefab/weaponSceneGeneralItem.lh",
+      "bytes": 944,
+      "sha256": "999089090edd539fca6fa0b159a555e993a7a83d8296528eb9ac04dc2dc599f2"
+    },
+    {
+      "path": "prefab/weaponSceneWeaponItem.lh",
+      "bytes": 1312,
+      "sha256": "152af400fab0ac68abe65bb7ff32c76ecdbbf0ddc766bfd45938389a540d2db0"
+    },
+    {
+      "path": "resources/anim/aDou/skeleton.atlas",
+      "bytes": 1163,
+      "sha256": "e6a85cdb76111e4663d7376a3415a38b03352e60fd6f64c4f7b1f7919b9ce3b1"
+    },
+    {
+      "path": "resources/anim/aDou/skeleton.json",
+      "bytes": 77484,
+      "sha256": "fd77cefaa9083fa5c90e18f51caded4156d7d9c7fbcdeea2a7dd769e7536ab11"
+    },
+    {
+      "path": "resources/anim/aDou/skeleton.png",
+      "bytes": 6660,
+      "sha256": "d4114e1cd0f0b0029831d063afa876bc2a284398f6d11288a4635c214d97aedf"
+    },
+    {
+      "path": "resources/anim/boss0/skeleton.atlas",
+      "bytes": 1576,
+      "sha256": "f2380d1a73cac3a25e36658a74a946af809fb9b2443999c5d2f4351d2ac8e0ef"
+    },
+    {
+      "path": "resources/anim/boss0/skeleton.json",
+      "bytes": 62399,
+      "sha256": "c927b8d758dad613c0e730873f8199dd9da92fd5c8c787117f7f915946479276"
+    },
+    {
+      "path": "resources/anim/boss0/skeleton.png",
+      "bytes": 42740,
+      "sha256": "15254acb8153ba8f0da6eb3ad9c7e76875f303cd0791661691a3cd96b6c457e3"
+    },
+    {
+      "path": "resources/anim/boss1/skeleton.atlas",
+      "bytes": 1268,
+      "sha256": "b8b53a091d2a9062c8571679e553684566a8ca49a39e9f040c29584b77298229"
+    },
+    {
+      "path": "resources/anim/boss1/skeleton.json",
+      "bytes": 44542,
+      "sha256": "8fe7052b879f10f3874848ae547eaaf40c20190e96203e0f21987dbfe953144a"
+    },
+    {
+      "path": "resources/anim/boss1/skeleton.png",
+      "bytes": 16200,
+      "sha256": "880bdacb8e0b4b5e652fa67cf7121eb92fd7a2550a7b4699228505716dc4b702"
+    },
+    {
+      "path": "resources/anim/boss2/skeleton.atlas",
+      "bytes": 2327,
+      "sha256": "03e9d0769ff0e23456f52bb1d2fc87d2922022e92aea99f83f81b1301026aa54"
+    },
+    {
+      "path": "resources/anim/boss2/skeleton.json",
+      "bytes": 47508,
+      "sha256": "b4d665d6b27816cf26dded1360daa96d397606d33231066b8bcba5b718566d98"
+    },
+    {
+      "path": "resources/anim/boss2/skeleton.png",
+      "bytes": 51080,
+      "sha256": "47cd94cfc66c68046f3f762c251283f6544ba8cf38c69785cc6acf6623ef7389"
+    },
+    {
+      "path": "resources/anim/dancer/skeleton.atlas",
+      "bytes": 355,
+      "sha256": "50487aa15e919b773fe1074ae4cebbe534cf7fbf1a07483c72169558f5d4ff65"
+    },
+    {
+      "path": "resources/anim/dancer/skeleton.json",
+      "bytes": 12569,
+      "sha256": "6d3ea0dfe8f12328d475f6d7c66083bd33e36e86296358102a6995a2d9880069"
+    },
+    {
+      "path": "resources/anim/dancer/skeleton.png",
+      "bytes": 5894,
+      "sha256": "ab9451bbf923de76ab3539db96e2549754056b53796c32cdf91b3c99acb32984"
+    },
+    {
+      "path": "resources/anim/dongZhuo/skeleton.atlas",
+      "bytes": 905,
+      "sha256": "4236e11375ed4e7cd06ca661944a804f85e866fc133bc7d47bff244ccb507dc7"
+    },
+    {
+      "path": "resources/anim/dongZhuo/skeleton.json",
+      "bytes": 17664,
+      "sha256": "a8f3d547f7b7911f24f8b3502c248717d3b82b892038dd1c9f384ec6f54dc309"
+    },
+    {
+      "path": "resources/anim/dongZhuo/skeleton.png",
+      "bytes": 39953,
+      "sha256": "069822456b616ebdb7ef09fa1af6a1c5823fa0518b4de723eaff58dbd56e780f"
+    },
+    {
+      "path": "resources/anim/fileconfig.json",
+      "bytes": 862,
+      "sha256": "4eb6ae225eff815f6eeaef9e4eb157eaf94f95ba764ea771781f642a98aa5c43"
+    },
+    {
+      "path": "resources/anim/flag/skeleton.atlas",
+      "bytes": 552,
+      "sha256": "5be1cd8dc9b66c6122dc92e0fcdbd86a1b6199e53cef89ffdd26afa057ec1ef7"
+    },
+    {
+      "path": "resources/anim/flag/skeleton.json",
+      "bytes": 77414,
+      "sha256": "2d0e763ccfea11ae86101a50aed574f23507b8eff541641164cda69fc1094c25"
+    },
+    {
+      "path": "resources/anim/flag/skeleton.png",
+      "bytes": 20083,
+      "sha256": "00284bf3e6da45c62a7af5cc0ffc5e790528d63ab23955667e4fa452854fa75e"
+    },
+    {
+      "path": "resources/anim/grass/skeleton.atlas",
+      "bytes": 2228,
+      "sha256": "c699bf055c29ea52bb13a47a473bab6fdaf39627ec04284dc63a4403c0a0abbf"
+    },
+    {
+      "path": "resources/anim/grass/skeleton.json",
+      "bytes": 117591,
+      "sha256": "a1ee1f1e9bcaee05861f9b96345ebbe56737d9325cb09ebb77e74fb71acd8e3c"
+    },
+    {
+      "path": "resources/anim/grass/skeleton.png",
+      "bytes": 53815,
+      "sha256": "dfb4b1ab87b544fda254618fa19c89c905d1bbbe4b3e510167636b6680643ebc"
+    },
+    {
+      "path": "resources/anim/huaXiong/skeleton.atlas",
+      "bytes": 517,
+      "sha256": "056076001436f60703cc3158adaa45a04941725dff1e2f00cbba85a43119b54c"
+    },
+    {
+      "path": "resources/anim/huaXiong/skeleton.json",
+      "bytes": 36635,
+      "sha256": "a1164584f49367ddbb35804eba50191f9de8429acf4be61e2fa738b863d8daa6"
+    },
+    {
+      "path": "resources/anim/huaXiong/skeleton.png",
+      "bytes": 8527,
+      "sha256": "9fcd9b7e57b911dd6f1a151d59e0a5588aac741b2d09d30d643a62ba2537488d"
+    },
+    {
+      "path": "resources/anim/lvBu/skeleton.atlas",
+      "bytes": 891,
+      "sha256": "032ee8f8f5427e3702963a87670a56d4113fbf8b54de9549a9a938d012341f59"
+    },
+    {
+      "path": "resources/anim/lvBu/skeleton.json",
+      "bytes": 39752,
+      "sha256": "c3c1e2dbb83ba3bdac3e017043da41e02dde70a13a1b9a89d06464f71eaa9b85"
+    },
+    {
+      "path": "resources/anim/lvBu/skeleton.png",
+      "bytes": 29519,
+      "sha256": "29391332dd53c402fdea774706935abdc374d811ca2000a42840b2281901836b"
+    },
+    {
+      "path": "resources/anim/maChao/skeleton.atlas",
+      "bytes": 1745,
+      "sha256": "40d13a8d07c1b6d7b6806881c5201c88f2c104a1d44f140c523a640f50f80633"
+    },
+    {
+      "path": "resources/anim/maChao/skeleton.json",
+      "bytes": 54440,
+      "sha256": "0a667639474e0c33d8205c6ad6dc87876e8ce45efde9ee8d20c1adb3de520c80"
+    },
+    {
+      "path": "resources/anim/maChao/skeleton.png",
+      "bytes": 14824,
+      "sha256": "14dc59ee460facb40538d7ee5c8a3e64fe9d10346c1170e8943808ef76e6d40c"
+    },
+    {
+      "path": "resources/anim/mihuan/skeleton.atlas",
+      "bytes": 706,
+      "sha256": "2efeab293faae88ca90135ce5032ecfe68a43a8842fc51fad19e2c804e8f42c1"
+    },
+    {
+      "path": "resources/anim/mihuan/skeleton.json",
+      "bytes": 29997,
+      "sha256": "519b4893815886dad66be22cecc85f1a956e4d0a5eb47191cebc4c10f7600b4d"
+    },
+    {
+      "path": "resources/anim/mihuan/skeleton.png",
+      "bytes": 10123,
+      "sha256": "b71298b1fd095c300cc9e9733454778d54391b7fd491512914ea47fe3f4a087f"
+    },
+    {
+      "path": "resources/anim/stamina/skeleton.atlas",
+      "bytes": 450,
+      "sha256": "e042ca2a9d78c13c044c2c030e45b7900cbfa2448a1a944c4d719bff93ee4977"
+    },
+    {
+      "path": "resources/anim/stamina/skeleton.json",
+      "bytes": 50647,
+      "sha256": "1c452bc6bbd4d206254c345e2d4c55d0a6ae1fe4f1457e3c383589c846eefc51"
+    },
+    {
+      "path": "resources/anim/stamina/skeleton.png",
+      "bytes": 11536,
+      "sha256": "b8b1098086dcabfe9e43b22998d083b4e9c0b196e38bc00512f307bcbf8e6df8"
+    },
+    {
+      "path": "resources/anim/thief/skeleton.atlas",
+      "bytes": 619,
+      "sha256": "9e6d34d16148615db4746941c80c86f655f98746bc7291d94ff5a1731ea83837"
+    },
+    {
+      "path": "resources/anim/thief/skeleton.json",
+      "bytes": 9986,
+      "sha256": "86fd34354afea44b97586b0c037f5344afc32e3c4b18d2553eb7dffa2bcb3a72"
+    },
+    {
+      "path": "resources/anim/thief/skeleton.png",
+      "bytes": 3125,
+      "sha256": "89cf278076b39d33441eecab6926286fa1f8bc06291e483c34386b68e2110404"
+    },
+    {
+      "path": "resources/anim/zhangFei/skeleton.atlas",
+      "bytes": 1177,
+      "sha256": "3b551f9827e246831cee8363263716025c3700e485feeb03b67f3121b9eae810"
+    },
+    {
+      "path": "resources/anim/zhangFei/skeleton.json",
+      "bytes": 38090,
+      "sha256": "38b3df82b5ad66fe8df870652c6c1b7bd968e0349ab585a04ffc2b34bd007312"
+    },
+    {
+      "path": "resources/anim/zhangFei/skeleton.png",
+      "bytes": 9211,
+      "sha256": "de6ee08d42142abf949edc7daca056799dfa51ed6e2b704b6c954c509ce05462"
+    },
+    {
+      "path": "resources/anim/zhaoYun/skeleton.atlas",
+      "bytes": 1269,
+      "sha256": "bbb1bf3fa7c9894c3d2f95c95d3c109148c3ad588ffb82f5474535851ec3fdf2"
+    },
+    {
+      "path": "resources/anim/zhaoYun/skeleton.json",
+      "bytes": 39276,
+      "sha256": "739a1a5f760c8fb35f54acb18f91dc98da2271b75a99dae141608301886f4684"
+    },
+    {
+      "path": "resources/anim/zhaoYun/skeleton.png",
+      "bytes": 8373,
+      "sha256": "3f7e0654e9e83ebf28d9d35525a1d352582d05b13511f8a4d6f479474eccaa6d"
+    },
+    {
+      "path": "resources/img/battleUI/AutoAtlas.atlas",
+      "bytes": 9422,
+      "sha256": "ed94f2f817993a7df03e6b7d139e04199a8993e9aac3d728f0ed42ba339a8c5b"
+    },
+    {
+      "path": "resources/img/battleUI/AutoAtlas.png",
+      "bytes": 133831,
+      "sha256": "ea6546adecb1171f2dae6c0df6da314b1f5c6aa1d1de79ff36d100602ab11cb8"
+    },
+    {
+      "path": "resources/img/battleUI/bossTip/warning1.png",
+      "bytes": 9984,
+      "sha256": "62a93a9a75aae9c9ad392f94edc1803efb03f66fc3ce05c2cbba752740014367"
+    },
+    {
+      "path": "resources/img/battleUI/bossTip/warning2.png",
+      "bytes": 9984,
+      "sha256": "504b030788836dd013a01693f54d3cb7b7046c58aa7e1c8e1ad08cc1b265bd6c"
+    },
+    {
+      "path": "resources/img/battleUI/bossTip/warningBanner.png",
+      "bytes": 2909,
+      "sha256": "a52473efdccc49c6cf54e573ac07b144415d2883e643408f79fa18fd156f2093"
+    },
+    {
+      "path": "resources/img/battleUI/floor1.png",
+      "bytes": 8105,
+      "sha256": "ed968596430e299c2850913ade0b35ffd6baf7594ce90a8975a066c58924ed00"
+    },
+    {
+      "path": "resources/img/battleUI/giveUpDialog/bg.png",
+      "bytes": 14746,
+      "sha256": "25f376fa7f7e52f7a4159d437b7653484d82e9eecce110b806d1bbcd9ba514f8"
+    },
+    {
+      "path": "resources/img/battleUI/propsBoxBg.png",
+      "bytes": 2201,
+      "sha256": "80826170616c74a2fa7c14634f21b73f96bf797cf072869c929d695cbd488200"
+    },
+    {
+      "path": "resources/img/battleUI/unitInfo/unitInfoBk.png",
+      "bytes": 11710,
+      "sha256": "02e33a1f03f8266dec35a84bc644873e5b7b89fb8d9242ae489de31826078c11"
+    },
+    {
+      "path": "resources/img/commonUI/AutoAtlas.atlas",
+      "bytes": 825,
+      "sha256": "b7bda4215908b56db2471e44e4b0bdecc7cc4ae17197fdc1e78690a80bb40e7c"
+    },
+    {
+      "path": "resources/img/commonUI/AutoAtlas.png",
+      "bytes": 8122,
+      "sha256": "bd25422a800e0423514d358e23aaaeb235d09a5308dbcedd14be23268ebc68c2"
+    },
+    {
+      "path": "resources/img/effect/AutoAtlas.atlas",
+      "bytes": 19645,
+      "sha256": "87c87f019f13d74278474c8dd580c742c6192b42d32872e3c87d112b29f8ce29"
+    },
+    {
+      "path": "resources/img/effect/AutoAtlas.png",
+      "bytes": 1005239,
+      "sha256": "ecf4a7c4dac5c266e594160a120f5878440f88654db752bcaace73d0433cc972"
+    },
+    {
+      "path": "resources/img/effect/setSoldierEff1.png",
+      "bytes": 3520,
+      "sha256": "ef05fc3a32661c2c687d22f03e802c0d445dab90e8e48e9f5f83d1d6da8bce17"
+    },
+    {
+      "path": "resources/img/effect/setSoldierEff2.png",
+      "bytes": 1458,
+      "sha256": "dad59f2ba6fec02534a8dd407472c6920303f6254ddf5ddd7fae589e8da45f48"
+    },
+    {
+      "path": "resources/img/effect/soundWave.png",
+      "bytes": 8604,
+      "sha256": "05e28dc610f3a150cc064fdd372a5b2f6eeb42aa25831d9bb6621cd1cd870f83"
+    },
+    {
+      "path": "resources/img/fileconfig.json",
+      "bytes": 26079,
+      "sha256": "c16c9eea32900e81c2f9408378f1f0d7fdadd3f5a476d2a65d35f6c8505908e1"
+    },
+    {
+      "path": "resources/img/gameObject/AutoAtlas.atlas",
+      "bytes": 37507,
+      "sha256": "5dc3cecb37f952b24b7afb8b837cec0dadd5f609a894ccf88d386ff512c1b8dd"
+    },
+    {
+      "path": "resources/img/gameObject/AutoAtlas.png",
+      "bytes": 248829,
+      "sha256": "450e78589f4ee08190b57cd7a0c2519bae60f6e54b0ed2877e0a112a6740b37e"
+    },
+    {
+      "path": "resources/img/gameOverUI/AutoAtlas.atlas",
+      "bytes": 3768,
+      "sha256": "5e84c7299e999a60ca454c5c5c763ed5ff4f8006c175e539b8ec7894aaa03dae"
+    },
+    {
+      "path": "resources/img/gameOverUI/AutoAtlas.png",
+      "bytes": 70588,
+      "sha256": "352f9747684db693a3ddaabcda2e86203b7eb82ed14bee3518bef04b03cf5e83"
+    },
+    {
+      "path": "resources/img/gameOverUI/bg2.png",
+      "bytes": 1217,
+      "sha256": "505f399add24c8d90888ea3de25828657ab8d183e325fda7a02898e62320370c"
+    },
+    {
+      "path": "resources/img/gameOverUI/bg3.png",
+      "bytes": 1799,
+      "sha256": "3a7013dd135616cc20e5c1eb46458b1e89229c4497d37380c0f664cdfac91089"
+    },
+    {
+      "path": "resources/img/gameOverUI/lp/lpImg.png",
+      "bytes": 86156,
+      "sha256": "1d0892ba07a28f8025ba5f49d809b2959394b26cb8c30d1daaa1ef23ec27242f"
+    },
+    {
+      "path": "resources/img/mainUI/AutoAtlas.atlas",
+      "bytes": 13240,
+      "sha256": "e7847a8bbc15d1a937c0383232a72be0934c3e669eae42e0ea1e33a6882057d4"
+    },
+    {
+      "path": "resources/img/mainUI/AutoAtlas.png",
+      "bytes": 231127,
+      "sha256": "ddb19447bf216ede7517182723317858db5cc3cbebcf0db0768ec3311701a332"
+    },
+    {
+      "path": "resources/img/mainUI/bg1.png",
+      "bytes": 74645,
+      "sha256": "dff968f66c1dd26b88d9913b1704fac1782eea3f75214b77ede30318f0e1d081"
+    },
+    {
+      "path": "resources/img/mainUI/bg4.png",
+      "bytes": 11453,
+      "sha256": "0797b21ad78e0ad482cc87b0edde3f6850c924d754b04ef60358ec9ee4685865"
+    },
+    {
+      "path": "resources/img/mainUI/img1.png",
+      "bytes": 4542,
+      "sha256": "56ead7a5bc2554cabdda284239e084eb07fddff85119edd3fabd3d80444467b9"
+    },
+    {
+      "path": "resources/img/mainUI/line.png",
+      "bytes": 16508,
+      "sha256": "09a2ca84011216fb1edd0a319733053f9b36f27aeee9942c7842bc05388269ee"
+    },
+    {
+      "path": "resources/img/mainUI/privacy/bg.png",
+      "bytes": 8154,
+      "sha256": "074425b17f4a9ccac8accc452bb54fd8399f4f4fa78e72159e8dcd19992abbe5"
+    },
+    {
+      "path": "resources/img/mainUI/privacy/paper.png",
+      "bytes": 19698,
+      "sha256": "f10af4b52f584d946a747b03810a53f55cfeff6fe073071d06320b0b32978963"
+    },
+    {
+      "path": "resources/img/mainUI/season/bg.png",
+      "bytes": 7211,
+      "sha256": "305792432c265fa4f1458476db853c2457c8044564f757039326710d409166d2"
+    },
+    {
+      "path": "resources/img/mainUI/season/bgLight.png",
+      "bytes": 30133,
+      "sha256": "8c4cf84b73f5c171a8ca2ea4530eb1c134c441e2632551c95e11860932ff4431"
+    },
+    {
+      "path": "resources/img/mainUI/season/light.png",
+      "bytes": 91519,
+      "sha256": "91a7744791bfd46503ee0c4d72a6b5d4c51a6995ca077e3458dbb443d51a8a75"
+    },
+    {
+      "path": "resources/img/mainUI/season/scroll1.png",
+      "bytes": 2867,
+      "sha256": "781635c4db4d2b86977e8cd3d28437b91dd24ec6f8a3a29a2532f10271f72139"
+    },
+    {
+      "path": "resources/img/mainUI/season/scroll2.png",
+      "bytes": 2989,
+      "sha256": "17e8f34fef28c7d0e11366b2cc705bca284166e62be0507573ffc0f2ac346038"
+    },
+    {
+      "path": "resources/img/mainUI/setting/avatarSettingWnd.png",
+      "bytes": 7031,
+      "sha256": "4ed4216f184ec4ab69ee1460fafbee8c8f6be84705c0036205d20e3df48757c3"
+    },
+    {
+      "path": "resources/img/mainUI/setting/settingWnd.png",
+      "bytes": 12224,
+      "sha256": "24595ade5badb6775b03a20a7f0a54e3b6a3aba209760069590ccae5a2093059"
+    },
+    {
+      "path": "resources/img/mainUI/sidebar/bg.png",
+      "bytes": 10914,
+      "sha256": "bfd79eeb893a08807009e2c7122e5a37ef060fa4d229d226ee48a3370e5241c1"
+    },
+    {
+      "path": "resources/img/mainUI/stamina/bg.png",
+      "bytes": 6083,
+      "sha256": "90bfa4a4b529a71983b2b2f1e895d66e8cb848171ea19a2724490fef55629ca8"
+    },
+    {
+      "path": "resources/img/mainUI/tip1.png",
+      "bytes": 12512,
+      "sha256": "1ac9ddeb5c6698ade3b71ed47cbc5a48158321d3118469ef68cd3e9fd257f393"
+    },
+    {
+      "path": "resources/img/map/AutoAtlas.atlas",
+      "bytes": 8162,
+      "sha256": "10e35a6997f4ed446d4dd0ad462c9d9d2df69e9e223aca7930125cff77057417"
+    },
+    {
+      "path": "resources/img/map/AutoAtlas.png",
+      "bytes": 163486,
+      "sha256": "e5380e53946a6b117921da541d8e4389414f31c87174535ce2f9928a0d86efca"
+    },
+    {
+      "path": "resources/img/map/mapBg/mapBg3/wave.png",
+      "bytes": 11787,
+      "sha256": "aea8a6c8753735566fd5f7706e9a1857ccb78d9a72f08ad0f4f187b244edb36a"
+    },
+    {
+      "path": "resources/img/matchUI/AutoAtlas.atlas",
+      "bytes": 2155,
+      "sha256": "093ce948c73fcfa44bd895b1790b43305c6aedccb570af62ddbfb3dfc521edb2"
+    },
+    {
+      "path": "resources/img/matchUI/AutoAtlas.png",
+      "bytes": 24386,
+      "sha256": "b6d6ee3164af257d7520da574be58aff0e295813cc68901a9f06c5311d9ecf21"
+    },
+    {
+      "path": "resources/img/matchUI/flagBlue.png",
+      "bytes": 2544,
+      "sha256": "c1b2715914411b20dd127b46245720d34138216789ca9cc75654e57113c8eb42"
+    },
+    {
+      "path": "resources/img/matchUI/flagRed_1.png",
+      "bytes": 2754,
+      "sha256": "533d7d6d648fdf45bd98ea8cfa80e98dc45e9dc16ce5194fb0bebaf5d861e884"
+    },
+    {
+      "path": "resources/img/matchUI/matchBg.png",
+      "bytes": 46034,
+      "sha256": "21aa8cb7a6ef18a8cdc324bed1df8f814fd812d0788fc5c3c1048ef465485ba6"
+    },
+    {
+      "path": "resources/img/props/AutoAtlas.atlas",
+      "bytes": 14299,
+      "sha256": "d0077b4f0e16f7239dda6e37b063ac751b607beeb059a7489941bae6fbfaf207"
+    },
+    {
+      "path": "resources/img/props/AutoAtlas.png",
+      "bytes": 179953,
+      "sha256": "8df71b5122dcb6822ef0b5013486c184c4cce335c24ac4391c870a858a2e1e11"
+    },
+    {
+      "path": "resources/img/rank/AutoAtlas.atlas",
+      "bytes": 2366,
+      "sha256": "4504139acbd8f60e83a918cdf48c6a9840433054cb3abbeddd243aff2b029414"
+    },
+    {
+      "path": "resources/img/rank/AutoAtlas.png",
+      "bytes": 113035,
+      "sha256": "a774ce2e4dafb99b186a56259f75e4ed632486a3fea49bbf05dc3a8fcd50c44b"
+    },
+    {
+      "path": "resources/img/rank/bg0.png",
+      "bytes": 22999,
+      "sha256": "7277aa8b117bd8eca8a6a121541b428c22c799646af6cbcffbed5b9873c995b5"
+    },
+    {
+      "path": "resources/img/rank/rankBg0.png",
+      "bytes": 21588,
+      "sha256": "37cc33175a56fdae0812e30fd818e54f93b4c216dfac3c9958976c6a7e5de51d"
+    },
+    {
+      "path": "resources/img/rank/rankBg1.png",
+      "bytes": 29797,
+      "sha256": "f358cb02bf58941d6797a701b6b20d87ef3e2fda6a9dac58fa42b95fc05a5ea9"
+    },
+    {
+      "path": "resources/img/rank/rankBg2.png",
+      "bytes": 4734,
+      "sha256": "c6639225615397ebe03876b649b718f7aa71683cf3fed082ca8c046dc0291a1f"
+    },
+    {
+      "path": "resources/img/shop/AutoAtlas.atlas",
+      "bytes": 6235,
+      "sha256": "23ab429d15484b868f9c64f020967b29cbf9e2b2db5702c452ccf963894fc4b6"
+    },
+    {
+      "path": "resources/img/shop/AutoAtlas.png",
+      "bytes": 85550,
+      "sha256": "8e3b9aa1f50a6c6e006fec8c7560299b958bd1223b58aef3a7e20304c1dbcc8b"
+    },
+    {
+      "path": "resources/img/shop/dialogBg.png",
+      "bytes": 22890,
+      "sha256": "3af27d73c99120b7e33a87cbcd1533234d0ceb6dd5115e11d51e0fbe3fdd6618"
+    },
+    {
+      "path": "resources/img/shop/itemBg.png",
+      "bytes": 3987,
+      "sha256": "b2b36dfa78892702b15ffef85ec4c8963931623c2026270761cdd496529f7bde"
+    },
+    {
+      "path": "resources/img/shop/lottery/lotteryBg.png",
+      "bytes": 1974,
+      "sha256": "8463a17bed0081f2550769af8f4c95e7dfabddee4e31299564b67febf6bbd670"
+    },
+    {
+      "path": "resources/img/shop/propsBg.png",
+      "bytes": 2665,
+      "sha256": "467b16762481f77bf2b224e8df234d6d06274f96b25cd86ed32a806b2fe66c93"
+    },
+    {
+      "path": "resources/img/shop/shopBg1.png",
+      "bytes": 6238,
+      "sha256": "8c479a997e01aa49bce53a3c18344134fb424dd8d997d284996dcd0989159ad6"
+    },
+    {
+      "path": "resources/img/shop/shopBg2.png",
+      "bytes": 9303,
+      "sha256": "1e78984a5ceee120e8efbc11cb9914b705674a758f482377ae6f993f609bf42c"
+    },
+    {
+      "path": "resources/img/weapon/AutoAtlas.atlas",
+      "bytes": 16543,
+      "sha256": "9787f880445d36d32dc88dd5e6451f18500297fa9368428187e36e606026c15a"
+    },
+    {
+      "path": "resources/img/weapon/AutoAtlas.png",
+      "bytes": 247697,
+      "sha256": "f4d764d0c19cb964e35a3e23835c416182bbfae618a36a5ac82c3531ab625130"
+    },
+    {
+      "path": "resources/img/weaponBag/AutoAtlas.atlas",
+      "bytes": 5832,
+      "sha256": "1104e9e40ee7b0c11dd32fc6fe00738319000e7cc2c5260eb034e55f0f932627"
+    },
+    {
+      "path": "resources/img/weaponBag/AutoAtlas.png",
+      "bytes": 76734,
+      "sha256": "cb195e569efbde7542d1418e575cfe01c9bd0727302374988f6f2454e2ac9ed5"
+    },
+    {
+      "path": "resources/img/weaponBag/bg1.png",
+      "bytes": 21032,
+      "sha256": "61bf011084bc9a31596e377a3bdbc954d362d71ea1bf9ab8068f5aae325a460d"
+    },
+    {
+      "path": "resources/img/weaponBag/bg2.png",
+      "bytes": 13908,
+      "sha256": "50c445805774e3387151f2737d117aa79c27d98f62dbb191ec4e89a8cf8188c9"
+    },
+    {
+      "path": "resources/img/weaponBag/infoBg1.png",
+      "bytes": 9429,
+      "sha256": "e75a1d9316832437258038c1ba9c09922a2c25903d2fd4bab3caf06eafafd7fa"
+    },
+    {
+      "path": "resources/img/weaponBag/newWeaponBg.png",
+      "bytes": 1667,
+      "sha256": "cb866c9835e5a518063da005b004ba2fcfbd889b6525f6da3ed8836d473e6e3b"
+    },
+    {
+      "path": "resources/img/weaponBag/newWeaponBgLight.png",
+      "bytes": 12255,
+      "sha256": "8226abef225105f150e27873f2154c3ca56357454656e654bd6c9cba28e3aa8f"
+    },
+    {
+      "path": "resources/img/weaponBag/recycleBg.png",
+      "bytes": 23918,
+      "sha256": "9055c6ec5bb8cfb9b25784f5f804e5188d3ac8af3152c4b7db7400b1ef61aff0"
+    },
+    {
+      "path": "resources/img/weaponBag/vLight4.png",
+      "bytes": 14756,
+      "sha256": "67da3e5ae8a1cde107998b85050719c3db82607339ad629fef258bc0d856add8"
+    },
+    {
+      "path": "resources/loading/bg.png",
+      "bytes": 100238,
+      "sha256": "9b389c578f8fcbe9b860d4c3b8173a177290e1a89112e30cfd75bc1585c79505"
+    },
+    {
+      "path": "resources/loading/progress.png",
+      "bytes": 3082,
+      "sha256": "f26873926b2e13b943bb6d3cea5e981a0aa37b87d95ea9c71fe1c88928bfe945"
+    },
+    {
+      "path": "resources/loading/progressBar0.png",
+      "bytes": 2611,
+      "sha256": "417434694319800ef5cb75ba7802873ac71f4084cef0548206d198ff19ae42e9"
+    },
+    {
+      "path": "resources/loading/progressBar1.png",
+      "bytes": 5353,
+      "sha256": "f86992e91c590df85196cb867087b97c61a0636190f92b1192ecdc04d9ea51d2"
+    },
+    {
+      "path": "resources/loading/shareImg1.png",
+      "bytes": 98786,
+      "sha256": "263d7cede7bcaf421867324d1be716bfac6b65666bfd031aaca53ac4b5c7500e"
+    },
+    {
+      "path": "resources/loading/shareImg2.png",
+      "bytes": 100763,
+      "sha256": "a14b2f78a12e4e219a8ca463e645acdee11938b2be3544274f2ce3394fee1d82"
+    },
+    {
+      "path": "resources/loading/shareImg3.png",
+      "bytes": 96400,
+      "sha256": "ddb4848869ebfc9099bb48e2f7c05fe633a53580420afd927ef53abf569846de"
+    },
+    {
+      "path": "resources/loading/shareImg4.png",
+      "bytes": 93219,
+      "sha256": "a6b8a2def1dbe8e7998a5349914042095726d008884fb878c2934cb37a91bb32"
+    },
+    {
+      "path": "resources/loading/title.png",
+      "bytes": 11041,
+      "sha256": "bc167e15b4c62dcaa7e828bb8635003fd472b34a8ced95f0cbff30bbcad50bbc"
+    },
+    {
+      "path": "resources/loading/zhao0.png",
+      "bytes": 8729,
+      "sha256": "c019a32720b9902c7526d01b3a18ec2d577281f525f2d1f7f8d29c0482357d4d"
+    },
+    {
+      "path": "resources/loading/zhao1.png",
+      "bytes": 10759,
+      "sha256": "4ee2a94341ba7757527f69db07c11e90e9dce54fbeecd5c2c78e257108623d05"
+    },
+    {
+      "path": "resources/loading/zhao2.png",
+      "bytes": 7669,
+      "sha256": "f6c6fc6737cd69f2bcb2e7cdc373749fbe704eed1af71a82990aae2da3b61e7b"
+    },
+    {
+      "path": "resources/music/bg_battleScene_0.mp3",
+      "bytes": 431168,
+      "sha256": "b035dc29e7e8f1d26f104e29c4644c7f1c19521fac345d7d773d92152274d4f2"
+    },
+    {
+      "path": "resources/music/bg_battleScene_3.mp3",
+      "bytes": 955289,
+      "sha256": "ac9280c22c2cb0281e55af8a10dd02205ef59a5ddb71ba60551b8d6fb7e0e03e"
+    },
+    {
+      "path": "resources/music/bg_mainScene.mp3",
+      "bytes": 489892,
+      "sha256": "8dc0c8d3db92ccb91edf7c3d96d295e1b4cd865a82e3207bd1e53f57ee35a03f"
+    },
+    {
+      "path": "resources/music/fileconfig.json",
+      "bytes": 24,
+      "sha256": "b79c15a25fe8bdda55d5af5d8a5accaa186db324357b5a96a4147686ab82a6bd"
+    },
+    {
+      "path": "resources/sound/adou_hit.mp3",
+      "bytes": 8574,
+      "sha256": "5a85ae3bde85362f19c9d220e7dba822232228429a6245c21c93db1e37add3aa"
+    },
+    {
+      "path": "resources/sound/battle_end_gain_star.mp3",
+      "bytes": 11832,
+      "sha256": "eaeabc901de5ea88eab86f253e22f15c4b32e95562ba4243311a914b5571b3ee"
+    },
+    {
+      "path": "resources/sound/battle_end_gold_fly.mp3",
+      "bytes": 6960,
+      "sha256": "e10f9a86450121732450637307340b2d39944c37e5e4b29cb476cee2901413ee"
+    },
+    {
+      "path": "resources/sound/battle_end_lose_star.mp3",
+      "bytes": 17069,
+      "sha256": "0b1b76d6c2a14879b4c5cc00087f1f9d3f8d6fdd03f0206e38763c058cf58fc3"
+    },
+    {
+      "path": "resources/sound/battle_end_star_fly.mp3",
+      "bytes": 9166,
+      "sha256": "0839555d1a552c64f64e9cf861f671f28839ac089d0a97afcb9978f9ada1be2c"
+    },
+    {
+      "path": "resources/sound/boss_entrance.mp3",
+      "bytes": 74974,
+      "sha256": "87ba5a3db268d6a611cc142a9ebf12fb7f68a1d4f24ba32d1eebfbaf23b076d2"
+    },
+    {
+      "path": "resources/sound/boss_sweep_skill.mp3",
+      "bytes": 15600,
+      "sha256": "879116aaaaa60666c47fdf1b2e34a363194f675f7779fc135c0d6f1e56273235"
+    },
+    {
+      "path": "resources/sound/bow_attack.mp3",
+      "bytes": 2859,
+      "sha256": "06b07f332e9e4da9878ea328305efb9f8da6d567f0b2fed4508a9b26866402bc"
+    },
+    {
+      "path": "resources/sound/btn_down.mp3",
+      "bytes": 9119,
+      "sha256": "07045519b8d602807a0328aa6950f6e26393b934729e53176763bfc9ba97fbcb"
+    },
+    {
+      "path": "resources/sound/bulldozer_land.mp3",
+      "bytes": 12766,
+      "sha256": "829d389aabd758ce5c6dda39b2a9e28ded76c2f8c8410b92251dc58f7043f2ca"
+    },
+    {
+      "path": "resources/sound/bulldozer_push.mp3",
+      "bytes": 564,
+      "sha256": "a9579c777f9fff955dd0986380abfff7b975ed2252c27d8442c0f30c5ec88ea8"
+    },
+    {
+      "path": "resources/sound/caoCao_skill_seal.mp3",
+      "bytes": 22176,
+      "sha256": "3d4c8ee94998f57dac01c406e6f05fade14749413c7b77c0b66561566d9a7690"
+    },
+    {
+      "path": "resources/sound/cavalry_attack.mp3",
+      "bytes": 18427,
+      "sha256": "7ba37fedbcb736b14d643a76bdfeb65875e2492834403ded6c33db9e2dda9639"
+    },
+    {
+      "path": "resources/sound/chain_lock.mp3",
+      "bytes": 18506,
+      "sha256": "f9e1874141a54713b75b098846f2bde7ed5356eb0d902c84ab8fd10be263b94d"
+    },
+    {
+      "path": "resources/sound/danger_tip.mp3",
+      "bytes": 7283,
+      "sha256": "94fc7c7ba47c106dbd6777808d2c45be5fe3eceb90eec6f783a678f4e967a643"
+    },
+    {
+      "path": "resources/sound/diaoChan_skill_charm.mp3",
+      "bytes": 19008,
+      "sha256": "274eb3a70ab1ec3cbd084fe13405a4ae4aa146eae8337b994ce6e723c7ef8c86"
+    },
+    {
+      "path": "resources/sound/dongZhuo_skill_phantom.mp3",
+      "bytes": 13248,
+      "sha256": "00c5e11f4fdd3a77f37739decbc8adea5afcf470a151b18cc955d1bc2d9e85b8"
+    },
+    {
+      "path": "resources/sound/dongZhuo_skill_phase1_suck.mp3",
+      "bytes": 27932,
+      "sha256": "f231400ab26d2387f58e940cf06054e6ceca8fd92e7b030a2df0a59eb75996b0"
+    },
+    {
+      "path": "resources/sound/enemy_dead.mp3",
+      "bytes": 7844,
+      "sha256": "dd09da2c1b2955e0f9d18bc97d8211cc2b7d52d7d62e335f50b78699150393ad"
+    },
+    {
+      "path": "resources/sound/enemy_hit.mp3",
+      "bytes": 2756,
+      "sha256": "cca757257f2b499950df69b9a55ea8339cc0c8cb37fd4374a137d26c6c22be93"
+    },
+    {
+      "path": "resources/sound/enemy_knife_attack.mp3",
+      "bytes": 12671,
+      "sha256": "6a4c71004ac232601b818c1103cc54ead92f6fa815639b91f73538702721dc6c"
+    },
+    {
+      "path": "resources/sound/feijianchu.mp3",
+      "bytes": 9970,
+      "sha256": "6063faf1314ab27ae5631623a72b8ea71506fe99e84b7ab272066f8ba7b65af8"
+    },
+    {
+      "path": "resources/sound/feijiansha.mp3",
+      "bytes": 9134,
+      "sha256": "6389ad4192f5f758a08d217b2f167c513dbffacc176c81773fa5173c5b497bad"
+    },
+    {
+      "path": "resources/sound/feijianxuan.mp3",
+      "bytes": 12164,
+      "sha256": "d3320e9039c54553ccdd98236f535a2a0e5d834dd48ff500e2ef8b0a5e85a60b"
+    },
+    {
+      "path": "resources/sound/fileconfig.json",
+      "bytes": 24,
+      "sha256": "b79c15a25fe8bdda55d5af5d8a5accaa186db324357b5a96a4147686ab82a6bd"
+    },
+    {
+      "path": "resources/sound/game_lose.mp3",
+      "bytes": 29660,
+      "sha256": "bb88453a4cf1e88ed05ae0125004db1f5fb3b9af93dbc2de4ac56ae296f0f97c"
+    },
+    {
+      "path": "resources/sound/game_win.mp3",
+      "bytes": 35140,
+      "sha256": "3e60d9bbf428eaec731e84bb8cead48678073da1cec9f6395072cda6293d78b8"
+    },
+    {
+      "path": "resources/sound/general_arrow_rain.mp3",
+      "bytes": 11911,
+      "sha256": "7a6385cc562104f01919d4c84a57a71d46b9950a176f1cba92f308692dfbd38d"
+    },
+    {
+      "path": "resources/sound/general_bow_attack.mp3",
+      "bytes": 6641,
+      "sha256": "435957be577d226098f04fe7d26baa3c137d6e4fcf2b8ade77d581a20b526f77"
+    },
+    {
+      "path": "resources/sound/general_fire_arrow_rain.mp3",
+      "bytes": 23823,
+      "sha256": "84bb8175711f74a62139f6a01d35439c6df1f1593fbb5aab93a2243623917776"
+    },
+    {
+      "path": "resources/sound/general_ground_slam.mp3",
+      "bytes": 33277,
+      "sha256": "9bc39494ec5bc9093d882785415bf2c4995c57664246563f013d96c53b883dd8"
+    },
+    {
+      "path": "resources/sound/general_level_up.mp3",
+      "bytes": 16344,
+      "sha256": "8f3a41229e3ee7d844053b68f708872e016fda4e0cff8e1a35dd35c812716334"
+    },
+    {
+      "path": "resources/sound/general_pike_attack.mp3",
+      "bytes": 2913,
+      "sha256": "96d85b96e610cfc148fcd61d48efafb827878e489bc3e7c7c0649d042ba96bb7"
+    },
+    {
+      "path": "resources/sound/god_sword_create.mp3",
+      "bytes": 26375,
+      "sha256": "c0217d7c9b56f1c76badc441c1acc70ed172abf7e73fb39087e8910df1440bf8"
+    },
+    {
+      "path": "resources/sound/god_sword_kill.mp3",
+      "bytes": 30346,
+      "sha256": "1427ee6d479e233cbd9d64e995a7604bba25fd8ac6977d089d4046407117e6a4"
+    },
+    {
+      "path": "resources/sound/ground_cracked.mp3",
+      "bytes": 18852,
+      "sha256": "05da6b80f275bf06a8736da8144df401b5b5abf68f11a40a942d977ad35ef381"
+    },
+    {
+      "path": "resources/sound/guanYu_skill_roar.mp3",
+      "bytes": 16134,
+      "sha256": "60ca70b6e3db2225c1856cd89e2b3deffcfccc2eb7b060160747dd48d51bf558"
+    },
+    {
+      "path": "resources/sound/holyBlade_skill.mp3",
+      "bytes": 43839,
+      "sha256": "5c883ddbc87c8f7247940c0bc4686b321df681763ac48aacf5762909e9612843"
+    },
+    {
+      "path": "resources/sound/jianlie.mp3",
+      "bytes": 8089,
+      "sha256": "1612e7d94bf36fc8cdf2258739f74b054c847bcf4713bf2d7080fe8dea6c7646"
+    },
+    {
+      "path": "resources/sound/jumpSlash_stomp.mp3",
+      "bytes": 16872,
+      "sha256": "edefbaf5bf861dd8554db9a10109e4c1ec836a76aa1062ceff38504ed0b62d35"
+    },
+    {
+      "path": "resources/sound/knife_attack.mp3",
+      "bytes": 4812,
+      "sha256": "34af96f454916434e28f44d3b5bf91847a909fc60f2e9c585dc071bf1cbbac73"
+    },
+    {
+      "path": "resources/sound/landmine_explode.mp3",
+      "bytes": 18937,
+      "sha256": "0c3786fd8e263af35c5bcf1aee24801bcb83af86323eacc55ae7b97ccb4661d4"
+    },
+    {
+      "path": "resources/sound/lottery.mp3",
+      "bytes": 3832,
+      "sha256": "aa31d01a87f79f9704a0f4d10e96e34fc46b2f7fc8353cb323409bfd3f424594"
+    },
+    {
+      "path": "resources/sound/luBu_skill.mp3",
+      "bytes": 19121,
+      "sha256": "f6a0ac5d9c78156c82d4c46e6ff6094c75581b5bc91e3eb2cd2d24cbd7d12906"
+    },
+    {
+      "path": "resources/sound/luoyuechu.mp3",
+      "bytes": 11537,
+      "sha256": "042266658c1aaf9a6735d3d2a89a4fe515f0973bf93fc484f560f5317dd2acfd"
+    },
+    {
+      "path": "resources/sound/luoyueji.mp3",
+      "bytes": 14045,
+      "sha256": "93da0f72b6701aedbd46d4aea0072ff157d9b02dd76dc1f55575f3a4b120de87"
+    },
+    {
+      "path": "resources/sound/luoyuex.mp3",
+      "bytes": 8612,
+      "sha256": "7b6127dbd4afef73e81ae97264b9b5ff90a71cc8915e07fc29abeeb197d90703"
+    },
+    {
+      "path": "resources/sound/luoyuezhong.mp3",
+      "bytes": 8194,
+      "sha256": "83bab18237ad4a3b64541491694bb2d65ef30c411e8fe302a1155ea33e1e73cc"
+    },
+    {
+      "path": "resources/sound/maChao_attack_lightning.mp3",
+      "bytes": 12720,
+      "sha256": "85135e55b36355d8cfb757e121bc7e55fe4868a7a552f7c83aab4dd24ff8a570"
+    },
+    {
+      "path": "resources/sound/maChao_throwSpear.mp3",
+      "bytes": 11980,
+      "sha256": "922b22775ffe4904c2ff0c89bb73b66575937a0ba60129e8257d2ceaf791a7cd"
+    },
+    {
+      "path": "resources/sound/mantou_add.mp3",
+      "bytes": 4787,
+      "sha256": "2a70b5dd95ae9f41aed2bcd6a0f02522972e77b710ee844d1036b798eef1b504"
+    },
+    {
+      "path": "resources/sound/match_drum.mp3",
+      "bytes": 330010,
+      "sha256": "5d022a4347c01df4995d7fb936fbd79f7bd4282852f90b2a4afe598052d7c263"
+    },
+    {
+      "path": "resources/sound/merge_civilian.mp3",
+      "bytes": 8434,
+      "sha256": "3208ac01c929a9c09efb41df031cd6ea2201bb257a5375946e894543f1ff777e"
+    },
+    {
+      "path": "resources/sound/merge_general.mp3",
+      "bytes": 14478,
+      "sha256": "74685cd72b484e644fc0069bf87dbb3c3fa4f4727f13683a26b33d6975350d72"
+    },
+    {
+      "path": "resources/sound/meteor_fall.mp3",
+      "bytes": 43158,
+      "sha256": "c86284db41c7b2fb9cf55fdbcbe519096ac4e91d3925d2c0677c8bfd9bfcf3d9"
+    },
+    {
+      "path": "resources/sound/open_deck.mp3",
+      "bytes": 18114,
+      "sha256": "32b915a9087935ab343cf2fc9dfe7f70667945f6ffcd7eb3c9a96fedf98a2c1b"
+    },
+    {
+      "path": "resources/sound/popup_notification.mp3",
+      "bytes": 3589,
+      "sha256": "f09d1028bbdd4c7391650d02fab52f15360e3980ecca6728cff79699f589d63b"
+    },
+    {
+      "path": "resources/sound/shovel_treasure_box.mp3",
+      "bytes": 12110,
+      "sha256": "36ea74b40f8e404600f876bea3aa8f973df48c37a2e968d4f015597def6dbe6f"
+    },
+    {
+      "path": "resources/sound/shovel_use.mp3",
+      "bytes": 3747,
+      "sha256": "a5ac97aadc2a9d18f9972cea407d6c532e8d5e87bdeb378c66045cbf9503bcd8"
+    },
+    {
+      "path": "resources/sound/skill_ink_splash.mp3",
+      "bytes": 13803,
+      "sha256": "6330dbf5f6e83a0e48fae3f8a3a6499f7fd70d3ec29c54cb2d040431f3def0fd"
+    },
+    {
+      "path": "resources/sound/soldier_buy_enable.mp3",
+      "bytes": 9090,
+      "sha256": "d5fd47050a13d8d3ce96a3e02c77076e992c7c456bc148b310f25fa3876e9c3a"
+    },
+    {
+      "path": "resources/sound/soldier_create.mp3",
+      "bytes": 1715,
+      "sha256": "46eb6bb832cc8fab06a5d8af90b62bf97e2ad7c94251d0e87a1d3211ec1b621e"
+    },
+    {
+      "path": "resources/sound/soldier_merge_upgrade.mp3",
+      "bytes": 4895,
+      "sha256": "3e0b45c4c237bb63383c3a7b22638c035e3ac76693aa91dbd4d26b8f0a46d14e"
+    },
+    {
+      "path": "resources/sound/soldier_set.mp3",
+      "bytes": 2341,
+      "sha256": "124a93279f6f2d0a8d798fd27bc59b48812cd74515ac0b6e7a143c8c124b0ffd"
+    },
+    {
+      "path": "resources/sound/stun_1s.mp3",
+      "bytes": 7922,
+      "sha256": "be517c6326660b1ab54f362a7fc374aaf29687ec577e15d7ca4256340d9728d7"
+    },
+    {
+      "path": "resources/sound/summon_cavalry_skill.mp3",
+      "bytes": 65760,
+      "sha256": "9dd780f353db44e3e2edb425c04142bd860ae51b9e1635c6510f609d3e72d9ef"
+    },
+    {
+      "path": "resources/sound/sunShangXiang_jumpSlash_voice.mp3",
+      "bytes": 21992,
+      "sha256": "ad9005742447bb2724b0a43eeb70b57aa5ea7486aa95f2331bce5142f4b9c16d"
+    },
+    {
+      "path": "resources/sound/sword_attack.mp3",
+      "bytes": 11253,
+      "sha256": "127bcdf75478620e29f9f8b089d175cb1a8efa273152721fd649c8d69e898563"
+    },
+    {
+      "path": "resources/sound/swords_clash.mp3",
+      "bytes": 21347,
+      "sha256": "acb74744756d90eccb0e52a2b9909ea3031ff593ed9fd116a86a62a6a3051763"
+    },
+    {
+      "path": "resources/sound/talisman_burn.mp3",
+      "bytes": 8160,
+      "sha256": "f9fd3bbcc0de535f2ddee632e203adf04fc098479b3465116712cf8f9e31934f"
+    },
+    {
+      "path": "resources/sound/trap_trigger.mp3",
+      "bytes": 12612,
+      "sha256": "2033dd8708d2f77d71eff122a58163d4404d36e2d47d3e1051132a7b6264c5db"
+    },
+    {
+      "path": "resources/sound/xiahouDun_skill_cloud.mp3",
+      "bytes": 81050,
+      "sha256": "f00278c96b625b635196e307d5d570f0c649632c6310eb66f06c9fb1c8f2a549"
+    },
+    {
+      "path": "resources/sound/xiahouDun_skill_lightning.mp3",
+      "bytes": 9360,
+      "sha256": "a6afadd9506a8584a60dfc34d4890bc3e2a0fe021fed65cef4c02638dbdfd8da"
+    },
+    {
+      "path": "resources/sound/zhangJiao_skill_horn.mp3",
+      "bytes": 52117,
+      "sha256": "cd32e9d324463675c8443d37e0bbb95507e34f37d07b495b852c9cd041e3c9ab"
+    },
+    {
+      "path": "resources/sound/zhaoYun_voice_entrance.wav",
+      "bytes": 188792,
+      "sha256": "54e6a9abf506dc52de45e6668a7f8d2460a66239c7650f0382d78f7c103783bc"
+    },
+    {
+      "path": "resources/sound/zhenFu_general_skill.mp3",
+      "bytes": 84680,
+      "sha256": "45c0655f690e8613323ea3688f9825f2b6f5cb71d4d6d6e2b08a71bba7034c5d"
+    },
+    {
+      "path": "resources/sound/zhenFu_lighting.mp3",
+      "bytes": 119117,
+      "sha256": "37d24912072c3f955a1b522ee824394ef3affa4612e8ae7db8ac0bc519adf725"
+    },
+    {
+      "path": "resources/sound/zhenFu_skill_rain.mp3",
+      "bytes": 49200,
+      "sha256": "ddae5d24cd5f47e0a14b8b5d4ad7b98bd10d69e6427daf2200b70ba8a1085e22"
+    },
+    {
+      "path": "resources/sound/zhenFu_skill_rain_cycle.mp3",
+      "bytes": 21888,
+      "sha256": "1ee02657c197b60c13f1d6aaa4c774bc2278b18e58204ce3361df6f0fe7dc80c"
+    },
+    {
+      "path": "resources/sound/zhenFu_wind.mp3",
+      "bytes": 135835,
+      "sha256": "a43b0a8b76812cb20452d9162c038129873a24d34413a5d78990e2414e8682c1"
+    },
+    {
+      "path": "resources/sound/zhuangji.mp3",
+      "bytes": 9186,
+      "sha256": "9ccb359390af668d5a42ccd8aa6779bcf2b90a5ddb7915464aa7868548c8c965"
+    },
+    {
+      "path": "scene/AvatarSettingScene.ls",
+      "bytes": 3511,
+      "sha256": "4be5071d014a762fcfe48f02dd4cf6e084c005b6ccaed94e6ec8501a3d30e4d7"
+    },
+    {
+      "path": "scene/BattleScene.ls",
+      "bytes": 18044,
+      "sha256": "c18128cfda53e372fdda7b8399a8fac3b33f164cc69aa489a02b64737c61e1c1"
+    },
+    {
+      "path": "scene/GameOverScene.ls",
+      "bytes": 10841,
+      "sha256": "9ff11880c4e49d5093582aacec0f4a9e7bad16808283ae09b66fdcd54e7e39f7"
+    },
+    {
+      "path": "scene/LoadMaskScene.ls",
+      "bytes": 733,
+      "sha256": "08d0d8074fa49fcc28cbeb40ce18a4f4081316de513f2f949b779f5fc61fcec1"
+    },
+    {
+      "path": "scene/LoadScene.ls",
+      "bytes": 1655,
+      "sha256": "dd0ac775df3d2d485c3f728fd6eec078d703f0f3e32fa9ab07755de58a06fac0"
+    },
+    {
+      "path": "scene/MainScene.ls",
+      "bytes": 12351,
+      "sha256": "e42bbdc19b5d9d59a6f64f8b96fcc1bf5c6ba6d18a119dd5f8136ebe4bdb68ca"
+    },
+    {
+      "path": "scene/MatchScene.ls",
+      "bytes": 9236,
+      "sha256": "5d09fd66f8ac88e7984ca831f812a1e2ba15ff488a502aeb9d099f2edb88c36b"
+    },
+    {
+      "path": "scene/RankScene.ls",
+      "bytes": 2600,
+      "sha256": "4b29f058128abcb16133b06fe93639a62bbc8e1d8b1d6bdeb2201789c8e3e327"
+    },
+    {
+      "path": "scene/SettingScene.ls",
+      "bytes": 6905,
+      "sha256": "505c7e84c4b50d9c0ff30c89e86a3885d8387a0be41f2e9eb0569075c244e357"
+    },
+    {
+      "path": "scene/ShopScene.ls",
+      "bytes": 10582,
+      "sha256": "414438f2c9506cc9671008f4b7f5a677982de71392f7850d03db504b8eb1d5d6"
+    },
+    {
+      "path": "scene/WeaponScene.ls",
+      "bytes": 3504,
+      "sha256": "f9f206f6ebd8ff63056da1eb35f170db5852f972c46ffa24919eeb80a95a970f"
+    }
+  ]
+}

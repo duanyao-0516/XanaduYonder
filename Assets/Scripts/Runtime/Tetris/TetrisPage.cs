@@ -74,7 +74,12 @@ namespace XanaduYonder.Runtime.Tetris
         }
         public void SetForeground(bool value) { foreground = value; if (!value) Suspend(); }
         public void SetHostSaveWarning(string message) { hostWarning = message; RefreshWarning(); }
-        public void Back() { Suspend(); lobby(); }
+        public void Back() { HandleSystemBack(null); }
+        public void HandleSystemBack(Func<bool> confirmExit)
+        {
+            if (confirmExit != null && !confirmExit()) return;
+            Suspend(); lobby();
+        }
         private void TogglePause()
         {
             if (!loaded.CanWrite) return;

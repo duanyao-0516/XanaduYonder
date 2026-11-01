@@ -7,7 +7,6 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private ClassicGoldMinerLauncher classicGoldMinerLauncher;
-        private CanvasGroup classicGoldMinerLobbyInput;
         private bool IsClassicGoldMinerRunning => classicGoldMinerLauncher != null && classicGoldMinerLauncher.IsBusy;
 
         private static void AddClassicGoldMinerPreview(Transform parent)
@@ -20,12 +19,12 @@ namespace XanaduYonder.Runtime
 
         private void EnterClassicGoldMiner()
         {
-            if (activePage != Page.Lobby || paused || !focused || IsClassicGoldMinerRunning || IsKingdomRushRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             CloseModal();
             Save();
             feedback?.Stop();
             EnsureClassicGoldMinerLauncher();
-            SetClassicGoldMinerLobbyInput(false);
+            SetExternalGameLobbyInput(false);
             if (!classicGoldMinerLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled))
                 OnClassicGoldMinerReturned(ClassicGoldMinerLauncher.OpenFailureMessage);
             // The lobby stays underneath the native Activity; Android owns its focus,
@@ -34,8 +33,8 @@ namespace XanaduYonder.Runtime
 
         private void OnClassicGoldMinerReturned(string error)
         {
-            SetClassicGoldMinerLobbyInput(true);
-            if (activePage == Page.Lobby && !string.IsNullOrEmpty(error))
+            SetExternalGameLobbyInput(true);
+            if (activePage == Page.Lobby && !IsExternalGameRunning && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });
         }
 
@@ -44,20 +43,6 @@ namespace XanaduYonder.Runtime
             if (classicGoldMinerLauncher != null) return;
             classicGoldMinerLauncher = gameObject.AddComponent<ClassicGoldMinerLauncher>();
             classicGoldMinerLauncher.Returned += OnClassicGoldMinerReturned;
-        }
-
-        private void SetClassicGoldMinerLobbyInput(bool enabled)
-        {
-            if (lobbyPage == null) return;
-            if (classicGoldMinerLobbyInput == null)
-            {
-                classicGoldMinerLobbyInput = lobbyPage.GetComponent<CanvasGroup>();
-                // Unity missing components can be non-null managed wrappers.
-                if (classicGoldMinerLobbyInput == null) classicGoldMinerLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
-            }
-            // The stable lobby root survives display-mode rebuilds; individual cards do not.
-            classicGoldMinerLobbyInput.interactable = enabled;
-            classicGoldMinerLobbyInput.blocksRaycasts = enabled;
         }
 
         private void ReleaseClassicGoldMinerLauncher()
