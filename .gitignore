@@ -52,6 +52,9 @@ local.properties
 /Assets/Plugins/Android/KingdomRushContent.aar
 /Assets/Plugins/Android/KingdomRushContent.aar.meta
 /ThirdParty/KingdomRushRuntime/prebuilt/
+# Built from the hash-pinned local web content and Android host sources.
+/Assets/Plugins/Android/ZhaoyunAdouRuntime.aar
+/Assets/Plugins/Android/ZhaoyunAdouRuntime.aar.meta
 /TestResults/
 Tests/**/bin/
 Tests/**/obj/

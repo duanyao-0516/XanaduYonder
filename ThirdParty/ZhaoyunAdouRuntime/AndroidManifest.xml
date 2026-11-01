@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.xanaduyonder.zhaoyunadou">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
+    <application>
+        <activity android:name="com.xanaduyonder.zhaoyunadou.ZhaoyunAdouActivity"
+                  android:exported="false"
+                  android:screenOrientation="portrait"
+                  android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|locale|layoutDirection|fontScale|density"
+                  android:hardwareAccelerated="true"
+                  android:enableOnBackInvokedCallback="true"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+</manifest>

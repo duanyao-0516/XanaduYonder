@@ -15,6 +15,7 @@ using XanaduYonder.Core;
 using XanaduYonder.Core.Sudoku;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.KingdomRush;
+using XanaduYonder.Runtime.ZhaoyunAdou;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Sudoku;
 using Object = UnityEngine.Object;
@@ -74,6 +75,7 @@ namespace XanaduYonder.EditorTools
                     CheckRecords(fixture);
                     CheckOptions(fixture);
                     CheckKingdomRushLifecycle(fixture);
+                    CheckZhaoyunAdouLifecycle(fixture);
                     report.AppendLine("PASS production lobby at 720x" + height);
                 }
                 report.AppendLine("LOBBY_DESIGN_CHECKS_PASS: " + checks + " assertions");
@@ -98,12 +100,12 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush",
+        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "ZhaoyunAdou",
             "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "Idiom" };
-        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush",
+        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterZhaoyunAdou",
             "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 19 ? "敏捷挑战" : "文字语言"; }
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 21, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
+        private static string Category(int i) { return i < 8 ? "逻辑策略" : i < 14 ? "合成消除" : i < 20 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -185,7 +187,7 @@ namespace XanaduYonder.EditorTools
                 SetModeForCheck(f.Host, mode); f.Flush();
                 Require(ReferenceEquals(scroll, f.Scroll) && ReferenceEquals(status, Property(f.View, "StatusLabel")), "Changing mode keeps the scroll and status owners stable");
                 var cards = f.View.GetComponentsInChildren<Button>().Where(b => b.name.EndsWith(" game card", StringComparison.Ordinal)).ToArray();
-                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty actual entries");
+                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty-one actual entries");
                 for (int i = 0; i < cards.Length; i++)
                 {
                     var card = (RectTransform)cards[i].transform;
@@ -229,6 +231,7 @@ namespace XanaduYonder.EditorTools
                 }
                 CheckKingdomRushArtwork(f, mode);
                 CheckAircraftFireArtwork(f, mode);
+                CheckZhaoyunAdouArtwork(f, mode);
                 var groupTitles = f.View.GetComponentsInChildren<Text>().Where(t => t.name == "Group title").ToArray();
                 Require(groupTitles.Length == (mode == 2 ? 0 : 4), "Single has no redundant category headers; compact modes retain four groups");
                 var subtitle = Named(f.View.transform, "Lobby subtitle");
@@ -360,7 +363,9 @@ namespace XanaduYonder.EditorTools
             var returnedField = typeof(KingdomRushLauncher).GetField("Returned", Members);
             Require(((Delegate)returnedField.GetValue(launcher)).GetInvocationList().Length == 1, "The native return callback is subscribed once");
             typeof(KingdomRushLauncher).GetProperty("IsBusy").SetValue(launcher, true);
-            Invoke(f.Host, "SetKingdomRushLobbyInput", false);
+            Invoke(f.Host, "EnterZhaoyunAdou");
+            Require(f.Host.GetComponent<ZhaoyunAdouLauncher>() == null, "Kingdom Rush blocks a concurrent WebView launch");
+            Invoke(f.Host, "SetExternalGameLobbyInput", false);
             SetModeForCheck(f.Host, 0); f.Flush();
             Require(!FindCard(f.View.transform, "KingdomRush").GetComponent<Button>().IsInteractable(),
                 "A lobby rebuild cannot reactivate cards while the native game is opening");
@@ -380,6 +385,80 @@ namespace XanaduYonder.EditorTools
             pageField.SetValue(f.Host, lobbyPage);
             Invoke(f.Host, "ReleaseKingdomRushLauncher");
             Require(returnedField.GetValue(launcher) == null, "Host teardown releases the native return subscription");
+        }
+
+        private static void CheckZhaoyunAdouArtwork(Fixture f, int mode)
+        {
+            Require(f.Host.GetComponent<ZhaoyunAdouLauncher>() == null,
+                "Lobby rendering never initializes the WebView game launcher");
+            var card = FindCard(f.View.transform, "ZhaoyunAdou");
+            Require(Named(card, "Game name").GetComponent<Text>().text == "赵云与阿斗", "Zhaoyun Adou title in each lobby mode");
+            if (mode != 2)
+            {
+                var expected = Resources.Load<Sprite>("Lobby/Icons/zhaoyun-adou");
+                Require(expected != null && Named(card, "Game icon").GetComponent<Image>().sprite == expected,
+                    "Zhaoyun Adou uses its bundled original character icon");
+                return;
+            }
+            var slot = Named(card, "Game logo");
+            var image = slot.GetComponentsInChildren<RawImage>().Single();
+            Require(image.texture != null && image.texture == Resources.Load<Texture2D>("ZhaoyunAdou/Logo"),
+                "Zhaoyun Adou uses the original artwork without a fallback");
+            Near(image.rectTransform.rect.width / image.rectTransform.rect.height, 166f / 144,
+                "Zhaoyun Adou logo preserves the original aspect ratio");
+            Require(image.uvRect == new Rect(0, 0, 1, 1), "Zhaoyun Adou logo is not cropped");
+            var corners = new Vector3[4];
+            image.rectTransform.GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                var point = slot.InverseTransformPoint(corner);
+                Require(point.x >= slot.rect.xMin - .1f && point.x <= slot.rect.xMax + .1f &&
+                    point.y >= slot.rect.yMin - .1f && point.y <= slot.rect.yMax + .1f,
+                    "Zhaoyun Adou logo fits the shared lobby slot");
+            }
+        }
+
+        private static void CheckZhaoyunAdouLifecycle(Fixture f)
+        {
+            var pageField = typeof(AppController).GetField("activePage", Members);
+            var lobby = pageField.GetValue(f.Host);
+            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
+            Invoke(f.Host, "EnterZhaoyunAdou");
+            Require(f.Host.GetComponent<ZhaoyunAdouLauncher>() == null,
+                "A stale Zhaoyun Adou card cannot open a WebView over another game");
+            pageField.SetValue(f.Host, lobby);
+            Invoke(f.Host, "EnsureZhaoyunAdouLauncher");
+            Invoke(f.Host, "EnsureZhaoyunAdouLauncher");
+            var launcher = f.Host.GetComponent<ZhaoyunAdouLauncher>();
+            var callback = typeof(ZhaoyunAdouLauncher).GetField("Returned", Members);
+            Require(f.Host.GetComponents<ZhaoyunAdouLauncher>().Length == 1 &&
+                ((Delegate)callback.GetValue(launcher)).GetInvocationList().Length == 1,
+                "One WebView launcher owns one return callback");
+            typeof(ZhaoyunAdouLauncher).GetProperty("IsBusy").SetValue(launcher, true);
+            Invoke(f.Host, "SetExternalGameLobbyInput", false);
+            SetModeForCheck(f.Host, 2); f.Flush();
+            Require(!FindCard(f.View.transform, "ZhaoyunAdou").GetComponent<Button>().IsInteractable(),
+                "Rebuilt lobby remains locked during the WebView session");
+            int nativeLaunchers = f.Host.GetComponents<KingdomRushLauncher>().Length;
+            var modal = Property(f.Host, "modal");
+            Invoke(f.Host, "EnterKingdomRush"); Invoke(f.Host, "EnterZhaoyunAdou");
+            Invoke(f.Host, "EnterAircraftFire"); Invoke(f.Host, "HandleBack");
+            Require(nativeLaunchers == f.Host.GetComponents<KingdomRushLauncher>().Length &&
+                ReferenceEquals(modal, Property(f.Host, "modal")) && pageField.GetValue(f.Host).Equals(lobby),
+                "A WebView session blocks both external and Unity entries and lobby Back");
+            Invoke(f.Host, "OnKingdomRushReturned", new object[] { null });
+            Require(!FindCard(f.View.transform, "ZhaoyunAdou").GetComponent<Button>().IsInteractable(),
+                "A stale return from another host cannot release the WebView input lock");
+            typeof(ZhaoyunAdouLauncher).GetProperty("IsBusy").SetValue(launcher, false);
+            ((Action<string>)callback.GetValue(launcher))(null);
+            Require(FindCard(f.View.transform, "ZhaoyunAdou").GetComponent<Button>().IsInteractable(),
+                "The WebView return callback restores the lobby input");
+            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
+            ((Action<string>)callback.GetValue(launcher))(ZhaoyunAdouLauncher.OpenFailureMessage);
+            Require(ReferenceEquals(modal, Property(f.Host, "modal")), "A late WebView error leaves another page alone");
+            pageField.SetValue(f.Host, lobby);
+            Invoke(f.Host, "ReleaseZhaoyunAdouLauncher");
+            Require(callback.GetValue(launcher) == null, "Host teardown releases the WebView return subscription");
         }
 
         private static void CheckRecords(Fixture f)

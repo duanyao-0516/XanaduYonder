@@ -388,6 +388,26 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildZhaoyunAdouPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    EditorUserBuildSettings.buildAppBundle = false;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".zhaoyunadoupreview");
+                    PlayerSettings.productName = "Xanadu 赵云与阿斗";
+                    BuildApk("-zhaoyun-adou-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidStartupValidation()
         {
             RunOrFail(() =>
