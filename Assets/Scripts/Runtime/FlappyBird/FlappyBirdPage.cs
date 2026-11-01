@@ -100,14 +100,16 @@ namespace XanaduYonder.Runtime.FlappyBird
             }
             else if(visible) { pointer?.ResetContacts(); Refresh(); }
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if(!visible||settingsBlocked) return;
             if(dialogKind==DialogKind.Help||dialogKind==DialogKind.Exit) { CloseDialog(); Refresh(); return; }
-            if(dialogKind==DialogKind.Pause) { RequestHome(); return; }
-            if(dialogKind==DialogKind.Result) { RequestHome(); return; }
+            if(dialogKind==DialogKind.Pause) { RequestSystemHome(confirmExit); return; }
+            if(dialogKind==DialogKind.Result) { RequestSystemHome(confirmExit); return; }
             if(session.Phase==FlappyPhase.Running||session.Phase==FlappyPhase.Countdown) { Suspend(); Save(); return; }
-            RequestHome();
+            RequestSystemHome(confirmExit);
         }
         internal void TogglePause()
         {
@@ -127,12 +129,17 @@ namespace XanaduYonder.Runtime.FlappyBird
             if(session.Phase!=FlappyPhase.Ready&&session.Phase!=FlappyPhase.Paused&&session.Phase!=FlappyPhase.Result) return;
             Save(); CloseDialog(); pointer.Cancel(); session.Restart(NewSeed()); scene.Reset(); Refresh();
         }
-        internal void RequestHome()
+        internal void RequestHome() { RequestSystemHome(null); }
+        private void RequestSystemHome(Func<bool> confirmExit)
         {
             if(!visible||settingsBlocked||!HostAllows) return;
             bool active=session.Phase==FlappyPhase.Running||session.Phase==FlappyPhase.Paused||session.Phase==FlappyPhase.Countdown;
+            // If a pending record saves successfully here, still require the exit
+            // dialog for this system-back request instead of silently going home.
+            bool recordNeedsConfirmation=confirmExit!=null&&HasUnsavedRecord;
+            if(!active&&!HasUnsavedRecord&&confirmExit!=null&&!confirmExit()) return;
             Suspend(); Save();
-            if(active||HasUnsavedRecord) ShowExit();
+            if(active||HasUnsavedRecord||recordNeedsConfirmation) ShowExit();
             else returnLobby?.Invoke();
         }
         internal void ShowRules()

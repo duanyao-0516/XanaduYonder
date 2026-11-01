@@ -407,6 +407,29 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildCutTheRopeTest()
+        {
+            RunOrFail(() =>
+            {
+                // Dispose restores Prepare's serialized settings and Editor flags in finally,
+                // including failed builds, before RunOrFail can terminate the Editor process.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    EditorUserBuildSettings.buildAppBundle = false;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.Android.forceInternetPermission = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".cuttheropetest");
+                    PlayerSettings.productName = "割绳子测试";
+                    BuildApk("-cut-the-rope-test.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidStartupValidation()
         {
             RunOrFail(() =>

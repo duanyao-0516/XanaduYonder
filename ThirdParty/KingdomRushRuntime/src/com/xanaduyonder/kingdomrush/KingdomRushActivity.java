@@ -4,19 +4,33 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
 import android.view.WindowManager;
+import android.widget.Toast;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import java.io.File;
 import java.util.Locale;
 import org.love2d.android.GameActivity;
 
 /** Internal landscape Activity. Its normal exit is love.event.quit(), then finish(). */
 public final class KingdomRushActivity extends GameActivity {
+    private static final long BACK_CONFIRM_WINDOW_MS = 2000;
     private boolean hapticsEnabled;
     private boolean soundEnabled;
+    private boolean backKeyDown;
+    private boolean awaitingBackConfirmation;
+    private boolean exitRequested;
+    private boolean nativeRuntimeReady;
+    private boolean nativeQuitSent;
+    private boolean destroyed;
+    private long firstBackAt;
+    private Toast backToast;
+    private OnBackInvokedCallback backInvokedCallback;
 
     @Override protected void onCreate(Bundle savedState) {
         soundEnabled = getIntent().getBooleanExtra("soundEnabled", true);
@@ -33,6 +47,11 @@ public final class KingdomRushActivity extends GameActivity {
             // This runs after Activity.onCreate and before SDL_main starts in onResume.
             getFilesDir();
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                backInvokedCallback = this::requestReturnToLobby;
+                getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);
+            }
         } catch (RuntimeException | LinkageError error) {
             KingdomRushBridge.reportError("王国保卫战启动失败：" + error.toString());
             mBrokenLibraries = true;
@@ -59,12 +78,13 @@ public final class KingdomRushActivity extends GameActivity {
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent event) {
-        if (isRuntimeEntryRejected()) return super.dispatchKeyEvent(event);
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !mBrokenLibraries) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-                onNativeKeyDown(KeyEvent.KEYCODE_ESCAPE);
+                backKeyDown = true;
             } else if (event.getAction() == KeyEvent.ACTION_UP) {
-                onNativeKeyUp(KeyEvent.KEYCODE_ESCAPE);
+                boolean completed = backKeyDown && !event.isCanceled();
+                backKeyDown = false;
+                if (completed) requestReturnToLobby();
             }
             return true;
         }
@@ -72,10 +92,73 @@ public final class KingdomRushActivity extends GameActivity {
     }
 
     @Override public void onBackPressed() {
-        if (isRuntimeEntryRejected()) { finish(); return; }
-        if (mBrokenLibraries) { finish(); return; }
-        onNativeKeyDown(KeyEvent.KEYCODE_ESCAPE);
-        onNativeKeyUp(KeyEvent.KEYCODE_ESCAPE);
+        requestReturnToLobby();
+    }
+
+    private void requestReturnToLobby() {
+        if (exitRequested || isFinishing()) return;
+        if (isRuntimeEntryRejected() || mBrokenLibraries) {
+            exitRequested = true;
+            clearBackConfirmation();
+            finish();
+            return;
+        }
+        long now = SystemClock.elapsedRealtime();
+        long elapsed = now - firstBackAt;
+        if (awaitingBackConfirmation && elapsed >= 0 && elapsed < BACK_CONFIRM_WINDOW_MS) {
+            exitRequested = true;
+            clearBackConfirmation();
+            sendQuitWhenReady();
+            return;
+        }
+        clearBackConfirmation();
+        awaitingBackConfirmation = true;
+        firstBackAt = now;
+        backToast = Toast.makeText(this, "再按一次返回大厅", Toast.LENGTH_SHORT);
+        backToast.show();
+    }
+
+    private void onNativeRuntimeReady() {
+        if (destroyed || isFinishing()) return;
+        nativeRuntimeReady = true;
+        sendQuitWhenReady();
+    }
+
+    private void sendQuitWhenReady() {
+        if (!nativeRuntimeReady || !exitRequested || nativeQuitSent || destroyed || isFinishing()) return;
+        nativeQuitSent = true;
+        // Let love.quit save settings and SDL_main return before Activity/native teardown.
+        nativeSendQuit();
+    }
+
+    private void clearBackConfirmation() {
+        awaitingBackConfirmation = false;
+        backKeyDown = false;
+        if (backToast != null) {
+            backToast.cancel();
+            backToast = null;
+        }
+    }
+
+    @Override protected void onPause() {
+        clearBackConfirmation();
+        super.onPause();
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        if (!hasFocus) clearBackConfirmation();
+        super.onWindowFocusChanged(hasFocus);
+    }
+
+    @Override protected void onDestroy() {
+        destroyed = true;
+        exitRequested = true;
+        clearBackConfirmation();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && backInvokedCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
+            backInvokedCallback = null;
+        }
+        super.onDestroy();
     }
 
     @Override public void vibrate(double seconds) {
@@ -92,6 +175,10 @@ public final class KingdomRushActivity extends GameActivity {
 
     /** Called by the real Lua JNI module. Unknown fields are errors, never empty defaults. */
     public String getSystemProperty(String name) {
+        // LÖVE initializes/pumps SDL events before loading main.lua. Its existing
+        // property reads prove the event queue is ready, even during early loading.
+        // Keep confirmation/quit state on the UI thread, including this Lua callback.
+        runOnUiThread(this::onNativeRuntimeReady);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         switch (name) {
             case "HAS_PERMANENT_MENU_KEY": return Boolean.toString(ViewConfiguration.get(this).hasPermanentMenuKey());

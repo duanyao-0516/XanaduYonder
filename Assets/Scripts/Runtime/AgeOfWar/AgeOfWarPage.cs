@@ -330,11 +330,16 @@ namespace XanaduYonder.Runtime.AgeOfWar
         }
         private void SwitchScene(string key){view.BeginTransition(false);view.ShowScene(key);}
         private void Menu(){if(!PersistProgress())return;view.BeginTransition(false);Cursor.visible=originalCursor;battle=null;clock=null;CancelPointer();ShowMainMenu();}
-        internal void HandleBack()
+        internal void HandleBack() { HandleSystemBack(null); }
+        internal void HandleSystemBack(Func<bool> confirmExit)
         {
+            if(leaving)return;
             if(menuDialog!=null&&menuDialog.IsOpen){menuDialog.Close();return;}
-            if(transition){Exit();return;}if(view!=null&&view.Transitioning)return;if(battle!=null){if(view.HasTutorial){view.DismissTutorial();Command(AgeOfWarAction.Pause);return;}if(battle.Capture().Paused)Menu();else Command(AgeOfWarAction.Pause);return;}
-            if(view!=null&&view.SceneKey!="menu"){Menu();return;}Exit();
+            if(transition){if(confirmExit==null||confirmExit())Exit();return;}
+            if(view!=null&&view.Transitioning)return;
+            if(battle!=null){if(view.HasTutorial){view.DismissTutorial();Command(AgeOfWarAction.Pause);return;}if(battle.Capture().Paused)Menu();else Command(AgeOfWarAction.Pause);return;}
+            if(view!=null&&view.SceneKey!="menu"){Menu();return;}
+            if(confirmExit==null||confirmExit())Exit();
         }
         internal void HostActivity(bool active){if(!active)PersistProgress();stageClock.Reset();foreground=active;if(!active){menuDialog?.Close();Cursor.visible=originalCursor;view?.HidePointer();}CancelPointer();if(clock!=null)clock.Reset();if(audioPlayer!=null)audioPlayer.Suspend(!active||leaving);}
         internal void Suspend(){PersistProgress();stageClock.Reset();CancelPointer();if(clock!=null)clock.Reset();}

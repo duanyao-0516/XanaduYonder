@@ -8,7 +8,7 @@
 
 本次正式版本为 **0.9.4**，Android versionCode 为 **13**，包含 **20 个大厅入口**。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；交付范围与本轮未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
 
-当前开发分支新增 **21 · 只有一道门**：大厅打开独立横屏全屏 WebView，运行随包内置的 4399 / 243372 原版内容。保留单人、双人及原关卡进度；连续两次系统返回手势回到大厅，首次提示。接入实现见[实施计划](docs/superpowers/plans/2026-11-01-level-devil-android.md)，最终 APK 和模拟器验证边界见[验证报告](docs/verification-level-devil.md)。这不改变上面的已发布版本记录。构建隔离测试包使用 `scripts/build-level-devil.sh`，包名 `com.duanyao.xanaduyonder.leveldeviltest`，不覆盖正式包和存档。
+当前开发分支新增 **22 · 只有一道门**：大厅打开独立横屏全屏 WebView，运行随包内置的 4399 / 243372 原版内容。保留单人、双人及原关卡进度；连续两次系统返回手势回到大厅，首次提示。接入实现见[实施计划](docs/superpowers/plans/2026-11-01-level-devil-android.md)，最终 APK 和模拟器验证边界见[验证报告](docs/verification-level-devil.md)。这不改变上面的已发布版本记录。构建隔离测试包使用 `scripts/build-level-devil.sh`，包名 `com.duanyao.xanaduyonder.leveldeviltest`，不覆盖正式包和存档。
 
 **20 · 飞机大战（Aircraft Fire）**：独立 Unity C# 离线玩法，从原游戏入口菜单选择经典模式、关卡模式或查看历史成绩，说明与设置仅在入口显示；实战支持拖动飞机、自动射击、炸弹和双发补给，经典模式可在暂停页切换普通／疯狂进攻，关卡模式共七关。三种成绩与最高到达关卡单独保存，每局可免费复活一次。单列大厅使用用户提供 APK 的真实图标，双列和目录使用统一风格飞机图标。仅保留离线游戏内容，无广告、购买、通知或联网服务。原始参数、素材与移植调整见[APK 参考记录](docs/aircraft-fire-reference.md)；正式交付与初版历史验证分开记录在[飞机大战接入记录](docs/verification-aircraft-fire.md)。
 

@@ -101,10 +101,12 @@ namespace XanaduYonder.Runtime.HappyBall
             RefreshOverlay(); Save();
         }
 
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if (IsRunning) { Suspend(); Save(); }
-            else returnLobby();
+            else if (confirmExit == null || confirmExit()) returnLobby();
         }
 
         private void TogglePause()

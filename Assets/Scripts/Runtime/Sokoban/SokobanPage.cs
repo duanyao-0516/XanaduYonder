@@ -76,10 +76,12 @@ namespace XanaduYonder.Runtime.Sokoban
             else if(settingsBlocked) { settingsBlocked=false; session?.SetBlocked(false); }
             session?.SetForeground(value); Save(); Refresh(); if(value) CheckEndState();
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if(dialog!=null) { dismissDialog?.Invoke(); return; }
-            if(isEntry) Home(); else ShowLevels();
+            if(isEntry) { if(confirmExit==null||confirmExit()) Home(); } else ShowLevels();
         }
         private void Home() { CancelInput(); feedback.Stop(); Save(); returnLobby(); }
         internal void StartLevel(string levelId,bool fresh=false)

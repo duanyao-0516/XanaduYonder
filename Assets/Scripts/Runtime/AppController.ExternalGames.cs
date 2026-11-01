@@ -5,7 +5,7 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private CanvasGroup externalGameLobbyInput;
-        private bool IsExternalGameRunning => IsKingdomRushRunning || IsLevelDevilRunning;
+        private bool IsExternalGameRunning => IsKingdomRushRunning || IsLevelDevilRunning || IsCutTheRopeRunning;
 
         private void SetExternalGameLobbyInput(bool enabled)
         {
