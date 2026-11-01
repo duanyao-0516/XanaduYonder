@@ -137,7 +137,9 @@ namespace XanaduYonder.Runtime.AgeOfWar
                     if(frame.Ended){clearPending=true;PersistProgress();view.Render(frame);view.BeginTransition(false);Cursor.visible=originalCursor;battle=null;clock=null;CancelPointer();view.ShowScene(frame.Victory?"victory":"defeat");if(edition==1)audioPlayer.SelectMusic(null);}
                     else
                     {
-                        ReadPointer(frame);if(battle==null)return;frame=battle.Capture();view.CameraX=(float)cameraX;view.CameraY=cameraY;view.Render(frame);
+                        ReadPointer(frame);if(battle==null)return;
+                        if(menuDialog!=null&&menuDialog.IsOpen){stageClock.Reset();clock?.Reset();audioPlayer.Refresh();return;}
+                        frame=battle.Capture();view.CameraX=(float)cameraX;view.CameraY=cameraY;view.Render(frame);
                         if(frame.Paused)RenderPauseValues();
                         if(Input.GetKeyDown(KeyCode.Space)&&edition==1)Command(AgeOfWarAction.Pause);
                     }
@@ -237,6 +239,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             if(hit.action=="mobile-save-retry"){RetryProgress();return;}
             if(hit.action=="mobile-save-dismiss"){view.SaveWarning(null);return;}
             if(hit.action=="mobile-help"){OpenMenuDialog(true);return;}
+            if(hit.action=="mobile-battle-help"){OpenBattleHelp();return;}
             if(hit.action=="mobile-settings"){OpenMenuDialog(false);return;}
             if(hit.action=="mobile-continue"){ContinueBattle();return;}
             if(hit.action=="mobile-main-menu"){Menu();return;}
@@ -358,7 +361,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private void Fail(Exception error){Debug.LogException(error);Error="战争进化史加载失败："+error.Message;Exit();}
         private void Release()
         {
-            stageClock.Reset();battle=null;clock=null;menuSave=null;saveStore=null;menuDialog?.Dispose();menuDialog=null;if(view!=null){view.Dispose();view=null;}
+            stageClock.Reset();battleHelpOwner=null;resumeAfterBattleHelp=false;battle=null;clock=null;menuSave=null;saveStore=null;menuDialog?.Dispose();menuDialog=null;if(view!=null){view.Dispose();view=null;}
             if(audioPlayer!=null){audioPlayer.Release();audioPlayer=null;}if(canvasObject!=null){canvasObject.SetActive(false);Destroy(canvasObject);canvasObject=null;}
             if(viewport!=null)viewport.Changed-=ViewportChanged;viewport=null;stage=null;
             if(assets!=null){assets.Dispose();assets=null;}Application.targetFrameRate=oldTargetFps;Cursor.visible=originalCursor;

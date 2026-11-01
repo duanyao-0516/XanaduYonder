@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using XanaduYonder.Core.AgeOfWar;
 
 namespace XanaduYonder.Runtime.AgeOfWar
 {
@@ -18,8 +19,10 @@ namespace XanaduYonder.Runtime.AgeOfWar
         private Text soundState, hapticsState;
         private float width, height;
         private bool help, disposed;
+        private AgeOfWarBattleHelpContent battleHelp;
 
         public bool IsOpen { get { return overlay != null && overlay.gameObject.activeSelf; } }
+        public bool IsBattleHelp { get { return IsOpen && battleHelp != null; } }
 
         public AgeOfWarMenuDialog(RectTransform parent, int edition, Func<bool> sound, Action<bool> setSound,
             Func<bool> haptics, Action<bool> setHaptics, Action closed)
@@ -40,6 +43,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         public void ShowHelp()
         {
             if (disposed) return;
+            battleHelp = null;
             help = true;
             Build(1);
         }
@@ -47,7 +51,16 @@ namespace XanaduYonder.Runtime.AgeOfWar
         public void ShowSettings()
         {
             if (disposed) return;
+            battleHelp = null;
             help = false;
+            Build(1);
+        }
+
+        public void ShowBattleHelp(AgeOfWarAssets assets, IAgeOfWarBattle battle, AgeOfWarFrame frame)
+        {
+            if (disposed) return;
+            battleHelp = AgeOfWarBattleHelpContent.Capture(assets, battle, frame);
+            help = true;
             Build(1);
         }
 
@@ -63,6 +76,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
         {
             if (!IsOpen) return;
             DestroyVisuals();
+            battleHelp = null;
             // Notify only after the dialog stops intercepting input. Repeated Close is harmless.
             closed?.Invoke();
         }
@@ -73,6 +87,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             disposed = true;
             // Owner teardown is not a user dismissal and must not re-enter navigation callbacks.
             DestroyVisuals();
+            battleHelp = null;
         }
 
         private void Build(float position)
@@ -95,7 +110,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             var icon = UiFactory.Rect(panel, "Dialog icon", 18, 17, 25, 25).gameObject.AddComponent<UiIconGraphic>();
             icon.Kind = help ? UiIconKind.Book : UiIconKind.Settings;
             icon.color = UiFactory.Accent; icon.raycastTarget = false;
-            var title = UiFactory.Label(panel, help ? "战争进化史" + (edition == 1 ? "一代" : "二代") + " · 玩法" : "设置",
+            var title = UiFactory.Label(panel, battleHelp != null ? battleHelp.Title : help ? "战争进化史" + (edition == 1 ? "一代" : "二代") + " · 玩法" : "设置",
                 52, 11, Mathf.Max(1, panelWidth - 116), 40, 20, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             title.supportRichText = false;
             UiFactory.IconButton(panel, UiIconKind.Close, panelWidth - 54, 10, 40, 40, Close);
@@ -111,7 +126,7 @@ namespace XanaduYonder.Runtime.AgeOfWar
             scroll.horizontal = false; scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.inertia = true; scroll.decelerationRate = .135f; scroll.scrollSensitivity = 24;
-            float bodyHeight = help ? BuildHelp(content, viewportWidth) : BuildSettings(content, viewportWidth);
+            float bodyHeight = battleHelp != null ? BuildBattleHelp(content, viewportWidth) : help ? BuildHelp(content, viewportWidth) : BuildSettings(content, viewportWidth);
             content.sizeDelta = new Vector2(viewportWidth, Mathf.Max(viewportHeight, bodyHeight));
             BuildScrollbar(panel, panelWidth - 15, 62, viewportHeight);
             scroll.verticalNormalizedPosition = Mathf.Clamp01(position);
@@ -119,7 +134,41 @@ namespace XanaduYonder.Runtime.AgeOfWar
             var hint = UiFactory.Label(panel, help ? "上下滑动查看" : "设置在所有游戏中共用", 20, panelHeight - 42,
                 Mathf.Max(1, panelWidth - 138), 30, 13, UiFactory.Muted);
             hint.supportRichText = false;
-            SmallButton(panel, help ? "知道了" : "完成", panelWidth - 106, panelHeight - 43, 86, 32, Close);
+            SmallButton(panel, battleHelp != null ? "返回战场" : help ? "知道了" : "完成", panelWidth - 106, panelHeight - 43, 86, 32, Close);
+        }
+
+        private float BuildBattleHelp(RectTransform content, float contentWidth)
+        {
+            float top = BattleText(content, battleHelp.Summary, 0, 0, contentWidth, 14, UiFactory.Muted) + 20;
+            string group = "";
+            foreach (var entry in battleHelp.Entries)
+            {
+                if (entry.Group != group)
+                {
+                    group = entry.Group;
+                    top += BattleText(content, group, 0, top, contentWidth, 17, UiFactory.Ink, FontStyle.Bold) + 12;
+                }
+                const float iconSize = 46, textLeft = 60;
+                var icon = UiFactory.Rect(content, entry.Title + " original icon", 0, top, iconSize, iconSize).gameObject.AddComponent<Image>();
+                icon.sprite = entry.Icon;
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                float textWidth = Mathf.Max(1, contentWidth - textLeft);
+                float titleHeight = BattleText(content, entry.Title, textLeft, top, textWidth, 16, UiFactory.Ink, FontStyle.Bold);
+                float bodyHeight = BattleText(content, entry.Body, textLeft, top + titleHeight + 4, textWidth, 14, UiFactory.Muted);
+                top += Mathf.Max(iconSize, titleHeight + 4 + bodyHeight) + 22;
+            }
+            return top;
+        }
+
+        private static float BattleText(RectTransform parent, string value, float left, float top, float width,
+            int size, Color color, FontStyle style = FontStyle.Normal)
+        {
+            var text = UiFactory.Label(parent, value, left, top, width, 1, size, color, TextAnchor.UpperLeft, style);
+            text.supportRichText = false;
+            float height = Mathf.Ceil(text.preferredHeight);
+            text.rectTransform.sizeDelta = new Vector2(width, height);
+            return height;
         }
 
         private float BuildHelp(RectTransform content, float contentWidth)
