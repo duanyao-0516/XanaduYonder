@@ -388,6 +388,25 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildLevelDevilPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    // A separate package preserves the installed collection and saves.
+                    // Non-Development avoids Unity's diagnostic network permissions.
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".leveldeviltest");
+                    PlayerSettings.productName = "Xanadu 只有一道门";
+                    BuildApk("-level-devil-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidStartupValidation()
         {
             RunOrFail(() =>

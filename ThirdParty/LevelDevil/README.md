@@ -1,0 +1,51 @@
+# Level Devil / 只有一道门
+
+Pinned 4399 distribution from <https://www.4399.com/flash/243372.htm>, captured on 2026-11-01. `source-manifest.json` records the original download URLs, byte counts and SHA-256 hashes. The game is a Stencyl/OpenFL/Lime/Haxe HTML5 export; it is not a Unity port. The upstream game and resource copyrights remain with their respective owners. A publicly downloadable package is not a redistribution license; this repository records the integration and provenance, not a grant of rights.
+
+## Reproduce the content
+
+```sh
+python3 scripts/level-devil/build-content.py
+python3 scripts/level-devil/build-content.py --verify
+node scripts/level-devil/check-browser.cjs
+node scripts/level-devil/check-browser.cjs --prompt-smoke
+node scripts/level-devil/check-browser.cjs --ui-smoke
+node scripts/level-devil/check-viewport.cjs
+node scripts/level-devil/check-cancel.cjs
+```
+
+The Python scripts require only Python 3.9 or newer and its standard library. The browser check requires `playwright-core` (`PLAYWRIGHT_MODULE` can select its module directory) and Chrome (`CHROME_PATH` can select its executable). It defaults to the locally installed research tools and macOS Chrome. It uses an intercepted HTTPS origin; it does not run or contact a network server.
+
+`original/` contains the unmodified main JS, the original PAK and all 19 MP3s. Both Poki SDK files and the distributor's HTML are excluded from this controlled source and from the production assets. Their research copies remain outside this directory. The builder verifies all source hashes, all 2,138 gzip members and 184 scene-data pairs. Scenes include menus and special scenes; this count is not a claim that 184 levels have been played.
+
+`generated/` and `Assets/Plugins/Android/LevelDevilContent.aar` are generated and ignored by Git. The AAR contains only `AndroidManifest.xml` and `assets/level-devil/*`. Its manifest sets minSdk 26 and targetSdk 36 and requests no permissions. Every file served to the WebView is listed with bytes, SHA-256 and MIME in `assets/level-devil/manifest.json`; the manifest itself is private to the native resource loader. ZIP entry times, order and permissions are fixed. `--verify` recomputes and compares the exact AAR, production file set, contents and patch report without writing.
+
+## Narrow integration changes
+
+The original main JS hash and each patch's match count are asserted before changing it. `patch-report.json` records before/after hashes of each replacement. The patches remove SDK initialization, loading/usage telemetry, ad calls, unused outbound navigation/social/image helpers, the unused file-export library and the unused motion listener. Local asset XHR and audio loaders remain. Native allowlisting and the entry CSP additionally restrict the page to its packaged origin.
+
+Commercial interruptions continue asynchronously once. The two explicit speedrun-unlock sites and the optional-skip site have distinct local intents. They retain the original click, eligibility, pause, unlock, scene and save logic. No worlds are unlocked at startup. `controls.js` draws only the three formerly ad-related controls with engine primitives, displaying `UNLOCK FREE`, `SPEEDRUN` or `SKIP FREE`; it preserves their original animation state and hit regions. All PAK and MP3 bytes are unchanged.
+
+The canvas fills the WebView. The original 427 × 240 world is uniformly scaled and centered inside native safe insets, with no change to physics coordinates, collision geometry or level layouts. The world layer is clipped to that original view; the separate HUD layer places the original control sprites near the safe left/right edges. The side areas extend the scene background; single-player uses its original wall theme color so the original light control outlines remain visible. Resize releases active touches before applying new input coordinates.
+
+Touch handling retains saved `Hide_Controls` behavior. It associates each pointer with a key and maintains shared hold counts, so leaving a hit region, cancellation, a second finger's release, host interruption and scene replacement release the correct input. Host pause gates the engine tick independently of the game's own pause state. Host audio is an additional mute/pause gate and does not overwrite the original `Volume` setting.
+
+The original Lime backend maps primary touch DOWN/UP to mouse DOWN/UP but omits mouse release on CANCEL. The adapter clears that canceled primary's mouse flags and OpenFL mouse target without dispatching a synthetic release/click; canceling a secondary pointer preserves the primary state. Host cancellation clears these mouse targets too. Touch END/CANCEL still reach Lime while new input is blocked, retiring its old touch identities, while the game's canceled input remains released.
+
+The initial image scale is selected by the original engine. Startup preloads that scale's 425 sprites plus nine common images instead of decoding all 1,709 images. The full original PAK, including every scale, remains unchanged. Subsequent original fullscreen reloads retain the initial texture scale while display scaling follows the viewport; this avoids synchronous image lookups receiving undecoded images. The original asynchronous image loader remains available for every scale. Local console phase timings distinguish runtime start, selected preload, preload completion and engine start; phone startup latency still requires measurement on that phone.
+
+Only the first boot skips the original loading-scene wait, menu fades and curtains. Save loading and scene initialization remain synchronous and unchanged; closure-local one-shot flags preserve all later menu and gameplay transitions. Readiness still requires the real choice menu to be initialized and interactive.
+
+## Checkpoints and exit
+
+The original save key is `UnicycleLegend:mySave`, using the original Haxe serializer. The adapter validates stored fields before use, retains a last-good backup, atomically replaces the primary with `setItem`, and verifies readback. A corrupt primary can recover from a valid backup with a visible notice; a corrupt primary and backup stop loading and preserve the data. Write failure leaves the previous primary intact and presents a persistent unsaved notice. Costume flags accept the original game's numeric `0`/`1` purchase representation as well as booleans. Missing fields from older compatible saves retain the game's defaults.
+
+`LevelDevilHost.requestExit(requestId)` stops new input while allowing pending local reward/skip/completion work to finish. It waits for the original completion save at about 2,010 ms **and** the next scene's initialization/transition, because `Recent_Level` is updated by that scene. It then flushes the current checkpoint before sending one `exit-ready` with the same request ID. Write failure returns `exit-error` and does not close the page. Retry uses a new request ID; `cancelExit()` resumes interaction. When the player uses the original retry/menu action, engine scene cleanup cancels that scene's timers and the adapter retires only the associated pending tokens; a canceled completion grants no progress. Real backgrounding freezes the engine immediately, so a pending transaction continues only on resume. Sudden process death restores the last committed checkpoint, not a complete mid-jump physics snapshot.
+
+The choice menu (125) and both level maps (49, 174) add a new, explicitly marked instance of original actor 759 (`Btn_Back`). Its original sprite is scaled to at least 48 CSS pixels, inside the safe area. Clicking it sends `exit-intent`; native creates a request ID and uses the same save handshake before returning to the Unity hall. Failure/cancel restores the button for another attempt. The original actor initializer clears integration flags, and existing in-game back buttons retain their original map navigation.
+
+The bridge exports `setHostState(active,soundEnabled)`, `setViewportInsets(leftCss,topCss,rightCss,bottomCss)`, `releaseInput()`, `requestExit(id)` and `cancelExit()`. Insets persist across browser resize and are independent of device pixel density. Messages are `ready`, `exit-intent`, `exit-ready`, `exit-error` and `error`; a recoverable error includes `recoverable:true`. The adapter uses WebMessageListener when available and the exact `xanadu-level-devil:` prompt fallback otherwise. It announces ready after the initial choice scene is initialized and interactive. Sound starts muted until the native host supplies its current setting.
+
+## Verification scope
+
+The browser check loads the actual compiled game and injects private test access only into its intercepted JS response. This test accessor is absent from production. It exercises real startup and resource requests, single-player scene transitions, the original reward branches, pointer ownership, CDP multi-touch/cancellation, separate game/host pause, quota errors, completion/skip exit, two-player input, held input during scene replacement, retry interrupting completion, backup recovery and invalid-save rejection. The prompt smoke separately exercises the legacy bridge transport. The UI smoke captures normal/pressed free-action controls and checks the original unlock and skip/save flows. The viewport check exercises four viewport sizes at DPR 3, safe insets, uniform world scaling, three menu exit clicks, write-failure/cancel/retry, the minimum button size, original in-game Back, and real multi-touch on relocated single/duo controls. The cancellation check covers actual CDP touch cancellation followed by the first 80 ms Back press, partial cancellation of either pointer using DOM TouchEvents, prevention of canceled clicks, and both END/CANCEL during host pause. It is not an exhaustive playthrough. Android lifecycle, system Back, cutouts, app permissions and device touch/audio behavior require the native host's APK/device validation in addition to these checks.
