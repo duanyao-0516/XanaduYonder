@@ -15,6 +15,7 @@ using XanaduYonder.Core;
 using XanaduYonder.Core.Sudoku;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.KingdomRush;
+using XanaduYonder.Runtime.CutTheRope;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Sudoku;
 using Object = UnityEngine.Object;
@@ -74,6 +75,7 @@ namespace XanaduYonder.EditorTools
                     CheckRecords(fixture);
                     CheckOptions(fixture);
                     CheckKingdomRushLifecycle(fixture);
+                    CheckCutTheRopeLifecycle(fixture);
                     report.AppendLine("PASS production lobby at 720x" + height);
                 }
                 report.AppendLine("LOBBY_DESIGN_CHECKS_PASS: " + checks + " assertions");
@@ -98,12 +100,12 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush",
+        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope",
             "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "AircraftFire", "Idiom" };
-        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush",
+        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterCutTheRope",
             "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 19 ? "敏捷挑战" : "文字语言"; }
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 21, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 20, 5 };
+        private static string Category(int i) { return i < 8 ? "逻辑策略" : i < 14 ? "合成消除" : i < 20 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -185,7 +187,7 @@ namespace XanaduYonder.EditorTools
                 SetModeForCheck(f.Host, mode); f.Flush();
                 Require(ReferenceEquals(scroll, f.Scroll) && ReferenceEquals(status, Property(f.View, "StatusLabel")), "Changing mode keeps the scroll and status owners stable");
                 var cards = f.View.GetComponentsInChildren<Button>().Where(b => b.name.EndsWith(" game card", StringComparison.Ordinal)).ToArray();
-                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty actual entries");
+                Require(cards.Length == Names.Length, "Display mode " + mode + " contains all twenty-one actual entries");
                 for (int i = 0; i < cards.Length; i++)
                 {
                     var card = (RectTransform)cards[i].transform;
@@ -199,7 +201,7 @@ namespace XanaduYonder.EditorTools
                     {
                         var icon = Named(card, "Game icon");
                         var iconImage = icon.GetComponent<Image>();
-                        Require(iconImage != null && iconImage.sprite != null, Names[i] + " uses an imported icon or explicit fallback");
+                        Require(iconImage != null && iconImage.sprite != null, Names[i] + " has its compact artwork");
                         Near(icon.rect.width, 20, Names[i] + " icon width"); Near(icon.rect.height, 20, Names[i] + " icon height");
                         var iconCenter = card.InverseTransformPoint(icon.TransformPoint(icon.rect.center));
                         var nameCenter = card.InverseTransformPoint(title.rectTransform.TransformPoint(title.rectTransform.rect.center));
@@ -229,6 +231,7 @@ namespace XanaduYonder.EditorTools
                 }
                 CheckKingdomRushArtwork(f, mode);
                 CheckAircraftFireArtwork(f, mode);
+                CheckCutTheRopeArtwork(f, mode);
                 var groupTitles = f.View.GetComponentsInChildren<Text>().Where(t => t.name == "Group title").ToArray();
                 Require(groupTitles.Length == (mode == 2 ? 0 : 4), "Single has no redundant category headers; compact modes retain four groups");
                 var subtitle = Named(f.View.transform, "Lobby subtitle");
@@ -261,6 +264,7 @@ namespace XanaduYonder.EditorTools
                 f.Capture("mode-" + mode + "-top");
                 f.ShowCard(FindCard(f.View.transform, "KingdomRush")); f.Capture("mode-" + mode + "-kingdom-rush");
                 f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
+                f.ShowCard(FindCard(f.View.transform, "CutTheRope")); f.Capture("mode-" + mode + "-cut-the-rope");
                 if (mode == 2) { f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma"); }
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
                 foreach (var card in cards)
@@ -270,6 +274,76 @@ namespace XanaduYonder.EditorTools
                 }
                 f.ShowCard((RectTransform)cards.Last().transform); f.Capture("mode-" + mode + "-bottom");
             }
+        }
+
+        private static void CheckCutTheRopeArtwork(Fixture f, int mode)
+        {
+            Require(f.Host.GetComponent<CutTheRopeLauncher>() == null,
+                "Building and switching hall layouts does not create a Cut the Rope session");
+            var card = FindCard(f.View.transform, "CutTheRope");
+            Require(Named(card, "Game name").GetComponent<Text>().text == "割绳子", "Cut the Rope title survives all layouts");
+            if (mode != 2)
+            {
+                var icon = Named(card, "Game icon").GetComponent<Image>();
+                var approvedIcon = Resources.Load<Sprite>("Lobby/Icons/cut-the-rope");
+                Require(approvedIcon != null && icon.sprite == approvedIcon,
+                    "Compact Cut the Rope views use the matching scissors line icon");
+                return;
+            }
+            var slot = Named(card, "Game logo");
+            Near(slot.rect.width, 63, "Cut the Rope shares the 63-unit logo width");
+            Near(slot.rect.height, 63, "Cut the Rope shares the 63-unit logo height");
+            var artwork = slot.GetComponentsInChildren<Image>().Single();
+            var approvedLogo = Resources.Load<Sprite>("Lobby/CutTheRopeLogo");
+            Require(approvedLogo != null && artwork.sprite == approvedLogo,
+                "Single Cut the Rope view uses the user-supplied logo directly");
+            Require(artwork.preserveAspect && artwork.color == Color.white,
+                "Cut the Rope preserves the supplied logo proportions and colours");
+            Require(slot.GetComponentsInChildren<Mask>().Length == 0 && slot.GetComponentsInChildren<RectMask2D>().Length == 0,
+                "Cut the Rope does not crop or mask the supplied logo");
+            var corners = new Vector3[4]; artwork.rectTransform.GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                var point = slot.InverseTransformPoint(corner);
+                Require(point.x >= slot.rect.xMin - .1f && point.x <= slot.rect.xMax + .1f &&
+                    point.y >= slot.rect.yMin - .1f && point.y <= slot.rect.yMax + .1f,
+                    "Cut the Rope supplied logo fits its shared slot");
+            }
+        }
+
+        private static void CheckCutTheRopeLifecycle(Fixture f)
+        {
+            var pageField = typeof(AppController).GetField("activePage", Members);
+            var previousPage = pageField.GetValue(f.Host);
+            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
+            Invoke(f.Host, "EnterCutTheRope");
+            Require(f.Host.GetComponent<CutTheRopeLauncher>() == null, "A stale Cut the Rope action cannot enter from another page");
+            pageField.SetValue(f.Host, previousPage);
+            Invoke(f.Host, "EnsureCutTheRopeLauncher");
+            Invoke(f.Host, "EnsureCutTheRopeLauncher");
+            var launcher = f.Host.GetComponent<CutTheRopeLauncher>();
+            Require(launcher != null && f.Host.GetComponents<CutTheRopeLauncher>().Length == 1, "Cut the Rope owns one lazy launcher");
+            var returned = typeof(CutTheRopeLauncher).GetField("Returned", Members);
+            Require(((Delegate)returned.GetValue(launcher)).GetInvocationList().Length == 1, "Cut the Rope subscribes once");
+            Invoke(f.Host, "SetCutTheRopeLobbyInput", false);
+            foreach (int mode in new[] { 0, 1, 2 })
+            {
+                SetModeForCheck(f.Host, mode); f.Flush();
+                Require(!FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable(),
+                    "A hall rebuild cannot restore input behind the native game");
+            }
+            Invoke(f.Host, "OnCutTheRopeReturned", new object[] { null });
+            Require(FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable(), "Native return restores the rebuilt hall");
+            // Editor has no Android bridge: exercise the real synchronous rejection route.
+            Require(!launcher.TryOpen(true), "Unsupported editor host reports launch failure");
+            Invoke(f.Host, "SetCutTheRopeLobbyInput", false);
+            Invoke(f.Host, "OnCutTheRopeReturned", CutTheRopeLauncher.OpenFailureMessage);
+            Require(FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable() && Property(f.Host, "modal") != null,
+                "Launch failure restores hall input and explains the failed launch");
+            Invoke(f.Host, "CloseModal");
+            Invoke(f.Host, "ReleaseCutTheRopeLauncher");
+            Require(returned.GetValue(launcher) == null, "Host teardown removes native return callbacks");
+            Invoke(f.Host, "ReleaseCutTheRopeLauncher");
         }
 
         private static void CheckAircraftFireArtwork(Fixture f, int mode)
@@ -529,7 +603,16 @@ namespace XanaduYonder.EditorTools
                     var sudoku = inert.AddComponent<SudokuPage>();
                     typeof(SudokuPage).GetField("profile", Members).SetValue(sudoku, new SudokuProfile());
                     typeof(AppController).GetField("sudokuPage", Members).SetValue(Host, sudoku);
-                    Invoke(Host, "RefreshScores"); Flush();
+                    try { Invoke(Host, "RefreshScores"); }
+                    finally
+                    {
+                        // These uninitialized components only supply the first record snapshot.
+                        // Real modal/lifecycle checks must not suspend them as running games.
+                        typeof(AppController).GetField("jumpPage", Members).SetValue(Host, null);
+                        typeof(AppController).GetField("sheepPage", Members).SetValue(Host, null);
+                        typeof(AppController).GetField("sudokuPage", Members).SetValue(Host, null);
+                    }
+                    Flush();
                 }
                 catch { Dispose(); throw; }
             }

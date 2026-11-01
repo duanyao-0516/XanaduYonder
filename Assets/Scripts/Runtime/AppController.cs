@@ -92,7 +92,7 @@ namespace XanaduYonder.Runtime
         {
             get
             {
-                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning ||
+                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning || IsCutTheRopeRunning ||
                     (lobbyView != null && lobbyView.HasDisplayOptions) ||
                     lobbyPage == null || !lobbyPage.activeInHierarchy || canvasRoot == null ||
                     !canvasRoot.gameObject.activeInHierarchy || lobbyScroll == null || !lobbyScroll.isActiveAndEnabled ||
@@ -188,6 +188,7 @@ namespace XanaduYonder.Runtime
                 LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
                 LobbyGame("age-of-war", "AgeOfWar", "战争进化史", "18", "逻辑策略", "时代进化", "从石器时代，走向未来战场。", "一代 / 二代 · 横屏战斗", "一代 / 二代", ShowAgeOfWarSelection, AddAgeOfWarPreview),
                 LobbyGame("kingdom-rush", "KingdomRush", "王国保卫战", "19", "逻辑策略", "初代塔防", "守住每一条通往王国的路。", "32 关 · 三种挑战 · 13 位英雄", "32 关 · 三种挑战", EnterKingdomRush, AddKingdomRushPreview),
+                CutTheRopeEntry(),
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
                 LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
                 LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
@@ -1432,6 +1433,7 @@ namespace XanaduYonder.Runtime
         private void Update()
         {
             if (backExitPage != activePage) { ResetBackExitConfirmation(); backExitPage = activePage; }
+            if (IsCutTheRopeRunning) return;
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -1446,7 +1448,7 @@ namespace XanaduYonder.Runtime
 
         private void HandleBackCore()
         {
-            if (IsKingdomRushRunning) return;
+            if (IsKingdomRushRunning || IsCutTheRopeRunning) return;
             if (IsAgeOfWarPage) { ageOfWarPage.HandleSystemBack(ConfirmSystemBackExit); return; }
             var splash = GetComponent<BrandSplash>();
             if (splash != null && splash.BlocksInput) return;
@@ -1530,6 +1532,7 @@ namespace XanaduYonder.Runtime
             ResetBackExitConfirmation();
             ReleaseAircraftFire();
             ReleaseKingdomRushLauncher();
+            ReleaseCutTheRopeLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
         }
 

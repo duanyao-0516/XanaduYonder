@@ -25,7 +25,7 @@ Unity 已将系统返回送入 Escape，但部分页面及弹窗直接调用大�
 - KR 真实 Java／native 编译通过；62 项 JNI 签名、241 项 C++ 所需符号通过。
 - 独立源码复核发现的公共终局弹窗、Gomoku 坏存档弹窗绕过问题已修复并复核关闭。
 
-临时验证代码与证据在 `artifacts/validation/system-back*`、`artifacts/validation/android-double-back`，不加入正式源代码。设备手势、Toast 显示、游戏退出后重新进入仍待真机验收。
+临时验证代码与证据在 `artifacts/validation/system-back*`、`artifacts/validation/android-double-back`，不加入正式源代码。此前设备验证待用户验收；2026-11-01 修复包已覆盖安装至 OPPO PKM110，手机内 APK SHA256 核对一致。用户随后确认“测试没问题了”，授权合并推送 master。
 
 ## 资源一致性
 
@@ -39,4 +39,10 @@ Release 编译和签名校验通过，正式包名 `com.duanyao.xanaduyonder`，
 
 本地验收包：`artifacts/builds/XanaduYonder-0.9.4-back-confirmation.apk`，318,515,767 字节。SHA256：`e8b90c95bc48fea6475a53e105867c427b2b8b3428f73e707ca39485f36a5bcf`。安装包内 game.love 哈希与上述稳定内容一致，ZIP CRC 与内容检查通过。
 
-这是基于 0.9.4 的本地修复包，未创建新版本号或远端发布，未安装到手机。
+这是基于 0.9.4 的修复验收包，已在 OPPO 上由用户验收；未创建新版本号或远端 Release。
+
+## 合并到最新 master
+
+合并时 master 新增 `ae1113f`（割绳子接入）。保留其大厅入口、独立运行期间的输入阻断和销毁清理；割绳子自己的 Android 双返回策略保持不变。仅统一 AppController 重叠的 Update／HandleBackCore 分支，其他已验收修复代码和游戏资源未变。
+
+合并后重新通过 Unity 编译与 LobbyDesign 的 3817 项断言。逐文件核验：24 个非冲突修复文件与用户验收提交字节一致，55 个非冲突上游文件与 master 字节一致；独立合并审查通过。未重新生成或安装包含割绳子的合并版 APK。
