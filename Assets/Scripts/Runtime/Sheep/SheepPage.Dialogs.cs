@@ -16,7 +16,7 @@ namespace XanaduYonder.Runtime.Sheep
         private void ShowModes()
         {
             Suspend(); Save();
-            var panel = openModal("旸了个旸 · 选择模式", 654, () => { closeModal(); returnLobby(); });
+            var panel = openModal("旸了个旸 · 选择模式", 654, returnLobby);
             UiFactory.Label(panel, "第二关挑战", 32, 112, 532, 38, 29, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(panel, "四档难度 · 清空全部牌面", 32, 154, 532, 32, 21, UiFactory.Muted);
             var challenge = data.Challenge != null && new SheepGame(data.Challenge).Phase != SheepPhase.Won;

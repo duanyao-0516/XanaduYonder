@@ -64,7 +64,9 @@ namespace XanaduYonder.Runtime.LinkMatch
             }
             Save();
         }
-        public void Back()
+        public void Back() { HandleSystemBack(null); }
+
+        public void HandleSystemBack(Func<bool> confirmExit)
         {
             if(settingsBlocked) return;
             if(dialog!=null)
@@ -75,7 +77,7 @@ namespace XanaduYonder.Runtime.LinkMatch
                 else ShowPause();
                 return;
             }
-            if(isEntry) Home();else ShowEntry();
+            if(isEntry) { if(confirmExit==null||confirmExit()) Home(); } else ShowEntry();
         }
         private void Home() { TickClock();Save();CancelTransient();returnLobby(); }
         internal void ShowEntry()

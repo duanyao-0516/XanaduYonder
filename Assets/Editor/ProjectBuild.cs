@@ -408,6 +408,86 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildClassicGoldMinerPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".classicgoldminertest");
+                    PlayerSettings.productName = "Xanadu 经典矿工";
+                    BuildApk("-classic-gold-miner-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
+        public static void BuildLevelDevilPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    // A separate package preserves the installed collection and saves.
+                    // Non-Development avoids Unity's diagnostic network permissions.
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".leveldeviltest");
+                    PlayerSettings.productName = "Xanadu 只有一道门";
+                    BuildApk("-level-devil-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
+        public static void BuildCutTheRopeTest()
+        {
+            RunOrFail(() =>
+            {
+                // Dispose restores Prepare's serialized settings and Editor flags in finally,
+                // including failed builds, before RunOrFail can terminate the Editor process.
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    EditorUserBuildSettings.buildAppBundle = false;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.Android.forceInternetPermission = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".cuttheropetest");
+                    PlayerSettings.productName = "割绳子测试";
+                    BuildApk("-cut-the-rope-test.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
+        public static void BuildZhaoyunAdouPreview()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    EditorUserBuildSettings.development = false;
+                    EditorUserBuildSettings.allowDebugging = false;
+                    EditorUserBuildSettings.connectProfiler = false;
+                    EditorUserBuildSettings.buildAppBundle = false;
+                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".zhaoyunadoupreview");
+                    PlayerSettings.productName = "Xanadu 赵云与阿斗";
+                    BuildApk("-zhaoyun-adou-preview.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidStartupValidation()
         {
             RunOrFail(() =>

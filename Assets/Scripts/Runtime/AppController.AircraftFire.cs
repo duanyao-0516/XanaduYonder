@@ -31,7 +31,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterAircraftFire()
         {
-            if (activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || modal != null || IsExternalGameRunning) return;
             StopAnimation();
             CloseModal();
             Screen.orientation = ScreenOrientation.Portrait;

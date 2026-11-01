@@ -1,0 +1,19 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { width:100%; height:100%; margin:0; overflow:hidden; overscroll-behavior:none; }
+body { background:#5b341c; color:#fff1cb; font-family:Arial,"Noto Sans SC",sans-serif; user-select:none; -webkit-user-select:none; touch-action:none; }
+#app { position:fixed; inset:0; min-width:0; min-height:0; overflow:hidden; }
+#app canvas { display:block; touch-action:none; }
+button { font:inherit; touch-action:none; }
+#mode-menu { position:fixed; z-index:5; top:calc(var(--classic-safe-top) + 4px); right:calc(var(--classic-safe-right) + 4px); min-height:48px; padding:8px 14px; border:1px solid #d2b379; border-radius:12px; background:#362314e8; color:#fff1cb; font-size:13px; }
+.playing #mode-menu { display:none; }
+.bomb { display:none; position:fixed; z-index:5; bottom:calc(var(--classic-safe-bottom) + 6px); width:58px; height:58px; min-height:58px; padding:6px; border:2px solid #e8c66e; border-radius:50%; background:#4e321be6; box-shadow:0 2px 6px #0007; color:#fff0bf; }
+.playing .bomb { display:block; }
+.bomb.player-one { left:calc(var(--classic-safe-left) + 6px); }
+.bomb.player-two { right:calc(var(--classic-safe-right) + 6px); border-color:#a3d3e1; background:#243c45e6; color:#dcf7ff; }
+.bomb img { height:34px; width:auto; max-width:32px; object-fit:contain; pointer-events:none; }
+.bomb-count { position:absolute; top:-3px; right:-3px; min-width:22px; height:22px; padding:2px 5px; line-height:16px; border-radius:12px; background:#f0cb6c; color:#30210b; font-size:13px; font-weight:bold; pointer-events:none; }
+.player-two .bomb-count { background:#a3d3e1; }
+.player-label { position:absolute; left:5px; bottom:4px; font-size:11px; pointer-events:none; }
+.bomb:disabled { opacity:.45; }
+.bomb:active { transform:scale(.95); }
+#load-error { position:fixed; z-index:10; inset:15% 18%; margin:auto; max-height:200px; overflow:auto; padding:24px; border:1px solid #b88b51; border-radius:12px; background:#35251d; line-height:1.7; }

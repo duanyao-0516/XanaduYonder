@@ -7,7 +7,6 @@ namespace XanaduYonder.Runtime
     public sealed partial class AppController
     {
         private FruitSliceLauncher fruitSliceLauncher;
-        private CanvasGroup fruitSliceLobbyInput;
         private bool IsFruitSliceRunning => fruitSliceLauncher != null && fruitSliceLauncher.IsBusy;
 
         private static void AddFruitSlicePreview(Transform parent)
@@ -19,7 +18,7 @@ namespace XanaduYonder.Runtime
 
         private void EnterFruitSlice()
         {
-            if (activePage != Page.Lobby || paused || !focused || IsFruitSliceRunning || IsKingdomRushRunning) return;
+            if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             LogFruitSliceStartup("unity_entry_accepted");
             CloseModal();
             Save();
@@ -30,7 +29,7 @@ namespace XanaduYonder.Runtime
                 fruitSliceLauncher = gameObject.AddComponent<FruitSliceLauncher>();
                 fruitSliceLauncher.Returned += OnFruitSliceReturned;
             }
-            SetFruitSliceLobbyInput(false);
+            SetExternalGameLobbyInput(false);
             LogFruitSliceStartup("unity_try_open_begin");
             var opened = fruitSliceLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled);
             LogFruitSliceStartup("unity_try_open_returned");
@@ -57,20 +56,8 @@ namespace XanaduYonder.Runtime
 
         private void OnFruitSliceReturned(string error)
         {
-            SetFruitSliceLobbyInput(true);
-            if (activePage == Page.Lobby && !string.IsNullOrEmpty(error)) ShowDialog("暂时无法打开", error, "返回大厅", () => { });
-        }
-
-        private void SetFruitSliceLobbyInput(bool enabled)
-        {
-            if (lobbyPage == null) return;
-            if (fruitSliceLobbyInput == null)
-            {
-                fruitSliceLobbyInput = lobbyPage.GetComponent<CanvasGroup>();
-                if (fruitSliceLobbyInput == null) fruitSliceLobbyInput = lobbyPage.AddComponent<CanvasGroup>();
-            }
-            fruitSliceLobbyInput.interactable = enabled;
-            fruitSliceLobbyInput.blocksRaycasts = enabled;
+            SetExternalGameLobbyInput(!IsExternalGameRunning);
+            if (activePage == Page.Lobby && !IsExternalGameRunning && !string.IsNullOrEmpty(error)) ShowDialog("暂时无法打开", error, "返回大厅", () => { });
         }
 
         private void ReleaseFruitSliceLauncher()

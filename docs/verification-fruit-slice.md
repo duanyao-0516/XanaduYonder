@@ -114,3 +114,5 @@ API 33 的 `OnBackInvokedCallback` 没有手势取消事件，当前主动取消
 | 初版历史产物 | 327,443,991 bytes；SHA-256 `5024a506adc49dc4880af096d8b1967e3845c798ae40df4f773043c32a946540`。此版存在挑战页缺类故障，已被最终产物替代 |
 
 构建使用本工作树的 Gradle 目录及独立 ADB 服务端口，同一工作树的 Unity 检查与构建串行执行。新版本待补记录须将源码、主机检查、Unity/Gradle 构建、APK 检查、安装和设备交互分别填写。
+
+Master integration: existing entries 21-24 are retained; Fruit Slice is now entry 25. The merged lobby has 25 entries (9 strategy, 6 merge, 9 agility, 1 language). Fruit Slice joins the current shared external-game exclusion and lobby-input owner. No tests or compilation were run for this delivery at the user's explicit request.

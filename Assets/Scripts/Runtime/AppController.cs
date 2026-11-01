@@ -92,7 +92,7 @@ namespace XanaduYonder.Runtime
         {
             get
             {
-                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsKingdomRushRunning || IsFruitSliceRunning ||
+                if (!startupComplete || activePage != Page.Lobby || paused || !focused || modal != null || IsExternalGameRunning ||
                     (lobbyView != null && lobbyView.HasDisplayOptions) ||
                     lobbyPage == null || !lobbyPage.activeInHierarchy || canvasRoot == null ||
                     !canvasRoot.gameObject.activeInHierarchy || lobbyScroll == null || !lobbyScroll.isActiveAndEnabled ||
@@ -114,6 +114,7 @@ namespace XanaduYonder.Runtime
 
         private void Awake()
         {
+            Input.backButtonLeavesApp = false;
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
@@ -187,6 +188,8 @@ namespace XanaduYonder.Runtime
                 LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
                 LobbyGame("age-of-war", "AgeOfWar", "战争进化史", "18", "逻辑策略", "时代进化", "从石器时代，走向未来战场。", "一代 / 二代 · 横屏战斗", "一代 / 二代", ShowAgeOfWarSelection, AddAgeOfWarPreview),
                 LobbyGame("kingdom-rush", "KingdomRush", "王国保卫战", "19", "逻辑策略", "初代塔防", "守住每一条通往王国的路。", "32 关 · 三种挑战 · 13 位英雄", "32 关 · 三种挑战", EnterKingdomRush, AddKingdomRushPreview),
+                CutTheRopeEntry(),
+                LobbyGame("zhaoyun-adou", "ZhaoyunAdou", "赵云与阿斗", "23", "逻辑策略", "合成布阵", "合兵布阵，与阿斗守住战场。", "离线人机 · 兵种合成 · 武器成长", "离线人机 · 合成布阵", EnterZhaoyunAdou, AddZhaoyunAdouPreview),
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
                 LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
                 LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
@@ -198,8 +201,10 @@ namespace XanaduYonder.Runtime
                 LobbyGame("flappy-bird", "FlappyBird", "Flappy Bird", "16", "敏捷挑战", "轻点飞行", "轻点一下，再飞远一点。", "", "", EnterFlappyBird, AddFlappyPreview),
                 LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
                 LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人竖屏 / 双人横屏合作 · 10 关挑战", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
+                LobbyGame("classic-gold-miner", "ClassicGoldMiner", "经典黄金矿工", "24", "敏捷挑战", "经典寻宝", "重温熟悉的矿场，一起满载而归。", "单人 / 双人 · 随时续局", "单人 / 双人", EnterClassicGoldMiner, AddClassicGoldMinerPreview),
+                LobbyGame("level-devil", "LevelDevil", "只有一道门", "22", "敏捷挑战", "小心下一步", "越过意想不到的机关，走到门前。", "横屏离线 · 单人 / 双人 · 触屏操作", "单人 / 双人", EnterLevelDevil, AddLevelDevilPreview),
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
-                LobbyGame("fruit-slice", "FruitSlice", "切水果大师", "21", "敏捷挑战", "指尖切果", "划出一道刀光，切开缤纷水果。", "三种模式 · 免费刀光 · 离线畅玩", "三种模式 · 离线畅玩", EnterFruitSlice, AddFruitSlicePreview),
+                LobbyGame("fruit-slice", "FruitSlice", "切水果大师", "25", "敏捷挑战", "指尖切果", "划出一道刀光，切开缤纷水果。", "三种模式 · 免费刀光 · 离线畅玩", "三种模式 · 离线畅玩", EnterFruitSlice, AddFruitSlicePreview),
                 LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
             };
             lobbyView = root.gameObject.AddComponent<LobbyView>();
@@ -397,7 +402,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenIdiomModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height, back);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -474,7 +479,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenGameModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -620,7 +625,7 @@ namespace XanaduYonder.Runtime
         private RectTransform OpenSheepModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height);
-            dismissModal = back;
+            SetModalBack(back);
             return panel;
         }
 
@@ -1130,6 +1135,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            ResetBackExitConfirmation();
             if (IsAgeOfWarPage && ageOfWarPage != null && ageOfWarPage.IsVisible) { ageOfWarPage.Exit(); return; }
             if(ageOfWarSelection!=null)ageOfWarSelection.SetActive(false);
             LeaveAircraftFire();
@@ -1268,6 +1274,7 @@ namespace XanaduYonder.Runtime
                 if (secondaryAction != null) secondaryAction();
                 else CheckEndState();
             };
+            modalBackReturnsToLobby = secondaryAction == (Action)ShowLobby;
         }
 
         private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
@@ -1310,6 +1317,7 @@ namespace XanaduYonder.Runtime
                 modal = null;
             }
             dismissModal = null;
+            modalBackReturnsToLobby = false;
         }
 
         private void RefreshScores()
@@ -1428,6 +1436,8 @@ namespace XanaduYonder.Runtime
 
         private void Update()
         {
+            if (backExitPage != activePage) { ResetBackExitConfirmation(); backExitPage = activePage; }
+            if (IsExternalGameRunning) return;
             if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -1440,35 +1450,39 @@ namespace XanaduYonder.Runtime
             if (Input.GetKeyDown(KeyCode.DownArrow)) Move(Direction.Down);
         }
 
-        private void HandleBack()
+        private void HandleBackCore()
         {
-            if (IsKingdomRushRunning || IsFruitSliceRunning) return;
-            if (IsAgeOfWarPage) { ageOfWarPage.HandleBack(); return; }
+            if (IsExternalGameRunning) return;
+            if (IsAgeOfWarPage) { ageOfWarPage.HandleSystemBack(ConfirmSystemBackExit); return; }
             var splash = GetComponent<BrandSplash>();
             if (splash != null && splash.BlocksInput) return;
             if (activePage == Page.Lobby && lobbyView != null && lobbyView.HasDisplayOptions)
             { lobbyView.CloseDisplayOptions(); return; }
-            if (activePage == Page.Zuma) { zumaPage.HandleBack(); return; }
-            if (modal != null) dismissModal?.Invoke();
-            else if (activePage == Page.GoldMiner && goldMinerPage.HandleBack()) { }
-            else if (activePage == Page.AircraftFire) aircraftFirePage.Back();
-            else if (activePage == Page.FlappyBird) flappyBirdPage.Back();
-            else if (activePage == Page.Dino) dinoPage.Back();
+            if (activePage == Page.Zuma) { zumaPage.HandleSystemBack(ConfirmSystemBackExit); return; }
+            if (modal != null)
+            {
+                if (!modalBackReturnsToLobby || ConfirmSystemBackExit()) dismissModal?.Invoke();
+            }
+            else if (activePage == Page.GoldMiner && goldMinerPage.HandleSystemBack(ConfirmSystemBackExit)) { }
+            else if (activePage == Page.AircraftFire) aircraftFirePage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.FlappyBird) flappyBirdPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Dino) dinoPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
-            else if (activePage == Page.Sudoku) sudokuPage.Back();
-            else if (activePage == Page.Minesweeper) minesweeperPage.Back();
-            else if (activePage == Page.Sokoban) sokobanPage.Back();
-            else if (activePage == Page.LinkMatch) linkMatchPage.Back();
-            else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.Back();
-            else if (activePage == Page.HappyBall) happyBallPage.Back();
-            else if (activePage == Page.Tetris) tetrisPage.Back();
-            else if (activePage == Page.Gomoku) gomokuPage.Back();
-            else if (activePage != Page.Lobby) ShowLobby();
+            else if (activePage == Page.Sudoku) sudokuPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Minesweeper) minesweeperPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Sokoban) sokobanPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.LinkMatch) linkMatchPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.SlidingPuzzle) slidingPuzzlePage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.HappyBall) happyBallPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Tetris) tetrisPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.Gomoku) gomokuPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage != Page.Lobby) { if (ConfirmSystemBackExit()) ShowLobby(); }
             else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
         }
 
         private void OnApplicationPause(bool value)
         {
+            if (value) ResetBackExitConfirmation();
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
@@ -1490,6 +1504,7 @@ namespace XanaduYonder.Runtime
 
         private void OnApplicationFocus(bool value)
         {
+            if (!value) ResetBackExitConfirmation();
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
@@ -1518,9 +1533,14 @@ namespace XanaduYonder.Runtime
 
         private void OnDestroy()
         {
+            ResetBackExitConfirmation();
             ReleaseAircraftFire();
             ReleaseKingdomRushLauncher();
             ReleaseFruitSliceLauncher();
+            ReleaseClassicGoldMinerLauncher();
+            ReleaseLevelDevilLauncher();
+            ReleaseCutTheRopeLauncher();
+            ReleaseZhaoyunAdouLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
         }
 

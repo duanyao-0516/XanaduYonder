@@ -3,6 +3,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <application android:extractNativeLibs="true" tools:replace="android:extractNativeLibs">
+        <activity android:name="com.xanaduyonder.leveldevil.LevelDevilActivity"
+                  android:exported="false"
+                  android:screenOrientation="sensorLandscape"
+                  android:configChanges="orientation|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale|layoutDirection|locale"
+                  android:hardwareAccelerated="true"
+                  android:enableOnBackInvokedCallback="true"
+                  android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
         <activity android:name="com.xanaduyonder.fruitslice.FruitSliceActivity"
                   android:exported="false"
                   android:hardwareAccelerated="true"

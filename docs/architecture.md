@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-已发布版本为 0.9.1、Android versionCode 10，包含 19 个大厅入口，见[v0.9.1 发布记录](releases/v0.9.1.md)。当前开发分支加入第 20 个入口飞机大战，属于未发布预览；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+正式版本记录为 0.9.4、Android versionCode 13，包含 20 个大厅入口，见[v0.9.4 发布记录](releases/v0.9.4.md)。当前开发分支加入第 23 个入口赵云与阿斗，属于未发布预览；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -21,7 +21,8 @@
 | 俄罗斯方块 | `Core/Tetris`、`TetrisSession`、`TetrisPage`、`TetrisView` | `tetris-v1.json` | 完整棋盘/活动块、七袋/RNG、Next/Hold、规则计时、分数与最高分、结果标记；`game: null` 表示未开始 |
 | Flappy Bird | `Core/FlappyBird` / `FlappySession`、`FlappyBirdPage` | `flappy-bird-v1.json` | 最高纪录；不跨进程保存对局 |
 | 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v2.json` | 轻松／挑战 × 五关共十槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩；严格迁移 v1 六槽 |
-| 飞机大战（预览） | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
+| 飞机大战 | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
+| 赵云与阿斗（预览） | 原 Laya 游戏 / 独立 Android WebView | 独立 origin 的 localStorage：`xanadu.zhaoyun-adou.player.v1` | 金币、段位、武器/武将与设置；不跨进程保存战场 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -247,10 +248,20 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 `Core/AgeOfWar/One` 与 `Core/AgeOfWar/Two` 分别移植两代原规则，只共享命令、显示快照和音频事件 DTO。一代固定 40 Hz 并保留 AVM1 帧事件顺序；二代每个实际 stage 事件读取整数毫秒差，再按原 Moon 顺序推进相机、弹体、单位和 UI。二代的帧率设置改变实际刷新目标，速度倍数作用于原 elapsed-time 路径。两者不能交换成同一套简化战斗循环。
 
-`AgeOfWarPage` 拥有横屏进入/退出、导航 token、输入、时间和音频；`AgeOfWarView` 只渲染快照及原界面。`AgeOfWarAssets` 按代持有图集、字体与音频，离页释放；原始 SWF 只参加离线提取与运行对照，APP 没有 SWF/Ruffle/WebView 依赖。点击通过原 stage 坐标映射；触屏空白战场拖动镜头。方向稳定之前不交出宿主输入，返回大厅在竖屏稳定后完成。后台取消正在进行的触摸，冻结模拟与声音；恢复时重新取时，不能补跑后台经过的时间。
+`AgeOfWarPage` 拥有横屏进入/退出、导航 token、输入、时间和音频；`AgeOfWarView` 只渲染快照及原界面。`AgeOfWarAssets` 按代持有图集、字体与音频，离页释放；原始 SWF 只参加离线提取与运行对照，该模块没有 SWF/Ruffle/WebView 依赖。点击通过原 stage 坐标映射；触屏空白战场拖动镜头。方向稳定之前不交出宿主输入，返回大厅在竖屏稳定后完成。后台取消正在进行的触摸，冻结模拟与声音；恢复时重新取时，不能补跑后台经过的时间。
 
 `AgeOfWarOneBattle` 和 `AgeOfWarTwoBattle` 各自拥有显式版本化二进制快照，保存完整规则状态、随机序列、AI、单位/炮塔/弹体/特效、训练队列、技能时序及动画引用。恢复走无副作用读取路径，不重放命令、伤害或声音。`AgeOfWarSaveStore` 独占 `age-of-war-one-v1.json` 与 `age-of-war-two-v1.json` 及各自备份/临时文件；JSON 外层保存版本、视口、菜单与音画设置，核心负载上限 16 MiB。临时文件刷盘后替换，损坏主档不会覆盖合法备份；不支持的版本和 I/O 错误禁止覆盖，双档损坏保留原文件。
 
 `AgeOfWarPage` 在完整模拟步/命令边界同步取快照，每秒及有效命令、暂停、离页、后台/失焦、销毁前保存。恢复先暂停，不补算离线时间；版本选择页固定进入游戏主菜单，主菜单仅在存在可恢复战场时启用 Continue。点击 Continue 重新读取存档并恢复，不复用菜单打开时的旧快照。胜负结算向主备写入空战场标记；保存失败保留内存和重试提示，离页先补写成功。系统强杀可能回退至最后成功检查点。
 
 游戏主菜单的玩法与设置采用局部横屏 UGUI 弹窗，打开时屏蔽页面手动指针路径，关闭、后台及方向变化时取消未提交触点；玩法内容按代区分并附原英文词汇的中文对照。共享声音、触感开关仍由现有宿主持久化，不改写其他游戏的存档协议。推箱子在自身页面隐藏时不响应其它横屏游戏触发的布局刷新；显式初始化仍使用强制布局，保存模型不受影响。真实验证范围见[接入记录](verification-age-of-war.md)。
+
+## 赵云与阿斗的独立边界
+
+`AppController.ZhaoyunAdou` 延迟创建 `ZhaoyunAdouLauncher`，由 JNI 调用专用 `ZhaoyunAdouBridge`。Unity 只拥有大厅路由、声音总开关与外部游戏互斥；`AppController.ExternalGames` 在稳定大厅根节点加输入锁，王国保卫战与本游戏共用门禁，任一旧回调不能解锁仍运行的另一个外部游戏。
+
+`ZhaoyunAdouActivity` 使用系统 WebView 执行原 Laya 客户端，直接全屏、不为边缘手势增加留白。原生层管理资源白名单、焦点与前后台、两秒内两次系统返回。APK assets 映射至固定 HTTPS origin，拒绝任何网络回退、外部导航和权限请求，不向 JS 注册原生能力。页面先完成保存/暂停/静音握手，宿主再冻结 WebView；代次校验丢弃旧页面或旧焦点的回调。
+
+`ThirdParty/ZhaoyunAdouContent` 中的适配代码拥有离线业务规则。上游资源和 bundle 固定 SHA；构建仅导出必要原类并在初始化前安装适配，不交付解混淆副本。普通经济与 AI 仍由原引擎执行；仅取消广告、体力和功能跨天等待，保留真实日期、段位/碎片门槛及每日奖励。首次四类武器和领取标志、每日段位金币和领取标志分别经单次存档写入并读回核验，失败不能先标记成功。
+
+独立 origin `https://zhaoyun-adou.xanadu.invalid/` 下的 `xanadu.zhaoyun-adou.player.v1` 保存长期进度。损坏 JSON 保留原值并显示错误。后台恢复战斗需点击继续；退出按原退出结算语义执行一次，返回大厅或进程回收后只恢复主菜单及长期进度。内容、原生 AAR 与最终 APK 均校验完整输入指纹；实际验证范围见[离线接入记录](verification-zhaoyun-adou.md)。

@@ -152,11 +152,13 @@ namespace XanaduYonder.Runtime.GoldMiner
             }
         }
 
-        public bool HandleBack()
+        public bool HandleBack() { return HandleSystemBack(null); }
+
+        public bool HandleSystemBack(Func<bool> confirmExit)
         {
             if (!visible) return false;
             if (modal != null && modalBack != null) { var action = modalBack; action(); return true; }
-            if (selecting) { lobby(); return true; }
+            if (selecting) { if (confirmExit == null || confirmExit()) lobby(); return true; }
             ShowPause();
             return true;
         }

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game; original fruit-slice line icon added",
+  "status": "23 approved icons preserved byte-for-byte; 2 supplemental game icons preserved; age-of-war is now connected to the series entry; original aircraft-fire icon added for the twentieth game; Cut the Rope uses the matching scissors line icon; Level Devil uses an original matching door line icon; Zhaoyun Adou uses an original matching spear and shield line icon; original fruit-slice line icon added",
   "counts": {
-    "pngAssets": 27,
+    "pngAssets": 30,
     "approvedAssets": 23,
-    "existingGameIcons": 20,
+    "existingGameIcons": 23,
     "preparedGameIcons": 1,
     "fallbackIcons": 1,
     "controlIcons": 5,
-    "lucideAssets": 23,
-    "customAssets": 4,
-    "uniqueLucideSourceIcons": 22,
-    "uniqueCustomSourceIcons": 3
+    "lucideAssets": 24,
+    "customAssets": 6,
+    "uniqueLucideSourceIcons": 23,
+    "uniqueCustomSourceIcons": 5
   },
   "package": {
     "name": "lucide-static",
@@ -22,7 +22,7 @@
     "licenseUrl": "https://unpkg.com/lucide-static@1.17.0/LICENSE",
     "licenseSha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
     "originalPackageJson": "lobby-ui-v2-assets/source/package.json",
-    "appliesTo": "23 exported Lucide assets (22 unique source icons); excludes custom idiom and fallback-controller"
+    "appliesTo": "24 exported Lucide assets (23 unique source icons); excludes custom idiom, fallback-controller and aircraft-fire"
   },
   "approvedArchive": {
     "root": "lobby-ui-v2-assets",
@@ -1050,6 +1050,102 @@
       "pngSha256": "b5fbb85637ef1dfbde6acc3a2865d54e9502699312704b7da52ad6906de6a7fc",
       "resourcePath": "Lobby/Icons/aircraft-fire",
       "unityAsset": "Assets/Resources/Lobby/Icons/aircraft-fire.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8"
+    },
+    {
+      "id": "cut-the-rope",
+      "name": "割绳子",
+      "aliases": [
+        "割绳子",
+        "Cut the Rope"
+      ],
+      "kind": "game",
+      "status": "connected-entry",
+      "lucideIcon": "scissors",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.17.0/icons/scissors.svg",
+      "originalSvg": "additional-icons/source/scissors.svg",
+      "originalSha256": "7d05030ffc15151b0d628aec4a505b845257312a886e232aab784e060054f0ae",
+      "svg": "additional-icons/svg/cut-the-rope.svg",
+      "svgSha256": "a3c5ea4d11175157813850bd5696c30eadd3d2545e159ab96202d59db7c4121e",
+      "png": "additional-icons/png/cut-the-rope.png",
+      "pngSha256": "d12ecd7fdf09b6592810f5b262651d08cbce0b189a5a05bee00913908fc18edd",
+      "resourcePath": "Lobby/Icons/cut-the-rope",
+      "unityAsset": "Assets/Resources/Lobby/Icons/cut-the-rope.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8",
+      "validation": {
+        "width": 96,
+        "height": 96,
+        "channels": 4,
+        "depth": "uchar",
+        "space": "srgb",
+        "hasAlpha": true,
+        "transparentPixels": 6773,
+        "partialAlphaPixels": 684,
+        "opaquePixels": 1759
+      }
+    },
+    {
+      "id": "level-devil",
+      "name": "只有一道门",
+      "kind": "game",
+      "status": "connected-entry",
+      "origin": "Original project door line drawing",
+      "svg": "additional-icons/svg/level-devil.svg",
+      "svgSha256": "1c09bcc876e291a65af403123edd20b31fa5db30237648ecc5efe52f0bc4854e",
+      "png": "additional-icons/png/level-devil.png",
+      "pngSha256": "9af0e671afc091d4e2cd1cab3566d85a9281ad7e5ac398f6c8971e111c047257",
+      "resourcePath": "Lobby/Icons/level-devil",
+      "unityAsset": "Assets/Resources/Lobby/Icons/level-devil.png",
+      "stroke": "#276653",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "strokeWidth": 2,
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "pngWidth": 96,
+      "pngHeight": 96,
+      "pngFormat": "RGBA8"
+    },
+    {
+      "id": "zhaoyun-adou",
+      "name": "赵云与阿斗",
+      "kind": "game",
+      "status": "connected-entry",
+      "origin": "Original project spear and shield line drawing",
+      "svg": "additional-icons/svg/zhaoyun-adou.svg",
+      "svgSha256": "aabea7da593346eb207525e90b96b740e3743c28262e0880580ee64f1b27e855",
+      "png": "additional-icons/png/zhaoyun-adou.png",
+      "pngSha256": "c3c23d9897023230af60ba0f696c7562aa7b9206831df2a674ec06d405759a52",
+      "resourcePath": "Lobby/Icons/zhaoyun-adou",
+      "unityAsset": "Assets/Resources/Lobby/Icons/zhaoyun-adou.png",
       "stroke": "#276653",
       "viewBox": [
         0,

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' data: blob:; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>经典黄金矿工 · 双人</title>
+    <link rel="stylesheet" href="../shared/host.css" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="modulepreload" href="./js/vendor-04f93d05.js" />
+    <script src="../shared/host.js"></script>
+    <script src="./js/modulepreload.js" defer></script>
+    <script type="module" src="./js/game.mjs"></script>
+  </head>
+  <body>
+    <main id="app" aria-label="双人矿场，左半区控制玩家一，右半区控制玩家二"></main>
+    <button type="button" id="mode-menu">模式选择</button>
+    <button type="button" class="bomb player-one" data-player="0" data-action="bomb" aria-label="玩家一使用炸药" disabled>
+      <img src="./resource/assets/ui/shop_1.png" alt="" draggable="false" />
+      <span class="bomb-count" aria-hidden="true">0</span><span class="player-label">一</span>
+    </button>
+    <button type="button" class="bomb player-two" data-player="1" data-action="bomb" aria-label="玩家二使用炸药" disabled>
+      <img src="./resource/assets/ui/shop_1.png" alt="" draggable="false" />
+      <span class="bomb-count" aria-hidden="true">0</span><span class="player-label">二</span>
+    </button>
+    <p id="load-error" role="alert" hidden></p>
+  </body>
+</html>
