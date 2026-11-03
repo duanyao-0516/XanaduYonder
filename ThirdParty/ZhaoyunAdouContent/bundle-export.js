@@ -9,5 +9,6 @@ Object.defineProperty(window, '__XanaduZhaoyunInternals', {value:Object.freeze({
   PolicyMgr:_0x173678, AnalyticsMgr:_0x3bd209, PreloadMgr:_0x4f17f6,
   SeasonMgr:_0xf232f0, CdnConfigMgr:_0x5a8f22, TipMgr:_0x28d50e,
   EffectsMgr:_0x574784, FactoryMgr:_0xfc0f6c, BorderEffect:_0x4b211c,
-  PikeDefinitions:_0x492e4b, SlotsMgr:_0x1324d6, ContainersMgr:_0x16e251
+  PikeDefinitions:_0x492e4b, SlotsMgr:_0x1324d6, ContainersMgr:_0x16e251,
+  SoldierMgr:_0x3b5ed8
 }), configurable:false, writable:false});
