@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
+set +x
 set -euo pipefail
 umask 077
+
+install_after_build=false
+device_serial=""
+if [[ $# -gt 0 ]]; then
+    if [[ $1 != --install || $# -gt 2 || ${2:-} == -* ]]; then
+        printf 'Usage: %s [--install [DEVICE_SERIAL]]\n' "$0" >&2
+        exit 2
+    fi
+    install_after_build=true
+    device_serial="${2:-}"
+fi
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
@@ -13,7 +25,33 @@ APKSIGNER="${APKSIGNER:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/apksigner}"
 AAPT="${AAPT:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/aapt}"
 if [[ -d "$ANDROID_PLAYER/OpenJDK" ]]; then export JAVA_HOME="$ANDROID_PLAYER/OpenJDK"; fi
 
-for variable in XANADU_KEYSTORE_PATH XANADU_KEY_ALIAS XANADU_KEYSTORE_PASSWORD XANADU_KEY_PASSWORD; do
+signing_keys=(XANADU_KEYSTORE_PATH XANADU_KEY_ALIAS XANADU_KEYSTORE_PASSWORD XANADU_KEY_PASSWORD)
+if [[ -z ${XANADU_KEYSTORE_PATH+x} && -z ${XANADU_KEY_ALIAS+x} &&
+      -z ${XANADU_KEYSTORE_PASSWORD+x} && -z ${XANADU_KEY_PASSWORD+x} ]]; then
+    # Read literal JSON strings through a private pipe, including spaces and shell metacharacters.
+    signing_file="$HOME/Library/Application Support/XanaduYonder/signing/release-signing.json"
+    for variable in "${signing_keys[@]}"; do
+        IFS= read -r -d '' "$variable" || exit 2
+        export "$variable"
+    done < <(python3 - "$signing_file" "${signing_keys[@]}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    config = json.loads(path.read_text(encoding="utf-8"))
+    values = [config[key] for key in sys.argv[2:]]
+    if not all(isinstance(value, str) and value and "\0" not in value for value in values):
+        raise ValueError
+    payload = b"\0".join(value.encode("utf-8") for value in values) + b"\0"
+except (OSError, KeyError, TypeError, ValueError):
+    sys.exit(f"Missing or invalid signing configuration: {path}. Alternatively, set all four signing variables.")
+sys.stdout.buffer.write(payload)
+PY
+)
+fi
+for variable in "${signing_keys[@]}"; do
     if [[ -z "${!variable:-}" ]]; then
         printf 'Required signing environment variable is missing: %s\n' "$variable" >&2
         exit 2
@@ -42,7 +80,7 @@ rm -f "$INTERMEDIATE_APK"
 
 printf 'Building release APK. Unity log: %s\n' "$LOG_FILE"
 # Prevent credentials from entering the Unity process, generated Gradle files or its logs.
-if ! env -u XANADU_KEYSTORE_PATH -u XANADU_KEY_ALIAS \
+if ! env -u ANDROID_LINT_JARS -u XANADU_KEYSTORE_PATH -u XANADU_KEY_ALIAS \
     -u XANADU_KEYSTORE_PASSWORD -u XANADU_KEY_PASSWORD \
     "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" \
     -buildTarget Android -executeMethod XanaduYonder.EditorTools.ProjectBuild.BuildAndroidRelease \
@@ -77,3 +115,8 @@ fi
 mv -f "$signed_apk" "$APK_FILE"
 printf 'Release APK: %s\n' "$APK_FILE"
 shasum -a 256 "$APK_FILE"
+
+if [[ $install_after_build == true ]]; then
+    unset "${signing_keys[@]}"
+    "$PROJECT_ROOT/scripts/install-android.sh" "$device_serial" "$APK_FILE"
+fi

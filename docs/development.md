@@ -250,7 +250,15 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 
 ## 正式发布 APK
 
-发布构建使用独立、长期保留的私有签名。通过安全的本地凭据管理方式给当前进程设置以下环境变量，不要把口令直接写入命令历史、仓库或日志：
+连接小米手机并允许 USB 调试，在项目目录运行一条命令即可构建正式 APK 并覆盖安装：
+
+```bash
+./scripts/build-release.sh --install
+```
+
+连接多台设备时，在 `--install` 后加小米的设备序列号。省略序列号时，脚本优先使用 `ANDROID_SERIAL`，否则自动选择唯一已授权的 ARM64 真机。只打包时运行 `./scripts/build-release.sh`。覆盖安装使用 `adb install -r`，沿用同一正式签名即可保留原有存档。
+
+脚本默认读取本机私有文件 `~/Library/Application Support/XanaduYonder/signing/release-signing.json`。JSON 对象使用下表的四个键，值均为字符串。也可以通过环境变量传入一整套签名配置。只要设置了其中任意一个环境变量，脚本就要求四项齐全，防止混用两套签名。配置文件和口令留在仓库外。
 
 | 环境变量 | 用途 |
 | --- | --- |
@@ -259,13 +267,9 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 | `XANADU_KEYSTORE_PASSWORD` | keystore 口令 |
 | `XANADU_KEY_PASSWORD` | 密钥口令 |
 
-```bash
-scripts/build-release.sh
-```
-
 脚本缺少签名配置时立即失败。Unity 子进程不会收到上述变量，只生成关闭 Development Build、脚本调试与 profiler 连接的中间 APK；签名配置不进入 Unity 的 `ProjectSettings`。构建入口在结束或抛出异常时恢复原来的 Development 和自定义签名开关。
 
-脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入；拒绝 debuggable APK，并在签名验证成功后原子替换 `artifacts/builds/XanaduYonder-0.9.5-android-arm64.apk`。中间文件不会作为发布产物保留。脚本返回非零代表本次失败，即使目录中存在较早的正式 APK，也不能将其当作本次构建成功。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
+脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入。签名验证成功后才原子替换 `artifacts/builds/XanaduYonder-0.9.5-android-arm64.apk` 并开始安装。构建或签名失败时不会安装旧包。如果安装失败，本次生成的正式 APK 会保留，重新连接设备后可以单独重试安装。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
 
 Unity 日志为 `artifacts/logs/build-android-release.log`，本地签名验证日志为 `artifacts/logs/sign-android-release.log`。只上传最终 APK、校验和及公开发布说明；不要上传 keystore、口令、私有签名日志或整个构建目录。后续版本必须使用同一发布密钥才能覆盖升级。正式签名与现有开发签名不同，Android 会拒绝直接覆盖开发包；测试迁移前应先保护设备存档，不能直接卸载并丢失进度。
 
