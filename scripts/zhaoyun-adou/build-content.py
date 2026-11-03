@@ -71,9 +71,11 @@ def main():
         missing = 'res://5bf43f39-5425-4fb0-bffd-b4d58ddcac67'
         assert old.count(missing) == 1, 'Expected one missing victory-bag reference'
         scene.write_text(old.replace(missing, 'resources/img/mainUI/bag1.png'), encoding='utf-8')
-        for name in ['index.html','offline-adapter.js','host-bridge.js','offline.css']:
+        local_scripts = ['offline-adapter.js','host-bridge.js','save-editor-data.js','save-editor-ui.js',
+                         'battle-aid.js','battle-aid-ui.js']
+        for name in ['index.html','offline.css',*local_scripts]:
             shutil.copyfile(VENDOR/name, staging/name)
-        for name in ['js/bundle.js','offline-adapter.js','host-bridge.js']:
+        for name in ['js/bundle.js',*local_scripts]:
             subprocess.run(['node','--check',str(staging/name)],check=True,capture_output=True)
         files=[]
         for file in sorted(staging.rglob('*')):

@@ -140,6 +140,29 @@
   I.PropsMgr.prototype.OD=function(){return propsPool.call(this).filter(id=>id!==23);};
   const main=scene('Main');
   const originalMainOpen=main.onOpened;
+  function addPanelButton(scene, parent, field, title, x, y, panel) {
+    if (scene[field]) return;
+    const button = new Laya.Box();
+    button.name = field;
+    button.size(136, 88);
+    button.pos(x, y);
+    button.mouseEnabled = true;
+    button.graphics.drawRect(4, 12, 128, 63, '#ead9b4', '#624321', 3);
+    const caption = new Laya.Text();
+    caption.text = title;
+    caption.fontSize = 30;
+    caption.bold = true;
+    caption.color = '#48321c';
+    caption.align = 'center';
+    caption.valign = 'middle';
+    caption.size(button.width, button.height);
+    caption.mouseEnabled = false;
+    button.addChild(caption);
+    parent.addChild(button);
+    scene[field] = button;
+    button.on(Laya.Event.CLICK, scene, () => panel.open());
+    button.on(Laya.Event.UNDISPLAY, scene, () => panel.close());
+  }
   main.onOpened=function(...args){
     const weapons=I.WeaponMgr.instance(),player=I.DataMgr.instance().player;
     if(weapons.Dm()&&!player.weaponFree){
@@ -147,8 +170,12 @@
       if(!result.ok){startupGiftError=result.error;return;}
     }
     startupGiftError=null;
-    return originalMainOpen.apply(this,args);
+    const result = originalMainOpen.apply(this,args);
+    // The removed stamina meter left a slot beside Settings in this scaled header.
+    addPanelButton(this, this.settingBtn.parent, 'offlineSaveEditorButton', '存档', 100, 102, window.XanaduSaveEditorUI);
+    return result;
   };
+  wrap(main, 'onClosed', () => window.XanaduSaveEditorUI.close());
 
   main.jct=()=>Promise.resolve();main.fct=noop;main.Rn=showPersonalRank;
   function mainOfflineUI(){
@@ -187,6 +214,11 @@
 
   // The original map flags enforce one use of each aid per battle. No global 'ad success'.
   const battle=scene('Battle');
+  wrap(battle, 'onAwake', function () {
+    addPanelButton(this, this.xBtn.parent, 'offlineGeneralAidButton', '援将', 112, 12, window.XanaduBattleAidUI);
+    this.offlineGeneralAidButton.zIndex = this.round.zIndex;
+  });
+  wrap(battle, 'onClosed', () => window.XanaduBattleAidUI.close());
   battle.Lnt=function(){
     const game=this.Gw;
     if(game.map.Na&&!game.map.$a){
