@@ -14,7 +14,8 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.9.4";
+        public const string Version = "0.9.5";
+        public const int VersionCode = 14;
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()
@@ -381,8 +382,8 @@ namespace XanaduYonder.EditorTools
                     EditorUserBuildSettings.development = false;
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".aircrafttest");
                     PlayerSettings.productName = "Xanadu 飞机大战";
-                    PlayerSettings.bundleVersion = "0.9.4";
-                    PlayerSettings.Android.bundleVersionCode = 13;
+                    PlayerSettings.bundleVersion = Version;
+                    PlayerSettings.Android.bundleVersionCode = VersionCode;
                     BuildApk("-aircraft-fire-preview.apk", BuildOptions.StrictMode, version: Version);
                 }
             });
@@ -623,7 +624,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.bundleVersionCode = 13;
+            PlayerSettings.Android.bundleVersionCode = VersionCode;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

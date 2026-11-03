@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-本次正式版本为 **0.9.4**，Android versionCode 为 **13**，包含 **20 个大厅入口**。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；交付范围与本轮未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
+当前源码的 Android 构建版本为 **0.9.5**（versionCode **14**）。最近一次正式发布为 **0.9.4**，Android versionCode 为 **13**，包含 **20 个大厅入口**。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；交付范围与本轮未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
 
 **25 · 切水果大师**：独立全屏离线 WebView，2 秒内两次系统返回回到大厅。27 款刀光首击装备，取消钻石与领取计时，复活免费，切水果首次按下立即响应；去除广告及联网调用。单列大 Logo 使用原游戏小图标，双列与目录使用统一绿色线稿切西瓜图标。固定原始输入和完整离线资源随仓库交付。构建入口 `scripts/build-fruit-slice.sh`，测试包名 `com.duanyao.xanaduyonder.fruitslicetest`；用户已验收，验证范围见[接入记录](docs/verification-fruit-slice.md)。
 
@@ -152,9 +152,9 @@ scripts/install-android.sh DEVICE_SERIAL
 
 连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.9.1-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。48 张 Fluent 3D 原图（水果、食物、动物、自然与物品）和完整 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
 
-通用开发 APK 输出到 `artifacts/builds/XanaduYonder-0.9.1.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
+通用开发 APK 输出到 `artifacts/builds/XanaduYonder-0.9.5.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
 
-正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.9.1-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
+正式发布使用 `scripts/build-release.sh`，配置发布签名后生成 `artifacts/builds/XanaduYonder-0.9.5-android-arm64.apk`；签名配置和升级注意事项见[正式发布 APK](docs/development.md#正式发布-apk)。Android 8.0 及以上的 ARM64 设备可安装；本地生成正式 APK 不会自动创建 GitHub Release。
 
 [v0.6.0 发布记录](docs/releases/v0.6.0.md) · [v0.5.0 发布记录](docs/releases/v0.5.0.md) · [v0.4.0 发布记录](docs/releases/v0.4.0.md) · [扫雷设计](docs/superpowers/specs/2026-10-27-minesweeper-design.md) · [扫雷验证](docs/verification-minesweeper.md) · [v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [数独玩法与接入](docs/sudoku-game.md) · [数独初版验证](docs/verification-sudoku.md) · [数独修订验证](docs/verification-sudoku-refinement.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [四档难度校准](docs/verification-sheep-difficulty.md) · [模式、难度与紧凑界面验证](docs/verification-sheep-modes.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 

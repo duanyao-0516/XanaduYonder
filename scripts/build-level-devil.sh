@@ -7,7 +7,8 @@ source "$PROJECT_ROOT/scripts/startup-unity-environment.sh"
 # Keep standard Android lint enabled and avoid importing unrelated build hooks.
 unset ANDROID_LINT_JARS
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-level-devil.log"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-0.9.4-level-devil-preview.apk"
+source "$PROJECT_ROOT/scripts/project-version.sh"
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-level-devil-preview.apk"
 python3 "$PROJECT_ROOT/scripts/kingdom-rush/verify-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/level-devil/build-content.py"
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
