@@ -215,6 +215,105 @@ function progress(data) {
   return Object.fromEntries(keys.map(k => [k,data[k]]));
 }
 
+async function checkRank(page, id, stars) {
+  const actual = await page.evaluate(({id,stars,key})=>{
+    const i=window.__XanaduZhaoyunInternals, game=i.DataMgr.instance();
+    const rank=i.RankDataMgr.instance(), main=i.SceneMgr.instance().co('MainScene');
+    const points=rank.C0(id,stars), expected=rank.R0(points);
+    const ordinary=[main.star0,main.star1,main.star2,main.star3,main.star4];
+    return {points,disk:JSON.parse(localStorage.getItem(key))._curStar,memory:game.player.curStar,
+      expected,live:game.rank.iL,name:game.rank.I0.get(expected.rank).rank,caption:main.rankTxt.text,
+      ordinaryVisible:ordinary.map(s=>s.visible),goldStars:ordinary.filter(s=>s.skin.endsWith('/star4.png')).length,
+      emperorVisible:main.star5.visible,emperorText:main.starNum.text};
+  },{id,stars,key});
+  assert.equal(actual.disk,actual.points);assert.equal(actual.memory,actual.points);
+  assert.equal(actual.live.id,actual.expected.rank);assert.equal(actual.live.level,stars);
+  assert.equal(actual.caption,actual.name,'the main menu must refresh immediately');
+  assert(actual.ordinaryVisible.every(v=>v===(id!==50)));
+  assert.equal(actual.emperorVisible,id===50);
+  if (id===50) assert.equal(actual.emperorText,'x'+stars);
+  else assert.equal(actual.goldStars,stars);
+  const cat=await catalog(page);
+  assert.equal(cat.rankId,id);assert.equal(cat.rankStars,stars);
+  return actual.name;
+}
+
+async function editLegacyRank(page) {
+  const initial=await disk(page), panel=await openEditor(page);
+  const ranks=await page.evaluate(()=>{
+    const rows=[...window.__XanaduZhaoyunInternals.DataMgr.instance().rank.I0.values()];
+    const firstByName=new Map();
+    for (const row of rows) if (!firstByName.has(row.rank)) firstByName.set(row.rank,{id:row.id,name:row.rank});
+    return [...firstByName.values()];
+  });
+  assert.equal(ranks.length,51);
+  const cat=await catalog(page);
+  assert.deepEqual(cat.ranks.map(({id,name})=>({id,name})),ranks);
+  await checkRank(page,50,103);
+  const stars=field(panel,'段内星数');
+  const combo=panel.getByRole('combobox',{name:'个人段位',exact:true});
+  assert((await combo.innerText()).includes(ranks[50].name));assert.equal(await stars.inputValue(),'103');
+  await combo.tap();
+  const list=panel.getByRole('listbox',{name:'个人段位',exact:true});
+  const options=await list.getByRole('option').evaluateAll(rows=>rows.map(r=>({id:Number(r.value),label:r.innerText})));
+  assert.deepEqual(options.map(row=>row.id),ranks.map(r=>r.id));
+  assert(options.every((row,n)=>row.label.includes(ranks[n].name)));
+  await list.getByRole('option',{selected:true}).tap();
+  await choose(panel,'个人段位','7',51);assert.equal(await stars.inputValue(),'1');
+  await stars.fill('4');
+  await choose(panel,'个人段位','50',51);assert.equal(await stars.inputValue(),'103');
+  assert.deepEqual(await disk(page),initial,'previewing an edit must not write the player');
+  await rejected(page,{kind:'rank',id:7,stars:6});
+  await rejected(page,{kind:'rank',id:7,stars:0});
+  await rejected(page,{kind:'rank',id:7,stars:4},true);
+
+  const immutable = data => {
+    const state=progress(data);delete state._curStar;
+    return {...state,gold:data._gold,keepSkills:data._xanaduKeepSkills,streak:data._winStreak,
+      season:data._seasonId,finalRanks:data._seasonFinalRanks};
+  };
+  // Leave unsaved settings in the form. The rank button commits only the rank command.
+  await field(panel,'金币').fill('99999');
+  await field(panel,'跨天保留技能道具').tap();
+  for (const [id,level] of [[7,4],[7,2],[50,101]]) {
+    await choose(panel,'个人段位',String(id),51);
+    await stars.fill(String(level));await submit(page,panel,'保存段位');
+    await checkRank(page,id,level);
+    assert.deepEqual(immutable(await disk(page)),immutable(initial));
+  }
+  await closeEditor(panel);
+  await touchMain(page,'rankBtn');
+  const rankPanel=page.locator('#xanadu-personal-rank');
+  assert((await rankPanel.innerText()).includes('大帝 · 101星'));
+  await rankPanel.getByRole('button',{name:'返回游戏'}).tap();
+  await page.reload();await activate(page);
+  await checkRank(page,50,101);assert.deepEqual(immutable(await disk(page)),immutable(initial));
+  note('legacy Emperor 103 stars maps to one of 51 original rank names; previews, promotion, demotion and atomic saves refresh the real menu and reload without changing gold, records or yesterday’s reward');
+}
+
+async function rankUnlocks(browser) {
+  const {context,page}=await launchGame(browser,320,568);
+  try {
+    const unlocked=()=>page.evaluate(()=>{
+      const p=window.__XanaduZhaoyunInternals.DataMgr.instance().player;
+      return [p.openProps,p.isAvatarUnlocked(11),p.isAvatarUnlocked(6)];
+    });
+    assert.deepEqual(await unlocked(),[false,false,false]);
+    const steps=[
+      [0,5,[false,false,false]], [1,1,[true,false,false]],
+      [9,5,[true,false,false]], [10,1,[true,true,false]],
+      [49,5,[true,true,false]], [50,1,[true,true,true]], [0,1,[true,true,true]]
+    ];
+    for (const [id,stars,expected] of steps) {
+      checkOk(await apply(page,{kind:'rank',id,stars}));
+      assert.deepEqual(await unlocked(),expected,'permanent unlocks after rank '+id);
+    }
+    await page.reload();await activate(page);
+    await checkRank(page,0,1);assert.deepEqual(await unlocked(),[true,true,true]);
+    note('rank-granted shop access and the two rank avatars unlock at 军士.二, 少将 and 大帝 and survive demotion and reload');
+  } finally { await context.close(); }
+}
+
 async function rejected(page, operation, fault = false) {
   const actual = await page.evaluate(({operation,key,fault}) => {
     const player = window.__XanaduZhaoyunInternals.DataMgr.instance().player;
@@ -422,9 +521,19 @@ async function fresh(browser) {
     panel = await openEditor(page);
     const initial = await catalog(page), first = await disk(page);
     assert.equal(initial.keepSkills,true);
+    const saveRank=button(panel,'保存段位');
+    assert(await saveRank.isVisible());assert.equal(await field(panel,'段内星数').inputValue(),'1');
+    if (await saveRank.isEnabled()) await submit(page,panel,'保存段位');
+    assert.equal((await disk(page))._curStar,first._curStar,'unchanged starting rank must preserve raw zero');
+    await choose(panel,'个人段位','1',51);
+    await field(panel,'段内星数').fill('4');
+    await saveRank.scrollIntoViewIfNeeded();
+    fs.mkdirSync(evidence,{recursive:true});
+    await page.screenshot({path:path.join(evidence,'save-rank-320.png')});
     await field(panel,'金币').fill('718');
     await submit(page,panel,'保存设置');
     assert.equal((await disk(page))._gold,718);
+    assert.equal((await disk(page))._curStar,first._curStar,'saving settings cannot apply the selected rank');
     await rejected(page,{kind:'settings',gold:719,keepSkills:false},true);
     await editWeapons(page,panel,initial);
     panel = await editProps(page,panel);
@@ -452,7 +561,7 @@ async function dates(browser, first) {
   // Historical, full origin save without either new field. Original supports
   // contemporary dated triples and legacy bare IDs / ID+level tuples.
   const then = previousDay();
-  const old = {...first,_openTime:then,_saveTime:then,_registerTime:then,_winDay:2,_loseDay:1,
+  const old = {...first,_openTime:then,_saveTime:then,_registerTime:then,_curStar:353,_win:8,_lose:3,_winDay:2,_loseDay:1,
     _isGetLastRankReward:1,_lastStar:-1,_props:[[2,1,then],[22,3,then],11,[12,1]]};
   delete old._xanaduManualRecruitIds; delete old._xanaduKeepSkills;
   report.fixtures.push({kind:'previous calendar day full save, absent editor fields',props:old._props,winDay:2,loseDay:1,rewardReceipt:1});
@@ -468,8 +577,8 @@ async function dates(browser, first) {
     assert.equal(byId(cat.props,11).level,1); assert.equal(byId(cat.props,12).level,1);
     assert(loaded._props.every(row=>Array.isArray(row) && row.length===3 && Number.isFinite(row[2])));
     assert.equal(loaded._winDay,0); assert.equal(loaded._loseDay,0); assert.equal(loaded._isGetLastRankReward,0);
-    assert.equal(loaded._curStar,first._curStar); assert.equal(loaded._lastStar,loaded._curStar);
-    assert.equal(loaded._win,first._win); assert.equal(loaded._lose,first._lose);
+    assert.equal(loaded._curStar,old._curStar); assert.equal(loaded._lastStar,loaded._curStar);
+    assert.equal(loaded._win,old._win); assert.equal(loaded._lose,old._lose);
     await button(panel,'道具').tap();
     const promotion = byId(cat.props,22), beforeProps = (await disk(page))._props;
     await choose(panel,'选择道具','22:1',24,{...promotion,...promotion.levelDetails[0],rarityName:'卓越 · 1级'});
@@ -493,6 +602,7 @@ async function dates(browser, first) {
     assert.equal(receipt._isGetLastRankReward,1); assert(receipt._gold>loaded._gold);
     assert(await page.getByRole('button',{name:'每日段位奖励已领取',exact:true}).isDisabled());
     await page.getByRole('button',{name:'返回游戏',exact:true}).tap();
+    await editLegacyRank(page);
     today = await disk(page);
     note('360×640 legacy load keeps dated and legacy skills, resets daily stats and permits exactly one real rank reward');
   } finally { await game.context.close(); }
@@ -673,6 +783,7 @@ async function battleAid(browser) {
 async function run(browser) {
   const first = await fresh(browser);
   await dates(browser,first);
+  await rankUnlocks(browser);
   await battleAid(browser);
 }
 

@@ -36,8 +36,8 @@
   function integer(input, min, max, title) {
     const text = input.value.trim();
     const value = Number(text);
-    if (!/^\d+$/.test(text) || !Number.isSafeInteger(value) || value < min || value > max) {
-      throw new Error(title + '请输入 ' + min + ' 至 ' + max + ' 的整数');
+    if (!/^\d+$/.test(text) || !Number.isSafeInteger(value) || value < min || (max !== null && value > max)) {
+      throw new Error(max === null ? title + '请输入正整数' : title + '请输入 ' + min + ' 至 ' + max + ' 的整数');
     }
     return value;
   }
@@ -172,6 +172,22 @@
       kind:'settings', gold:integer(gold, 0, 99999999, '金币'), keepSkills:keepSkills.checked
     }), () => '已保存：金币 ' + catalog.gold + '，跨天保留已' + (catalog.keepSkills ? '开启' : '关闭') + '。');
 
+    const rankChoice = window.XanaduPanelSelect.create(settings, '个人段位');
+    const rankStars = numberInput('段内星数', settings, catalog.rankStars);
+    const rankHint = element('p');
+    settings.append(rankHint);
+    const selectedRank = () => catalog.ranks.find(rank => String(rank.id) === rankChoice.value);
+    function showRankStars() {
+      const rank = selectedRank();
+      rankStars.value = String(rank.id === catalog.rankId ? catalog.rankStars : 1);
+      rankHint.textContent = rank.maxStars ? '这个小段可选 1 至 ' + rank.maxStars + ' 星。' : '大帝连续计星，可以超过 100 星。';
+    }
+    rankChoice.element.addEventListener('change', () => { showRankStars(); feedback(''); });
+    action(settings, '保存段位', () => {
+      const rank = selectedRank();
+      return {kind:'rank', id:rank.id, stars:integer(rankStars, 1, rank.maxStars, '段内星数')};
+    }, () => '已保存段位：' + selectedRank().name + ' ' + catalog.rankStars + ' 星。');
+
     const props = section('道具');
     const propChoice = window.XanaduPanelSelect.create(props, '选择道具');
     const propInfo = element('p');
@@ -256,6 +272,10 @@
       if (kind === 'settings') {
         gold.value = String(catalog.gold);
         keepSkills.checked = catalog.keepSkills;
+      }
+      if (!kind || kind === 'rank') {
+        rankChoice.setOptions(catalog.ranks, catalog.rankId);
+        showRankStars();
       }
       if (!kind || kind === 'prop') refreshProps();
       if (!kind || kind === 'weapon') {

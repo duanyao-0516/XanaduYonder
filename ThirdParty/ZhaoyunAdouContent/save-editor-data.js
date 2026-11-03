@@ -165,12 +165,25 @@
     }));
   }
 
+  function rankChoices(game) {
+    const choices = new Map();
+    for (const row of game.rank.I0.values()) {
+      // The four 大帝 rows set battle difficulty, but share one continuous star count.
+      if (choices.has(row.rank)) choices.get(row.rank).maxStars = null;
+      else choices.set(row.rank, {id:row.id, name:row.rank, maxStars:row.level});
+    }
+    return choices;
+  }
+
   function catalog() {
     const game = currentGame();
     const player = game.player;
+    const ranks = rankChoices(game);
+    const currentRank = game.rank.iL;
     return {
       gold: player.gold,
       keepSkills: player._data[keepKey],
+      ranks: [...ranks.values()], rankId:ranks.get(currentRank.rank).id, rankStars:currentRank.level,
       props: propCatalog(game),
       weapons: [...game.wy.my].map(([id, weapon]) => ({
         id, name:weapon.txt, count:Math.floor(player.getWeaponFragmentCount(id) / weapon.fragmentNum),
@@ -183,6 +196,32 @@
 
   function propId(row) {
     return Array.isArray(row) ? row[0] : row;
+  }
+
+  function setRank(game, next, id, stars) {
+    const rank = game.rank.I0.get(id);
+    const choice = rank && rankChoices(game).get(rank.rank);
+    requireValue(choice && choice.id === id, '请选择有效的个人段位。');
+    requireValue(integer(stars, 1, choice.maxStars ?? Number.MAX_SAFE_INTEGER),
+      choice.maxStars ? '该段位可选 1 至 ' + choice.maxStars + ' 星。' : '大帝星数须为正整数。');
+    const current = game.rank.iL;
+    // A fresh save uses 0 total stars for 军士.一 1星. Keep that value on a no-op.
+    if (current.rank === choice.name && current.level === stars) return false;
+
+    const converter = I.RankDataMgr.instance();
+    const total = converter.C0(id, stars);
+    // Matchmaking samples up to total + 25, with an exclusive upper bound one above that.
+    requireValue(Number.isSafeInteger(total + 26), '星数过大。');
+    const target = converter.R0(total);
+    requireValue(game.rank.I0.get(target.rank)?.rank === choice.name && target.level === stars,
+      '星数与所选段位不符。');
+    next._curStar = total;
+    next._rankCorrected = 1; // Preserve manual 大帝 ranks through the original legacy-save migration.
+    if (target.rank >= game.props.Rn) next._openProps = true;
+    // Rank-gated avatars from AvatarMgr.X0 unlock permanently, including after a demotion.
+    if (target.rank >= 10) next._avatarUnlocks[11 - 1] = 1; // 少将: 将军
+    if (target.rank >= 50) next._avatarUnlocks[6 - 1] = 1;  // 大帝: 钓鱼老翁
+    return true;
   }
 
   function newProp(game, next, change) {
@@ -266,6 +305,9 @@
           next._gold = change.gold;
           next[keepKey] = change.keepSkills;
           break;
+        case 'rank':
+          if (!setRank(game, next, change.id, change.stars)) return {ok:true};
+          break;
         case 'weapon':
           addWeapon(game, next, change.id, change.quantity);
           break;
@@ -286,6 +328,7 @@
       saved = true;
       if (change.kind === 'prop') refreshProps(player);
       if (change.kind === 'weapon') I.WeaponMgr.instance().refresh();
+      if (change.kind === 'rank') I.SceneMgr.instance().co('MainScene').Act();
       if (change.kind === 'settings') {
         const main = I.SceneMgr.instance().co('MainScene');
         if (main.goldTxt) main.goldTxt.text = String(player.gold);
