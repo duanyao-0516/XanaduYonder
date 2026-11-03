@@ -68,8 +68,7 @@ scripts/test-link-match.sh
 scripts/test-link-match-input.sh
 scripts/test-link-match-persistence.sh
 scripts/test-link-match-ui.sh
-scripts/build-android.sh
-scripts/install-android.sh DEVICE_SERIAL
+./scripts/build-android.sh --install
 ```
 
 `scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含战争进化史系列入口的十八张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
@@ -247,6 +246,24 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 验收需分别覆盖：入口浏览不建局、十槽恢复和目标槽重开、合法及非法 v1 迁移、旧备份恢复、新版损坏不回退、迁移写失败、下一关已有局的续接、第 03／04 关前往下一关与第 05 关末关、最后一对与计时截止、无路自动重排、后台遮盘与明确继续、短屏 48／96／192 张及外围路线、真实相邻触点取消／多指、游戏与公共设置保存失败提示，以及从 Zuma／Dino 横屏返回后的宿主恢复。Android dp、系统安全区、音效触感与实际设备交互另行记录；构建成功或安装启动成功都不代表这些场景已通过。
 
 首版三关的历史测试、截图和 APK 记录保留在[原验证记录](verification-link-match.md)。新增五关、v2 迁移、生产 UGUI 对照和设备边界单独记入[扩关验证记录](verification-link-match-expanded.md)；[浏览器密度对照](prototypes/link-match-density/README.md)仅用于设计展示，不能替代这些验证。
+
+## 通用 Android Debug
+
+在桌面仓根目录连接一台已授权的 ARM64 安卓真机，小米手机上可与正式版同时安装：
+
+```bash
+./scripts/build-android.sh --install
+```
+
+脚本构建完整的开发版 `artifacts/builds/XanaduYonder-0.9.5-debug.apk`。确认 APK 的包名是 `com.duanyao.xanaduyonder.debug` 后，使用 `adb install -r` 安装并启动 **XanaduYonder Debug**。再次安装会更新先前同签名的 Debug，保留其进度。正式应用有独立的数据目录和存档。
+
+如有多台设备，在 `--install` 后加目标设备序列号；省略时会沿用已设置的 `ANDROID_SERIAL`，否则要求只有一台已授权的 ARM64 真机。构建日志同步显示在终端并保存到 `artifacts/logs/build-android.log`。如果安装失败，已生成的 APK 会保留。可以直接重试安装：
+
+```bash
+./scripts/install-android.sh DEVICE_SERIAL artifacts/builds/XanaduYonder-0.9.5-debug.apk com.duanyao.xanaduyonder.debug
+```
+
+仅运行 `./scripts/build-android.sh` 保留原开发打包流程，输出 `artifacts/builds/XanaduYonder-0.9.5.apk`，包名仍为 `com.duanyao.xanaduyonder`。原包名的开发包使用调试签名，Android 会拒绝用它覆盖同包名的正式签名应用；已装正式版的设备请使用上面的独立 Debug 命令。
 
 ## 正式发布 APK
 

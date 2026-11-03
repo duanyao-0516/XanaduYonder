@@ -33,6 +33,31 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidDeviceDebug()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                var customKeystore = PlayerSettings.Android.useCustomKeystore;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".debug");
+                    PlayerSettings.productName = "XanaduYonder Debug";
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    BuildApk("-debug.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    PlayerSettings.Android.useCustomKeystore = customKeystore;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         // Isolated device validation never replaces a release or another worktree's APK.
         public static void BuildAndroidIdiomValidation()
         {

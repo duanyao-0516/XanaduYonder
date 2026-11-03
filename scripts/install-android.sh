@@ -13,12 +13,12 @@ if [[ ! -x "$ADB" ]]; then ADB="$(command -v adb || true)"; fi
 if [[ ! -x "$ADB" && -x "$HOME/Library/Android/sdk/platform-tools/adb" ]]; then
     ADB="$HOME/Library/Android/sdk/platform-tools/adb"
 fi
-if [[ $# -gt 2 ]]; then
-    printf 'Too many arguments. Usage: %s [PHYSICAL_DEVICE_SERIAL] [APK_PATH]\n' "$0" >&2
+if [[ $# -gt 3 ]]; then
+    printf 'Too many arguments. Usage: %s [PHYSICAL_DEVICE_SERIAL] [APK_PATH [EXPECTED_PACKAGE]]\n' "$0" >&2
     exit 2
 fi
 if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
-    printf 'Usage: %s [PHYSICAL_DEVICE_SERIAL] [APK_PATH]\nWithout a serial, exactly one connected, authorized physical device is required.\n' "$0"
+    printf 'Usage: %s [PHYSICAL_DEVICE_SERIAL] [APK_PATH [EXPECTED_PACKAGE]]\nWithout a serial, exactly one connected, authorized physical device is required.\n' "$0"
     exit 0
 fi
 if [[ ! -x "$ADB" ]]; then
@@ -34,6 +34,20 @@ fi
 if [[ ! -s "$APK_FILE" ]]; then
     printf 'APK missing or empty: %s\nRun scripts/build-android.sh first.\n' "$APK_FILE" >&2
     exit 1
+fi
+launch_package=com.duanyao.xanaduyonder
+if [[ $# -eq 3 ]]; then
+    AAPT="${AAPT:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/aapt}"
+    if [[ ! -x "$AAPT" ]]; then
+        printf 'aapt is required to confirm the target APK identity. Set AAPT to its executable path.\n' >&2
+        exit 1
+    fi
+    launch_package="$3"
+    actual_package="$("$AAPT" dump badging "$APK_FILE" | sed -nE "s/^package: name='([^']+)'.*/\\1/p")"
+    if [[ -z "$launch_package" || "$actual_package" != "$launch_package" ]]; then
+        printf 'APK package mismatch: expected %s, found %s. Skipping installation.\n' "$launch_package" "${actual_package:-unknown}" >&2
+        exit 1
+    fi
 fi
 serial="${1:-${ANDROID_SERIAL:-}}"
 if [[ -z "$serial" ]]; then
@@ -76,4 +90,4 @@ if [[ ",$abis," != *,arm64-v8a,* ]]; then
 fi
 printf 'Installing %s on physical device %s\n' "$APK_FILE" "$serial"
 "$ADB" -s "$serial" install -r "$APK_FILE"
-"$ADB" -s "$serial" shell am start -n com.duanyao.xanaduyonder/com.unity3d.player.UnityPlayerActivity
+"$ADB" -s "$serial" shell am start -n "$launch_package/com.unity3d.player.UnityPlayerActivity"

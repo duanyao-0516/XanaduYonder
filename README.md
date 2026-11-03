@@ -138,8 +138,7 @@ scripts/test-link-match.sh
 scripts/test-link-match-input.sh
 scripts/test-link-match-persistence.sh
 scripts/test-link-match-ui.sh
-scripts/build-android.sh
-scripts/install-android.sh DEVICE_SERIAL
+./scripts/build-android.sh --install
 ```
 
 扫雷验证使用专用 `scripts/build-minesweeper-validation.sh` 和 `com.duanyao.xanaduyonder.minesweepertest`，操作步骤见[扫雷独立验证](docs/development.md#扫雷独立验证)。UI 检查与构建须在同一本工作树中串行执行，不覆盖正式应用。
@@ -152,7 +151,7 @@ scripts/install-android.sh DEVICE_SERIAL
 
 连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-0.9.1-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。48 张 Fluent 3D 原图（水果、食物、动物、自然与物品）和完整 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
 
-通用开发 APK 输出到 `artifacts/builds/XanaduYonder-0.9.5.apk`，构建日志在 `artifacts/logs/build-android.log`。这是用于本地验收的开发包，使用本机调试签名，不是商店发布包。安装脚本只选择物理设备；`DEVICE_SERIAL` 从 `adb devices -l` 获取。
+小米已安装正式版时，运行 `./scripts/build-android.sh --install` 构建并启动独立应用 **XanaduYonder Debug**（`com.duanyao.xanaduyonder.debug`）。Debug 和正式版可并存，各自保存进度；指定设备用 `./scripts/build-android.sh --install DEVICE_SERIAL`。Unity 日志实时显示在终端，并写入 `artifacts/logs/build-android.log`。无参数打包仍生成原包名的 `artifacts/builds/XanaduYonder-0.9.5.apk`；两种产物及安装方法见[通用 Android Debug](docs/development.md#通用-android-debug)。
 
 连接一台已授权的 ARM64 安卓真机后，运行 `./scripts/build-release.sh --install` 即可读取本机签名、构建 Release 并覆盖安装。仅打包时运行 `./scripts/build-release.sh`，输出为 `artifacts/builds/XanaduYonder-0.9.5-android-arm64.apk`。支持 Android 8.0 及以上，签名配置与多设备用法见[正式发布 APK](docs/development.md#正式发布-apk)。
 
