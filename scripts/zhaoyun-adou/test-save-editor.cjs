@@ -314,6 +314,94 @@ async function rankUnlocks(browser) {
   } finally { await context.close(); }
 }
 
+async function settleStarBattle(page, win, startChange, finalChange, suspend = false) {
+  const before=await disk(page);
+  await touchMain(page,'playBtn');
+  await page.waitForFunction(()=>{
+    const i=window.__XanaduZhaoyunInternals, state=window.XanaduZhaoyun.status();
+    return state.battle && !state.paused && i.TimeMgr.instance().yr.has('BattleMgr');
+  },null,{timeout:45000});
+  const startStars=before._curStar+startChange;
+  assert.equal((await disk(page))._curStar,startStars,'start-of-battle persisted stars');
+  if (suspend) {
+    checkOk(await page.evaluate(()=>window.XanaduZhaoyun.setActive(false)));
+    assert.equal((await disk(page))._curStar,startStars,'background save persists the protected rank');
+    checkOk(await page.evaluate(()=>window.XanaduZhaoyun.setActive(true)));
+    await page.getByRole('button',{name:'继续游戏',exact:true}).tap();
+    assert.equal(await page.evaluate(()=>window.XanaduZhaoyun.status().paused),false);
+  }
+  // Exercise the original death event and all settlement listeners. Set base HP to zero
+  // for a deterministic outcome instead of waiting for enough waves to win or lose.
+  await page.evaluate(win=>{
+    const battle=window.__XanaduZhaoyunInternals.DataMgr.instance().Qf;
+    if (win) battle.ki=0;
+    else battle.Si=0;
+  },win);
+  await page.waitForFunction(()=>{
+    const i=window.__XanaduZhaoyunInternals, reward=i.SceneMgr.instance().co('GameOverScene')?.getBtn;
+    return window.XanaduZhaoyun.status().scene==='GameOverScene' && reward?.visible && reward.scaleX>=.98;
+  },null,{timeout:30000});
+  const after=await disk(page);
+  assert.equal(after._curStar,before._curStar+finalChange,'settled stars');
+  if (!win) {
+    const display=await page.evaluate(()=>{
+      const i=window.__XanaduZhaoyunInternals, scene=i.SceneMgr.instance().co('GameOverScene');
+      const stars=Array.from({length:5},(_,n)=>scene.eot(n)).filter(node=>node.visible && node.skin.endsWith('/star1.png'));
+      return {arrow:scene.arrow.visible,stars:stars.length,expected:i.DataMgr.instance().rank.iL.level};
+    });
+    assert.equal(display.arrow,finalChange<0,'loss arrow must reflect an actual lost star');
+    assert.equal(display.stars,display.expected,'loss screen must show the settled stars');
+  }
+  assert.equal(after._win,before._win+Number(win));assert.equal(after._lose,before._lose+Number(!win));
+  assert.equal(after._seasonRound,before._seasonRound+1);
+  await touchScene(page,'GameOverScene','getBtn');
+  const gold=before._gold+(win ? 20 : 5);
+  await page.waitForFunction(({key,gold})=>JSON.parse(localStorage.getItem(key))._gold===gold,{key,gold},{timeout:15000});
+  await page.reload();await activate(page);
+  const saved=await disk(page);
+  assert.equal(saved._curStar,after._curStar);assert.equal(saved._gold,gold);
+  return {before:before._curStar,start:startStars,after:saved._curStar,win,coins:gold-before._gold};
+}
+
+async function starProtection(browser,first) {
+  // An existing non-tutorial save in the middle of a tier. No pre-existing copy of the setting.
+  const old={...first,_win:2,_lose:1,_curStar:3};
+  delete old._xanaduProtectStars;
+  const {context,page}=await launchGame(browser,320,568,old);
+  try {
+    await tripleTapCoin(page);
+    let panel=await openEditor(page);
+    const protect=field(panel,'失败不掉星');
+    assert.equal((await catalog(page)).protectStars,false);assert(!await protect.isChecked());
+    const keepBox=await field(panel,'跨天保留技能道具').boundingBox(), protectBox=await protect.boundingBox();
+    assert(keepBox && protectBox && protectBox.y>=keepBox.y+keepBox.height,'protection follows skill retention');
+    await protect.tap();assert.equal((await catalog(page)).protectStars,false,'unsaved checkbox is only a preview');
+    await submit(page,panel,'保存设置');await closeEditor(panel);
+    assert.equal((await disk(page))._xanaduProtectStars,true);
+    checkOk(await apply(page,{kind:'settings',gold:old._gold,keepSkills:true}));
+    await page.reload();await activate(page);
+    assert.equal((await catalog(page)).protectStars,true,'legacy settings payload must preserve protection');
+    panel=await openEditor(page);assert(await field(panel,'失败不掉星').isChecked());await closeEditor(panel);
+    const protectedLoss=await settleStarBattle(page,false,0,0,true);
+    const protectedWin=await settleStarBattle(page,true,0,1);
+    panel=await openEditor(page);
+    await field(panel,'失败不掉星').tap();await submit(page,panel,'保存设置');await closeEditor(panel);
+    await page.reload();await activate(page);
+    assert.equal((await catalog(page)).protectStars,false);
+    const ordinaryLoss=await settleStarBattle(page,false,-1,-1);
+    checkOk(await apply(page,{kind:'rank',id:0,stars:1}));
+    const floorLoss=await settleStarBattle(page,false,0,0);
+    report.starProtection={protectedLoss,protectedWin,ordinaryLoss,floorLoss};
+    note('protection persists for old and new settings calls; real non-tutorial battles keep stars on loss, gain one on victory and restore start-of-battle deduction when switched off');
+  } finally {await context.close();}
+  const tutorial=await launchGame(browser,320,568,{...first,_xanaduProtectStars:true});
+  try {
+    assert.equal((await disk(tutorial.page))._win+(await disk(tutorial.page))._lose,0);
+    report.starProtection.tutorialLoss=await settleStarBattle(tutorial.page,false,0,0);
+    note('tutorial loss preserves the raw starting stars with protection; the original minimum-rank loss stays at one star when protection is off');
+  } finally {await tutorial.context.close();}
+}
+
 async function rejected(page, operation, fault = false) {
   const actual = await page.evaluate(({operation,key,fault}) => {
     const player = window.__XanaduZhaoyunInternals.DataMgr.instance().player;
@@ -521,6 +609,8 @@ async function fresh(browser) {
     panel = await openEditor(page);
     const initial = await catalog(page), first = await disk(page);
     assert.equal(initial.keepSkills,true);
+    assert.equal(initial.protectStars,false);
+    assert(!await field(panel,'失败不掉星').isChecked());
     const saveRank=button(panel,'保存段位');
     assert(await saveRank.isVisible());assert.equal(await field(panel,'段内星数').inputValue(),'1');
     if (await saveRank.isEnabled()) await submit(page,panel,'保存段位');
@@ -782,6 +872,7 @@ async function battleAid(browser) {
 
 async function run(browser) {
   const first = await fresh(browser);
+  await starProtection(browser,first);
   await dates(browser,first);
   await rankUnlocks(browser);
   await battleAid(browser);

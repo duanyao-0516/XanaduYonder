@@ -3,6 +3,7 @@
   'use strict';
   const I = window.__XanaduZhaoyunInternals;
   const keepKey = '_xanaduKeepSkills';
+  const protectStarsKey = '_xanaduProtectStars';
   const recruitsKey = '_xanaduManualRecruitIds';
   const playerPrototype = I.PlayerData.prototype;
   const specialPrototype = I.SpecialGeneralMgr.prototype;
@@ -20,10 +21,11 @@
   }
 
   // initData enumerates the constructor's keys, then expires props and writes immediately.
-  // Register the two local keys before that pass, including for first-time saves.
+  // Register local keys before that pass, including for first-time saves.
   const init = playerPrototype.init;
   playerPrototype.init = function (...args) {
     this._data[keepKey] = true;
+    this._data[protectStarsKey] = false;
     this._data[recruitsKey] = [];
     return init.apply(this, args);
   };
@@ -31,9 +33,18 @@
   playerPrototype.initData = function (saved) {
     const input = Object.assign({}, saved);
     input[keepKey] = typeof saved[keepKey] === 'boolean' ? saved[keepKey] : true;
+    input[protectStarsKey] = saved[protectStarsKey] === true;
     input[recruitsKey] = Array.isArray(saved[recruitsKey])
       ? [...new Set(saved[recruitsKey].filter(manualId))] : [];
     return load.call(this, input);
+  };
+
+  // w1(-1) handles both the opening stake and a loss without a stake. When
+  // the opening stake is skipped, the original win path awards exactly one star.
+  const applyBattleStars = I.RankMgr.prototype.w1;
+  I.RankMgr.prototype.w1 = function (delta) {
+    if (delta < 0 && I.DataMgr.instance().player._data[protectStarsKey] === true) return;
+    return applyBattleStars.call(this, delta);
   };
 
   const expireProps = playerPrototype.deleteYesterdayProps;
@@ -183,6 +194,7 @@
     return {
       gold: player.gold,
       keepSkills: player._data[keepKey],
+      protectStars: player._data[protectStarsKey],
       ranks: [...ranks.values()], rankId:ranks.get(currentRank.rank).id, rankStars:currentRank.level,
       props: propCatalog(game),
       weapons: [...game.wy.my].map(([id, weapon]) => ({
@@ -304,6 +316,10 @@
             '金币须为 0 至 99999999 的整数，并指定跨日道具设置。');
           next._gold = change.gold;
           next[keepKey] = change.keepSkills;
+          if (change.protectStars !== undefined) {
+            requireValue(typeof change.protectStars === 'boolean', '请选择是否开启失败不掉星。');
+            next[protectStarsKey] = change.protectStars;
+          }
           break;
         case 'rank':
           if (!setRank(game, next, change.id, change.stars)) return {ok:true};

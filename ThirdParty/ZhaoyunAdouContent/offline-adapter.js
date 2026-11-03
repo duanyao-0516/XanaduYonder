@@ -255,6 +255,17 @@
   // Reward doubling is removed at both display and action boundaries.
   const over=scene('GameOver'), claim=over.xht;
   over.xht=function(event){return claim.call(this,event,false);};
+  // A loss with unchanged stars uses the original minimum-rank sequence:
+  // keep the stars on screen and proceed to the normal reward or close button.
+  const lossStep = over.Xot, lossPhases = over.constructor.Yot;
+  over.Xot = function (...args) {
+    if (this.Nrt === lossPhases.Hot) {
+      const rank = I.DataMgr.instance().rank;
+      const current = rank.iL;
+      if (current.id === rank.d1.id && current.level === rank.d1.level) this.Nrt = lossPhases.Wot;
+    }
+    return lossStep.apply(this, args);
+  };
   wrap(over,'onAwake',function(){hide(this.getBtnAd);});
   wrap(over,'wot',function(){hide(this.getBtnAd);this.getBtn.y=this.Att?960:1090;});
 

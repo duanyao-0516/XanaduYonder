@@ -168,9 +168,16 @@
     keepSkills.checked = catalog.keepSkills;
     field(settings, '跨天保留技能道具', keepSkills).classList.add('save-editor-check');
     settings.append(element('p', '开启后，次日继续保留已装备的主动、被动道具和等级。'));
+    const protectStars = element('input');
+    protectStars.type = 'checkbox';
+    protectStars.checked = catalog.protectStars;
+    field(settings, '失败不掉星', protectStars).classList.add('save-editor-check');
+    settings.append(element('p', '败局保留当前星数，胜局仍升 1 星。'));
     action(settings, '保存设置', () => ({
-      kind:'settings', gold:integer(gold, 0, 99999999, '金币'), keepSkills:keepSkills.checked
-    }), () => '已保存：金币 ' + catalog.gold + '，跨天保留已' + (catalog.keepSkills ? '开启' : '关闭') + '。');
+      kind:'settings', gold:integer(gold, 0, 99999999, '金币'), keepSkills:keepSkills.checked,
+      protectStars:protectStars.checked
+    }), () => '已保存：金币 ' + catalog.gold + '，跨天保留已' + (catalog.keepSkills ? '开启' : '关闭') +
+      '，失败不掉星已' + (catalog.protectStars ? '开启' : '关闭') + '。');
 
     const rankChoice = window.XanaduPanelSelect.create(settings, '个人段位');
     const rankStars = numberInput('段内星数', settings, catalog.rankStars);
@@ -272,6 +279,7 @@
       if (kind === 'settings') {
         gold.value = String(catalog.gold);
         keepSkills.checked = catalog.keepSkills;
+        protectStars.checked = catalog.protectStars;
       }
       if (!kind || kind === 'rank') {
         rankChoice.setOptions(catalog.ranks, catalog.rankId);
