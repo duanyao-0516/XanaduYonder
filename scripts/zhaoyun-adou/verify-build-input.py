@@ -68,7 +68,7 @@ def validate(root):
     actual = {p.relative_to(base/'content').as_posix() for p in (base/'content').rglob('*') if p.is_file()}
     require(actual == set(expected), 'Content inventory changed after build')
     require({'index.html', 'offline.css', 'offline-adapter.js', 'host-bridge.js', 'panel-select.js', 'save-editor-data.js',
-             'save-editor-ui.js', 'battle-aid.js', 'battle-aid-ui.js', 'js/bundle.js'} <= set(expected),
+             'save-editor-ui.js', 'battle-aid.js', 'battle-aid-ui.js', 'battle-speed.js', 'js/bundle.js'} <= set(expected),
             'Missing offline entry/adapter')
     aar = root/'Assets/Plugins/Android/ZhaoyunAdouRuntime.aar'
     require(sha(aar.read_bytes()) == runtime['aarSha256'], 'AAR changed after build')

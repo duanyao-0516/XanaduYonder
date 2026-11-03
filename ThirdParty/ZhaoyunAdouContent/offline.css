@@ -156,3 +156,32 @@ canvas{touch-action:none}
   text-align: start;
 }
 .panel-select-options [aria-selected="true"] { background: #6d4525; color: #fff5d9; }
+
+.panel-option-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.panel-option-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+}
+.panel-option-type,
+.panel-option-description,
+.panel-option-quality {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.panel-option-quality {
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: #211a15;
+  font-weight: 700;
+}
+.panel-option-description { white-space: pre-line; }
+.panel-select-value { gap: 6px; }
+.panel-select-value::after { flex-shrink: 0; }

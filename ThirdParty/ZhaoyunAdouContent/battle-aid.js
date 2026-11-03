@@ -30,9 +30,7 @@
     if (session) throw new Error('援将面板已经打开。');
     const scene = currentBattle();
     const rack = I.ContainersMgr.instance().bP(RECRUIT_RACK, PLAYER);
-    const generals = I.DataMgr.instance().km.generalType.map((name, id) => ({
-      id, name, words: Array.from(name)
-    }));
+    const generals = window.XanaduSaveEditorData.generals();
     const snapshot = {generals, freeSlots: freeSlots(rack)};
     // DOM controls stay live while original game time (including in-flight recruits) is paused.
     I.TimeMgr.instance().pause(true);

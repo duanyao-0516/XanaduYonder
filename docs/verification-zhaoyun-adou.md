@@ -61,3 +61,16 @@ bash scripts/build-zhaoyun-adou.sh
 本轮内容共 303 个文件。Chromium 156 小屏专项 11 个阶段通过，包含 320×568 下孙尚香三字发放与实际拖动合成、只有两空槽时整组拒绝、动画预约占位、第二字创建后异常回滚重试、前后台暂停衔接，以及 360×640 的旧档跨日与奖励重置。原有浏览器主流程 11 个阶段通过。数据与阶段记录在 `artifacts/zhaoyun-adou/browser-evidence/save-editor.json` 和 `content.json`。安装包一节记录的是前一版预览，此功能已生成当前工作树的 Android AAR，未重建或安装合集 APK。
 
 后续修复了手机上下拉框闪退。在 Android API 36、WebView 133 的隔离环境中，旧版原生选择框弹出时宿主失焦，约 34 毫秒后恢复，选项随即关闭。换成页内列表后，触屏可选择武器列表最后一项、道具等级、满槽替换目标及武将，也能在战斗中选孙尚香并收到三张姓名字牌。首页金币支持长按和快速三连点来切换两个入口，显隐与游戏存档分别保存。Debug 与 Release 共用这份包含 304 个文件的离线内容。
+
+## 战斗倍速与装备目录
+
+战斗右上角可在 1× 与 2× 之间切换。浏览器专项用真实触摸切换按钮，对照墙钟、游戏时钟、原波次控制器，并以两种测试单位检查原攻击冷却。还覆盖战斗暂停、援将、切后台后点继续、退出结算和下一局默认倍率。目录专项检查 22 种道具、46 件武器、15 名武将的类型与说明、不同等级的效果和品质色，以及小屏列表的滚动和选中状态。
+
+在 320×568 和 360×640 两种视口的 2× 档位，游戏时钟与实际时间之比约为 2.0，切回 1× 或结束对局后的主菜单约为 1.0。包含这些界面的 305 个离线文件均已通过 Android AAR 打包输入校验。
+
+在安装了 Playwright Core 的本机可复现以下两项检查。输出在 `artifacts/zhaoyun-adou/browser-evidence/`。它们验证的是本地 Chromium 和实际离线内容，完整合集 APK 与小米真机另行验证。
+
+```sh
+NODE_PATH=/tmp/4399-package-tools/node_modules node scripts/zhaoyun-adou/test-battle-speed.cjs
+NODE_PATH=/tmp/4399-package-tools/node_modules node scripts/zhaoyun-adou/test-save-editor.cjs
+```

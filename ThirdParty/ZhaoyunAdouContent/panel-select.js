@@ -3,6 +3,37 @@
   'use strict';
   let nextId = 0;
 
+  function choiceText(item) {
+    const copy = document.createElement('span');
+    copy.className = 'panel-option-copy';
+    const title = document.createElement('span');
+    title.className = 'panel-option-title';
+    const name = document.createElement('strong');
+    name.textContent = item.name;
+    title.append(name);
+    if (item.typeLabel) {
+      const type = document.createElement('span');
+      type.className = 'panel-option-type';
+      type.textContent = item.typeLabel;
+      title.append(type);
+    }
+    if (item.rarityName) {
+      const quality = document.createElement('span');
+      quality.className = 'panel-option-quality';
+      quality.style.color = item.rarityColor;
+      quality.textContent = item.rarityName;
+      title.append(quality);
+    }
+    copy.append(title);
+    if (item.description) {
+      const description = document.createElement('span');
+      description.className = 'panel-option-description';
+      description.textContent = item.description;
+      copy.append(description);
+    }
+    return copy;
+  }
+
   function create(parent, title) {
     const element = document.createElement('details');
     element.className = 'save-editor-field panel-select';
@@ -29,7 +60,8 @@
 
     function select(option) {
       value = option?.value ?? '';
-      displayed.textContent = option?.textContent ?? '';
+      displayed.replaceChildren();
+      if (option) displayed.append(option.firstElementChild.cloneNode(true));
       for (const row of list.children) {
         row.setAttribute('aria-selected', String(row === option));
       }
@@ -37,11 +69,11 @@
 
     function setOptions(choices, preferred = value) {
       list.replaceChildren();
-      for (const [id, label] of choices) {
+      for (const item of choices) {
         const option = document.createElement('button');
         option.type = 'button';
-        option.value = String(id);
-        option.textContent = label;
+        option.value = String(item.id);
+        option.append(choiceText(item));
         option.setAttribute('role', 'option');
         list.append(option);
       }

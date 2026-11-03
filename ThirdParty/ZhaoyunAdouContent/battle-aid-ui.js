@@ -45,7 +45,7 @@
       header.append(title, back);
       const body = node('div', undefined, 'save-editor-body');
       const select = window.XanaduPanelSelect.create(body, '选择武将');
-      select.setOptions(generals.map(general => [general.id, general.name]));
+      select.setOptions(generals);
       const slots = node('p');
       const example = node('p', '例如孙尚香会发入“孙、尚、香”三个字。把字拖上棋盘即可按原规则合成。');
       const send = node('button', '发放姓名字', 'save-editor-submit');

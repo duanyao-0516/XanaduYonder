@@ -280,12 +280,53 @@
 
   // The original map flags enforce one use of each aid per battle. No global 'ad success'.
   const battle=scene('Battle');
+  function addBattleSpeedButton(scene) {
+    if (scene.offlineSpeedButton) return;
+    const button = new Laya.Box();
+    button.name = 'offlineSpeedButton';
+    // The rightmost active AI prop ends at x=494; the passive row begins at y=118.
+    button.pos(508, 4);
+    button.size(116, 108);
+    button.zIndex = scene.round.zIndex;
+    button.mouseEnabled = true;
+    button.graphics.drawRect(3, 8, 110, 92, '#ead9b4', '#624321', 3);
+    const caption = new Laya.Text();
+    caption.name = 'speedCaption';
+    caption.text = '倍速\n1×';
+    caption.fontSize = 28;
+    caption.bold = true;
+    caption.color = '#48321c';
+    caption.align = 'center';
+    caption.valign = 'middle';
+    caption.size(button.width, button.height);
+    caption.mouseEnabled = false;
+    button.addChild(caption);
+    // The parent box also listens for pointer input to pick up soldiers and props.
+    const stop = event => event.stopPropagation();
+    for (const type of [Laya.Event.MOUSE_DOWN, Laya.Event.MOUSE_MOVE, Laya.Event.MOUSE_UP]) {
+      button.on(type, scene, stop);
+    }
+    button.on(Laya.Event.CLICK, scene, event => {
+      stop(event);
+      caption.text = '倍速\n' + window.XanaduBattleSpeed.toggle() + '×';
+    });
+    scene.xBtn.parent.addChild(button);
+    scene.offlineSpeedButton = button;
+  }
   wrap(battle, 'onAwake', function () {
     addPanelButton(this, this.xBtn.parent, 'offlineGeneralAidButton', '援将', 112, 12, window.XanaduBattleAidUI);
     this.offlineGeneralAidButton.zIndex = this.round.zIndex;
+    addBattleSpeedButton(this);
   });
-  wrap(battle, 'onOpened', function () { syncToolButton(this.offlineGeneralAidButton); });
-  wrap(battle, 'onClosed', () => window.XanaduBattleAidUI.close());
+  wrap(battle, 'onOpened', function () {
+    syncToolButton(this.offlineGeneralAidButton);
+    window.XanaduBattleSpeed.begin();
+    this.offlineSpeedButton.getChildByName('speedCaption').text = '倍速\n1×';
+  });
+  wrap(battle, 'onClosed', () => {
+    try { window.XanaduBattleAidUI.close(); }
+    finally { window.XanaduBattleSpeed.end(); }
+  });
   battle.Lnt=function(){
     const game=this.Gw;
     if(game.map.Na&&!game.map.$a){

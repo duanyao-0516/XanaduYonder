@@ -123,7 +123,22 @@ const propOp = (id, level = 1, replaceId) => ({kind:'prop',id,level,replaceId});
 const button = (panel, name) => panel.getByRole('button',{name,exact:true});
 const field = (panel, name) => panel.getByLabel(name, {exact:false});
 
-async function choose(panel, label, value, expectedCount) {
+async function checkItemDetails(row, item) {
+  const text = (await row.innerText()).replace(/\s+/g, ' ');
+  for (const detail of [item.typeLabel, item.description]) {
+    assert(detail && text.includes(detail.replace(/\s+/g, ' ')), 'choice lacks type or description for ' + item.name);
+  }
+  const quality = row.locator('.panel-option-quality');
+  if (!item.rarityName) {
+    assert.equal(await quality.count(), 0, 'no invented general rarity');
+    return;
+  }
+  assert.equal(await quality.innerText(), item.rarityName);
+  const rgb = item.rarityColor.slice(1).match(/../g).map(component => parseInt(component,16));
+  assert.equal(await quality.evaluate(el => getComputedStyle(el).color), 'rgb(' + rgb.join(', ') + ')');
+}
+
+async function choose(panel, label, value, expectedCount, item) {
   const trigger = panel.getByRole('combobox', {name:label, exact:true});
   await trigger.tap();
   const list = panel.getByRole('listbox', {name:label, exact:true});
@@ -132,12 +147,37 @@ async function choose(panel, label, value, expectedCount) {
   await panel.page().waitForTimeout(200);
   assert(await list.isVisible(), label + ' should remain open until a choice is made');
   assert.equal(await panel.page().evaluate(() => window.XanaduZhaoyun.status().active), true);
-  if (expectedCount !== undefined) assert.equal(await list.getByRole('option').count(), expectedCount);
+  if (expectedCount !== undefined) {
+    assert.equal(await list.getByRole('option').count(),expectedCount);
+    if (item) {
+      assert.equal(await list.locator('.panel-option-type').count(),expectedCount);
+      assert.equal(await list.locator('.panel-option-description').count(),expectedCount);
+      assert.equal(await list.locator('.panel-option-quality').count(),item.rarityName ? expectedCount : 0);
+    }
+  }
+  if (label === '选择武器' && expectedCount === 46) {
+    await list.scrollIntoViewIfNeeded();
+    const rect = await list.boundingBox(), x = rect.x + rect.width / 2;
+    const cdp = await panel.page().context().newCDPSession(panel.page());
+    try {
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y:rect.y+rect.height*0.75}]});
+      for (let step=1;step<=6;step++) {
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:rect.y+rect.height*(0.75-step*0.08)}]});
+        await panel.page().waitForTimeout(30);
+      }
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    } finally { await cdp.detach(); }
+    assert(await list.evaluate(el=>el.scrollHeight>el.clientHeight && el.scrollTop>0),
+      'long weapon list must scroll by touch on the small viewport');
+  }
   const option = list.locator('button[value="' + value + '"]');
   const text = await option.innerText();
+  if (item) await checkItemDetails(option,item);
+  assert(await list.evaluate(el => el.scrollWidth <= el.clientWidth + 1),'no horizontal scrolling');
   await option.tap();
   await list.waitFor({state:'hidden'});
   assert((await trigger.innerText()).includes(text));
+  if (item) await checkItemDetails(trigger,item);
 }
 
 async function submit(page, panel, name) {
@@ -190,7 +230,7 @@ async function editWeapons(page, panel, initial) {
   const sample = initial.weapons.find(w=>!w.count && byId(definitions,w.id).threshold>1);
   assert(sample);
   await button(panel,'武器').tap();
-  await choose(panel,'选择武器',String(sample.id));
+  await choose(panel,'选择武器',String(sample.id),46,sample);
   await field(panel,'整把数量').fill('2');
   await submit(page,panel,'添加武器');
   assert.equal(byId((await catalog(page)).weapons,sample.id).count,2);
@@ -242,18 +282,19 @@ async function editProps(page,panel) {
   await closeEditor(panel);
   panel = await openEditor(page);
   await button(panel,'道具').tap();
-  await choose(panel,'选择道具',String(c.id));
+  await choose(panel,'选择道具',String(c.id),22,c);
   await submit(page,panel,'保存道具');
   assert.match(await panel.getByRole('status').innerText(),/替换/);
   assert.equal(byId((await catalog(page)).props,c.id).level,0);
-  await choose(panel,'替换道具',String(a.id));
+  await choose(panel,'替换道具',String(a.id),undefined,a);
   await choose(panel,'选择道具',String(active[3].id));
-  await choose(panel,'选择道具',String(c.id));
+  await choose(panel,'选择道具',String(c.id),22,c);
   assert.match(await panel.getByRole('combobox',{name:'替换道具'}).innerText(),/请选择要替换的道具/);
-  await choose(panel,'替换道具',String(a.id));
+  await choose(panel,'替换道具',String(a.id),undefined,a);
   await submit(page,panel,'保存道具');
-  await choose(panel,'选择道具','22');
-  await choose(panel,'道具等级','3',3);
+  const promotion=byId(rows,22);
+  await choose(panel,'选择道具','22',22,promotion);
+  await choose(panel,'道具等级','3',3,{...promotion,...promotion.levelDetails[2]});
   await choose(panel,'替换道具',String(passive[0].id));
   await submit(page,panel,'保存道具');
   await rejected(page,propOp(22,4));
@@ -271,14 +312,14 @@ async function editGenerals(page,panel) {
   assert(initial.generals.filter(g=>g.id<12).every(g=>g.recruitable));
   assert.deepEqual(initial.generals.filter(g=>!g.recruitable).map(g=>g.id).sort((a,b)=>a-b),[12,13,14]);
   await button(panel,'武将').tap();
-  await choose(panel,'选择武将','2');
+  await choose(panel,'选择武将','2',15,byId(initial.generals,2));
   assert(await button(panel,'授予招募资格').isDisabled(), 'ordinary Ma Chao is already available');
   const before = await disk(page);
   checkOk(await apply(page,{kind:'general',id:2}));
   assert.deepEqual((await disk(page))._xanaduManualRecruitIds,before._xanaduManualRecruitIds);
   await rejected(page,{kind:'general',id:12},true);
   for (const id of [12,13,14]) {
-    await choose(panel,'选择武将',String(id));
+    await choose(panel,'选择武将',String(id),15,byId(initial.generals,id));
     await submit(page,panel,'授予招募资格');
     assert(await button(panel,'授予招募资格').isDisabled());
     checkOk(await apply(page,{kind:'general',id}));
@@ -428,7 +469,8 @@ async function openAid(page,id) {
   await touchScene(page,'BattleScene','offlineGeneralAidButton');
   const panel = page.getByRole('dialog',{name:'战斗援将',exact:true});
   await panel.waitFor({state:'visible',timeout:6000});
-  await choose(panel,'选择武将',String(id),15);
+  const general = await page.evaluate(id=>window.XanaduSaveEditorData.generals().find(item=>item.id===id),id);
+  await choose(panel,'选择武将',String(id),15,general);
   return panel;
 }
 

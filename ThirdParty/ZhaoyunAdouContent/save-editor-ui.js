@@ -189,10 +189,13 @@
       propInfo.textContent = (active ? '主动' : '被动') + '道具已装备 ' + held.length + '/' + limit +
         '。' + (item.level ? '当前为 ' + item.level + ' 级。' : '该道具尚未装备。') +
         (full ? '请选择要替换的同类道具。' : '');
-      const levels = Array.from({length:item.maxLevel}, (_, i) => [i + 1, (i + 1) + ' 级']);
+      const levels = Array.from({length:item.maxLevel}, (_, i) => ({
+        ...item, ...item.levelDetails?.[i], id:i + 1, name:(i + 1) + ' 级'
+      }));
       level.setOptions(levels, preferredLevel ?? (item.level || 1));
       replaceField.hidden = !full;
-      if (full) replacement.setOptions([['', '请选择要替换的道具'], ...held.map(other => [other.id, other.name + ' · ' + other.level + ' 级'])], '');
+      if (full) replacement.setOptions([{id:'', name:'请选择要替换的道具'},
+        ...held.map(other => ({...other, name:other.name + ' · ' + other.level + ' 级'}))], '');
       else replacement.setOptions([]);
     }
     propChoice.element.addEventListener('change', () => { propFields(); feedback(''); });
@@ -243,15 +246,15 @@
         keepSkills.checked = catalog.keepSkills;
       }
       if (!kind || kind === 'prop') {
-        propChoice.setOptions(catalog.props.map(item => [item.id, item.name]), propChoice.value);
+        propChoice.setOptions(catalog.props, propChoice.value);
         propFields();
       }
       if (!kind || kind === 'weapon') {
-        weaponChoice.setOptions(catalog.weapons.map(item => [item.id, item.name]), weaponChoice.value);
+        weaponChoice.setOptions(catalog.weapons, weaponChoice.value);
         weaponFields();
       }
       if (!kind || kind === 'general') {
-        generalChoice.setOptions(catalog.generals.map(item => [item.id, item.name]), generalChoice.value);
+        generalChoice.setOptions(catalog.generals, generalChoice.value);
         generalFields();
       }
     }

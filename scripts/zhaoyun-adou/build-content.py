@@ -12,6 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]
 VENDOR = ROOT / 'ThirdParty/ZhaoyunAdouContent'
 BUNDLE_SHA = '249945e2ac02d62f259336b049751de805d913c252169111cbda2c684eaebf0e'
 ANCHOR = '})();function _0x2d19'
+# The pinned BattleMgr.R9 reads one clock for soldiers and generals on both sides.
+ATTACK_CLOCK = r'const _0x55a280=Date["\u006e\u006f\u0077"]();'
+LOCAL_ATTACK_CLOCK = 'const _0x55a280=window.XanaduBattleSpeed.attackNow();'
 EXCLUDE = {'index.html', 'gameIndex.html', 'dialog/GMDialog.lh', 'dialog/GetStaminaDialog.lh',
            'dialog/AuthorizeDialog.lh', 'dialog/PrivacyPolicyDialog.lh', 'dialog/SidebarDialog.lh',
            'dialog/AddDeskDialog.lh', 'dialog/ShareLpDialog.lh', 'data/agreement.txt',
@@ -49,8 +52,10 @@ def main():
     bundle = original.decode('utf-8')
     assert bundle.count(ANCHOR) == 1, 'Expected exactly one game-closure insertion anchor'
     injection = (VENDOR/'bundle-export.js').read_text()
-    generated = bundle.replace(ANCHOR, '\n'+injection+'\n'+ANCHOR, 1)
-    assert generated.replace('\n'+injection+'\n', '', 1) == bundle, 'Bundle mutation escaped the narrow export'
+    assert bundle.count(ATTACK_CLOCK) == 1 and LOCAL_ATTACK_CLOCK not in bundle, 'Pinned attack clock changed'
+    generated = bundle.replace(ANCHOR, '\n'+injection+'\n'+ANCHOR, 1).replace(ATTACK_CLOCK, LOCAL_ATTACK_CLOCK, 1)
+    restored = generated.replace('\n'+injection+'\n', '', 1).replace(LOCAL_ATTACK_CLOCK, ATTACK_CLOCK, 1)
+    assert restored == bundle, 'Unexpected mutation of the pinned bundle'
     output.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix='.zhaoyun-content-', dir=output.parent))
     try:
@@ -72,7 +77,7 @@ def main():
         assert old.count(missing) == 1, 'Expected one missing victory-bag reference'
         scene.write_text(old.replace(missing, 'resources/img/mainUI/bag1.png'), encoding='utf-8')
         local_scripts = ['offline-adapter.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
-                         'battle-aid.js','battle-aid-ui.js']
+                         'battle-aid.js','battle-aid-ui.js','battle-speed.js']
         for name in ['index.html','offline.css',*local_scripts]:
             shutil.copyfile(VENDOR/name, staging/name)
         for name in ['js/bundle.js',*local_scripts]:
@@ -84,7 +89,7 @@ def main():
         digest=sha(json.dumps(files,sort_keys=True,separators=(',',':')).encode())
         report={'passed':True,'schemaVersion':1,'sourceBundleSha256':BUNDLE_SHA,'inputFiles':len(lock['files']),
                 'files':files,'contentDigest':digest,'excluded':sorted(EXCLUDE),'sourceFiles':[{'path':p.relative_to(ROOT).as_posix(),'sha256':sha(p.read_bytes())} for p in sorted([x for x in VENDOR.rglob('*') if x.is_file()]+[Path(__file__).resolve()])],'transforms':[
-                    'one game-IIFE export insertion; all other original bundle bytes retained',
+                    'one game-IIFE export insertion and one BattleMgr.R9 clock substitution; all other original bundle bytes retained',
                     'local entry and business offline adapter; no platform SDK',
                     'remove unused shader registrations','replace victory bag with bundled bag1 frame']}
         if output.exists(): shutil.rmtree(output)
