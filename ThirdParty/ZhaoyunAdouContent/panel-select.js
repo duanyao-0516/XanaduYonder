@@ -24,6 +24,12 @@
       quality.textContent = item.rarityName;
       title.append(quality);
     }
+    if (item.equipped) {
+      const owned = document.createElement('span');
+      owned.className = 'panel-option-type';
+      owned.textContent = '已装备';
+      title.append(owned);
+    }
     copy.append(title);
     if (item.description) {
       const description = document.createElement('span');

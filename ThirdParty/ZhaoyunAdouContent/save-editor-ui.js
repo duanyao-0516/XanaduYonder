@@ -176,38 +176,50 @@
     const propChoice = window.XanaduPanelSelect.create(props, '选择道具');
     const propInfo = element('p');
     props.append(propInfo);
-    const level = window.XanaduPanelSelect.create(props, '道具等级');
     const replacement = window.XanaduPanelSelect.create(props, '替换道具');
-    const replaceField = replacement.element;
-    const selectedProp = () => catalog.props.find(item => String(item.id) === propChoice.value);
-    function propFields(preferredLevel) {
-      const item = selectedProp();
+    let propOptions = [];
+    let previousPropId;
+    const selectedProp = () => propOptions.find(option => String(option.id) === propChoice.value);
+
+    function refreshProps() {
+      propOptions = catalog.props.flatMap(item => item.levelDetails.map(detail => {
+        const graded = item.maxLevel > 1;
+        return {id:graded ? item.id + ':' + detail.level : item.id, item, level:detail.level,
+          name:item.name, typeLabel:item.typeLabel, description:detail.description, rarityColor:detail.rarityColor,
+          rarityName:graded ? detail.rarityName + ' · ' + detail.level + '级' : detail.rarityName,
+          equipped:graded && item.level === detail.level};
+      }));
+      propChoice.setOptions(propOptions, propChoice.value);
+      propFields();
+    }
+
+    function propFields() {
+      const {item, level} = selectedProp();
       const active = item.kind === 'active';
       const limit = active ? 2 : 6;
       const held = catalog.props.filter(other => other.kind === item.kind && other.level > 0);
       const full = item.level === 0 && held.length >= limit;
+      let ownership = '该道具尚未装备。';
+      if (item.level) ownership = item.level === level ? '该道具已装备。' : '保存后将更新已装备的道具。';
       propInfo.textContent = (active ? '主动' : '被动') + '道具已装备 ' + held.length + '/' + limit +
-        '。' + (item.level ? '当前为 ' + item.level + ' 级。' : '该道具尚未装备。') +
-        (full ? '请选择要替换的同类道具。' : '');
-      const levels = Array.from({length:item.maxLevel}, (_, i) => ({
-        ...item, ...item.levelDetails?.[i], id:i + 1, name:(i + 1) + ' 级'
-      }));
-      level.setOptions(levels, preferredLevel ?? (item.level || 1));
-      replaceField.hidden = !full;
+        '。' + ownership + (full ? '请选择要替换的同类道具。' : '');
+      replacement.element.hidden = !full;
+      const keepReplacement = item.id === previousPropId ? replacement.value : '';
       if (full) replacement.setOptions([{id:'', name:'请选择要替换的道具'},
-        ...held.map(other => ({...other, name:other.name + ' · ' + other.level + ' 级'}))], '');
+        ...held], keepReplacement);
       else replacement.setOptions([]);
+      previousPropId = item.id;
     }
     propChoice.element.addEventListener('change', () => { propFields(); feedback(''); });
     action(props, '保存道具', () => {
-      const item = selectedProp();
-      const command = {kind:'prop', id:item.id, level:Number(level.value)};
-      if (!replaceField.hidden) {
+      const {item, level} = selectedProp();
+      const command = {kind:'prop', id:item.id, level};
+      if (!replacement.element.hidden) {
         if (!replacement.value) throw new Error('同类已满，请选择要替换的道具');
         command.replaceId = Number(replacement.value);
       }
       return command;
-    }, () => '已装备' + selectedProp().name + '，当前 ' + selectedProp().level + ' 级。');
+    }, () => '已装备' + selectedProp().item.name + '。');
 
     const weapons = section('武器');
     const weaponChoice = window.XanaduPanelSelect.create(weapons, '选择武器');
@@ -245,10 +257,7 @@
         gold.value = String(catalog.gold);
         keepSkills.checked = catalog.keepSkills;
       }
-      if (!kind || kind === 'prop') {
-        propChoice.setOptions(catalog.props, propChoice.value);
-        propFields();
-      }
+      if (!kind || kind === 'prop') refreshProps();
       if (!kind || kind === 'weapon') {
         weaponChoice.setOptions(catalog.weapons, weaponChoice.value);
         weaponFields();

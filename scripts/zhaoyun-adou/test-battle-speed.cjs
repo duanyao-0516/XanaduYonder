@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '../..');
 const arg = process.argv.indexOf('--source');
 if (arg >= 0 && !process.argv[arg+1]) throw new Error('--source requires a generated content directory');
 const content = arg >= 0 ? path.resolve(process.argv[arg+1]) : path.join(root, 'artifacts/zhaoyun-adou/content');
-const evidence = path.join(root,'artifacts/zhaoyun-adou/browser-evidence');
+const evidence = path.join(path.dirname(content),'browser-evidence');
 const origin = 'https://zhaoyun-adou.xanadu.invalid';
 const executablePath = process.env.CHROMIUM_PATH || ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(fs.existsSync);
 const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.ls':'application/json','.lh':'application/json','.png':'image/png','.mp3':'audio/mpeg','.wav':'audio/wav','.atlas':'text/plain','.txt':'text/plain'};
@@ -53,29 +53,41 @@ async function clock(page,row,label,speed,battle=true,probeAttacks=false) {
     const i=window.__XanaduZhaoyunInternals,time=i.TimeMgr.instance(),wave=time.yr.get('BattleMgr')?.caller;
     if (battle && !wave) throw new Error('The battle wave controller has not started');
     // Exercise the pinned R9 soldier and general cooldowns without inserting synthetic units
-    // into the real battle. Both have a target and a 240 ms attack interval in game time.
-    const hits={playerSoldier:[],enemyGeneral:[]}, target=[{}];
+    // into the real battle. Both sides have a target and a 200 ms attack interval in game time.
+    const hits={playerSoldier:[],enemySoldier:[],playerGeneral:[],enemyGeneral:[]}, target=[{}];
     function attacker(player,log) {
-      return {pk:true,TS:false,Jm:player,Aw:-Infinity,ck:.24,currentState:'UnitAttack',
+      return {pk:true,TS:false,Jm:player,Aw:-Infinity,ck:.2,currentState:'UnitAttack',
         km:{x:0,y:0,width:1,height:1},Mn:1,$b:target,wN(){this.$b=target;},attack(){log.push(performance.now());}};
     }
-    const fixture=probeAttacks && {jD:[attacker(true,hits.playerSoldier)],jA:[attacker(false,hits.enemyGeneral)],_k:{uP:()=>target}};
+    const fixture=probeAttacks && {
+      jD:[attacker(true,hits.playerSoldier),attacker(false,hits.enemySoldier)],
+      jA:[attacker(true,hits.playerGeneral),attacker(false,hits.enemyGeneral)],
+      _k:{uP:()=>target}
+    };
+    const probeKey='xanadu-test:R9'; let steps=0,maxStepMs=0;
+    if (fixture) time.Lr(probeKey,fixture,function(delta) {
+      steps++;maxStepMs=Math.max(maxStepMs,delta);
+      wave.R9.call(this,delta);
+    });
     function read(){return {wall:performance.now(),date:Date.now(),game:time.pr,timer:wave?.x9,phase:wave?.k9,wave:i.DataMgr.instance().Qf.Rs};}
     const start=read();let prev=start, current, stableGame=0, stableWave=0,frames=0,changedFrames=0,pausedFrames=0;
-    do {
-      await new Promise(requestAnimationFrame);
-      if (fixture) wave.R9.call(fixture,time.delta);
-      current=read();
-      if (time.ur) pausedFrames++;
-      if (current.game!==prev.game) changedFrames++;
-      if (battle && current.phase===prev.phase && current.wave===prev.wave && current.timer>=prev.timer) {
-        stableGame+=current.game-prev.game;stableWave+=current.timer-prev.timer;
-      }
-      prev=current;frames++;
-    } while (current.wall-start.wall<1250);
+    try {
+      do {
+        await new Promise(requestAnimationFrame);
+        current=read();
+        if (time.ur) pausedFrames++;
+        if (current.game!==prev.game) changedFrames++;
+        if (battle && current.phase===prev.phase && current.wave===prev.wave && current.timer>=prev.timer) {
+          stableGame+=current.game-prev.game;stableWave+=current.timer-prev.timer;
+        }
+        prev=current;frames++;
+      } while (current.wall-start.wall<1250);
+    } finally {
+      if (fixture) time.wr(probeKey);
+    }
     const attacks=fixture && Object.fromEntries(Object.entries(hits).map(([kind,times])=>[kind,{
       hits:times.length,meanIntervalMs:times.length>1?(times.at(-1)-times[0])/(times.length-1):null}]));
-    return {realMs:current.wall-start.wall,dateMs:current.date-start.date,gameMs:current.game-start.game,stableWave,stableGame,frames,changedFrames,pausedFrames,timerScale:Laya.timer.scale,attacks,
+    return {realMs:current.wall-start.wall,dateMs:current.date-start.date,gameMs:current.game-start.game,stableWave,stableGame,frames,changedFrames,pausedFrames,timerScale:Laya.timer.scale,attacks,steps,maxStepMs,
       fromWave:start.wave,toWave:current.wave};
   },{battle,probeAttacks});
   sample.rate=sample.gameMs/sample.realMs;row.clocks.push({label,...sample});
@@ -84,6 +96,9 @@ async function clock(page,row,label,speed,battle=true,probeAttacks=false) {
   if (battle) {
     assert(sample.stableGame>=400 && Math.abs(sample.stableWave-sample.stableGame)<=sample.stableGame*.025,
       label+' wave clock did not follow the gameplay clock: '+JSON.stringify(sample));
+  }
+  if (probeAttacks && speed>1) {
+    assert(sample.steps>=sample.changedFrames*speed && sample.maxStepMs<=20.1,label+' combat substeps: '+JSON.stringify(sample));
   }
   return sample;
 }
@@ -113,9 +128,32 @@ async function exitBattle(page,row) {
   await tap(page,row,'GameOverScene','getBtn');await waitScene(page,'MainScene');
 }
 
-async function runSize(browser,width,height,withAid) {
+async function checkResumes(page,row,speed,withAid) {
+  await pause(page,row);await frozen(page,'original pause dialog');
+  await tap(page,row,'PauseDialog','noBtn');await assertSpeed(page,speed);
+  await clock(page,row,'after pause dialog '+speed+'×',speed);
+  if (withAid) {
+    await tap(page,row,'BattleScene','offlineGeneralAidButton');
+    const aid=page.getByRole('dialog',{name:'战斗援将',exact:true});
+    await aid.waitFor({state:'visible'});await frozen(page,'battle aid dialog');
+    await aid.getByRole('button',{name:'返回战斗',exact:true}).tap();
+    await assertSpeed(page,speed);await clock(page,row,'after battle aid '+speed+'×',speed);
+  }
+  const saveStart=Date.now();
+  assert((await page.evaluate(()=>XanaduZhaoyun.setActive(false))).ok);
+  const savedAt=await page.evaluate(()=>JSON.parse(Laya.LocalStorage.getItem(XanaduZhaoyun.status().saveKey))._saveTime);
+  const save={speed,start:saveStart,savedAt,end:Date.now()};
+  row.saves.push(save);
+  assert(savedAt>=save.start-50 && savedAt<=save.end+50,'background save timestamp must use the real clock');
+  await frozen(page,'background');
+  assert((await page.evaluate(()=>XanaduZhaoyun.setActive(true))).ok);await frozen(page,'waiting for explicit Continue');
+  await page.getByRole('button',{name:'继续游戏',exact:true}).tap();
+  await assertSpeed(page,speed);await clock(page,row,'after foreground Continue '+speed+'×',speed);
+}
+
+async function runSize(browser,width,height,withAid,exitSpeed) {
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:true,hasTouch:true});
-  const page=await context.newPage(),row={width,height,touches:[],clocks:[]};report.sizes.push(row);
+  const page=await context.newPage(),row={width,height,touches:[],clocks:[],saves:[]};report.sizes.push(row);
   page.on('pageerror',err=>report.errors.push(err.message));
   await page.route('**/*',async route=>{
     const u=new URL(route.request().url());
@@ -135,48 +173,37 @@ async function runSize(browser,width,height,withAid) {
     await tap(page,row,'MainScene','playBtn');await waitBattle(page);
     await assertSpeed(page,1);
     const one=await clock(page,row,'initial 1×',1,true,true);
-    await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,2);
-    row.unloadedSpine=await page.evaluate(()=>{
-      // The battle can attach a Spine node while its template is still loading.
-      const node=new Laya.Spine2DRenderNode();
-      const hasKeeper=Boolean(node._timeKeeper);
-      node.onUpdate();
-      return {hasKeeper,updated:true};
-    });
-    assert.deepEqual(row.unloadedSpine,{hasKeeper:false,updated:true});
-    const two=await clock(page,row,'touch selected 2×',2,true,true);
-    const rateRatio=two.rate/one.rate;
-    assert(rateRatio>1.55 && rateRatio<2.55,'2×/1× rate: '+rateRatio);
-    for (const kind of Object.keys(one.attacks)) {
-      const slow=one.attacks[kind],fast=two.attacks[kind];
-      const intervalRatio=slow.meanIntervalMs/fast.meanIntervalMs;
-      assert(slow.hits>=4 && fast.hits>slow.hits && intervalRatio>1.5 && intervalRatio<2.6,
-        kind+' 2×/1× attack cooldown: '+JSON.stringify({slow,fast}));
+    let previous=one;
+    for (const speed of [2,3]) {
+      await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,speed);
+      const unloadedSpine=await page.evaluate(()=>{
+        // The battle can attach a Spine node while its template is still loading.
+        const node=new Laya.Spine2DRenderNode();
+        const hasKeeper=Boolean(node._timeKeeper);
+        node.onUpdate();
+        return {hasKeeper,updated:true};
+      });
+      assert.deepEqual(unloadedSpine,{hasKeeper:false,updated:true});
+      const sample=await clock(page,row,'touch selected '+speed+'×',speed,true,true);
+      const rateRatio=sample.rate/one.rate;
+      assert(rateRatio>speed*.775 && rateRatio<speed*1.275,speed+'×/1× game clock: '+rateRatio);
+      assert(sample.rate/previous.rate>1.3,speed+'× too close to previous speed '+previous.rate);
+      for (const kind of Object.keys(one.attacks)) {
+        const baseline=one.attacks[kind],fast=sample.attacks[kind];
+        const intervalRatio=baseline.meanIntervalMs/fast.meanIntervalMs;
+        assert(baseline.hits>=4 && fast.hits>previous.attacks[kind].hits && intervalRatio>speed*.75 && intervalRatio<speed*1.3,
+          kind+' '+speed+'×/1× attack cooldown: '+JSON.stringify({baseline,fast}));
+      }
+      await page.screenshot({path:path.join(evidence,'speed-'+width+'x'+height+'-'+speed+'x.png')});
+      await checkResumes(page,row,speed,withAid);
+      previous=sample;
     }
-    await page.screenshot({path:path.join(evidence,'speed-'+width+'x'+height+'-2x.png')});
-
-    await pause(page,row);await frozen(page,'original pause dialog');
-    await tap(page,row,'PauseDialog','noBtn');await assertSpeed(page,2);await clock(page,row,'after pause dialog',2);
-    if (withAid) {
-      await tap(page,row,'BattleScene','offlineGeneralAidButton');
-      const aid=page.getByRole('dialog',{name:'战斗援将',exact:true});
-      await aid.waitFor({state:'visible'});await frozen(page,'battle aid dialog');
-      await aid.getByRole('button',{name:'返回战斗',exact:true}).tap();
-      await assertSpeed(page,2);await clock(page,row,'after battle aid',2);
-    }
-    const saveStart=Date.now();
-    assert((await page.evaluate(()=>XanaduZhaoyun.setActive(false))).ok);
-    const savedAt=await page.evaluate(()=>JSON.parse(Laya.LocalStorage.getItem(XanaduZhaoyun.status().saveKey))._saveTime);
-    row.save={start:saveStart,savedAt,end:Date.now()};
-    assert(savedAt>=row.save.start-50 && savedAt<=row.save.end+50,'background save timestamp must use the real clock');
-    await frozen(page,'background');
-    assert((await page.evaluate(()=>XanaduZhaoyun.setActive(true))).ok);await frozen(page,'waiting for explicit Continue');
-    await page.getByRole('button',{name:'继续游戏',exact:true}).tap();
-    await assertSpeed(page,2);await clock(page,row,'after foreground Continue',2);
     await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,1);await clock(page,row,'touch back to 1×',1);
-    await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,2);
+    for (let speed=2;speed<=exitSpeed;speed++) {
+      await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,speed);
+    }
     await exitBattle(page,row);
-    await clock(page,row,'main menu after 2× battle',1,false);
+    await clock(page,row,'main menu after '+exitSpeed+'× battle',1,false);
     await tap(page,row,'MainScene','playBtn');await waitBattle(page);await assertSpeed(page,1);
     await clock(page,row,'next battle defaults to 1×',1);
     console.log('PASS '+width+'×'+height+' touch, clock, pauses and reset');
@@ -191,8 +218,8 @@ async function runSize(browser,width,height,withAid) {
   try {
     report.chromium=browser.version();
     report.contentDigest=JSON.parse(fs.readFileSync(path.resolve(content,'../content-build.json'),'utf8')).contentDigest;
-    await runSize(browser,320,568,true);
-    await runSize(browser,360,640,false);
+    await runSize(browser,320,568,true,3);
+    await runSize(browser,360,640,false,2);
     assert.deepEqual(report.remote,[]);assert.deepEqual(report.missing,[]);assert.deepEqual(report.errors,[]);
     report.passed=true;
   } catch(error) {report.error=error.stack;console.error(error);}

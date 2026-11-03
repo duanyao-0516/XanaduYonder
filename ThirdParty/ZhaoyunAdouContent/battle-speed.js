@@ -32,14 +32,15 @@
     // Same ordering as Stage._updateTimers in the pinned engine. Only the gameplay
     // timer and its tweens get extra updates. Give projectiles small collision steps
     // and discard long stalls instead of running an accumulated backlog on resume.
+    const frameRate = rate;
     const realMs = Math.min(elapsed, 64);
-    const gameMs = realMs * rate;
-    const steps = Math.max(rate, Math.ceil(gameMs / 20));
+    const gameMs = realMs * frameRate;
+    const steps = Math.max(frameRate, Math.ceil(gameMs / 20));
     const stepMs = gameMs / steps;
     Laya.systemTimer._update(timestamp);
     Laya.physicsTimer._update(timestamp);
     let advanced = 0;
-    for (let index = 0; index < steps && rate === 2 && !time.ur; index++) {
+    for (let index = 0; index < steps && rate === frameRate && !time.ur; index++) {
       // Keep _lastTimer in the real clock domain: timer.once uses it to schedule new callbacks.
       gameTimer._lastTimer = timestamp - stepMs;
       gameTimer._update(timestamp);
@@ -63,11 +64,11 @@
   }
   function updateFastSpine() {
     // Spine consumes the accumulated delta once per render. Keep its normal
-    // real-frame limit (64 ms by default) while advancing the clip at double speed.
+    // real-frame limit (64 ms by default) while advancing the clip at the selected speed.
     const keeper = this._timeKeeper; // not created until this node's Spine template has loaded
     if (!this._needUpdate || !keeper || I.TimeMgr.instance().ur) return normalSpineUpdate.call(this);
     const limit = keeper.maxDelta;
-    keeper.maxDelta = limit * 2;
+    keeper.maxDelta = limit * rate;
     try { return normalSpineUpdate.call(this); }
     finally { keeper.maxDelta = limit; } // a clip event can reset or replace this node's keeper
   }
@@ -83,17 +84,19 @@
   function toggle() {
     const status = window.XanaduZhaoyun.status();
     if (!active || !status.active || !status.battle || status.paused) return rate;
-    if (rate === 2) {
+    if (rate === 3) {
       stopFastFrames();
-    } else {
+      return rate;
+    }
+    if (rate === 1) {
       // Keep old wall-clock attack timestamps comparable even when switching mid-cooldown.
       if (attackEpoch === null) attackEpoch = Date.now() - I.TimeMgr.instance().pr;
       normalFrame = Laya.stage._updateTimers;
       normalSpineUpdate = Laya.Spine2DRenderNode.prototype.onUpdate;
       Laya.stage._updateTimers = fastFrame;
       Laya.Spine2DRenderNode.prototype.onUpdate = updateFastSpine;
-      rate = 2;
     }
+    rate += 1;
     return rate;
   }
   const originalGameOver = I.GameMgr.prototype.gameOver;

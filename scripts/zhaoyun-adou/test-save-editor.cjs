@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '../..');
 const sourceArg = process.argv.indexOf('--source');
 if (sourceArg >= 0 && !process.argv[sourceArg + 1]) throw new Error('--source requires a directory');
 const content = sourceArg < 0 ? path.join(root, 'artifacts/zhaoyun-adou/content') : path.resolve(process.argv[sourceArg + 1]);
-const evidence = path.join(root, 'artifacts/zhaoyun-adou/browser-evidence');
+const evidence = path.join(path.dirname(content), 'browser-evidence');
 const origin = 'https://zhaoyun-adou.xanadu.invalid';
 const key = 'xanadu.zhaoyun-adou.player.v1';
 const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.ls':'application/json','.lh':'application/json','.png':'image/png','.mp3':'audio/mpeg','.wav':'audio/wav','.atlas':'text/plain','.txt':'text/plain'};
@@ -147,10 +147,27 @@ async function choose(panel, label, value, expectedCount, item) {
   await panel.page().waitForTimeout(200);
   assert(await list.isVisible(), label + ' should remain open until a choice is made');
   assert.equal(await panel.page().evaluate(() => window.XanaduZhaoyun.status().active), true);
+  if (label === '选择道具') {
+    assert.equal(await panel.getByRole('combobox',{name:'道具等级'}).count(),0);
+    const promoted = list.getByRole('option').filter({hasText:'升职令'});
+    assert.deepEqual(await promoted.locator('.panel-option-quality').allTextContents(),
+      ['卓越 · 1级','史诗 · 2级','传说 · 3级']);
+    assert.deepEqual(await promoted.locator('.panel-option-description').allTextContents(),
+      ['刷出的兵有5%概率升到2级','刷出的兵有10%概率升到2级','刷出的兵有15%概率升到2级']);
+    const ownedLevel = byId((await catalog(panel.page())).props,22).level;
+    const ownedRow = promoted.filter({hasText:'已装备'});
+    assert.equal(await ownedRow.count(),ownedLevel ? 1 : 0);
+    if (ownedLevel) assert.equal(await ownedRow.getAttribute('value'),'22:' + ownedLevel);
+    const singles = list.getByRole('option').filter({hasNotText:'升职令'});
+    assert.equal(await singles.count(),21);
+    assert((await singles.locator('.panel-option-quality').allTextContents()).every(text=>!text.includes('级')));
+  }
   if (expectedCount !== undefined) {
     assert.equal(await list.getByRole('option').count(),expectedCount);
     if (item) {
-      assert.equal(await list.locator('.panel-option-type').count(),expectedCount);
+      const typedRows = await list.getByRole('option').evaluateAll(rows => rows.filter(row =>
+        [...row.querySelectorAll('.panel-option-type')].some(label => label.textContent && label.textContent !== '已装备')).length);
+      assert.equal(typedRows,expectedCount);
       assert.equal(await list.locator('.panel-option-description').count(),expectedCount);
       assert.equal(await list.locator('.panel-option-quality').count(),item.rarityName ? expectedCount : 0);
     }
@@ -172,6 +189,7 @@ async function choose(panel, label, value, expectedCount, item) {
   }
   const option = list.locator('button[value="' + value + '"]');
   const text = await option.innerText();
+  if (label === '替换道具') assert(!/ · [123]级/.test(await option.innerText()));
   if (item) await checkItemDetails(option,item);
   assert(await list.evaluate(el => el.scrollWidth <= el.clientWidth + 1),'no horizontal scrolling');
   await option.tap();
@@ -271,7 +289,18 @@ async function editWeapons(page, panel, initial) {
 async function editProps(page,panel) {
   const rows = (await catalog(page)).props, active = rows.filter(p=>p.kind==='active'), passive = rows.filter(p=>p.kind==='passive');
   assert.equal(rows.length,22); assert.equal(active.length,10); assert.equal(passive.length,12);
-  assert(rows.every(p=>p.level===0)); assert.equal(byId(rows,22).maxLevel,3);
+  assert(rows.every(p=>p.level===0));
+  const original = await page.evaluate(() => {
+    const rows = [];
+    window.__XanaduZhaoyunInternals.DataMgr.instance().props.Fn.forEach((prop,id) => {
+      if (![0,1,23].includes(id)) rows.push({id,levels:prop.Yn?.length || 1});
+    });
+    return rows;
+  });
+  assert.equal(original.filter(item=>item.levels===1).length,21);
+  assert.deepEqual(original.filter(item=>item.levels>1),[{id:22,levels:3}]);
+  assert.deepEqual(rows.map(p=>({id:p.id,levels:p.maxLevel})),original);
+  report.propLevels={single:21,multiple:[{id:22,name:byId(rows,22).name,levels:3}]};
   const [a,b,c] = active;
   for (const item of [a,b,...passive.slice(0,6)]) checkOk(await apply(page,propOp(item.id)));
   await rejected(page,propOp(c.id)); await rejected(page,propOp(passive[6].id));
@@ -282,21 +311,41 @@ async function editProps(page,panel) {
   await closeEditor(panel);
   panel = await openEditor(page);
   await button(panel,'道具').tap();
-  await choose(panel,'选择道具',String(c.id),22,c);
+  await choose(panel,'选择道具',String(c.id),24,c);
+  assert.equal(await panel.getByRole('combobox',{name:'道具等级'}).count(),0,'single-level skills must hide the level picker');
   await submit(page,panel,'保存道具');
   assert.match(await panel.getByRole('status').innerText(),/替换/);
   assert.equal(byId((await catalog(page)).props,c.id).level,0);
   await choose(panel,'替换道具',String(a.id),undefined,a);
   await choose(panel,'选择道具',String(active[3].id));
-  await choose(panel,'选择道具',String(c.id),22,c);
+  await choose(panel,'选择道具',String(c.id),24,c);
   assert.match(await panel.getByRole('combobox',{name:'替换道具'}).innerText(),/请选择要替换的道具/);
   await choose(panel,'替换道具',String(a.id),undefined,a);
   await submit(page,panel,'保存道具');
+  assert.equal(await panel.getByRole('status').innerText(),'已装备' + c.name + '。');
+  assert(!(await panel.getByRole('region',{name:'道具'}).innerText()).includes('1 级'));
   const promotion=byId(rows,22);
-  await choose(panel,'选择道具','22',22,promotion);
-  await choose(panel,'道具等级','3',3,{...promotion,...promotion.levelDetails[2]});
-  await choose(panel,'替换道具',String(passive[0].id));
+  const preview = async n => {
+    const detail = promotion.levelDetails[n-1];
+    await choose(panel,'选择道具','22:' + n,24,{...promotion,...detail,rarityName:detail.rarityName + ' · ' + n + '级'});
+  };
+  for (const n of [1,2,3]) {
+    await preview(n);
+    assert.equal(await panel.locator('.panel-option-description:visible').count(),1,'one selected effect preview');
+    assert.equal(byId((await catalog(page)).props,22).level,0,'preview must not equip the item');
+  }
+  await choose(panel,'替换道具',String(passive[0].id),undefined,passive[0]);
+  await preview(2);
+  assert((await panel.getByRole('combobox',{name:'替换道具'}).innerText()).includes(passive[0].name));
   await submit(page,panel,'保存道具');
+  assert.equal(byId((await catalog(page)).props,22).level,2);
+  await preview(3);
+  await submit(page,panel,'保存道具');
+  assert.equal(byId((await catalog(page)).props,22).level,3);
+  assert.equal(await panel.getByRole('status').innerText(),'已装备升职令。');
+  await choose(panel,'选择道具',String(c.id),24,c);
+  await submit(page,panel,'保存道具');
+  assert.equal(byId((await catalog(page)).props,c.id).level,1,'a single-level skill cannot inherit level 3');
   await rejected(page,propOp(22,4));
   const held = (await catalog(page)).props.filter(p=>p.level);
   assert.deepEqual(held.filter(x=>x.kind==='active').map(x=>x.id).sort((x,y)=>x-y),[b.id,c.id].sort((x,y)=>x-y));
@@ -412,7 +461,7 @@ async function dates(browser, first) {
   try {
     const {page} = game;
     await tripleTapCoin(page);
-    const panel = await openEditor(page);
+    let panel = await openEditor(page);
     const cat = await catalog(page), loaded = await disk(page);
     assert(cat.keepSkills); assert.equal(cat.gold,old._gold);
     assert.equal(byId(cat.props,2).level,1); assert.equal(byId(cat.props,22).level,3);
@@ -421,6 +470,17 @@ async function dates(browser, first) {
     assert.equal(loaded._winDay,0); assert.equal(loaded._loseDay,0); assert.equal(loaded._isGetLastRankReward,0);
     assert.equal(loaded._curStar,first._curStar); assert.equal(loaded._lastStar,loaded._curStar);
     assert.equal(loaded._win,first._win); assert.equal(loaded._lose,first._lose);
+    await button(panel,'道具').tap();
+    const promotion = byId(cat.props,22), beforeProps = (await disk(page))._props;
+    await choose(panel,'选择道具','22:1',24,{...promotion,...promotion.levelDetails[0],rarityName:'卓越 · 1级'});
+    await closeEditor(panel);
+    assert.deepEqual((await disk(page))._props,beforeProps,'closing a preview cannot change a saved level 3');
+    panel = await openEditor(page);
+    await button(panel,'道具').tap();
+    await choose(panel,'选择道具','11',24,byId(cat.props,11));
+    await choose(panel,'选择道具','22:3',24,{...promotion,...promotion.levelDetails[2],rarityName:'传说 · 3级'});
+    assert.equal(byId((await catalog(page)).props,22).level,3);
+    await button(panel,'设置').tap();
     assert(await field(panel,'跨天保留技能道具').isChecked());
     await field(panel,'跨天保留技能道具').tap();
     await submit(page,panel,'保存设置');
