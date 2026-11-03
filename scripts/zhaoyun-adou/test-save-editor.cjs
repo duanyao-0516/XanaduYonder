@@ -45,9 +45,10 @@ async function activate(page) {
   checkOk(state[0]); checkOk(state[1]); assert.equal(state[2].scene, 'MainScene');
 }
 
-async function touchScene(page, sceneName, field) {
+async function scenePoint(page, sceneName, field) {
   const point = await page.evaluate(({sceneName,field}) => {
-    const scene = window.__XanaduZhaoyunInternals.SceneMgr.instance().co(sceneName), node = scene[field];
+    const scene = window.__XanaduZhaoyunInternals.SceneMgr.instance().co(sceneName);
+    const node = field === 'coin' ? scene.goldTxt.parent.getChildAt(0) : scene[field];
     if (!node?.parent || !node.visible || (field.startsWith('offline') && !node.mouseEnabled)) return null;
     const p = node.localToGlobal(new Laya.Point(node.width / 2, node.height / 2));
     const rect = document.querySelector('canvas').getBoundingClientRect();
@@ -57,10 +58,54 @@ async function touchScene(page, sceneName, field) {
   const {width,height} = page.viewportSize();
   assert(point.x > 0 && point.x < width && point.y > 0 && point.y < height, 'offscreen ' + field + ': ' + JSON.stringify(point));
   report.touches.push({width,height,field,...point});
+  return point;
+}
+
+async function touchScene(page, sceneName, field) {
+  const point = await scenePoint(page, sceneName, field);
   await page.touchscreen.tap(point.x, point.y);
 }
 
 const touchMain = (page,field) => touchScene(page,'MainScene',field);
+
+const saveVisible = page => page.evaluate(() => {
+  const button = window.__XanaduZhaoyunInternals.SceneMgr.instance().co('MainScene').offlineSaveEditorButton;
+  if (button.visible !== button.mouseEnabled) throw new Error('button visibility and input disagree');
+  return button.visible;
+});
+
+async function tripleTapCoin(page) {
+  const point = await scenePoint(page,'MainScene','coin');
+  for (let i=0; i<3; ++i) await page.touchscreen.tap(point.x,point.y);
+}
+
+async function checkCoinGestures(page) {
+  assert.equal(await saveVisible(page),false);
+  const coin = await scenePoint(page,'MainScene','coin');
+  const tap = () => page.touchscreen.tap(coin.x,coin.y);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...coin,id:1}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:coin.x+28,y:coin.y,id:1}]});
+  await page.waitForTimeout(950);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.equal(await saveVisible(page),false,'dragging across the coin cannot trigger a hold');
+  await tap(); await tap();
+  assert.equal(await saveVisible(page),false);
+  await page.waitForTimeout(950);
+  await tap();
+  assert.equal(await saveVisible(page),false,'a late third tap cannot toggle tools');
+  await tap(); await tap();
+  assert.equal(await saveVisible(page),true);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...coin,id:1}]});
+  await page.waitForFunction(() => !window.__XanaduZhaoyunInternals.SceneMgr.instance().co('MainScene').offlineSaveEditorButton.visible,null,{timeout:3500});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await tap(); await tap();
+  assert.equal(await saveVisible(page),false,'lifting the long press must not count as another tap');
+  await tap();
+  assert.equal(await saveVisible(page),true);
+  await cdp.detach();
+  note('coin icon toggles both ways by real long press or three fast taps; short and expired sequences stay hidden');
+}
 
 async function openEditor(page) {
   await touchMain(page, 'offlineSaveEditorButton');
@@ -77,6 +122,23 @@ const byId = (rows, id) => rows.find(row => row.id === id);
 const propOp = (id, level = 1, replaceId) => ({kind:'prop',id,level,replaceId});
 const button = (panel, name) => panel.getByRole('button',{name,exact:true});
 const field = (panel, name) => panel.getByLabel(name, {exact:false});
+
+async function choose(panel, label, value, expectedCount) {
+  const trigger = panel.getByRole('combobox', {name:label, exact:true});
+  await trigger.tap();
+  const list = panel.getByRole('listbox', {name:label, exact:true});
+  await list.waitFor({state:'visible'});
+  // Android's native picker used to vanish when its separate window paused the host.
+  await panel.page().waitForTimeout(200);
+  assert(await list.isVisible(), label + ' should remain open until a choice is made');
+  assert.equal(await panel.page().evaluate(() => window.XanaduZhaoyun.status().active), true);
+  if (expectedCount !== undefined) assert.equal(await list.getByRole('option').count(), expectedCount);
+  const option = list.locator('button[value="' + value + '"]');
+  const text = await option.innerText();
+  await option.tap();
+  await list.waitFor({state:'hidden'});
+  assert((await trigger.innerText()).includes(text));
+}
 
 async function submit(page, panel, name) {
   // The real panel debounces repeated changes for 450 ms across all four tabs.
@@ -128,7 +190,7 @@ async function editWeapons(page, panel, initial) {
   const sample = initial.weapons.find(w=>!w.count && byId(definitions,w.id).threshold>1);
   assert(sample);
   await button(panel,'武器').tap();
-  await field(panel,'选择武器').selectOption(String(sample.id));
+  await choose(panel,'选择武器',String(sample.id));
   await field(panel,'整把数量').fill('2');
   await submit(page,panel,'添加武器');
   assert.equal(byId((await catalog(page)).weapons,sample.id).count,2);
@@ -180,13 +242,20 @@ async function editProps(page,panel) {
   await closeEditor(panel);
   panel = await openEditor(page);
   await button(panel,'道具').tap();
-  await field(panel,'选择道具').selectOption(String(c.id));
+  await choose(panel,'选择道具',String(c.id));
   await submit(page,panel,'保存道具');
   assert.match(await panel.getByRole('status').innerText(),/替换/);
   assert.equal(byId((await catalog(page)).props,c.id).level,0);
-  await field(panel,'替换道具').selectOption(String(a.id));
+  await choose(panel,'替换道具',String(a.id));
+  await choose(panel,'选择道具',String(active[3].id));
+  await choose(panel,'选择道具',String(c.id));
+  assert.match(await panel.getByRole('combobox',{name:'替换道具'}).innerText(),/请选择要替换的道具/);
+  await choose(panel,'替换道具',String(a.id));
   await submit(page,panel,'保存道具');
-  checkOk(await apply(page,propOp(22,3,passive[0].id)));
+  await choose(panel,'选择道具','22');
+  await choose(panel,'道具等级','3',3);
+  await choose(panel,'替换道具',String(passive[0].id));
+  await submit(page,panel,'保存道具');
   await rejected(page,propOp(22,4));
   const held = (await catalog(page)).props.filter(p=>p.level);
   assert.deepEqual(held.filter(x=>x.kind==='active').map(x=>x.id).sort((x,y)=>x-y),[b.id,c.id].sort((x,y)=>x-y));
@@ -202,14 +271,14 @@ async function editGenerals(page,panel) {
   assert(initial.generals.filter(g=>g.id<12).every(g=>g.recruitable));
   assert.deepEqual(initial.generals.filter(g=>!g.recruitable).map(g=>g.id).sort((a,b)=>a-b),[12,13,14]);
   await button(panel,'武将').tap();
-  await field(panel,'选择武将').selectOption('2');
+  await choose(panel,'选择武将','2');
   assert(await button(panel,'授予招募资格').isDisabled(), 'ordinary Ma Chao is already available');
   const before = await disk(page);
   checkOk(await apply(page,{kind:'general',id:2}));
   assert.deepEqual((await disk(page))._xanaduManualRecruitIds,before._xanaduManualRecruitIds);
   await rejected(page,{kind:'general',id:12},true);
   for (const id of [12,13,14]) {
-    await field(panel,'选择武将').selectOption(String(id));
+    await choose(panel,'选择武将',String(id));
     await submit(page,panel,'授予招募资格');
     assert(await button(panel,'授予招募资格').isDisabled());
     checkOk(await apply(page,{kind:'general',id}));
@@ -245,6 +314,10 @@ async function verifyBattle(page) {
   assert.equal(await page.getByRole('dialog',{name:'存档管理'}).count(),0);
   const hasBattleEntry = await page.evaluate(()=>Boolean(window.__XanaduZhaoyunInternals.SceneMgr.instance().co('BattleScene').offlineSaveEditorButton));
   assert.equal(hasBattleEntry,false);
+  assert.equal(await page.evaluate(()=>{
+    const button=window.__XanaduZhaoyunInternals.SceneMgr.instance().co('BattleScene').offlineGeneralAidButton;
+    return button.visible || button.mouseEnabled;
+  }),false,'hiding the tools on the menu also hides battle aid');
   report.pools = {originalPlayer:pools.basePlayer.length,player:pools.player.length,ai:pools.ai.length,aiRank:pools.aiRank,specialCharacters:added};
   note('real battle starts by touch, only the player pool adds seven special letters; editor is absent during battle');
 }
@@ -252,6 +325,7 @@ async function verifyBattle(page) {
 async function fresh(browser) {
   const {context,page} = await launchGame(browser,320,568);
   try {
+    await checkCoinGestures(page);
     let panel = await openEditor(page);
     await closeEditor(panel);
     note('fresh 320×568 opens and closes the menu editor by touch');
@@ -271,6 +345,9 @@ async function fresh(browser) {
     await page.reload(); await activate(page);
     assert.deepEqual(await catalog(page),expected);
     assert.deepEqual(progress(await disk(page)),progress(first));
+    assert.equal(await saveVisible(page),true,'tool visibility is remembered independently of player progress');
+    await tripleTapCoin(page);
+    assert.equal(await saveVisible(page),false);
     note('verified edits reload, including flags and all 46 weapon counts; rejected writes leave memory and disk intact');
     await verifyBattle(page);
     return first;
@@ -292,7 +369,9 @@ async function dates(browser, first) {
   const game = await launchGame(browser,360,640,old);
   let today;
   try {
-    const {page} = game, panel = await openEditor(page);
+    const {page} = game;
+    await tripleTapCoin(page);
+    const panel = await openEditor(page);
     const cat = await catalog(page), loaded = await disk(page);
     assert(cat.keepSkills); assert.equal(cat.gold,old._gold);
     assert.equal(byId(cat.props,2).level,1); assert.equal(byId(cat.props,22).level,3);
@@ -349,8 +428,7 @@ async function openAid(page,id) {
   await touchScene(page,'BattleScene','offlineGeneralAidButton');
   const panel = page.getByRole('dialog',{name:'战斗援将',exact:true});
   await panel.waitFor({state:'visible',timeout:6000});
-  await field(panel,'选择武将').selectOption(String(id));
-  assert.equal(await field(panel,'选择武将').locator('option').count(),15);
+  await choose(panel,'选择武将',String(id),15);
   return panel;
 }
 
@@ -436,6 +514,7 @@ async function battleAid(browser) {
   const {context,page} = await launchGame(browser,320,568);
   try {
     assert((await catalog(page)).generals.filter(g=>g.id>=12).every(g=>!g.recruitable));
+    await tripleTapCoin(page);
     await touchMain(page,'playBtn');
     await page.waitForFunction(()=>window.XanaduZhaoyun.status().battle,null,{timeout:30000});
     // battle=true precedes release of the original scene-transition input mask.

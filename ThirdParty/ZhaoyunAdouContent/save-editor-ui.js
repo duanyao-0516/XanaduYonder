@@ -42,14 +42,6 @@
     return value;
   }
 
-  function setOptions(select, options, preferred) {
-    select.replaceChildren();
-    for (const [id, caption] of options) select.add(new Option(caption, String(id)));
-    if (preferred !== undefined && options.some(([id]) => String(id) === String(preferred))) {
-      select.value = String(preferred);
-    }
-  }
-
   function currentMain() {
     const status = window.XanaduZhaoyun?.status();
     if (!status?.ready || status.scene !== 'MainScene' || status.paused) return null;
@@ -181,14 +173,12 @@
     }), () => '已保存：金币 ' + catalog.gold + '，跨天保留已' + (catalog.keepSkills ? '开启' : '关闭') + '。');
 
     const props = section('道具');
-    const propChoice = element('select');
-    const level = element('select');
-    const replacement = element('select');
-    field(props, '选择道具', propChoice);
+    const propChoice = window.XanaduPanelSelect.create(props, '选择道具');
     const propInfo = element('p');
     props.append(propInfo);
-    field(props, '道具等级', level);
-    const replaceField = field(props, '替换道具', replacement);
+    const level = window.XanaduPanelSelect.create(props, '道具等级');
+    const replacement = window.XanaduPanelSelect.create(props, '替换道具');
+    const replaceField = replacement.element;
     const selectedProp = () => catalog.props.find(item => String(item.id) === propChoice.value);
     function propFields(preferredLevel) {
       const item = selectedProp();
@@ -200,12 +190,12 @@
         '。' + (item.level ? '当前为 ' + item.level + ' 级。' : '该道具尚未装备。') +
         (full ? '请选择要替换的同类道具。' : '');
       const levels = Array.from({length:item.maxLevel}, (_, i) => [i + 1, (i + 1) + ' 级']);
-      setOptions(level, levels, preferredLevel ?? (item.level || 1));
+      level.setOptions(levels, preferredLevel ?? (item.level || 1));
       replaceField.hidden = !full;
-      if (full) setOptions(replacement, [['', '请选择要替换的道具'], ...held.map(other => [other.id, other.name + ' · ' + other.level + ' 级'])]);
-      else replacement.replaceChildren();
+      if (full) replacement.setOptions([['', '请选择要替换的道具'], ...held.map(other => [other.id, other.name + ' · ' + other.level + ' 级'])], '');
+      else replacement.setOptions([]);
     }
-    propChoice.addEventListener('change', () => { propFields(); feedback(''); });
+    propChoice.element.addEventListener('change', () => { propFields(); feedback(''); });
     action(props, '保存道具', () => {
       const item = selectedProp();
       const command = {kind:'prop', id:item.id, level:Number(level.value)};
@@ -217,8 +207,7 @@
     }, () => '已装备' + selectedProp().name + '，当前 ' + selectedProp().level + ' 级。');
 
     const weapons = section('武器');
-    const weaponChoice = element('select');
-    field(weapons, '选择武器', weaponChoice);
+    const weaponChoice = window.XanaduPanelSelect.create(weapons, '选择武器');
     const weaponInfo = element('p');
     weapons.append(weaponInfo);
     const quantity = numberInput('整把数量', weapons, 1);
@@ -226,14 +215,13 @@
     function weaponFields() {
       weaponInfo.textContent = '当前拥有 ' + selectedWeapon().count + ' 把，每次可以添加 1 至 99 把。';
     }
-    weaponChoice.addEventListener('change', () => { weaponFields(); feedback(''); });
+    weaponChoice.element.addEventListener('change', () => { weaponFields(); feedback(''); });
     action(weapons, '添加武器', () => ({
       kind:'weapon', id:selectedWeapon().id, quantity:integer(quantity, 1, 99, '整把数量')
     }), command => '已添加' + selectedWeapon().name + ' ' + command.quantity + ' 把，现有 ' + selectedWeapon().count + ' 把。');
 
     const generals = section('武将');
-    const generalChoice = element('select');
-    field(generals, '选择武将', generalChoice);
+    const generalChoice = window.XanaduPanelSelect.create(generals, '选择武将');
     const generalInfo = element('p');
     generals.append(generalInfo);
     const selectedGeneral = () => catalog.generals.find(item => String(item.id) === generalChoice.value);
@@ -247,7 +235,7 @@
         (item.recruitable ? '已有招募资格。' : '可以授予招募资格。') +
         '授予后仍需随机抽到姓名字，并手动摆放合成。';
     }
-    generalChoice.addEventListener('change', () => { generalFields(); feedback(''); });
+    generalChoice.element.addEventListener('change', () => { generalFields(); feedback(''); });
 
     function refresh(kind) {
       if (kind === 'settings') {
@@ -255,15 +243,15 @@
         keepSkills.checked = catalog.keepSkills;
       }
       if (!kind || kind === 'prop') {
-        setOptions(propChoice, catalog.props.map(item => [item.id, item.name]), propChoice.value);
+        propChoice.setOptions(catalog.props.map(item => [item.id, item.name]), propChoice.value);
         propFields();
       }
       if (!kind || kind === 'weapon') {
-        setOptions(weaponChoice, catalog.weapons.map(item => [item.id, item.name]), weaponChoice.value);
+        weaponChoice.setOptions(catalog.weapons.map(item => [item.id, item.name]), weaponChoice.value);
         weaponFields();
       }
       if (!kind || kind === 'general') {
-        setOptions(generalChoice, catalog.generals.map(item => [item.id, item.name]), generalChoice.value);
+        generalChoice.setOptions(catalog.generals.map(item => [item.id, item.name]), generalChoice.value);
         generalFields();
       }
     }

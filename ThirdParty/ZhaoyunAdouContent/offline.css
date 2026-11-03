@@ -43,7 +43,7 @@ canvas{touch-action:none}
 }
 .save-editor-card h2 { margin: 0; font-size: 22px; }
 .save-editor-card button,
-.save-editor-card select,
+.save-editor-card .panel-select summary,
 .save-editor-card input[type="text"] {
   min-height: 44px;
   box-sizing: border-box;
@@ -61,7 +61,7 @@ canvas{touch-action:none}
 .save-editor-card button:disabled { opacity: .6; }
 .save-editor-card button:focus-visible,
 .save-editor-card input:focus-visible,
-.save-editor-card select:focus-visible {
+.save-editor-card .panel-select summary:focus-visible {
   outline: 2px solid #2b6386;
   outline-offset: -2px;
 }
@@ -93,7 +93,7 @@ canvas{touch-action:none}
   margin-bottom: 8px;
   font-weight: 600;
 }
-.save-editor-field select,
+.save-editor-field .panel-select-value,
 .save-editor-field input[type="text"] {
   width: 100%;
   min-width: 0;
@@ -124,3 +124,35 @@ canvas{touch-action:none}
 .save-editor-message:empty { display: none; }
 .save-editor-error { color: #8a2f18; }
 .xanadu-battle-aid .save-editor-body p { margin: 8px 0 12px; }
+
+.panel-select { display: block; }
+.panel-select summary {
+  display: grid;
+  gap: 4px;
+  border: 0;
+  cursor: pointer;
+}
+.panel-select summary::-webkit-details-marker { display: none; }
+.panel-select-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #9b7950;
+  border-radius: 6px;
+}
+.panel-select-value::after { content: '▾'; }
+.panel-select[open] .panel-select-value::after { content: '▴'; }
+.panel-select-options {
+  display: grid;
+  max-height: min(36vh, 240px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.panel-select-options button {
+  width: 100%;
+  text-align: start;
+}
+.panel-select-options [aria-selected="true"] { background: #6d4525; color: #fff5d9; }

@@ -140,13 +140,78 @@
   I.PropsMgr.prototype.OD=function(){return propsPool.call(this).filter(id=>id!==23);};
   const main=scene('Main');
   const originalMainOpen=main.onOpened;
+  const toolsKey = 'xanadu.zhaoyun-adou.tools-visible.v1';
+  let toolsVisible = false;
+  try { toolsVisible = localStorage.getItem(toolsKey) === '1'; } catch (_) { /* session only */ }
+  function syncToolButton(button) {
+    button.visible = toolsVisible;
+    button.mouseEnabled = toolsVisible;
+  }
+  // The menu is cached. Bind only while it is open, and discard unfinished gestures on exit.
+  let unbindCoin = null;
+  function bindCoin(menu) {
+    unbindCoin?.();
+    const coin = menu.goldTxt.parent;
+    const events = Laya.Event;
+    const owner = {};
+    let timer, pressedId = null, startX, startY, taps = 0, firstTap = 0;
+    function endPress() {
+      clearTimeout(timer);
+      pressedId = null;
+    }
+    function reset() { endPress(); taps = 0; }
+    function toggle() {
+      reset();
+      const status = window.XanaduZhaoyun.status();
+      if (!status.active || status.paused || status.scene !== 'MainScene') return;
+      toolsVisible = !toolsVisible;
+      try { localStorage.setItem(toolsKey, toolsVisible ? '1' : '0'); } catch (_) { /* session only */ }
+      syncToolButton(menu.offlineSaveEditorButton);
+      I.TipMgr.instance().showTip(toolsVisible ? '存档和援将已显示' : '存档和援将已隐藏');
+    }
+    coin.mouseEnabled = true;
+    coin.on(events.MOUSE_DOWN, owner, event => {
+      if (pressedId !== null || event.touches.length > 1) { reset(); return; }
+      pressedId = event.touchId;
+      startX = event.stageX;
+      startY = event.stageY;
+      timer = setTimeout(toggle, 800);
+    });
+    coin.on(events.MOUSE_DRAG, owner, event => {
+      if (event.touchId === pressedId &&
+          (Math.abs(event.stageX - startX) > 10 || Math.abs(event.stageY - startY) > 10)) reset();
+    });
+    coin.on(events.MOUSE_OUT, owner, () => { if (pressedId !== null) reset(); });
+    coin.on(events.MOUSE_UP, owner, event => {
+      // A completed hold already consumed the press. Its release must not start another tap sequence.
+      if (event.touchId !== pressedId) return;
+      endPress();
+      if (event.nativeEvent?.type === 'touchcancel') { reset(); return; }
+      const now = performance.now();
+      if (!taps || now - firstTap > 850) { firstTap = now; taps = 0; }
+      if (++taps === 3) toggle();
+    });
+    menu.on(events.MOUSE_DOWN, owner, event => {
+      if (!coin.contains(event.target)) reset();
+    });
+    window.addEventListener('blur', reset);
+    document.addEventListener('visibilitychange', reset);
+    unbindCoin = () => {
+      reset();
+      coin.offAllCaller(owner);
+      menu.offAllCaller(owner);
+      window.removeEventListener('blur', reset);
+      document.removeEventListener('visibilitychange', reset);
+      unbindCoin = null;
+    };
+  }
   function addPanelButton(scene, parent, field, title, x, y, panel) {
-    if (scene[field]) return;
+    if (scene[field]) { syncToolButton(scene[field]); return; }
     const button = new Laya.Box();
     button.name = field;
     button.size(136, 88);
     button.pos(x, y);
-    button.mouseEnabled = true;
+    syncToolButton(button);
     button.graphics.drawRect(4, 12, 128, 63, '#ead9b4', '#624321', 3);
     const caption = new Laya.Text();
     caption.text = title;
@@ -173,9 +238,10 @@
     const result = originalMainOpen.apply(this,args);
     // The removed stamina meter left a slot beside Settings in this scaled header.
     addPanelButton(this, this.settingBtn.parent, 'offlineSaveEditorButton', '存档', 100, 102, window.XanaduSaveEditorUI);
+    bindCoin(this);
     return result;
   };
-  wrap(main, 'onClosed', () => window.XanaduSaveEditorUI.close());
+  wrap(main, 'onClosed', () => { unbindCoin?.(); window.XanaduSaveEditorUI.close(); });
 
   main.jct=()=>Promise.resolve();main.fct=noop;main.Rn=showPersonalRank;
   function mainOfflineUI(){
@@ -218,6 +284,7 @@
     addPanelButton(this, this.xBtn.parent, 'offlineGeneralAidButton', '援将', 112, 12, window.XanaduBattleAidUI);
     this.offlineGeneralAidButton.zIndex = this.round.zIndex;
   });
+  wrap(battle, 'onOpened', function () { syncToolButton(this.offlineGeneralAidButton); });
   wrap(battle, 'onClosed', () => window.XanaduBattleAidUI.close());
   battle.Lnt=function(){
     const game=this.Gw;

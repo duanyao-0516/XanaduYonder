@@ -44,10 +44,8 @@
       back.addEventListener('click', close);
       header.append(title, back);
       const body = node('div', undefined, 'save-editor-body');
-      const label = node('label', undefined, 'save-editor-field');
-      const select = node('select');
-      for (const general of generals) select.add(new Option(general.name, String(general.id)));
-      label.append(node('span', '选择武将'), select);
+      const select = window.XanaduPanelSelect.create(body, '选择武将');
+      select.setOptions(generals.map(general => [general.id, general.name]));
       const slots = node('p');
       const example = node('p', '例如孙尚香会发入“孙、尚、香”三个字。把字拖上棋盘即可按原规则合成。');
       const send = node('button', '发放姓名字', 'save-editor-submit');
@@ -62,7 +60,7 @@
         slots.textContent = '征召栏有 ' + freeSlots + ' 个空位。' + general.words.join('、') +
           ' 需要 ' + needed + ' 格。' + (needed > freeSlots ? '请先腾出 ' + (needed - freeSlots) + ' 格。' : '');
       }
-      select.addEventListener('change', () => {
+      select.element.addEventListener('change', () => {
         describe();
         message.textContent = '';
       });
@@ -87,7 +85,7 @@
         }
       });
       describe();
-      body.append(label, slots, example, send);
+      body.append(slots, example, send);
       card.append(header, body, message);
       panel.append(card);
       document.body.append(panel);
