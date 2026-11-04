@@ -128,6 +128,81 @@ async function exitBattle(page,row) {
   await tap(page,row,'GameOverScene','getBtn');await waitScene(page,'MainScene');
 }
 
+// Deploy via the original factory and observe the real attacks on live enemies.
+// Reuse is checked by object identity: a fresh ID is assigned on each deployment.
+async function pooledArcher(page,row,secondBattle) {
+  const sample=await page.evaluate(async next=>{
+    const i=window.__XanaduZhaoyunInternals, game=i.DataMgr.instance(), army=i.SoldierMgr.instance();
+    const wave=i.TimeMgr.instance().yr.get('BattleMgr').caller, map=game.map, board=i.ContainersMgr.instance().bP(1,true);
+    const cells=map.Ga.flatMap((col,x)=>col.map((tile,y)=>({x,y,tile,
+      distance:Math.hypot(x+.5-map.Aa.x,y+.5-map.Aa.y)})))
+      .filter(c=>c.tile==='1_0' && !board.getItem(c.x,c.y)).sort((a,b)=>a.distance-b.distance);
+    const cell=cells[0], archer=army.BB(1,'弓',true,cell.x,cell.y);
+    const reused=archer===window.__speedTestLastArcher, initialAw=archer.Aw;
+    const previousId=window.__speedTestLastArcherId;
+    let general;
+    if (next) {
+      const pair=cells.find(a=>a!==cell && cells.some(b=>b!==cell && b.x===a.x+1 && b.y===a.y));
+      army.BB(1,'黄',true,pair.x,pair.y);army.BB(1,'忠',true,pair.x+1,pair.y);
+      general=[...army.jA.values()].find(g=>g.Jm && g.gE.some(part=>part.HS==='黄'));
+      if (!general) throw new Error('黄忠 did not merge from his two deployed pieces');
+    } else {
+      window.__speedTestLastArcher=archer;window.__speedTestLastArcherId=archer.id;
+    }
+    const inRange=()=>wave._k.uP(archer.km.x+archer.km.width/2,archer.km.y+archer.km.height/2,archer.Mn,true).length>0;
+    const units=general ? [archer,general] : [archer];
+    const descriptors=units.map(u=>Object.getOwnPropertyDescriptor(u,'attack')), hits=units.map(()=>[]);
+    let monitoring=false;
+    units.forEach((unit,n)=>{
+      const attack=unit.attack;
+      unit.attack=function(...args){if(monitoring) hits[n].push(performance.now());return attack.apply(this,args);};
+    });
+    try {
+      if (next) {
+        // Use wave one's own spawned attackers for this round. The opening placement
+        // countdown and enemy entry animation must not be counted as missed attacks.
+        const deadline=performance.now()+22000;
+        while (!(game.Qf.Rs===1 && inRange())) {
+          if (performance.now()>deadline || game.Qf.Rs>1) throw new Error('No wave-one enemy reached the archer');
+          await new Promise(requestAnimationFrame);
+        }
+      } else {
+        // This first round is the tutorial. Give it the same original enemy as a wave
+        // would, since its wave countdown awaits the player's recruitment tutorial.
+        wave._k.Ud(map.Ca,true);
+      }
+      const start=performance.now(), waveNumber=game.Qf.Rs, cooldownMs=archer.ck*1000;
+      const attackNow=window.XanaduBattleSpeed.attackNow();
+      let lastSpawn=start, targetFrames=0;
+      monitoring=true;
+      do {
+        await new Promise(requestAnimationFrame);
+        if (inRange()) targetFrames++;
+        else if (!next && performance.now()-lastSpawn>600) {
+          wave._k.Ud(map.Ca,true);lastSpawn=performance.now();
+        }
+      } while (performance.now()-start < (next ? cooldownMs*2+250 : 3000));
+      return {id:archer.id,previousId,reused,initialAw,attackNow,initialLeadMs:next?initialAw-attackNow:null,
+        lastAw:archer.Aw,cooldownMs,waveNumber,targetFrames,elapsedMs:Math.round(performance.now()-start),archerHits:hits[0].length,
+        firstArcherMs:hits[0].length?Math.round(hits[0][0]-start):null,generalHits:hits[1]?.length};
+    } finally {
+      units.forEach((unit,n)=>{
+        if (descriptors[n]) Object.defineProperty(unit,'attack',descriptors[n]);
+        else delete unit.attack;
+      });
+    }
+  },secondBattle);
+  (row.pooledArcher ||= []).push(sample);
+  console.log('real archer '+row.width+' round '+(secondBattle?2:1)+' '+JSON.stringify(sample));
+  assert(sample.targetFrames>0,'the archer had a live enemy in range');
+  if (secondBattle) {
+    assert(sample.reused && sample.id!==sample.previousId,'the first archer must reuse the prior battle object');
+    assert(sample.waveNumber===1 && sample.generalHits>0,'a newly merged general must attack in wave one');
+  }
+  assert(sample.archerHits>0,'real archer did not attack: '+JSON.stringify(sample));
+  if (secondBattle) assert(sample.firstArcherMs<=sample.cooldownMs+250,'first attack exceeded a normal cooldown');
+}
+
 async function checkResumes(page,row,speed,withAid) {
   await pause(page,row);await frozen(page,'original pause dialog');
   await tap(page,row,'PauseDialog','noBtn');await assertSpeed(page,speed);
@@ -202,9 +277,14 @@ async function runSize(browser,width,height,withAid,exitSpeed) {
     for (let speed=2;speed<=exitSpeed;speed++) {
       await tap(page,row,'BattleScene','offlineSpeedButton');await assertSpeed(page,speed);
     }
+    // Let a sustained fast battle build up enough simulated time to reproduce the
+    // former cross-battle cooldown even after settlement and the normal wave countdown.
+    await page.waitForTimeout(13000);
+    await pooledArcher(page,row,false);
     await exitBattle(page,row);
     await clock(page,row,'main menu after '+exitSpeed+'× battle',1,false);
     await tap(page,row,'MainScene','playBtn');await waitBattle(page);await assertSpeed(page,1);
+    await pooledArcher(page,row,true);
     await clock(page,row,'next battle defaults to 1×',1);
     console.log('PASS '+width+'×'+height+' touch, clock, pauses and reset');
   } catch (error) {

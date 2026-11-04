@@ -4,12 +4,13 @@
   const I = window.__XanaduZhaoyunInternals;
   let active = false;
   let rate = 1;
-  let attackEpoch = null;
+  // A zero Aw means the unit can attack immediately. Keep the same positive epoch
+  // for the lifetime of the original unit pool, including across battle scenes.
+  const attackEpoch = Date.now();
   let normalFrame = null;
   let normalSpineUpdate = null;
 
   function attackNow() {
-    if (attackEpoch === null) return Date.now();
     const time = I.TimeMgr.instance();
     // R9 runs inside TimeMgr.update, before that method adds the current delta to pr.
     return attackEpoch + time.pr + time.delta;
@@ -75,7 +76,6 @@
   function end() {
     stopFastFrames();
     active = false;
-    attackEpoch = null;
   }
   function begin() {
     end();
@@ -89,8 +89,6 @@
       return rate;
     }
     if (rate === 1) {
-      // Keep old wall-clock attack timestamps comparable even when switching mid-cooldown.
-      if (attackEpoch === null) attackEpoch = Date.now() - I.TimeMgr.instance().pr;
       normalFrame = Laya.stage._updateTimers;
       normalSpineUpdate = Laya.Spine2DRenderNode.prototype.onUpdate;
       Laya.stage._updateTimers = fastFrame;
