@@ -11,7 +11,8 @@ namespace XanaduYonder.Runtime
 
         private static void AddFruitSlicePreview(Transform parent)
         {
-            var artwork = UiFactory.Rect(parent, "FruitSlice original logo", 0, 0, 96, 96).gameObject.AddComponent<RawImage>();
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "FruitSlice");
+            var artwork = UiFactory.Rect(root, "FruitSlice original logo", 0, 0, 96, 96).gameObject.AddComponent<RawImage>();
             artwork.texture = Resources.Load<Texture2D>("Lobby/Icons/fruit-slice-logo");
             artwork.raycastTarget = false;
         }

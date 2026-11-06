@@ -14,6 +14,14 @@ namespace XanaduYonder.Runtime
             return UiFactory.Rect(parent, name + " preview", 426, 60, 150, 104);
         }
 
+        internal static RectTransform RoundedLogoFrame(Transform parent, string name)
+        {
+            var image = UiFactory.Panel(parent, name + " logo mask", 0, 0, 96, 96, Color.white);
+            image.pixelsPerUnitMultiplier = 16f / 18f;
+            image.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+            return image.rectTransform;
+        }
+
         internal static void Numbers2048(Transform parent)
         {
             var root = Frame(parent, "2048");

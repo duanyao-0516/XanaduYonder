@@ -19,11 +19,8 @@ namespace XanaduYonder.Runtime
 
         private static void AddAircraftFirePreview(Transform parent)
         {
-            var maskImage = UiFactory.Panel(parent, "Aircraft Fire logo mask", 0, 0, 96, 96, Color.white);
-            maskImage.pixelsPerUnitMultiplier = 16f / 18f;
-            var mask = maskImage.gameObject.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
-            var artwork = UiFactory.Rect(maskImage.transform, "Aircraft Fire original launcher icon", 0, 0, 96, 96)
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "Aircraft Fire");
+            var artwork = UiFactory.Rect(root, "Aircraft Fire original launcher icon", 0, 0, 96, 96)
                 .gameObject.AddComponent<RawImage>();
             artwork.texture = Resources.Load<Texture2D>("AircraftFire/Logo");
             artwork.raycastTarget = false;

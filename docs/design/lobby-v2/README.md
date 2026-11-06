@@ -62,3 +62,13 @@ image.preserveAspect = true;
 ## 赵云与阿斗补充图标
 
 双列与目录使用原创长枪护盾线条图标，沿用 `#276653`、2 单位圆头线条、24×24 viewBox 和 96×96 透明 PNG。单列大 Logo 原样使用用户指定附件；见[美术来源](../../zhaoyun-adou-lobby-art.md)。
+
+## 切水果大师补充图标
+
+双列与分类目录使用原创西瓜线条图标：左上、右下两个半圆由中间一道斜切线分开，每半保留一枚简化瓜籽，便于在 20px 下辨识。沿用 `#276653`、2 单位圆头圆角线条、24×24 viewBox 和 96×96 透明 RGBA PNG，运行路径为 `Lobby/Icons/fruit-slice`。
+
+单列使用为本项目生成的 1024×1024 彩色切瓜图，替换原 36×36 缩略图；Unity 以无压缩、Max Size 512 导入，资源路径保持 `Lobby/Icons/fruit-slice-logo`。来源、尺寸及哈希记录在 `ThirdParty/FruitSliceHost/artwork.json`，构建前校验已跟踪资源，不再下载旧缩略图。
+
+2026-11-06，割绳子、赵云与阿斗、经典黄金矿工、只有一道门、切水果大师的单列大图与飞机大战统一使用 96×96、18 单位圆角遮罩，再适配到原有 63×63 槽位；前四款保留原图片文件。真实 Unity 大厅检查通过 4,851 项断言，覆盖 720×1320、720×1582 及三种展示方式；截图与报告位于 `artifacts/lobby-design/`。此结果不代替 Android 真机验收。
+
+本次日志在 Editor 启动索引阶段记录了 `UnityEditor.Search.SearchDatabase` 的 `ArgumentOutOfRangeException`；之后大厅用例与截图均完成，进程退出码为 0。该异常堆栈不经过大厅代码，未在本次视觉调整中修改编辑器索引。

@@ -20,7 +20,8 @@ namespace XanaduYonder.Runtime
 
         private static void AddCutTheRopePreview(Transform parent)
         {
-            var logo = UiFactory.Rect(parent, "Cut the Rope supplied logo", 0, 0, 72, 72)
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "Cut the Rope");
+            var logo = UiFactory.Rect(root, "Cut the Rope supplied logo", 0, 0, 96, 96)
                 .gameObject.AddComponent<Image>();
             logo.sprite = Resources.Load<Sprite>("Lobby/CutTheRopeLogo");
             logo.color = Color.white;

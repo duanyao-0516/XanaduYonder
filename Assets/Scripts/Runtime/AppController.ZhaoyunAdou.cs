@@ -11,10 +11,8 @@ namespace XanaduYonder.Runtime
 
         private static void AddZhaoyunAdouPreview(Transform parent)
         {
-            // Preserve the user-supplied square logo without cropping or recoloring.
-            var root = LobbyPreviews.Frame(parent, "ZhaoyunAdou");
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "ZhaoyunAdou");
             var artwork = UiFactory.Rect(root, "ZhaoyunAdou artwork", 0, 0, 96, 96).gameObject.AddComponent<RawImage>();
-            UiFactory.Center(artwork.rectTransform);
             artwork.texture = Resources.Load<Texture2D>("ZhaoyunAdou/Logo");
             artwork.raycastTarget = false;
         }

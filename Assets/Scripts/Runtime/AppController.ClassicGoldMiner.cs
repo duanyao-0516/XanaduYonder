@@ -11,7 +11,8 @@ namespace XanaduYonder.Runtime
 
         private static void AddClassicGoldMinerPreview(Transform parent)
         {
-            var logo = UiFactory.Rect(parent, "Classic Gold Miner logo", 0, 0, 72, 72).gameObject.AddComponent<Image>();
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "Classic Gold Miner");
+            var logo = UiFactory.Rect(root, "Classic Gold Miner logo", 0, 0, 96, 96).gameObject.AddComponent<Image>();
             logo.sprite = Resources.Load<Sprite>("Lobby/ClassicGoldMinerLogo");
             logo.preserveAspect = true;
             logo.raycastTarget = false;

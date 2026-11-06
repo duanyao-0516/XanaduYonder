@@ -11,10 +11,9 @@ namespace XanaduYonder.Runtime
 
         private static void AddLevelDevilPreview(Transform parent)
         {
-            var root = LobbyPreviews.Frame(parent, "LevelDevil");
+            var root = LobbyPreviews.RoundedLogoFrame(parent, "LevelDevil");
             var image = UiFactory.Rect(root, "LevelDevil artwork", 0, 0, 96, 96)
                 .gameObject.AddComponent<RawImage>();
-            UiFactory.Center(image.rectTransform);
             image.texture = Resources.Load<Texture2D>("LevelDevil/Logo");
             image.raycastTarget = false;
         }

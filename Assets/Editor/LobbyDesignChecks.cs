@@ -239,6 +239,7 @@ namespace XanaduYonder.EditorTools
                 CheckZhaoyunAdouArtwork(f, mode);
                 CheckCutTheRopeArtwork(f, mode);
                 CheckLevelDevilArtwork(f, mode);
+                CheckRoundedLogoArtwork(f, mode);
                 var groupTitles = f.View.GetComponentsInChildren<Text>().Where(t => t.name == "Group title").ToArray();
                 Require(groupTitles.Length == (mode == 2 ? 0 : 4), "Single has no redundant category headers; compact modes retain four groups");
                 var subtitle = Named(f.View.transform, "Lobby subtitle");
@@ -273,7 +274,13 @@ namespace XanaduYonder.EditorTools
                 f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
                 f.ShowCard(FindCard(f.View.transform, "ClassicGoldMiner")); f.Capture("mode-" + mode + "-classic-gold-miner");
                 f.ShowCard(FindCard(f.View.transform, "CutTheRope")); f.Capture("mode-" + mode + "-cut-the-rope");
-                if (mode == 2) { f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma"); }
+                if (mode == 2)
+                {
+                    f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma");
+                    f.ShowCard(FindCard(f.View.transform, "ZhaoyunAdou")); f.Capture("mode-2-zhaoyun-adou");
+                    f.ShowCard(FindCard(f.View.transform, "LevelDevil")); f.Capture("mode-2-level-devil");
+                    f.ShowCard(FindCard(f.View.transform, "FruitSlice")); f.Capture("mode-2-fruit-slice");
+                }
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
                 foreach (var card in cards)
                 {
@@ -309,9 +316,6 @@ namespace XanaduYonder.EditorTools
                 (float)approvedLogo.width / approvedLogo.height, "Level Devil preserves the supplied logo proportions");
             Require(artwork.uvRect == new Rect(0, 0, 1, 1) && artwork.color == Color.white,
                 "Level Devil keeps the complete supplied logo and colours");
-            Require(slot.GetComponentsInChildren<Mask>().Length == 0 && slot.GetComponentsInChildren<RectMask2D>().Length == 0,
-                "Level Devil does not crop or mask the supplied logo");
-            Require(slot.GetComponentsInChildren<Graphic>().Length == 1, "Level Devil artwork has no extra background panel");
         }
 
         private static void CheckCutTheRopeArtwork(Fixture f, int mode)
@@ -331,14 +335,12 @@ namespace XanaduYonder.EditorTools
             var slot = Named(card, "Game logo");
             Near(slot.rect.width, 63, "Cut the Rope shares the 63-unit logo width");
             Near(slot.rect.height, 63, "Cut the Rope shares the 63-unit logo height");
-            var artwork = slot.GetComponentsInChildren<Image>().Single();
+            var artwork = Named(slot, "Cut the Rope supplied logo").GetComponent<Image>();
             var approvedLogo = Resources.Load<Sprite>("Lobby/CutTheRopeLogo");
             Require(approvedLogo != null && artwork.sprite == approvedLogo,
                 "Single Cut the Rope view uses the user-supplied logo directly");
             Require(artwork.preserveAspect && artwork.color == Color.white,
                 "Cut the Rope preserves the supplied logo proportions and colours");
-            Require(slot.GetComponentsInChildren<Mask>().Length == 0 && slot.GetComponentsInChildren<RectMask2D>().Length == 0,
-                "Cut the Rope does not crop or mask the supplied logo");
             var corners = new Vector3[4]; artwork.rectTransform.GetWorldCorners(corners);
             foreach (var corner in corners)
             {
@@ -415,6 +417,57 @@ namespace XanaduYonder.EditorTools
                     point.y >= slot.rect.yMin - .1f && point.y <= slot.rect.yMax + .1f,
                     "Aircraft Fire original logo fits its shared slot");
             }
+        }
+
+        private static void CheckRoundedLogoArtwork(Fixture f, int mode)
+        {
+            if (mode != 2) return;
+            var reference = Named(FindCard(f.View.transform, "AircraftFire"), "Game logo")
+                .GetComponentsInChildren<Mask>().Single().GetComponent<Image>();
+            foreach (var name in new[] { "AircraftFire", "CutTheRope", "ZhaoyunAdou", "ClassicGoldMiner", "LevelDevil", "FruitSlice" })
+            {
+                var slot = Named(FindCard(f.View.transform, name), "Game logo");
+                Near(slot.rect.width, 63, name + " rounded logo uses the shared slot width");
+                Near(slot.rect.height, 63, name + " rounded logo uses the shared slot height");
+                var mask = slot.GetComponentsInChildren<Mask>().Single();
+                var maskImage = mask.GetComponent<Image>();
+                Require(!mask.showMaskGraphic && maskImage.type == Image.Type.Sliced &&
+                    maskImage.sprite == reference.sprite && slot.GetComponentsInChildren<RectMask2D>().Length == 0,
+                    name + " uses the Aircraft Fire rounded mask without a visible background");
+                Near(maskImage.pixelsPerUnitMultiplier, 16f / 18f, name + " retains the Aircraft Fire corner radius");
+                var graphics = slot.GetComponentsInChildren<Graphic>();
+                Require(graphics.Length == 2, name + " contains only the rounded mask and supplied artwork");
+                var artwork = graphics.Single(graphic => graphic != maskImage);
+                Require(artwork.transform.parent == mask.transform && artwork.color == Color.white,
+                    name + " masks the original artwork without recolouring it");
+                if (artwork is RawImage raw)
+                    Require(raw.texture != null && raw.texture.width == raw.texture.height && raw.uvRect == new Rect(0, 0, 1, 1),
+                        name + " retains the complete square image composition inside the rounded mask");
+                else
+                {
+                    var image = (Image)artwork;
+                    Require(image.sprite != null && image.preserveAspect && image.sprite.rect.width == image.sprite.rect.height,
+                        name + " preserves the supplied square sprite proportions");
+                }
+                foreach (var graphic in graphics)
+                {
+                    Near(graphic.rectTransform.rect.width, 96, name + " uses the Aircraft Fire artwork width");
+                    Near(graphic.rectTransform.rect.height, 96, name + " uses the Aircraft Fire artwork height");
+                    var corners = new Vector3[4]; graphic.rectTransform.GetWorldCorners(corners);
+                    for (int i = 0; i < corners.Length; i++)
+                    {
+                        var point = slot.InverseTransformPoint(corners[i]);
+                        Near(point.x, i < 2 ? slot.rect.xMin : slot.rect.xMax, name + " artwork fills the shared slot horizontally");
+                        Near(point.y, i == 0 || i == 3 ? slot.rect.yMin : slot.rect.yMax, name + " artwork fills the shared slot vertically");
+                    }
+                }
+            }
+            var miner = Named(FindCard(f.View.transform, "ClassicGoldMiner"), "Classic Gold Miner logo").GetComponent<Image>();
+            Require(miner.sprite == Resources.Load<Sprite>("Lobby/ClassicGoldMinerLogo"),
+                "Classic Gold Miner retains its supplied logo");
+            var fruit = Named(FindCard(f.View.transform, "FruitSlice"), "FruitSlice original logo").GetComponent<RawImage>();
+            Require(fruit.texture == Resources.Load<Texture2D>("Lobby/Icons/fruit-slice-logo"),
+                "Fruit Slice uses the replacement logo at its existing resource path");
         }
 
         private static void CheckKingdomRushArtwork(Fixture f, int mode)

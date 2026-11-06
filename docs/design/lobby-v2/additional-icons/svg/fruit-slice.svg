@@ -1,7 +1,7 @@
-<!-- Original XanaduYonder artwork: sliced watermelon, matching the lobby's rounded green stroke. -->
+<!-- Original XanaduYonder artwork: two watermelon halves separated by one diagonal cut. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
      fill="none" stroke="#276653" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M3 9h18a9 9 0 0 1-18 0Z" />
-  <path d="M6 12a6.5 6.5 0 0 0 12 0M15 3l-4 6" />
-  <path d="M9 11.5l.4.7M12 12v.8M15 11.5l-.4.7" />
+  <path d="M14.8 4.6a7.22 7.22 0 0 0-10.2 10.2Z" />
+  <path d="M9.2 19.4a7.22 7.22 0 0 0 10.2-10.2Z" />
+  <path d="m7.2 7.2.6.6m8.4 8.4.6.6M4 20 20 4" />
 </svg>
