@@ -1,9 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.xanaduyonder.cuttherope">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
     <application>
+        <!-- Respect the system rotation lock; allow all four orientations when unlocked. -->
         <activity android:name="com.xanaduyonder.cuttherope.CutTheRopeActivity"
                   android:exported="false"
-                  android:screenOrientation="fullSensor"
+                  android:screenOrientation="fullUser"
                   android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|locale|layoutDirection|fontScale|density"
                   android:hardwareAccelerated="true"
                   android:enableOnBackInvokedCallback="true"
