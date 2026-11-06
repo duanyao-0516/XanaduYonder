@@ -3,6 +3,10 @@ set -euo pipefail
 
 install_after_build=false
 device_serial=""
+if [[ ${1:-} == --help || ${1:-} == -h ]]; then
+    printf 'Usage: %s [--install [DEVICE_SERIAL]]\nBuild the isolated, locally signed Debug app without Unity Development mode.\n' "$0"
+    exit 0
+fi
 if [[ $# -gt 0 ]]; then
     if [[ $1 != --install || $# -gt 2 || ${2:-} == -* ]]; then
         printf 'Usage: %s [--install [DEVICE_SERIAL]]\n' "$0" >&2
@@ -16,12 +20,8 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity}"
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-android.log"
 source "$PROJECT_ROOT/scripts/project-version.sh"
-APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}.apk"
-method="XanaduYonder.EditorTools.ProjectBuild.BuildAndroid"
-if [[ $install_after_build == true ]]; then
-    APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-debug.apk"
-    method="XanaduYonder.EditorTools.ProjectBuild.BuildAndroidDeviceDebug"
-fi
+APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-debug.apk"
+method="XanaduYonder.EditorTools.ProjectBuild.BuildAndroidDeviceDebug"
 
 if [[ ! -x "$UNITY_EDITOR" ]]; then
     printf 'Unity Editor not found: %s\nSet UNITY_EDITOR to the Editor executable.\n' "$UNITY_EDITOR" >&2
@@ -33,8 +33,12 @@ trap 'rm -f "$build_start"' EXIT
 unset ANDROID_LINT_JARS XANADU_KEYSTORE_PATH XANADU_KEY_ALIAS XANADU_KEYSTORE_PASSWORD XANADU_KEY_PASSWORD
 
 printf 'Building Android with %s\nLog: %s\n' "$UNITY_EDITOR" "$LOG_FILE"
-if "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" \
-    -buildTarget Android -executeMethod "$method" -logFile - 2>&1 | tee "$LOG_FILE"; then
+# Keep Unity's temporary ADB server out of the later device installation.
+if (
+    source "$PROJECT_ROOT/scripts/startup-unity-environment.sh" || exit $?
+    "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" \
+        -buildTarget Android -executeMethod "$method" -logFile -
+) 2>&1 | tee "$LOG_FILE"; then
     if [[ ! -s "$APK_FILE" || -z "$(find "$APK_FILE" -newer "$build_start" -print)" ]]; then
         printf 'Unity did not produce a fresh debug APK: %s\n' "$APK_FILE" >&2
         exit 1
@@ -48,6 +52,7 @@ else
     printf 'Could not write Unity build log: %s\n' "$LOG_FILE" >&2
     exit "${statuses[1]}"
 fi
+python3 "$PROJECT_ROOT/scripts/verify-android-runtime.py" "$APK_FILE" --expected-package com.duanyao.xanaduyonder.debug
 printf 'APK: %s\n' "$APK_FILE"
 
 if [[ $install_after_build == true ]]; then

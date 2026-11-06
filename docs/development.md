@@ -68,18 +68,20 @@ scripts/test-link-match.sh
 scripts/test-link-match-input.sh
 scripts/test-link-match-persistence.sh
 scripts/test-link-match-ui.sh
-./scripts/build-android.sh --install
+./scripts/build-android.sh --install DEVICE_SERIAL
 ```
 
 `scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含战争进化史系列入口的十八张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
-`DEVICE_SERIAL` 从 `adb devices -l` 取得。安装脚本显式拒绝模拟器；不传序列号时仅在恰好存在一台已授权物理设备且没有其他未就绪设备时自动选择。可以传第二个参数指定 APK。
+`DEVICE_SERIAL` 从 `adb devices -l` 取得。安装脚本显式拒绝模拟器；省略时沿用 `ANDROID_SERIAL`，否则仅在恰好存在一台已授权物理设备且没有其他未就绪设备时自动选择。`install-android.sh` 第二个参数可指定 APK，第三个参数可声明期望包名。
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-构建输出为 `artifacts/builds/XanaduYonder-0.9.5.apk`，日志为 `artifacts/logs/build-android.log`。当前源码版本为 0.9.5，Android versionCode 为 14。构建本地 APK 不会自动发布新版。开发包使用 Development Build 便于本地日志与存档检查，关闭脚本调试和 profiler 自动连接；使用本机 Android 调试签名，不是商店发布包。
+默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.5，Android versionCode 为 14。无参数构建与 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
+
+全部 25 个 APK 构建入口，包括 Debug、Release 及小游戏 validation/preview，都关闭 Unity Development、脚本调试、Profiler 连接和 Deep Profiling。产物不带 Android debuggable、Development Console 或 PlayerConnection；debug 仅指本地签名，不提供 `run-as` 数据访问。小游戏测试包继续保留各自独立包名。黄金矿工帧性能日志、旸了个旸生成耗时日志受 `DEVELOPMENT_BUILD || UNITY_EDITOR` 控制，当前 APK 不包含这些诊断日志，编辑器仍保留。
 
 如需单独创建/检查启动场景与构建设置：
 
@@ -121,7 +123,7 @@ scripts/build-gold-miner-validation.sh
 
 前六项直接编译同一份生产 C#；目录检查遍历 240 张地图和 2000 组种子，Levels 检查用生产模拟重放全部成功见证。UI 脚本启动真正的 Unity Play Mode，使用隔离临时目录与实际 UGUI 命中，报告/截图在 `artifacts/gold-miner-development/ui/`。它不会读写正式玩家存档。资源导入入口为 `XanaduYonder.EditorTools.GoldMinerAssetImporter.Prepare`。
 
-APK 为 `artifacts/builds/XanaduYonder-0.9.1-gold-miner-validation.apk`，日志在 `artifacts/logs/build-gold-miner-validation.log`。显式选择 `adb devices -l` 的物理设备，安装及启动 `com.duanyao.xanaduyonder.goldminertest/com.unity3d.player.UnityPlayerActivity`；不要使用普通安装脚本覆盖正式包。测试包与正式版、其他工作树的测试包各有独立数据目录。
+APK 为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-gold-miner-validation.apk`，日志在 `artifacts/logs/build-gold-miner-validation.log`。显式选择 `adb devices -l` 的物理设备，安装及启动 `com.duanyao.xanaduyonder.goldminertest/com.unity3d.player.UnityPlayerActivity`；使用 `install-android.sh` 时显式传入本次 APK 路径和期望包名。测试包与正式版、其他工作树的测试包各有独立数据目录。
 
 `scripts/prepare-gold-miner-touch.sh` 只在本机编译 Android 原生多指验收驱动，输出 `artifacts/gold-miner-development/device-tools/gold-miner-touch.jar`；不自动连接或操作设备。手工选择设备后可用 `adb -s SERIAL shell CLASSPATH=/data/local/tmp/gold-miner-touch.jar app_process / NativeTouch dual X1 Y1 X2 Y2 HOLD_MS` 验证真正的 Android MotionEvent 双指链路。实际设备、构建和验证范围见[黄金矿工验证](verification-gold-miner.md)。
 
@@ -136,7 +138,9 @@ scripts/test-watermelon-physics.sh
 scripts/test-watermelon-pointer.sh
 scripts/build-watermelon-validation.sh
 ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
-"$ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.9.1-watermelon-validation.apk
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+"$ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-${PROJECT_VERSION}-watermelon-validation.apk
 "$ADB" -s DEVICE_SERIAL shell am start -n com.duanyao.xanaduyonder.watermelontest/com.unity3d.player.UnityPlayerActivity
 ```
 
@@ -146,7 +150,7 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 
 `test-watermelon-pointer.sh` 通过真实 UGUI 射线与生产指针处理器检查区域内起手、左右越界释放、上下越界取消、原指锁定、重复释放和帮助文案；它不替代 Android 原生触摸取消或多指验收。左右越界允许投放，上下越界和后台取消后不补投，完整行为见[边界投放记录](superpowers/specs/2026-10-30-watermelon-edge-release-design.md)。
 
-验证脚本输出 `artifacts/builds/XanaduYonder-0.9.1-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。请使用上面的显式 ADB 安装与启动命令；普通 `install-android.sh` 启动的是正式包名。生成此包不会创建新版本或 GitHub Release，此前十款合集的发行情况见[v0.5.0 发布记录](releases/v0.5.0.md)。
+验证脚本输出 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-watermelon-validation.apk`，日志为 `artifacts/logs/build-watermelon-validation.log`；应用包标识为 `com.duanyao.xanaduyonder.watermelontest`。它使用独立应用数据目录，不覆盖正式应用或数独等其他工作树的安装。可使用上面的显式 ADB 命令；若用 `install-android.sh`，需传入本次 APK 路径并可指定期望包名，不能省略 APK 而安装默认 Debug。生成此包不会创建新版本或 GitHub Release，此前十款合集的发行情况见[v0.5.0 发布记录](releases/v0.5.0.md)。
 
 `watermelon-v1.json` 独立保存棋盘状态、当前/下一颗、随机状态、主题、得分、最高分及目标提示状态，保存备份为 `watermelon-v1.json.bak`。暂停、退回大厅和应用切后台时应保留续局；主题切换应保持物体位置、大小与速度。需要在真机覆盖拖动松手、连续合并、触摸取消、暂停/恢复、进程重启续局、声音/触感设置及三个主题显示。
 
@@ -156,7 +160,7 @@ ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK
 
 扫雷的 Unity 界面测试和 APK 构建通过 `scripts/minesweeper-unity-environment.sh` 使用当前工作树的 `Library/MinesweeperGradle`，并分配独立临时 ADB 端口。不要把这些目录链接到其他工作树；该脚本只改变当前命令的环境，不修改全局 Gradle/ADB 设置。临时端口分配需要 Python 3。
 
-07 扫雷已包含在正式 v0.5.0 的十款游戏合集中；当前开发源码包含十九个大厅入口（战争进化史入口包含两代，另含王国保卫战初代），版本为 0.9.1、Android versionCode 为 10。独立测试包沿用当前源码版本，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
+07 扫雷已包含在正式 v0.5.0 的十款游戏合集中。当前独立测试包沿用 `ProjectBuild.Version` 与 `ProjectBuild.VersionCode`，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
 
 本轮开发、测试和构建只使用 `/Users/bytedance/.codex/worktrees/minesweeper/XanaduYonder`；不切换、清理、构建或修改其他工作树，不共享其他检出的 Library/Temp。以下命令均从这一本工作树根目录执行：
 
@@ -174,15 +178,17 @@ scripts/build-minesweeper-validation.sh
 
 `test-minesweeper-ui.sh` 启动生产 UGUI 页面，注入内存 Profile 或明确的临时 Store，不读取或清空日常 `Application.persistentDataPath`。日志为 `artifacts/logs/minesweeper-ui-checks.log`，截图与报告位于 `artifacts/validation/minesweeper-ui/`。它需要图形渲染，不加 `-nographics`。两个 UI 检查与 Android 构建必须顺序执行；运行前关闭当前树的交互 Unity 编辑器。编辑器合成触点和尺寸换算不能代替真机多指、取消、物理 dp 与生命周期检查。
 
-构建脚本调用 `ProjectBuild.BuildAndroidMinesweeperValidation`，通过 try/finally 临时替换包名/产品名并恢复原配置，输出 `artifacts/builds/XanaduYonder-0.9.1-minesweeper-validation.apk`，日志为 `artifacts/logs/build-minesweeper-validation.log`。仅成功退出且产物非空才可作为本次构建结果，独立包名是 `com.duanyao.xanaduyonder.minesweepertest`。以下安装/启动命令仅在本次构建成功并选定实际设备后执行：
+构建脚本调用 `ProjectBuild.BuildAndroidMinesweeperValidation`，通过 try/finally 临时替换包名/产品名并恢复原配置，输出 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-minesweeper-validation.apk`，日志为 `artifacts/logs/build-minesweeper-validation.log`。仅成功退出且产物非空才可作为本次构建结果，独立包名是 `com.duanyao.xanaduyonder.minesweepertest`。以下安装/启动命令仅在本次构建成功并选定实际设备后执行：
 
 ```bash
 MINESWEEPER_ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
-"$MINESWEEPER_ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.9.1-minesweeper-validation.apk
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+"$MINESWEEPER_ADB" -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-${PROJECT_VERSION}-minesweeper-validation.apk
 "$MINESWEEPER_ADB" -s DEVICE_SERIAL shell am start -n com.duanyao.xanaduyonder.minesweepertest/com.unity3d.player.UnityPlayerActivity
 ```
 
-不要用普通 `install-android.sh` 启动此包，该脚本启动的是正式包名。扫雷测试包使用独立数据目录；`minesweeper-v1.json` 与 `.bak/.tmp` 不修改其他游戏的存档。设备验收需覆盖真实双指/第三指/取消、50% 小格和 100% 基准尺寸、按钮点击范围、全屏/总览/返回层级、共享设置后台关闭、锁屏恢复、胜负一次结算、保存失败后重试及已有六款游戏回归。是否已执行逐项以验证记录为准。
+使用 `install-android.sh` 时需显式传入扫雷 APK 路径和期望包名，默认 APK 是独立 Debug。扫雷测试包使用独立数据目录；`minesweeper-v1.json` 与 `.bak/.tmp` 不修改其他游戏的存档。设备验收需覆盖真实双指/第三指/取消、50% 小格和 100% 基准尺寸、按钮点击范围、全屏/总览/返回层级、共享设置后台关闭、锁屏恢复、胜负一次结算、保存失败后重试及已有六款游戏回归。是否已执行逐项以验证记录为准。
 
 ## 推箱子独立验证与 UI 参考
 
@@ -200,14 +206,16 @@ scripts/test-minigame-ui.sh
 scripts/build-sokoban-validation.sh
 ```
 
-最后三项会启动 Unity，必须串行执行，运行前关闭当前树的交互编辑器。专用环境脚本隔离 Gradle 和 ADB；UI 夹具注入内存 profile，不读取日常玩家进度。构建输出当前版本的 `artifacts/builds/XanaduYonder-0.9.1-sokoban-validation.apk`，包名为 `com.duanyao.xanaduyonder.sokobantest`。这仍是包含当前全部游戏的合集构建，独立包名用于保护正式应用及其他测试包的数据。
+最后三项会启动 Unity，必须串行执行，运行前关闭当前树的交互编辑器。专用环境脚本隔离 Gradle 和 ADB；UI 夹具注入内存 profile，不读取日常玩家进度。构建输出当前版本的 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-sokoban-validation.apk`，包名为 `com.duanyao.xanaduyonder.sokobantest`。这仍是包含当前全部游戏的合集构建，独立包名用于保护正式应用及其他测试包的数据。
 
-安装前核对本次成功构建的文件、哈希和实际设备序列号；不要用启动正式包名的普通安装脚本替代下面的专用目标：
+安装前核对本次成功构建的文件、哈希和实际设备序列号；使用下面的专用目标，或向 `install-android.sh` 显式传入本次 APK 路径和期望包名：
 
 ```bash
 SOKOBAN_ADB=/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
 "$SOKOBAN_ADB" devices -l
-"$SOKOBAN_ADB" -s DEVICE_SERIAL install --no-streaming -r artifacts/builds/XanaduYonder-0.9.1-sokoban-validation.apk
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+"$SOKOBAN_ADB" -s DEVICE_SERIAL install --no-streaming -r artifacts/builds/XanaduYonder-${PROJECT_VERSION}-sokoban-validation.apk
 "$SOKOBAN_ADB" -s DEVICE_SERIAL shell am start -W -n com.duanyao.xanaduyonder.sokobantest/com.unity3d.player.UnityPlayerActivity
 ```
 
@@ -230,14 +238,16 @@ scripts/build-link-match-validation.sh
 
 后三项会使用 Unity，必须在当前工作树中串行执行，运行前关闭本树的交互编辑器。连连看的 UI／构建脚本 source `scripts/link-match-unity-environment.sh`，使用本树 `Library/LinkMatchGradle` 和临时独立 ADB 端口；不复用其他工作树的 Library、Temp 或构建产物，不停止共享 ADB／Gradle 服务。
 
-`build-link-match-validation.sh` 调用 `ProjectBuild.BuildAndroidLinkMatchValidation`，目标为 `artifacts/builds/XanaduYonder-0.9.1-link-match-validation.apk`，日志为 `artifacts/logs/build-link-match-validation.log`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。这是包含当前源码游戏的合集开发验证包；构建入口在 finally 中恢复原包名和产品名。正常开发包、正式包的路径及标识不变，也不会自动创建 Release。产物是否成功以本次构建结果、时间和哈希为准，不能只凭目录已有同名 APK 判断。
+`build-link-match-validation.sh` 调用 `ProjectBuild.BuildAndroidLinkMatchValidation`，目标为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-link-match-validation.apk`，日志为 `artifacts/logs/build-link-match-validation.log`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。这是包含当前源码游戏的合集开发验证包；构建入口在 finally 中恢复原包名和产品名。正常开发包、正式包的路径及标识不变，也不会自动创建 Release。产物是否成功以本次构建结果、时间和哈希为准，不能只凭目录已有同名 APK 判断。
 
-确认设备序列号后显式安装、启动此独立包，不用普通安装脚本代替包名隔离：
+确认设备序列号后显式安装、启动此独立包；若使用 `install-android.sh`，同样传入本次 APK 路径和期望包名：
 
 ```bash
 LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/adb"
 "$LINK_MATCH_ADB" devices -l
-"$LINK_MATCH_ADB" -s DEVICE_SERIAL install --no-streaming -r artifacts/builds/XanaduYonder-0.9.1-link-match-validation.apk
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+"$LINK_MATCH_ADB" -s DEVICE_SERIAL install --no-streaming -r artifacts/builds/XanaduYonder-${PROJECT_VERSION}-link-match-validation.apk
 "$LINK_MATCH_ADB" -s DEVICE_SERIAL shell am start -W -n com.duanyao.xanaduyonder.linkmatchtest/com.unity3d.player.UnityPlayerActivity
 ```
 
@@ -249,31 +259,37 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 
 ## 通用 Android Debug
 
-在桌面仓根目录连接一台已授权的 ARM64 安卓真机，小米手机上可与正式版同时安装：
+在仓库根目录构建独立 Debug；连接已授权的 ARM64 安卓真机后可同时构建并安装：
 
 ```bash
-./scripts/build-android.sh --install
+./scripts/build-android.sh
+./scripts/build-android.sh --install DEVICE_SERIAL
 ```
 
-脚本构建完整的开发版 `artifacts/builds/XanaduYonder-0.9.5-debug.apk`。确认 APK 的包名是 `com.duanyao.xanaduyonder.debug` 后，使用 `adb install -r` 安装并启动 **XanaduYonder Debug**。再次安装会更新先前同签名的 Debug，保留其进度。正式应用有独立的数据目录和存档。
+两种命令都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，包名为 `com.duanyao.xanaduyonder.debug`，名称为 **XanaduYonder Debug**。`--install` 在产物校验成功后使用 `adb install -r` 安装并启动；再次安装更新同包名、同签名的 Debug，保留其进度。Debug 与正式应用并存，各有独立的数据目录和存档。它使用本地 debug 签名，但关闭 Unity Development 与 Android debuggable，不带开发控制台或 PlayerConnection，也不能作为 `run-as` 诊断包。
 
 如有多台设备，在 `--install` 后加目标设备序列号；省略时会沿用已设置的 `ANDROID_SERIAL`，否则要求只有一台已授权的 ARM64 真机。构建日志同步显示在终端并保存到 `artifacts/logs/build-android.log`。如果安装失败，已生成的 APK 会保留。可以直接重试安装：
 
 ```bash
-./scripts/install-android.sh DEVICE_SERIAL artifacts/builds/XanaduYonder-0.9.5-debug.apk com.duanyao.xanaduyonder.debug
+./scripts/install-android.sh DEVICE_SERIAL
+
+# 指定 APK，并显式校验期望包名
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+./scripts/install-android.sh DEVICE_SERIAL "artifacts/builds/XanaduYonder-${PROJECT_VERSION}-debug.apk" com.duanyao.xanaduyonder.debug
 ```
 
-仅运行 `./scripts/build-android.sh` 保留原开发打包流程，输出 `artifacts/builds/XanaduYonder-0.9.5.apk`，包名仍为 `com.duanyao.xanaduyonder`。原包名的开发包使用调试签名，Android 会拒绝用它覆盖同包名的正式签名应用；已装正式版的设备请使用上面的独立 Debug 命令。
+不指定 APK 时，`install-android.sh` 默认读取当前版本的 `-debug.apk` 并要求 `.debug` 包名。指定第二个参数时，脚本读取 APK 实际包名用于启动；第三个参数若存在，还会核对期望包名，不匹配就拒绝安装。因此也可显式传入小游戏独立 APK 或正式 APK。任何覆盖安装都要求目标包名及签名一致。
 
 ## 正式发布 APK
 
-连接小米手机并允许 USB 调试，在项目目录运行一条命令即可构建正式 APK 并覆盖安装：
+连接已授权的 ARM64 安卓真机，在项目目录构建并覆盖安装同包名、同签名的正式应用：
 
 ```bash
-./scripts/build-release.sh --install
+./scripts/build-release.sh --install DEVICE_SERIAL
 ```
 
-连接多台设备时，在 `--install` 后加小米的设备序列号。省略序列号时，脚本优先使用 `ANDROID_SERIAL`，否则自动选择唯一已授权的 ARM64 真机。只打包时运行 `./scripts/build-release.sh`。覆盖安装使用 `adb install -r`，沿用同一正式签名即可保留原有存档。
+省略序列号时，脚本优先使用 `ANDROID_SERIAL`，否则自动选择唯一已授权的 ARM64 真机。只打包时运行 `./scripts/build-release.sh`。Release 使用原主包 `com.duanyao.xanaduyonder` 与既有私有 release 签名；通过 `adb install -r` 覆盖同包名、同签名正式应用并保留存档，独立 Debug 应用不受影响。
 
 脚本默认读取本机私有文件 `~/Library/Application Support/XanaduYonder/signing/release-signing.json`。JSON 对象使用下表的四个键，值均为字符串。也可以通过环境变量传入一整套签名配置。只要设置了其中任意一个环境变量，脚本就要求四项齐全，防止混用两套签名。配置文件和口令留在仓库外。
 
@@ -286,9 +302,15 @@ LINK_MATCH_ADB="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}/platform-tools/ad
 
 脚本缺少签名配置时立即失败。Unity 子进程不会收到上述变量，只生成关闭 Development Build、脚本调试与 profiler 连接的中间 APK；签名配置不进入 Unity 的 `ProjectSettings`。构建入口在结束或抛出异常时恢复原来的 Development 和自定义签名开关。
 
-脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入。签名验证成功后才原子替换 `artifacts/builds/XanaduYonder-0.9.5-android-arm64.apk` 并开始安装。构建或签名失败时不会安装旧包。如果安装失败，本次生成的正式 APK 会保留，重新连接设备后可以单独重试安装。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
+脚本使用配套 SDK 的 `apksigner` 替换中间 APK 的调试签名，口令只经环境变量传入。APK 与签名验证成功后才原子替换 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-android-arm64.apk`；只有指定 `--install` 才继续安装。构建或签名失败时不会安装旧包。如果安装失败，本次生成的正式 APK 会保留，重新连接设备后可以单独重试安装。可以通过 `APKSIGNER`、`AAPT` 覆盖工具路径。
 
-Unity 日志为 `artifacts/logs/build-android-release.log`，本地签名验证日志为 `artifacts/logs/sign-android-release.log`。只上传最终 APK、校验和及公开发布说明；不要上传 keystore、口令、私有签名日志或整个构建目录。后续版本必须使用同一发布密钥才能覆盖升级。正式签名与现有开发签名不同，Android 会拒绝直接覆盖开发包；测试迁移前应先保护设备存档，不能直接卸载并丢失进度。
+```bash
+PROJECT_ROOT="$PWD"
+source scripts/project-version.sh
+./scripts/install-android.sh DEVICE_SERIAL "artifacts/builds/XanaduYonder-${PROJECT_VERSION}-android-arm64.apk" com.duanyao.xanaduyonder
+```
+
+Unity 日志为 `artifacts/logs/build-android-release.log`，本地签名验证日志为 `artifacts/logs/sign-android-release.log`。只上传最终 APK、校验和及公开发布说明；不要上传 keystore、口令、私有签名日志或整个构建目录。后续正式版本必须使用同一包名及发布密钥才能覆盖升级；独立 Debug 的包名、签名和存档分别保留。
 
 ### GitHub CLI
 
@@ -306,7 +328,7 @@ gh auth status
 
 ## 欢乐球球独立验证
 
-欢乐球球初版保留源码版本 0.5.0/versionCode 5；当前构建沿用本次 0.9.1/versionCode 10，通过 `scripts/happy-ball-unity-environment.sh` 使用本工作树独立 `Library/HappyBallGradle` 和临时 ADB 端口，不修改全局环境。UI 检查与构建必须串行执行，测试使用临时存档目录。
+欢乐球球初版保留源码版本 0.5.0/versionCode 5；当前构建沿用 `ProjectBuild.Version` 与 `ProjectBuild.VersionCode`，通过 `scripts/happy-ball-unity-environment.sh` 使用本工作树独立 `Library/HappyBallGradle` 和临时 ADB 端口，不修改全局环境。UI 检查与构建必须串行执行，测试使用临时存档目录。
 
 ```bash
 scripts/test-happy-ball.sh
@@ -317,9 +339,9 @@ scripts/test-minigame-ui.sh
 scripts/build-happy-ball-validation.sh
 ```
 
-APK 为 `artifacts/builds/XanaduYonder-0.9.1-happy-ball-validation.apk`，包名 `com.duanyao.xanaduyonder.happyballtest`、名称“Xanadu 球球测试”，使用调试签名，独立于正式应用。图形报告/长短屏截图位于 `artifacts/validation/happy-ball-ui/`，构建日志为 `artifacts/logs/build-happy-ball-validation.log`。包名和产品名在构建结束后恢复。
+APK 为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-happy-ball-validation.apk`，包名 `com.duanyao.xanaduyonder.happyballtest`、名称“Xanadu 球球测试”，使用调试签名，独立于正式应用。图形报告/长短屏截图位于 `artifacts/validation/happy-ball-ui/`，构建日志为 `artifacts/logs/build-happy-ball-validation.log`。包名和产品名在构建结束后恢复。
 
-有已授权设备时，使用 Unity 配套 `adb -s DEVICE_SERIAL install -r artifacts/builds/XanaduYonder-0.9.1-happy-ball-validation.apk` 安装，并显式启动测试包；不要用启动正式包名的通用安装脚本。真机需验证左右转向、释放停止、多指取消、越过竖板的时机、连续红板的重击例外、分裂动效、音效触感、后台/锁屏暂停、读档及长局性能。实际完成范围见[验证记录](verification-happy-ball.md)。
+有已授权设备时，可用 Unity 配套 ADB 安装并显式启动测试包；也可向 `install-android.sh` 传入本次 `-happy-ball-validation.apk` 路径及期望包名 `com.duanyao.xanaduyonder.happyballtest`。真机需验证左右转向、释放停止、多指取消、越过竖板的时机、连续红板的重击例外、分裂动效、音效触感、后台/锁屏暂停、读档及长局性能。实际完成范围见[验证记录](verification-happy-ball.md)。
 
 ## 项目与缓存
 
@@ -351,7 +373,7 @@ scripts/test-gomoku-ui.sh
 scripts/build-gomoku-validation.sh
 ```
 
-前四项直接编译生产 C# 源码；界面测试用真实 UGUI、相机渲染和指针事件，输出 `artifacts/validation/gomoku-ui/`。验证构建使用独立包名 `com.duanyao.xanaduyonder.gomokutest`，输出 `artifacts/builds/XanaduYonder-0.9.1-gomoku-validation.apk`，不覆盖正式应用的数据。`ProjectBuild.BuildAndroidGomokuValidation` 用 try/finally 恢复包名与产品名；不修改发布版本或签名。
+前四项直接编译生产 C# 源码；界面测试用真实 UGUI、相机渲染和指针事件，输出 `artifacts/validation/gomoku-ui/`。验证构建使用独立包名 `com.duanyao.xanaduyonder.gomokutest`，输出 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-gomoku-validation.apk`，不覆盖正式应用的数据。`ProjectBuild.BuildAndroidGomokuValidation` 用 try/finally 恢复包名与产品名；不修改发布版本或签名。
 
 两个 Unity 入口均 source `scripts/gomoku-unity-environment.sh`，使用本工作树的 `Library/GomokuGradle` 及临时私有 ADB 端口。不复用或链接其他工作树的 Library、Temp 和构建产物，不停止共享 ADB / Gradle 服务。安装时明确指定已确认设备序列号和测试包，设备未连接时不要把编辑器测试称为真机验证。实际证据及限制见[五子棋验证记录](verification-gomoku.md)。
 
@@ -372,4 +394,4 @@ scripts/test-sliding-puzzle-ui.sh
 scripts/build-sliding-puzzle-validation.sh
 ```
 
-后两项启动 Unity，必须串行执行；环境脚本隔离本树 Gradle 缓存和 ADB 服务，UI 夹具使用内存 profile 或独立临时目录。UI 检查需要图形渲染，不加 `-nographics`。验证包使用 `com.duanyao.xanaduyonder.slidingpuzzletest`；输出文件名从 `ProjectBuild.Version` 读取，当前为 `artifacts/builds/XanaduYonder-0.9.1-sliding-puzzle-validation.apk`，旧版 APK 不作为新构建成功的依据。设备安装需指定实际 ADB 服务端口和设备序列号，不覆盖正式包或其他小游戏测试包。
+后两项启动 Unity，必须串行执行；环境脚本隔离本树 Gradle 缓存和 ADB 服务，UI 夹具使用内存 profile 或独立临时目录。UI 检查需要图形渲染，不加 `-nographics`。验证包使用 `com.duanyao.xanaduyonder.slidingpuzzletest`；输出文件名从 `ProjectBuild.Version` 读取，格式为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-sliding-puzzle-validation.apk`，旧版 APK 不作为新构建成功的依据。设备安装需指定实际 ADB 服务端口和设备序列号，不覆盖正式包或其他小游戏测试包。

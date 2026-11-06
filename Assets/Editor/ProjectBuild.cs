@@ -26,11 +26,7 @@ namespace XanaduYonder.EditorTools
         [MenuItem("XanaduYonder/Build Android APK")]
         public static void BuildAndroid()
         {
-            RunOrFail(() =>
-            {
-                Prepare();
-                BuildApk(".apk", BuildOptions.Development | BuildOptions.StrictMode);
-            });
+            BuildAndroidDeviceDebug();
         }
 
         public static void BuildAndroidDeviceDebug()
@@ -46,7 +42,7 @@ namespace XanaduYonder.EditorTools
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".debug");
                     PlayerSettings.productName = "XanaduYonder Debug";
                     PlayerSettings.Android.useCustomKeystore = false;
-                    BuildApk("-debug.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-debug.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -70,7 +66,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".idiomtest");
                     PlayerSettings.productName = "Xanadu 成语测试";
-                    BuildApk("-idiom-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-idiom-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -92,7 +88,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".sheeptest");
                     PlayerSettings.productName = "Xanadu 旸测试";
-                    BuildApk("-sheep-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-sheep-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -114,7 +110,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".dinotest");
                     PlayerSettings.productName = "Xanadu Dino测试";
-                    BuildApk("-dino-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-dino-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -136,7 +132,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".watermelontest");
                     PlayerSettings.productName = "Xanadu 西瓜测试";
-                    BuildApk("-watermelon-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-watermelon-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -158,7 +154,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".minesweepertest");
                     PlayerSettings.productName = "Xanadu 扫雷测试";
-                    BuildApk("-minesweeper-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-minesweeper-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -180,7 +176,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".sokobantest");
                     PlayerSettings.productName = "Xanadu 推箱子测试";
-                    BuildApk("-sokoban-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-sokoban-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -202,7 +198,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".slidingpuzzletest");
                     PlayerSettings.productName = "Xanadu 华容道测试";
-                    BuildApk("-sliding-puzzle-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-sliding-puzzle-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -225,7 +221,7 @@ namespace XanaduYonder.EditorTools
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".flappybirdtest");
                     PlayerSettings.productName = "Xanadu 飞行测试";
                     FlappyAssetPreparation.Ensure();
-                    BuildApk("-flappy-bird-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-flappy-bird-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -247,7 +243,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".linkmatchtest");
                     PlayerSettings.productName = "Xanadu 连连看测试";
-                    BuildApk("-link-match-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-link-match-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -269,7 +265,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".ageofwartest");
                     PlayerSettings.productName = "Xanadu 战争进化史测试";
-                    BuildApk("-age-of-war-validation.apk", BuildOptions.Development | BuildOptions.StrictMode | BuildOptions.DetailedBuildReport, AgeOfWarBuildReport.Write);
+                    BuildApk("-age-of-war-validation.apk", BuildOptions.StrictMode | BuildOptions.DetailedBuildReport, AgeOfWarBuildReport.Write);
                 }
                 finally
                 {
@@ -281,7 +277,7 @@ namespace XanaduYonder.EditorTools
         }
 
         // User preview stays side-by-side with the installed app, without the Development runtime.
-        // BuildAndroid remains the explicit diagnostic build; no runtime errors are hidden here.
+        // All Android build entries omit the Development runtime; debug signing remains independent.
         public static void BuildZumaPreview()
         {
             RunOrFail(() =>
@@ -332,7 +328,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".gomokutest");
                     PlayerSettings.productName = "Xanadu 五子棋测试";
-                    BuildApk("-gomoku-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-gomoku-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -353,7 +349,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".tetristest");
                     PlayerSettings.productName = "Xanadu 方块测试";
-                    BuildApk("-tetris-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-tetris-validation.apk", BuildOptions.StrictMode);
                 }
             });
         }
@@ -370,7 +366,7 @@ namespace XanaduYonder.EditorTools
                     GoldMinerAssetImporter.Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".goldminertest");
                     PlayerSettings.productName = "Xanadu 矿工测试";
-                    BuildApk("-gold-miner-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-gold-miner-validation.apk", BuildOptions.StrictMode);
                 }
             });
         }
@@ -574,7 +570,7 @@ namespace XanaduYonder.EditorTools
                     Prepare();
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".happyballtest");
                     PlayerSettings.productName = "Xanadu 球球测试";
-                    BuildApk("-happy-ball-validation.apk", BuildOptions.Development | BuildOptions.StrictMode);
+                    BuildApk("-happy-ball-validation.apk", BuildOptions.StrictMode);
                 }
                 finally
                 {
@@ -587,6 +583,17 @@ namespace XanaduYonder.EditorTools
 
         private static void BuildApk(string suffix, BuildOptions options, Action<BuildReport> completed = null, string version = null)
         {
+            const BuildOptions developmentOptions = BuildOptions.Development | BuildOptions.AllowDebugging |
+                BuildOptions.ConnectWithProfiler | BuildOptions.EnableDeepProfilingSupport;
+            var requestedDevelopmentOptions = options & developmentOptions;
+            if (requestedDevelopmentOptions != BuildOptions.None || EditorUserBuildSettings.development ||
+                EditorUserBuildSettings.allowDebugging || EditorUserBuildSettings.connectProfiler)
+                throw new InvalidOperationException("Android APKs must exclude the Unity Development runtime. " +
+                    "Debug signing does not enable Development, script debugging or profiling. " +
+                    "Rejected BuildOptions=" + requestedDevelopmentOptions +
+                    ", development=" + EditorUserBuildSettings.development +
+                    ", allowDebugging=" + EditorUserBuildSettings.allowDebugging +
+                    ", connectProfiler=" + EditorUserBuildSettings.connectProfiler + ".");
             if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
                 throw new InvalidOperationException("Install this Editor's Android Build Support, SDK/NDK and OpenJDK modules.");
             var output = Path.GetFullPath("artifacts/builds/XanaduYonder-" + (version ?? Version) + suffix);
@@ -603,8 +610,40 @@ namespace XanaduYonder.EditorTools
                 throw new InvalidOperationException($"Android build {report.summary.result}: {report.summary.totalErrors} errors.");
             if (!File.Exists(output))
                 throw new IOException("Unity reported success but the APK does not exist: " + output);
+            VerifyAndroidRuntime(output);
             Debug.Log($"Android APK: {output} ({new FileInfo(output).Length} bytes)");
             completed?.Invoke(report);
+        }
+
+        private static void VerifyAndroidRuntime(string apk)
+        {
+            var sdk = UnityEditor.Android.AndroidExternalToolsSettings.sdkRootPath;
+            if (string.IsNullOrEmpty(sdk))
+                sdk = Path.Combine(BuildPipeline.GetPlaybackEngineDirectory(BuildTarget.Android, BuildOptions.None), "SDK");
+            var aapt = Path.Combine(sdk, "build-tools/36.0.0/aapt");
+            var start = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = QuoteBuildArgument(Path.GetFullPath("scripts/verify-android-runtime.py")) + " " +
+                    QuoteBuildArgument(apk) + " --aapt " + QuoteBuildArgument(aapt) +
+                    " --expected-package " + QuoteBuildArgument(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android)),
+                WorkingDirectory = Path.GetFullPath("."),
+                UseShellExecute = false,
+                RedirectStandardError = true
+            };
+            using (var process = System.Diagnostics.Process.Start(start))
+            {
+                if (process == null) throw new BuildFailedException("Could not verify the Android runtime.");
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                    throw new BuildFailedException("Android runtime verification failed: " + error);
+            }
+        }
+
+        private static string QuoteBuildArgument(string value)
+        {
+            return "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
         public static void ValidatePersistence()
@@ -664,7 +703,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.Android.optimizedFramePacing = true;
             EditorUserBuildSettings.buildAppBundle = false;
             EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
-            EditorUserBuildSettings.development = true;
+            EditorUserBuildSettings.development = false;
             EditorUserBuildSettings.allowDebugging = false;
             EditorUserBuildSettings.connectProfiler = false;
             QualitySettings.vSyncCount = 0;

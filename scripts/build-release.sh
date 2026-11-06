@@ -5,6 +5,10 @@ umask 077
 
 install_after_build=false
 device_serial=""
+if [[ ${1:-} == --help || ${1:-} == -h ]]; then
+    printf 'Usage: %s [--install [DEVICE_SERIAL]]\nBuild and sign the release app; optionally replace the same-package, same-signature installation.\n' "$0"
+    exit 0
+fi
 if [[ $# -gt 0 ]]; then
     if [[ $1 != --install || $# -gt 2 || ${2:-} == -* ]]; then
         printf 'Usage: %s [--install [DEVICE_SERIAL]]\n' "$0" >&2
@@ -80,11 +84,15 @@ rm -f "$INTERMEDIATE_APK"
 
 printf 'Building release APK. Unity log: %s\n' "$LOG_FILE"
 # Prevent credentials from entering the Unity process, generated Gradle files or its logs.
-if ! env -u ANDROID_LINT_JARS -u XANADU_KEYSTORE_PATH -u XANADU_KEY_ALIAS \
-    -u XANADU_KEYSTORE_PASSWORD -u XANADU_KEY_PASSWORD \
-    "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" \
-    -buildTarget Android -executeMethod XanaduYonder.EditorTools.ProjectBuild.BuildAndroidRelease \
-    -logFile "$LOG_FILE"; then
+# Keep Unity's temporary ADB server out of the later device installation.
+if ! (
+    source "$PROJECT_ROOT/scripts/startup-unity-environment.sh" || exit $?
+    env -u ANDROID_LINT_JARS -u XANADU_KEYSTORE_PATH -u XANADU_KEY_ALIAS \
+        -u XANADU_KEYSTORE_PASSWORD -u XANADU_KEY_PASSWORD \
+        "$UNITY_EDITOR" -batchmode -nographics -quit -projectPath "$PROJECT_ROOT" \
+        -buildTarget Android -executeMethod XanaduYonder.EditorTools.ProjectBuild.BuildAndroidRelease \
+        -logFile "$LOG_FILE"
+); then
     printf 'Release build failed; inspect the local Unity log. No new release APK was published.\n' >&2
     exit 1
 fi
@@ -92,11 +100,8 @@ if [[ ! -s "$INTERMEDIATE_APK" ]]; then
     printf 'Unity did not create a fresh release intermediate.\n' >&2
     exit 1
 fi
-badging="$("$AAPT" dump badging "$INTERMEDIATE_APK")"
-if [[ "$badging" == *application-debuggable* ]]; then
-    printf 'Refusing to sign a debuggable APK as a release.\n' >&2
-    exit 1
-fi
+python3 "$PROJECT_ROOT/scripts/verify-android-runtime.py" "$INTERMEDIATE_APK" \
+    --aapt "$AAPT" --expected-package com.duanyao.xanaduyonder
 
 if ! "$APKSIGNER" sign --ks "$XANADU_KEYSTORE_PATH" --ks-key-alias "$XANADU_KEY_ALIAS" \
     --ks-pass env:XANADU_KEYSTORE_PASSWORD --key-pass env:XANADU_KEY_PASSWORD \
@@ -118,5 +123,5 @@ shasum -a 256 "$APK_FILE"
 
 if [[ $install_after_build == true ]]; then
     unset "${signing_keys[@]}"
-    "$PROJECT_ROOT/scripts/install-android.sh" "$device_serial" "$APK_FILE"
+    "$PROJECT_ROOT/scripts/install-android.sh" "$device_serial" "$APK_FILE" com.duanyao.xanaduyonder
 fi

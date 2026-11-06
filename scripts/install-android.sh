@@ -27,28 +27,27 @@ if [[ ! -x "$ADB" ]]; then
 fi
 if [[ -n "${2:-}" ]]; then
     APK_FILE="$2"
+    expected_package="${3:-}"
 else
     source "$PROJECT_ROOT/scripts/project-version.sh"
-    APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}.apk"
+    APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-debug.apk"
+    expected_package=com.duanyao.xanaduyonder.debug
 fi
 if [[ ! -s "$APK_FILE" ]]; then
     printf 'APK missing or empty: %s\nRun scripts/build-android.sh first.\n' "$APK_FILE" >&2
     exit 1
 fi
-launch_package=com.duanyao.xanaduyonder
-if [[ $# -eq 3 ]]; then
-    AAPT="${AAPT:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/aapt}"
-    if [[ ! -x "$AAPT" ]]; then
-        printf 'aapt is required to confirm the target APK identity. Set AAPT to its executable path.\n' >&2
-        exit 1
-    fi
-    launch_package="$3"
-    actual_package="$("$AAPT" dump badging "$APK_FILE" | sed -nE "s/^package: name='([^']+)'.*/\\1/p")"
-    if [[ -z "$launch_package" || "$actual_package" != "$launch_package" ]]; then
-        printf 'APK package mismatch: expected %s, found %s. Skipping installation.\n' "$launch_package" "${actual_package:-unknown}" >&2
-        exit 1
-    fi
+AAPT="${AAPT:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/aapt}"
+if [[ ! -x "$AAPT" ]]; then
+    printf 'aapt is required to confirm the target APK identity. Set AAPT to its executable path.\n' >&2
+    exit 1
 fi
+launch_package="$("$AAPT" dump badging "$APK_FILE" | sed -nE "s/^package: name='([^']+)'.*/\\1/p")"
+if [[ -z "$launch_package" || ( -n "$expected_package" && "$launch_package" != "$expected_package" ) ]]; then
+    printf 'APK package mismatch: expected %s, found %s. Skipping installation.\n' "${expected_package:-a valid package}" "${launch_package:-unknown}" >&2
+    exit 1
+fi
+python3 "$PROJECT_ROOT/scripts/verify-android-runtime.py" "$APK_FILE" --aapt "$AAPT" --expected-package "$launch_package"
 serial="${1:-${ANDROID_SERIAL:-}}"
 if [[ -z "$serial" ]]; then
     physical_devices=()
@@ -89,5 +88,8 @@ if [[ ",$abis," != *,arm64-v8a,* ]]; then
     exit 1
 fi
 printf 'Installing %s on physical device %s\n' "$APK_FILE" "$serial"
-"$ADB" -s "$serial" install -r "$APK_FILE"
+if ! "$ADB" -s "$serial" install -r "$APK_FILE"; then
+    printf 'Replacement failed. Check that the installed app has the same package and signing key; no uninstall or data clearing was attempted.\n' >&2
+    exit 1
+fi
 "$ADB" -s "$serial" shell am start -n "$launch_package/com.unity3d.player.UnityPlayerActivity"
