@@ -1,3 +1,4 @@
+#if UNITY_ANDROID
 using System;
 using System.IO;
 using System.Diagnostics;
@@ -81,3 +82,4 @@ android {
         }
     }
 }
+#endif

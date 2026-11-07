@@ -187,9 +187,11 @@ namespace XanaduYonder.Runtime
                 LobbyGame("sokoban", "Sokoban", "推箱子", "12", "逻辑策略", "经典推箱", "把每一只箱子，推回它的位置。", "", "", EnterSokoban, AddSokobanPreview),
                 LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
                 LobbyGame("age-of-war", "AgeOfWar", "战争进化史", "18", "逻辑策略", "时代进化", "从石器时代，走向未来战场。", "一代 / 二代 · 横屏战斗", "一代 / 二代", ShowAgeOfWarSelection, AddAgeOfWarPreview),
+#if !UNITY_IOS
                 LobbyGame("kingdom-rush", "KingdomRush", "王国保卫战", "19", "逻辑策略", "初代塔防", "守住每一条通往王国的路。", "32 关 · 三种挑战 · 13 位英雄", "32 关 · 三种挑战", EnterKingdomRush, AddKingdomRushPreview),
                 CutTheRopeEntry(),
                 LobbyGame("zhaoyun-adou", "ZhaoyunAdou", "赵云与阿斗", "23", "逻辑策略", "合成布阵", "合兵布阵，与阿斗守住战场。", "离线人机 · 兵种合成 · 武器成长", "离线人机 · 合成布阵", EnterZhaoyunAdou, AddZhaoyunAdouPreview),
+#endif
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
                 LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
                 LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
@@ -201,10 +203,14 @@ namespace XanaduYonder.Runtime
                 LobbyGame("flappy-bird", "FlappyBird", "Flappy Bird", "16", "敏捷挑战", "轻点飞行", "轻点一下，再飞远一点。", "", "", EnterFlappyBird, AddFlappyPreview),
                 LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
                 LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人竖屏 / 双人横屏合作 · 10 关挑战", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
+#if !UNITY_IOS
                 LobbyGame("classic-gold-miner", "ClassicGoldMiner", "经典黄金矿工", "24", "敏捷挑战", "经典寻宝", "重温熟悉的矿场，一起满载而归。", "单人 / 双人 · 随时续局", "单人 / 双人", EnterClassicGoldMiner, AddClassicGoldMinerPreview),
                 LobbyGame("level-devil", "LevelDevil", "只有一道门", "22", "敏捷挑战", "小心下一步", "越过意想不到的机关，走到门前。", "横屏离线 · 单人 / 双人 · 触屏操作", "单人 / 双人", EnterLevelDevil, AddLevelDevilPreview),
+#endif
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
+#if !UNITY_IOS
                 LobbyGame("fruit-slice", "FruitSlice", "切水果大师", "25", "敏捷挑战", "指尖切果", "划出一道刀光，切开缤纷水果。", "三种模式 · 免费刀光 · 离线畅玩", "三种模式 · 离线畅玩", EnterFruitSlice, AddFruitSlicePreview),
+#endif
                 LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
             };
             lobbyView = root.gameObject.AddComponent<LobbyView>();

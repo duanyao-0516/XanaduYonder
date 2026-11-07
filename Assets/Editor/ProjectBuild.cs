@@ -617,6 +617,7 @@ namespace XanaduYonder.EditorTools
 
         private static void VerifyAndroidRuntime(string apk)
         {
+#if UNITY_ANDROID
             var sdk = UnityEditor.Android.AndroidExternalToolsSettings.sdkRootPath;
             if (string.IsNullOrEmpty(sdk))
                 sdk = Path.Combine(BuildPipeline.GetPlaybackEngineDirectory(BuildTarget.Android, BuildOptions.None), "SDK");
@@ -639,6 +640,9 @@ namespace XanaduYonder.EditorTools
                 if (process.ExitCode != 0)
                     throw new BuildFailedException("Android runtime verification failed: " + error);
             }
+#else
+            throw new BuildFailedException("Android runtime verification requires the Android build target.");
+#endif
         }
 
         private static string QuoteBuildArgument(string value)
@@ -717,7 +721,7 @@ namespace XanaduYonder.EditorTools
             Debug.Log("Prepared portrait Android ARM64 IL2CPP project: " + PackageName + " " + Version);
         }
 
-        private static void SetLegacyInput()
+        internal static void SetLegacyInput()
         {
             // Unity exposes this setting through serialized PlayerSettings rather than a public setter.
             var assets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
@@ -733,7 +737,7 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static void EnsureBootstrapScene()
+        internal static void EnsureBootstrapScene()
         {
             if (File.Exists(ScenePath))
             {
