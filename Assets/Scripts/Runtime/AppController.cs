@@ -204,6 +204,7 @@ namespace XanaduYonder.Runtime
                 LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
                 LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人循环闯关 / 双人 30 关合作", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
                 LobbyGame("level-devil", "LevelDevil", "只有一道门", "22", "敏捷挑战", "小心下一步", "越过意想不到的机关，走到门前。", "横屏离线 · 单人 / 双人 · 触屏操作", "单人 / 双人", EnterLevelDevil, AddLevelDevilPreview),
+                LobbyGame("bomb-it", "BombIt", "Q版泡泡堂", "27", "敏捷挑战", "经典炸弹人", "炸开道路，躲过火焰，战胜对手。", "初代原版 · 离线人机 / 同屏双人", "人机 / 双人", EnterBombIt, AddBombItPreview),
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
                 LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
             };
@@ -1597,6 +1598,7 @@ namespace XanaduYonder.Runtime
             ResetBackExitConfirmation();
             ReleaseAircraftFire();
             ReleaseLevelDevilLauncher();
+            ReleaseBombItLauncher();
             ReleaseCutTheRopeLauncher();
             ReleaseZhaoyunAdouLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);

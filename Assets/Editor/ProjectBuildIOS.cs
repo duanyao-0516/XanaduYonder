@@ -48,9 +48,9 @@ namespace XanaduYonder.EditorTools
 
         private static void VerifyWebGames(string root, WebGame[] games, bool exported)
         {
-            var expected = new HashSet<string> { "zhaoyun-adou", "cut-the-rope", "level-devil" };
+            var expected = new HashSet<string> { "zhaoyun-adou", "cut-the-rope", "level-devil", "bomb-it" };
             if (games == null || games.Length != expected.Count)
-                throw new BuildFailedException("Three offline iOS web games are required.");
+                throw new BuildFailedException("All configured offline iOS web games are required.");
             foreach (var game in games)
             {
                 if (game == null || !expected.Remove(game.id) ||

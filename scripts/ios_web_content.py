@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 
-GAMES = ("zhaoyun-adou", "cut-the-rope", "level-devil")
+GAMES = ("zhaoyun-adou", "cut-the-rope", "level-devil", "bomb-it")
 
 
 def sha(data):
@@ -77,13 +77,13 @@ def cached_files(root, game):
 
 
 def content_files(root, game):
-    if game == 'level-devil':
+    if game in ('level-devil', 'bomb-it'):
         # This deterministic builder verifies the pinned source and applies the same
         # adapters as Android. Its pure build function does not write an AAR.
-        directory = root / 'scripts/level-devil'
+        directory = root / 'scripts' / game
         sys.path.insert(0, str(directory))
         try:
-            spec = importlib.util.spec_from_file_location('xanadu_level_content', directory / 'build-content.py')
+            spec = importlib.util.spec_from_file_location('xanadu_' + game.replace('-', '_') + '_content', directory / 'build-content.py')
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             files, _, _ = module.build()
@@ -100,8 +100,11 @@ def content_files(root, game):
 
 
 def mime(name):
+    if Path(name).name in ('LICENSE_APACHE', 'LICENSE_MIT'):
+        return 'text/plain'
     overrides = {'.js': 'application/javascript', '.json': 'application/json', '.aac': 'audio/aac',
-                 '.m4a': 'audio/mp4', '.wasm': 'application/wasm', '.css': 'text/css', '.html': 'text/html'}
+                 '.m4a': 'audio/mp4', '.wasm': 'application/wasm', '.swf': 'application/x-shockwave-flash',
+                 '.css': 'text/css', '.html': 'text/html'}
     return overrides.get(Path(name).suffix) or mimetypes.guess_type(name)[0] or 'application/octet-stream'
 
 

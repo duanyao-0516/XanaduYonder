@@ -40,7 +40,7 @@ namespace XanaduYonder.Runtime
                 Screen.autorotateToPortraitUpsideDown = false;
                 Screen.orientation = ScreenOrientation.AutoRotation;
             }
-            else Screen.orientation = game == "level-devil" ? ScreenOrientation.LandscapeLeft : ScreenOrientation.Portrait;
+            else Screen.orientation = (game == "level-devil" || game == "bomb-it") ? ScreenOrientation.LandscapeLeft : ScreenOrientation.Portrait;
             try
             {
                 if (OpenNative(game, Path.Combine(Application.streamingAssetsPath, "web-games", game), soundEnabled ? 1 : 0) != 0)

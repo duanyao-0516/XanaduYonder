@@ -6,11 +6,13 @@
 
 统一入口的历史结果见[整合验证记录](docs/verification-platform-integration.md)，当前精简与 iOS 网页适配见[本轮记录](docs/verification-ios-web-games.md)。
 
+Q版泡泡堂初代以净化后的原版 SWF＋Ruffle 离线运行，保留人机和同屏双人。横屏中央等比放大并贴底显示，工具集中在两侧；单人左侧移动右侧放弹，双人左右各有移动和放弹操作。齿轮设置可切换摇杆／方向键并记住选择。原版菜单选择模式，左侧头像切换触控布局。返回大厅会结束当前对局。来源与验证边界见[接入记录](docs/bomb-it.md)。
+
 ## 当前状态
 
-当前源码版本为 **0.9.6**（build **15**），Android 与 iOS 均包含 **22 个大厅入口**。赵云与阿斗、割绳子、只有一道门分别由 Android WebView／iOS WKWebView 运行；Zuma、飞机大战保持 Unity 原生。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。源码、编译和设备结果见[本轮迁移记录](docs/verification-ios-web-games.md)。
+当前源码版本为 **0.9.7**（build **16**），Android 与 iOS 的源码目录均包含 **23 个大厅入口**。赵云与阿斗、割绳子、只有一道门、Q版泡泡堂分别由 Android WebView／iOS WKWebView 运行；Zuma、飞机大战保持 Unity 原生。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。源码、编译和设备结果见[本轮迁移记录](docs/verification-ios-web-games.md)。
 
-当前发布版本为 **0.9.6**（build **15**）：Android 提供沿用正式签名的 ARM64 APK，iOS 提供 Release 配置构建的 ARM64 未签名 IPA，需使用自己的 Apple 签名后安装。Android 正式包名为 `com.duanyao.xanaduyonder`，iOS 为 `com.duanyao.xanaduyonder.iosnative`。下载与本轮范围见[v0.9.6 发布记录](docs/releases/v0.9.6.md)；历史 v0.9.4 的 20 入口范围见[旧发布记录](docs/releases/v0.9.4.md)。
+Android 当前发布版本为 **0.9.7**（build **16**），提供沿用正式签名的 ARM64 Release APK，正式包名为 `com.duanyao.xanaduyonder`。下载与本轮范围见[v0.9.7 发布记录](docs/releases/v0.9.7.md)。本次不构建或发布 iOS，iOS 最新公开附件仍为 [v0.9.6 的未签名 IPA](docs/releases/v0.9.6.md)，需使用自己的 Apple 签名后安装；其内容不等于当前源码。历史 v0.9.4 的 20 入口范围见[旧发布记录](docs/releases/v0.9.4.md)。
 
 构建统一从以下入口开始，必须显式选择平台：
 
@@ -25,7 +27,7 @@ iOS 导出后由 Xcode 编译、签名和安装；Mac 自动续签使用固定�
 
 **贪吃蛇**：恢复原分支中的 Unity 原生玩法，接入三种大厅视图，统一绿色线稿图标与大 Logo。经典模式六档与关卡模式分别续玩；设置可开启“吃到食物停一帧”，默认关闭，开启后只停一个前台渲染帧，方向输入继续接收。
 
-本分支的操作与体验整理见[本轮说明](docs/gameplay-polish.md)：俄罗斯方块掌机按键和换边、成语双人固定按钮、连连看类别搭配、指定 9 款游戏的结算回看，以及黄金矿工独立数值版本。上述源码改动尚未包含在既有 v0.9.6 Release 资产中。
+操作与体验整理见[本轮说明](docs/gameplay-polish.md)：俄罗斯方块掌机按键和换边、成语双人固定按钮、连连看类别搭配、指定 9 款游戏的结算回看，以及黄金矿工独立数值版本。这些改动已纳入 Android v0.9.7，既有 v0.9.6 Release 资产保持不变。
 
 **赵云与阿斗**：通过独立全屏 WebView 加入逻辑策略分类，所有游戏资源内置，使用本地 AI 对手；单列大 Logo 使用用户提供原图，双列和目录使用统一墨绿长枪护盾线条图标；删除广告、分享、联网入口和体力门槛，保留金币商店及正常成长。武器背包等功能取消跨天等待，地图按累计局数轮换，保留段位和碎片条件。Android 两秒内连续两次系统返回回到大厅，首次返回提示；iOS 通过首屏返回大厅按钮退出；同进程后台可暂停续玩，退出或进程回收后保留长期进度并回主菜单。源码构建、内容修补与验证范围见[离线接入记录](docs/verification-zhaoyun-adou.md)。
 **只有一道门**：大厅打开独立横屏全屏 WebView，运行随包内置的 4399 / 243372 原版内容。保留单人、双人及原关卡进度；Android 连续两次系统返回手势回到大厅，首次提示；iOS 使用首屏的原画风返回大厅按钮。接入实现见[实施计划](docs/superpowers/plans/2026-11-01-level-devil-android.md)，最终 APK 和模拟器验证边界见[验证报告](docs/verification-level-devil.md)。这不改变上面的已发布版本记录。构建隔离测试包使用 `scripts/build-level-devil.sh`，包名 `com.duanyao.xanaduyonder.leveldeviltest`，不覆盖正式包和存档。
@@ -61,7 +63,7 @@ iOS 导出后由 Xcode 编译、签名和安装；Mac 自动续签使用固定�
 
 连连看首版三关的生产 UI、自动化和 APK 结果保留在[原开发验证记录](docs/verification-link-match.md)；五关扩展、严格迁移、新 UI 对照及设备验收边界见[扩关验证记录](docs/verification-link-match-expanded.md)。文档描述当前源码，不代表新增场景均已验证通过。
 
-大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存；图标与大 Logo 随布局展示。飞机大战归入敏捷挑战，赵云与阿斗归入逻辑策略；两端保持相同的 22 项目录。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
+大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存；图标与大 Logo 随布局展示。飞机大战与 Q版泡泡堂归入敏捷挑战，赵云与阿斗归入逻辑策略；两端保持相同的 23 项目录。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
 
 Unity 玩法中，除 Dino、Flappy Bird、飞机大战外各款游戏独立保存对局；Flappy Bird 的 `flappy-bird-v1.json` 只保存最高纪录，主动离开或进程重启后从准备页开始；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。飞机大战的 `aircraft-fire-v1.json` 只保存经典普通／疯狂／闯关最高分与最高到达关卡，不保存战场。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。Unity 玩法沿用共用声音与触感设置。旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 

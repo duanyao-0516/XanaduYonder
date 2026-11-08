@@ -4,3 +4,5 @@
 *.asset text eol=lf whitespace=-blank-at-eol
 # Bundled upstream license/readme bytes are pinned in the Sokoban source manifest.
 Assets/Resources/Sokoban/Licenses/*.txt -text whitespace=-blank-at-eol
+# Ruffle's upstream runtime and licenses are verified against pinned byte hashes.
+ThirdParty/Ruffle/* -text whitespace=-blank-at-eol

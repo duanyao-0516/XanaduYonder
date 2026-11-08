@@ -76,6 +76,7 @@ source "$PROJECT_ROOT/scripts/project-version.sh"
 INTERMEDIATE_APK="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-release-intermediate.apk"
 APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-android-arm64.apk"
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
+python3 "$PROJECT_ROOT/scripts/bomb-it/build-content.py"
 signed_apk="$(mktemp "$PROJECT_ROOT/artifacts/builds/.release-signed.XXXXXX")"
 trap 'rm -f "$signed_apk" "$INTERMEDIATE_APK"' EXIT
 rm -f "$INTERMEDIATE_APK"

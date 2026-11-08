@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 与 iOS 均包含 22 个入口，平台宿主差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+当前源码共用 Unity 工程，版本为 0.9.7 / build 16，Android 与 iOS 的源码目录均包含 23 个入口，平台宿主差异见[统一构建说明](building.md)。Android 当前发布见[v0.9.7 记录](releases/v0.9.7.md)；iOS 本轮不发布，最新公开附件仍见[v0.9.6 记录](releases/v0.9.6.md)，该历史包的内容不等于当前源码。历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 ## 源码与构建目录
 
@@ -263,7 +263,7 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 ## 赵云与阿斗的独立边界
 
-`AppController.ZhaoyunAdou` 延迟创建 `ZhaoyunAdouLauncher`，Android 由 JNI 调用专用 `ZhaoyunAdouBridge`，iOS 交给共用 WKWebView 宿主。Unity 只拥有大厅路由、声音总开关与外部游戏互斥；`AppController.ExternalGames` 在稳定大厅根节点加输入锁，三款网页游戏共用门禁，任一旧回调不能解锁仍运行的另一个外部游戏。
+`AppController.ZhaoyunAdou` 延迟创建 `ZhaoyunAdouLauncher`，Android 由 JNI 调用专用 `ZhaoyunAdouBridge`，iOS 交给共用 WKWebView 宿主。Unity 只拥有大厅路由、声音总开关与外部游戏互斥；`AppController.ExternalGames` 在稳定大厅根节点加输入锁，四款网页游戏共用门禁，任一旧回调不能解锁仍运行的另一个外部游戏。
 
 `ZhaoyunAdouActivity` 使用系统 WebView 执行原 Laya 客户端，直接全屏、不为边缘手势增加留白。原生层管理资源白名单、焦点与前后台、两秒内两次系统返回。APK assets 映射至固定 HTTPS origin，拒绝任何网络回退、外部导航和权限请求，不向 JS 注册原生能力。页面先完成保存/暂停/静音握手，宿主再冻结 WebView；代次校验丢弃旧页面或旧焦点的回调。
 
@@ -281,10 +281,16 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 黄金矿工每个 run 明确保存 balanceProfile；Source 5 新挑战使用源布局与独立规则。v1-v4 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束，旧 Classic 4 不能被重新解释为 Source 5。详细参数与证据见[本轮说明](gameplay-polish.md)。
 
+## Q版泡泡堂的独立边界
+
+`AppController.BombIt` 只拥有大厅入口与外部游戏互斥；`BombItLauncher` 路由到 Android 的独立 `BombItActivity` 或 iOS 共用 WKWebView 宿主。原版 AVM1 规则、CPU、碰撞和关卡继续由 SWF 拥有，Ruffle 负责执行。手机适配仅添加摇杆／方向键、布局、焦点、暂停和退出握手，不重新实现规则。`controls.js` 用独立 localStorage 字段 `xanaduyonder.bomb-it.controls.v1` 保存控制样式（只接受 joystick／dpad），缺失或无效时使用摇杆；不改变原版 SharedObject。设置弹层由 `host.js` 管理，与原有暂停状态叠加，切换控制方式先释放全部旧触点。
+
+`ThirdParty/BombItContent/sanitizer` 按 SWF 标签移除广告 SDK，保留其他标签原字节并锁定输入散列；`scripts/bomb-it/build-content.py` 生成 Android／iOS 共用清单。Android 使用固定 `https://bomb-it.xanaduyonder.invalid/`，iOS 使用独立端口 `24684`；资源出口只接受清单中的本地文件。`BombItHost`／`BombItNative` 负责 host state、输入释放与退出确认。原版 SharedObject 只保留游戏自身写入的数据，不承诺保存进行中的对局。详见[接入记录](bomb-it.md)。
+
 ## iOS 网页游戏宿主
 
 `Assets/Plugins/iOS` 的 WKWebView 宿主拥有打开、方向、安全区、前后台、退出确认和资源服务。资源位于 `Data/Raw/web-games/{game}/`，每款游戏绑定固定 loopback 端口；只服务清单中通过大小／SHA-256 校验的离线资源，禁止外部导航与网络回退。使用持久化 `WKWebsiteDataStore`，不在退出时清空网页数据。
 
-游戏协议保留在对应内容适配器：赵云使用 configure／setActive／exit／status；割绳子同步读写存档，native 写入完成才返回成功；只有一道门使用 host state 与 exit-ready／exit-error 握手。页面销毁、旧回调和后台恢复由会话代次隔离。游戏保存失败时保留页面和错误提示，不能把关闭 WebView 当作成功保存。Android 各自 Activity 继续拥有原有平台生命周期。
+游戏协议保留在对应内容适配器：赵云使用 configure／setActive／exit／status；割绳子同步读写存档，native 写入完成才返回成功；只有一道门和 Q版泡泡堂使用各自的 host state 与 exit-ready／exit-error 握手。页面销毁、旧回调和后台恢复由会话代次隔离。游戏保存失败时保留页面和错误提示，不能把关闭 WebView 当作成功保存。Android 各自 Activity 继续拥有原有平台生命周期。
 
 构建与真机证据见[本轮记录](verification-ios-web-games.md)。删除游戏的旧文档属于历史记录，不再描述当前可运行模块。

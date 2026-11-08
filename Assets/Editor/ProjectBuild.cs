@@ -14,8 +14,8 @@ namespace XanaduYonder.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Bootstrap.unity";
         public const string PackageName = "com.duanyao.xanaduyonder";
-        public const string Version = "0.9.6";
-        public const int VersionCode = 15;
+        public const string Version = "0.9.7";
+        public const int VersionCode = 16;
 
         [MenuItem("XanaduYonder/Prepare project")]
         public static void PrepareProject()

@@ -49,6 +49,7 @@ local.properties
 /Assets/Plugins/Android/LevelDevilContent.aar
 /Assets/Plugins/Android/LevelDevilContent.aar.meta
 /ThirdParty/LevelDevil/generated/
+/Assets/Plugins/Android/bomb-it-content.aar
 # Built from the hash-pinned local web content and Android host sources.
 /Assets/Plugins/Android/ZhaoyunAdouRuntime.aar
 /Assets/Plugins/Android/ZhaoyunAdouRuntime.aar.meta

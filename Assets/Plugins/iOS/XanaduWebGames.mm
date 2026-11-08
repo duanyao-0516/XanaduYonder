@@ -109,6 +109,8 @@ static NSDictionary *CutSave(NSDictionary *request)
 @implementation XanaduWebGameController
 - (BOOL)isZhaoyun { return [self.game isEqual:@"zhaoyun-adou"]; }
 - (BOOL)isCut { return [self.game isEqual:@"cut-the-rope"]; }
+- (BOOL)isBombIt { return [self.game isEqual:@"bomb-it"]; }
+- (NSString *)eventHostObject { return self.isBombIt ? @"BombItHost" : @"LevelDevilHost"; }
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
     if (self.isZhaoyun) return UIInterfaceOrientationMaskPortrait;
@@ -175,7 +177,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     self.closeButton.titleLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightSemibold];
     self.closeButton.accessibilityLabel = @"保存并返回游戏大厅";
     [self.closeButton addTarget:self action:@selector(requestClose) forControlEvents:UIControlEventTouchUpInside];
-    // Every game fills the display. Level Devil provides its own title-screen exit.
+    // Every game fills the display. The event-driven games provide their own exit controls.
     WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
     configuration.websiteDataStore = WKWebsiteDataStore.defaultDataStore;
     configuration.allowsInlineMediaPlayback = YES;
@@ -189,7 +191,7 @@ static NSDictionary *CutSave(NSDictionary *request)
        "if(!r||!r.ok)throw Error(r&&r.error||'Native save failed');return r;}"
        "window.CutTheRopeNative=Object.freeze({ready:function(){send('ready');},reportError:function(e){send('error',String(e));},"
        "readSave:function(k){return save('read',k).value;},writeSave:function(k,v){return save('write',k,v).ok;},removeSave:function(k){return save('remove',k).ok;}});})();" :
-      @"window.LevelDevilNative=Object.freeze({postMessage:function(value){webkit.messageHandlers.xanadu.postMessage(Object.assign(JSON.parse(value),{generation:__XANADU_GENERATION__}));}});";
+      [NSString stringWithFormat:@"window.%@=Object.freeze({postMessage:function(value){webkit.messageHandlers.xanadu.postMessage(Object.assign(JSON.parse(value),{generation:__XANADU_GENERATION__}));}});", self.isBombIt ? @"BombItNative" : @"LevelDevilNative"];
     // WKWebView owns a separate web audio session; match the Unity playback policy.
     self.bridgeSource = @"(function(){if(navigator.audioSession){try{navigator.audioSession.type='playback';}catch(e){console.warn('Web audio session:',e.message);}}})();";
     if (!self.isZhaoyun) self.bridgeSource = [self.bridgeSource stringByAppendingString:bridge];
@@ -276,8 +278,8 @@ static NSDictionary *CutSave(NSDictionary *request)
         (CGRectEqualToRect(bounds, self.viewportBounds) && UIEdgeInsetsEqualToEdgeInsets(insets, self.viewportInsets))) return;
     self.viewportBounds = bounds; self.viewportInsets = insets;
     NSString *script = [NSString stringWithFormat:
-        @"window.LevelDevilHost.releaseInput();window.LevelDevilHost.setHallButtonFirstScreenOnly(true);"
-         "window.LevelDevilHost.setViewportInsets(%g*innerWidth/%g,%g*innerHeight/%g,%g*innerWidth/%g,%g*innerHeight/%g);true;",
+        @"window.%@.releaseInput();%@window.%@.setViewportInsets(%g*innerWidth/%g,%g*innerHeight/%g,%g*innerWidth/%g,%g*innerHeight/%g);true;",
+         self.eventHostObject, self.isBombIt ? @"" : @"window.LevelDevilHost.setHallButtonFirstScreenOnly(true);", self.eventHostObject,
          insets.left, bounds.size.width, insets.top, bounds.size.height,
          insets.right, bounds.size.width, insets.bottom, bounds.size.height];
     [self evaluate:script completion:nil];
@@ -320,7 +322,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     if ([type isEqual:@"exit-intent"]) { [self requestClose]; return; }
     if ([type isEqual:@"exit-ready"] && self.exitRequest && [body[@"requestId"] isEqual:self.exitRequest]) { [self finish:nil]; return; }
     if ([type isEqual:@"exit-error"] && self.exitRequest && [body[@"requestId"] isEqual:self.exitRequest]) {
-        [self showFailure:[body[@"message"] isKindOfClass:NSString.class] ? body[@"message"] : @"退出保存尚未完成。"]; return;
+        [self showFailure:[body[@"message"] isKindOfClass:NSString.class] ? body[@"message"] : (self.isBombIt ? @"游戏退出尚未完成。" : @"退出保存尚未完成。")]; return;
     }
     if ([type isEqual:@"error"] && ![body[@"recoverable"] boolValue])
         [self showFailure:[body[@"message"] isKindOfClass:NSString.class] ? body[@"message"] : @"游戏报告运行错误。"];
@@ -356,7 +358,7 @@ static NSDictionary *CutSave(NSDictionary *request)
 }
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error { if (navigation == self.navigation && error.code != NSURLErrorCancelled) [self showFailure:error.localizedDescription]; }
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error { if (navigation == self.navigation && error.code != NSURLErrorCancelled) [self showFailure:error.localizedDescription]; }
-- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView { self.ready = NO; [self showFailure:@"游戏页面已被系统停止。重新加载会恢复最近一次已保存的进度。"]; }
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView { self.ready = NO; [self showFailure:self.isBombIt ? @"游戏页面已被系统停止。重新加载将从游戏菜单开始。" : @"游戏页面已被系统停止。重新加载会恢复最近一次已保存的进度。"]; }
 - (void)evaluate:(NSString *)script completion:(void (^)(id, NSError *))completion
 {
     if (self.finished || !self.web) return;
@@ -389,7 +391,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     }
     if (self.exitRequest) {
         self.exitElapsed += delta;
-        if (self.exitElapsed > (self.isCut ? 3 : 10)) { [self showFailure:@"退出保存尚未确认，请重试；原有进度不会被清除。"]; return; }
+        if (self.exitElapsed > (self.isCut ? 3 : 10)) { [self showFailure:self.isBombIt ? @"游戏退出尚未确认，请重试。" : @"退出保存尚未确认，请重试；原有进度不会被清除。"]; return; }
     }
     if ((!self.isZhaoyun && !self.isCut) || !self.configured || self.polling || self.exitRequest || (self.isCut && !self.ready)) return;
     self.statusElapsed += delta;
@@ -421,7 +423,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     if (self.finished || !self.web) return;
     BOOL active = self.active && !self.interrupted && !self.fault;
     // A pending Level Devil exit must keep ticking its original save/transition.
-    BOOL running = active && (!self.exitRequest || (!self.isZhaoyun && !self.isCut));
+    BOOL running = active && (!self.exitRequest || (!self.isZhaoyun && !self.isCut && !self.isBombIt));
     BOOL audible = running && self.sound && !self.exitRequest;
     [self setMediaSuspended:!audible];
     if (audible) XanaduAudio_PrepareSession();
@@ -431,11 +433,13 @@ static NSDictionary *CutSave(NSDictionary *request)
     if (self.isZhaoyun) script = [NSString stringWithFormat:@"window.XanaduZhaoyun.setActive(%@,%@);", running ? @"true" : @"false", self.fault ? @"false" : @"true"];
     else if (self.isCut) script = [NSString stringWithFormat:@"window.CutTheRopeOffline.setHostPaused(%@);window.CutTheRopeOffline.setSoundEnabled(%@);%@",
         running ? @"false" : @"true", audible ? @"true" : @"false", running || self.fault ? @"true;" : @"window.CutTheRopeOffline.flush();"];
-    else script = [NSString stringWithFormat:@"window.LevelDevilHost.setHallButtonFirstScreenOnly(true);window.LevelDevilHost.setHostState(%@,%@);true;", running ? @"true" : @"false", audible ? @"true" : @"false"];
+    else script = [NSString stringWithFormat:@"%@window.%@.setHostState(%@,%@);true;",
+        self.isBombIt ? @"" : @"window.LevelDevilHost.setHallButtonFirstScreenOnly(true);", self.eventHostObject,
+        running ? @"true" : @"false", audible ? @"true" : @"false"];
     [self evaluate:script completion:^(id result, NSError *error) {
         if (revision != self.lifecycleRevision || self.fault) return;
         BOOL okay = self.isZhaoyun ? [result isKindOfClass:NSDictionary.class] && [result[@"ok"] boolValue] : [result isEqual:@YES];
-        if (error || !okay) [self showFailure:error.localizedDescription ?: @"保存或暂停尚未完成，请重试。"];
+        if (error || !okay) [self showFailure:error.localizedDescription ?: (self.isBombIt ? @"暂停操作尚未完成，请重试。" : @"保存或暂停尚未完成，请重试。")];
     }];
 }
 - (void)requestClose
@@ -454,7 +458,7 @@ static NSDictionary *CutSave(NSDictionary *request)
             if (error || !okay) [self showFailure:error.localizedDescription ?: @"退出保存失败，请重试保存。"];
             else [self finish:nil];
         }];
-    } else [self evaluate:[NSString stringWithFormat:@"window.LevelDevilHost.requestExit(%@);true;", JSONString(request)] completion:nil];
+    } else [self evaluate:[NSString stringWithFormat:@"window.%@.requestExit(%@);true;", self.eventHostObject, JSONString(request)] completion:nil];
 }
 - (void)retry
 {
@@ -464,7 +468,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     self.exitRequest = nil; self.closeButton.enabled = YES;
     // Clear only the failed host transaction. Preserve original gameplay state.
     if (!self.isZhaoyun && !self.isCut) {
-        [self evaluate:@"window.LevelDevilHost.cancelExit();true;" completion:^(__unused id result, NSError *error) {
+        [self evaluate:[NSString stringWithFormat:@"window.%@.cancelExit();true;", self.eventHostObject] completion:^(__unused id result, NSError *error) {
             if (error) [self showFailure:error.localizedDescription];
             else { [self applyState]; if (closing) [self requestClose]; }
         }];
@@ -489,17 +493,17 @@ static NSDictionary *CutSave(NSDictionary *request)
         [self applyState];
     }
     if (self.failureAlert || !self.active || !self.view.window) return;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"游戏尚未完成保存或加载" message:self.pendingFailure preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:self.isBombIt ? @"游戏暂时无法继续" : @"游戏尚未完成保存或加载" message:self.pendingFailure preferredStyle:UIAlertControllerStyleAlert];
     self.failureAlert = alert;
     __weak XanaduWebGameController *weakSelf = self;
-    [alert addAction:[UIAlertAction actionWithTitle:self.ready ? @"重试保存" : @"重新加载" style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) { [weakSelf retry]; }]];
-    [alert addAction:[UIAlertAction actionWithTitle:self.ready ? @"返回大厅（未确认本次保存）" : @"返回大厅" style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:self.ready ? (self.isBombIt ? @"重试" : @"重试保存") : @"重新加载" style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) { [weakSelf retry]; }]];
+    [alert addAction:[UIAlertAction actionWithTitle:self.ready && !self.isBombIt ? @"返回大厅（未确认本次保存）" : @"返回大厅" style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction *action) {
         XanaduWebGameController *owner = weakSelf; if (owner) [owner finish:owner.pendingFailure];
     }]];
     if (self.exitRequest && !self.isZhaoyun && !self.isCut) [alert addAction:[UIAlertAction actionWithTitle:@"留在游戏" style:UIAlertActionStyleCancel handler:^(__unused UIAlertAction *action) {
         XanaduWebGameController *owner = weakSelf;
         owner.failureAlert = nil; owner.pendingFailure = nil; owner.fault = NO; owner.exitRequest = nil; owner.closeButton.enabled = YES;
-        [owner evaluate:@"window.LevelDevilHost.cancelExit();true;" completion:^(__unused id result, NSError *error) { if (error) [owner showFailure:error.localizedDescription]; else [owner applyState]; }];
+        [owner evaluate:[NSString stringWithFormat:@"window.%@.cancelExit();true;", owner.eventHostObject] completion:^(__unused id result, NSError *error) { if (error) [owner showFailure:error.localizedDescription]; else [owner applyState]; }];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -536,7 +540,7 @@ extern "C" int XanaduWebGame_Open(const char *identifier, const char *root, int 
     NSString *path = root ? [NSString stringWithUTF8String:root] : nil;
     return OnMain(^int {
         if (Running) return 0;
-        NSDictionary *ports = @{ @"zhaoyun-adou":@24681, @"cut-the-rope":@24682, @"level-devil":@24683 };
+        NSDictionary *ports = @{ @"zhaoyun-adou":@24681, @"cut-the-rope":@24682, @"level-devil":@24683, @"bomb-it":@24684 };
         NSNumber *port = ports[game ?: @""];
         if (!port || !path.length || UIApplication.sharedApplication.applicationState != UIApplicationStateActive) { LastError = @"游戏参数无效或应用不在前台。"; return 0; }
         Running = YES; LastError = nil;

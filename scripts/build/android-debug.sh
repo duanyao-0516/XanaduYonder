@@ -27,6 +27,7 @@ if [[ ! -x "$UNITY_EDITOR" ]]; then
     exit 1
 fi
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
+python3 "$PROJECT_ROOT/scripts/bomb-it/build-content.py"
 build_start="$(mktemp "$PROJECT_ROOT/artifacts/builds/.debug-build-start.XXXXXX")"
 trap 'rm -f "$build_start"' EXIT
 unset ANDROID_LINT_JARS XANADU_KEYSTORE_PATH XANADU_KEY_ALIAS XANADU_KEYSTORE_PASSWORD XANADU_KEY_PASSWORD

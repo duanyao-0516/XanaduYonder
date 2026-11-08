@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "name": "Bomb It / Q版泡泡堂 初代",
+  "sourcePage": "https://sxiao.4399.com/4399swf/upload_swf/ftp18/liuxy/20160125/04/jifen2.htm",
+  "captureDate": "2026-11-08",
+  "files": [
+    {
+      "path": "game.swf",
+      "url": "https://sxiao.4399.com/4399swf/upload_swf/ftp18/liuxy/20160125/04/game.swf",
+      "referer": "https://sxiao.4399.com/4399swf/upload_swf/ftp18/liuxy/20160125/04/jifen2.htm",
+      "bytes": 2167060,
+      "sha256": "a2b4cc65115e4b6eb813962d80e91f1e65746a91f27e91d5e86fa1963ed5b54d"
+    }
+  ]
+}

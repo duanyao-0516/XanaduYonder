@@ -1,0 +1,19 @@
+Bomb It / Q版泡泡堂初代
+
+Source distribution: 4399, pinned game.swf URL and digest in source-manifest.json.
+The original game's artwork, music, sound, characters and rules remain the
+property of their respective original authors and rights holders. A downloadable
+SWF is not a grant of an open-source or redistribution license. No new license
+for those materials is asserted by this integration.
+
+Integration changes: removal of the unused FWAd_AS2 advertising/news framework
+and its symbol registrations, clearing FileAttributes.UseNetwork, plus a separate
+mobile host adapter. Original gameplay, AI, visual and sound tag bytes are retained.
+
+The standalone site loader, score-upload wrapper and remote News.swf are not
+distributed in the production payload. Original local high scores are preserved.
+
+Ruffle v0.7.1 is a separate Flash runtime distributed under the upstream choice
+of MIT or Apache-2.0 license. Both original license files are included in
+ThirdParty/Ruffle and in the packaged ruffle/ directory. Their terms do not
+relicense the game content.
