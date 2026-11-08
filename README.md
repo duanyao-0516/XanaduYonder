@@ -1,17 +1,32 @@
 # XanaduYonder
 
-使用 **Unity + C#** 开发的离线小游戏合集，Android 优先。
+使用 **Unity + C#** 开发的离线小游戏合集，Android 与 iPhone／iPad 共用源码，通过构建目标选择内容。
 
 目标是把自己开发的小游戏放进一个独立 APP，共用大厅、设置、声音、触感和本地存档，同时保持各款游戏的规则与资源独立，方便学习、迭代和接入新玩法。
 
+本次统一入口与双平台整理的实际结果见[整合验证记录](docs/verification-platform-integration.md)。
+
 ## 当前状态
 
-当前源码的 Android 构建版本为 **0.9.5**（versionCode **14**）。最近一次正式发布为 **0.9.4**，Android versionCode 为 **13**，包含 **20 个大厅入口**。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；交付范围与本轮未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
+当前源码版本为 **0.9.5**（build **14**），Android 包含 **25 个大厅入口**，iOS 包含 **19 个入口**。iOS 暂不包含切水果、只有一道门、经典黄金矿工、赵云与阿斗、割绳子、王国保卫战；Unity 原生黄金矿工保留。平台入口与专属资源均由构建流程处理。
+
+最近一次正式 Android 发布为 **0.9.4**，versionCode 为 **13**，包含 **20 个大厅入口**；这是历史发布范围，与当前源码和本地构建分开记录。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；该次交付范围与当时未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
+
+构建统一从以下入口开始，必须显式选择平台：
+
+```bash
+./scripts/build.sh android                              # 独立 Debug APK
+./scripts/build.sh android --configuration release      # 正式签名 APK
+./scripts/build.sh android --configuration release --install DEVICE_SERIAL
+./scripts/build.sh ios                                  # 过滤资源并导出 Xcode 工程
+```
+
+iOS 导出后由 Xcode 编译、签名和安装；Mac 自动续签使用固定的已验收快照，不随源码变化自动发布新版。完整参数和产物见[统一构建说明](docs/building.md)，文档入口见[文档导航](docs/README.md)。
 
 **25 · 切水果大师**：独立全屏离线 WebView，2 秒内两次系统返回回到大厅。27 款刀光首击装备，取消钻石与领取计时，复活免费，切水果首次按下立即响应；去除广告及联网调用。单列大 Logo 使用原游戏小图标，双列与目录使用统一绿色线稿切西瓜图标。固定原始输入和完整离线资源随仓库交付。构建入口 `scripts/build-fruit-slice.sh`，测试包名 `com.duanyao.xanaduyonder.fruitslicetest`；用户已验收，验证范围见[接入记录](docs/verification-fruit-slice.md)。
 
-**23 · 赵云与阿斗（当前开发分支）**：通过独立 Android 全屏 WebView 加入逻辑策略分类，所有游戏资源内置，使用本地 AI 对手；单列大 Logo 使用用户提供原图，双列和目录使用统一墨绿长枪护盾线条图标；删除广告、分享、联网入口和体力门槛，保留金币商店及正常成长。武器背包等功能取消跨天等待，地图按累计局数轮换，保留段位和碎片条件。两秒内连续两次系统返回回到大厅，首次返回提示；同进程后台可暂停续玩，退出或进程回收后保留长期进度并回主菜单。源码构建、内容修补与验证范围见[离线接入记录](docs/verification-zhaoyun-adou.md)。
-当前开发分支新增 **22 · 只有一道门**：大厅打开独立横屏全屏 WebView，运行随包内置的 4399 / 243372 原版内容。保留单人、双人及原关卡进度；连续两次系统返回手势回到大厅，首次提示。接入实现见[实施计划](docs/superpowers/plans/2026-11-01-level-devil-android.md)，最终 APK 和模拟器验证边界见[验证报告](docs/verification-level-devil.md)。这不改变上面的已发布版本记录。构建隔离测试包使用 `scripts/build-level-devil.sh`，包名 `com.duanyao.xanaduyonder.leveldeviltest`，不覆盖正式包和存档。
+**23 · 赵云与阿斗（Android）**：通过独立 Android 全屏 WebView 加入逻辑策略分类，所有游戏资源内置，使用本地 AI 对手；单列大 Logo 使用用户提供原图，双列和目录使用统一墨绿长枪护盾线条图标；删除广告、分享、联网入口和体力门槛，保留金币商店及正常成长。武器背包等功能取消跨天等待，地图按累计局数轮换，保留段位和碎片条件。两秒内连续两次系统返回回到大厅，首次返回提示；同进程后台可暂停续玩，退出或进程回收后保留长期进度并回主菜单。源码构建、内容修补与验证范围见[离线接入记录](docs/verification-zhaoyun-adou.md)。
+**22 · 只有一道门（Android）**：大厅打开独立横屏全屏 WebView，运行随包内置的 4399 / 243372 原版内容。保留单人、双人及原关卡进度；连续两次系统返回手势回到大厅，首次提示。接入实现见[实施计划](docs/superpowers/plans/2026-11-01-level-devil-android.md)，最终 APK 和模拟器验证边界见[验证报告](docs/verification-level-devil.md)。这不改变上面的已发布版本记录。构建隔离测试包使用 `scripts/build-level-devil.sh`，包名 `com.duanyao.xanaduyonder.leveldeviltest`，不覆盖正式包和存档。
 
 **20 · 飞机大战（Aircraft Fire）**：独立 Unity C# 离线玩法，从原游戏入口菜单选择经典模式、关卡模式或查看历史成绩，说明与设置仅在入口显示；实战支持拖动飞机、自动射击、炸弹和双发补给，经典模式可在暂停页切换普通／疯狂进攻，关卡模式共七关。三种成绩与最高到达关卡单独保存，每局可免费复活一次。单列大厅使用用户提供 APK 的真实图标，双列和目录使用统一风格飞机图标。仅保留离线游戏内容，无广告、购买、通知或联网服务。原始参数、素材与移植调整见[APK 参考记录](docs/aircraft-fire-reference.md)；正式交付与初版历史验证分开记录在[飞机大战接入记录](docs/verification-aircraft-fire.md)。
 
@@ -46,11 +61,11 @@
 
 连连看首版三关的生产 UI、自动化和 APK 结果保留在[原开发验证记录](docs/verification-link-match.md)；五关扩展、严格迁移、新 UI 对照及设备验收边界见[扩关验证记录](docs/verification-link-match-expanded.md)。文档描述当前源码，不代表新增场景均已验证通过。
 
-大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存；图标与大 Logo 随布局展示。战争进化史作为第 18 个系列入口接入三种视图，一张卡片内选择一代或二代；王国保卫战为第 19 个入口，同属逻辑策略，复用统一文字与图标样式。飞机大战为第 20 个入口，归入敏捷挑战。当前开发分支新增《赵云与阿斗》为第 23 个入口，归入逻辑策略。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
+大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存；图标与大 Logo 随布局展示。战争进化史作为第 18 个系列入口接入三种视图，一张卡片内选择一代或二代；王国保卫战为第 19 个入口，同属逻辑策略，复用统一文字与图标样式。飞机大战为第 20 个入口，归入敏捷挑战。Android 中《赵云与阿斗》为第 23 个入口，归入逻辑策略；当前两端范围见上方平台说明。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
 
 Unity 玩法中，除 Dino、Flappy Bird、飞机大战外各款游戏独立保存对局；Flappy Bird 的 `flappy-bird-v1.json` 只保存最高纪录，主动离开或进程重启后从准备页开始；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。飞机大战的 `aircraft-fire-v1.json` 只保存经典普通／疯狂／闯关最高分与最高到达关卡，不保存战场。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。Unity 玩法沿用共用声音与触感设置；王国保卫战开始页打开游戏原有音乐／音效设置，不写回大厅设置，关卡进度沿用其独立存档。旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
-**v0.9.4** 的正式发布附件仅为 `XanaduYonder-0.9.4-android-arm64.apk`，入口为 [GitHub Release](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.9.4)。正式包沿用既有应用身份与签名，可覆盖升级同签名正式版；此前 `com.duanyao.xanaduyonder.aircrafttest` 测试包的数据不会自动导入正式应用。v0.9.2／v0.9.3 及 v0.9.4 先前误传的测试 APK 不属于本次正式交付。按用户要求，本轮不追加测试或成品校验，也不声称当前版本通过设备回归。素材与第三方代码来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
+**v0.9.4** 的正式发布附件仅为 `XanaduYonder-0.9.4-android-arm64.apk`，入口为 [GitHub Release](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.9.4)。正式包沿用既有应用身份与签名，可覆盖升级同签名正式版；此前 `com.duanyao.xanaduyonder.aircrafttest` 测试包的数据不会自动导入正式应用。v0.9.2／v0.9.3 及 v0.9.4 先前误传的测试 APK 不属于本次正式交付。当时的 v0.9.4 发布操作按用户要求未追加测试或成品校验；该历史记录不代表当前源码的设备回归结果。素材与第三方代码来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
 战争进化史两代使用 Unity C# 原生规则与离线原素材，游戏与手机操作已由用户在 OPPO 验收。大厅三种视图复用统一字体与图标规范，单列展示原版标题 Logo。两代各自自动保存一局未完成战场，离开或重启后，先进入对应版本主菜单，再点 Continue 继续；无未完成战场时 Continue 置灰。恢复后先停在暂停页，胜负结算清除该局进度。一代暂停页可返回主菜单重新选择难度；两代入口右上角提供各自玩法及中英词汇对照、共用声音与触感设置。用户于 2026-10-30 确认续局与入口调整验收通过，并授权提交合并 master。来源、实现与验证范围见[战争进化史接入记录](docs/verification-age-of-war.md)。
 
@@ -58,7 +73,7 @@ Unity 玩法中，除 Dino、Flappy Bird、飞机大战外各款游戏独立保�
 
 后续小游戏的界面和接入可先参考[推箱子开发复盘与小游戏 UI 参考规范](docs/sokoban-development-guide.md)：包含实际问题、UI 参数、复用边界、内容与存档契约，以及从原型到 Unity 的验收检查表。
 
-固定 **Unity 6000.3.27f1（Apple Silicon）**，安装 Android Build Support 及配套 SDK/NDK/OpenJDK。C# 使用 VS Code + Unity 扩展，独立测试使用 .NET 10.0.403。完整环境、IDE 和构建步骤见 [开发说明](docs/development.md)。
+固定 **Unity 6000.3.27f1（Apple Silicon）**。Android 安装 Android Build Support 及配套 SDK/NDK/OpenJDK；iOS 安装 iOS Build Support 和兼容版本 Xcode。C# 使用 VS Code + Unity 扩展，独立测试使用 .NET 10.0.403。完整环境、IDE 和构建步骤见 [开发说明](docs/development.md)。
 
 在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击；成语接龙输入后点击发送，点击气泡查看释义；数独点击格子和数字，支持铅笔候选与快速输入；合成大西瓜拖动瞄准后松手投球。扫雷点击翻格、长按 0.4 秒立即标记，单指拖动、双指缩放和平移；编辑器右键松手可直接插旗/拔旗。 Zuma 从大厅进入横屏，拖动瞄准、松手单发。Dino 先选择方向，轻按跑道或右侧按钮短跳，按住长跳并在落地后续跳；左侧按住下蹲，编辑器支持空格／↑ 跳跃与 ↓ 下蹲。
 
@@ -138,7 +153,7 @@ scripts/test-link-match.sh
 scripts/test-link-match-input.sh
 scripts/test-link-match-persistence.sh
 scripts/test-link-match-ui.sh
-./scripts/build-android.sh --install DEVICE_SERIAL
+./scripts/build.sh android --install DEVICE_SERIAL
 ```
 
 扫雷验证使用专用 `scripts/build-minesweeper-validation.sh` 和 `com.duanyao.xanaduyonder.minesweepertest`，操作步骤见[扫雷独立验证](docs/development.md#扫雷独立验证)。UI 检查与构建须在同一本工作树中串行执行，不覆盖正式应用。
@@ -151,9 +166,9 @@ scripts/test-link-match-ui.sh
 
 连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。48 张 Fluent 3D 原图（水果、食物、动物、自然与物品）和完整 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
 
-运行 `./scripts/build-android.sh --install DEVICE_SERIAL` 构建并覆盖安装独立应用 **XanaduYonder Debug**（`com.duanyao.xanaduyonder.debug`）；仅打包用 `./scripts/build-android.sh`，两者都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`。Debug 使用本地 debug 签名，与正式版并存、分别保存进度；它关闭 Unity Development、Android debuggable、Development Console 和 PlayerConnection，不是 `run-as` 诊断包。所有小游戏 validation/preview 也采用相同的非 Development 约束，保留各自独立包名。Unity 构建日志保存在 `artifacts/logs/build-android.log`，版本统一从 `ProjectBuild.Version` 读取，当前为 0.9.5。安装脚本参数见[通用 Android Debug](docs/development.md#通用-android-debug)。
+运行 `./scripts/build.sh android --install DEVICE_SERIAL` 构建并覆盖安装独立应用 **XanaduYonder Debug**（`com.duanyao.xanaduyonder.debug`）；仅打包用 `./scripts/build.sh android`，两者都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`。Debug 使用本地 debug 签名，与正式版并存、分别保存进度；它关闭 Unity Development、Android debuggable、Development Console 和 PlayerConnection，不是 `run-as` 诊断包。所有小游戏 validation/preview 也采用相同的非 Development 约束，保留各自独立包名。Unity 构建日志保存在 `artifacts/logs/build-android.log`，版本统一从 `ProjectBuild.Version` 读取，当前为 0.9.5。安装脚本参数见[通用 Android Debug](docs/development.md#通用-android-debug)。
 
-运行 `./scripts/build-release.sh --install DEVICE_SERIAL` 构建原主包 `com.duanyao.xanaduyonder`，使用既有私有 release 签名，校验成功后才发布产物并覆盖安装同包名、同签名的正式应用。仅打包用 `./scripts/build-release.sh`，输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-android-arm64.apk`。两种安装命令均可省略序列号，沿用 `ANDROID_SERIAL` 或选择唯一已授权的 ARM64 真机；支持 Android 8.0 及以上。签名配置与安装方法见[正式发布 APK](docs/development.md#正式发布-apk)。
+运行 `./scripts/build.sh android --configuration release --install DEVICE_SERIAL` 构建原主包 `com.duanyao.xanaduyonder`，使用既有私有 release 签名，校验成功后才发布产物并覆盖安装同包名、同签名的正式应用。仅打包用 `./scripts/build.sh android --configuration release`，输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-android-arm64.apk`。两种安装命令均可省略序列号，沿用 `ANDROID_SERIAL` 或选择唯一已授权的 ARM64 真机；支持 Android 8.0 及以上。签名配置与安装方法见[正式发布 APK](docs/development.md#正式发布-apk)。
 
 [v0.6.0 发布记录](docs/releases/v0.6.0.md) · [v0.5.0 发布记录](docs/releases/v0.5.0.md) · [v0.4.0 发布记录](docs/releases/v0.4.0.md) · [扫雷设计](docs/superpowers/specs/2026-10-27-minesweeper-design.md) · [扫雷验证](docs/verification-minesweeper.md) · [v0.3.0 发布记录](docs/releases/v0.3.0.md) · [成语接龙验证](docs/verification-idiom.md) · [数独玩法与接入](docs/sudoku-game.md) · [数独初版验证](docs/verification-sudoku.md) · [数独修订验证](docs/verification-sudoku-refinement.md) · [数独题库来源](docs/sudoku-content.md) · [旸了个旸玩法与接入](docs/sheep-game.md) · [四档难度校准](docs/verification-sheep-difficulty.md) · [模式、难度与紧凑界面验证](docs/verification-sheep-modes.md) · [v0.3.0 当前包与 Logo 验证](docs/verification-logo-padding.md) · [v0.3.0 玩法修订验证](docs/verification-sheep-refinement.md) · [v0.3.0 初版历史验证](docs/verification-sheep.md) · [跳一跳玩法与接入](docs/jump-game.md) · [v0.2.0 发布记录](docs/releases/v0.2.0.md) · [v0.2.0 验证记录](docs/verification-jump.md) · [架构与存档契约](docs/architecture.md) · [设备场景回归](docs/device-testing.md) · [首版验证记录](docs/verification.md) · [v0.1.0 发布记录](docs/releases/v0.1.0.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
@@ -215,7 +230,7 @@ scripts/test-link-match-ui.sh
 
 ## 当前范围
 
-- 先把独立 Android APP 做好，安装后所有玩法可离线使用。
+- Android 与 iOS 共用主干和原生玩法，平台专属容器与资源按构建目标选择；游戏内容可离线使用，开发签名仍受系统授权期限约束。
 - 使用 Unity + C#，优先考虑学习资料、工具生态和后续扩展，不自行维护引擎。
 - 暂不接入微信、抖音等小游戏平台，不为这些渠道预装 SDK 或增加构建目标。
 - 不引入登录、会员、广告、服务器或云存档。
@@ -242,11 +257,11 @@ XanaduYonder 是独立项目，与 [DawnYew](https://github.com/duanyao-0516/Daw
 
 ## 开发约定
 
-- 默认分支为 `master`。
-- 编辑器版本固定在 `ProjectSettings/ProjectVersion.txt`，依赖固定在 `Packages/`；升级时同步更新构建说明并重新验证 Android 真机。
+- 默认分支为 `master`，两端共用；功能分支完成验证后合回主干，不按平台长期分叉。
+- 编辑器版本固定在 `ProjectSettings/ProjectVersion.txt`，依赖固定在 `Packages/`；升级时同步更新构建说明，并验证受影响平台的构建与真机行为。
 - 游戏规则与表现分开；规则使用可测试的 C#，场景、动画和输入由 Unity 承担。
 - 每款游戏使用稳定标识、独立资源和版本化本地存档。大厅负责进入、暂停、返回及资源释放。
-- 以真实 Android 设备检查输入、动效、性能和生命周期；编辑器运行正常不能代替设备验证。
+- 按受影响平台使用真实设备检查输入、动效、性能和生命周期；Android 与 iOS 的结果分别记录，编辑器运行正常不能代替设备验证。
 
 ## Git 与文件管理
 

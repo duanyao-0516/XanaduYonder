@@ -34,7 +34,7 @@ else
     expected_package=com.duanyao.xanaduyonder.debug
 fi
 if [[ ! -s "$APK_FILE" ]]; then
-    printf 'APK missing or empty: %s\nRun scripts/build-android.sh first.\n' "$APK_FILE" >&2
+    printf 'APK missing or empty: %s\nRun scripts/build.sh android first.\n' "$APK_FILE" >&2
     exit 1
 fi
 AAPT="${AAPT:-$ANDROID_PLAYER/SDK/build-tools/36.0.0/aapt}"

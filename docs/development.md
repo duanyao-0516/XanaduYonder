@@ -1,4 +1,6 @@
-# 本地开发与 Android 构建
+# 本地开发与双平台构建
+
+日常构建统一使用 `scripts/build.sh android|ios`，参数、平台内容、签名与产物见[统一构建说明](building.md)。本文保留各玩法的专用验证命令；旧平台脚本只作为兼容入口。
 
 新小游戏的设计和接入先参考[推箱子开发复盘与小游戏 UI 参考规范](sokoban-development-guide.md)。其中将共享风格、实际缺陷、内容/存档契约和验证层次分开说明；推箱子的紧凑选关、取消缩放等取舍不应直接套用到所有玩法。
 
@@ -6,6 +8,7 @@
 
 - Unity Editor **6000.3.27f1**，changeset `672d562a42a7`，Mac 使用 Apple Silicon 版本。
 - Unity Hub 安装同一编辑器的 **Android Build Support**、**Android SDK & NDK Tools**、**OpenJDK**；保持 Unity External Tools 默认使用随该版本安装的依赖。
+- iPhone／iPad 导出还需安装同版本 **iOS Build Support** 和兼容 Xcode；真机签名、开发者模式及本机定时续签见 [iOS 运行记录](verification-ios-native.md)和[自动续签说明](ios-auto-renew.md)。
 - VS Code 安装 Microsoft 的 `visualstudiotoolsforunity.vstuc` 扩展，它同时安装 C# 与 C# Dev Kit。Unity 项目使用 `com.unity.ide.visualstudio`，不使用已废弃的 Visual Studio Code Editor 包。
 - .NET SDK **10.0.403** 用于独立测试，`global.json` 允许同 feature band 的后续补丁。它不替代 Unity 的脚本编译器与 Android 构建工具。
 - Android 8.0/API 26 或以上的 **ARM64 真机**，开启开发者选项与 USB 调试，并授权当前电脑。首版固定 target SDK 36，避免跟随机器中额外安装的 SDK 自动变化。
@@ -22,7 +25,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅按固定分类纵向滚动，支持双列卡片、分类目录、单列大卡；直接点击整张卡片进入游戏。规则、公共设置和各自存档逻辑均与手机共用。
 
-大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。两个在研游戏的图标已经预留为 `Lobby/Icons/kingdom-rush`（王国守卫战／皇家守卫军）和 `Lobby/Icons/age-of-war`（战争进化史），它们尚不是大厅入口。
+大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。战争进化史已经是共用系列入口；王国保卫战是 Android 专属入口。当前大厅为 Android 25 项、iOS 19 项，详见[平台构建矩阵](building.md)。
 
 ## 命令
 
@@ -68,10 +71,10 @@ scripts/test-link-match.sh
 scripts/test-link-match-input.sh
 scripts/test-link-match-persistence.sh
 scripts/test-link-match-ui.sh
-./scripts/build-android.sh --install DEVICE_SERIAL
+./scripts/build.sh android --install DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含战争进化史系列入口的十八张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含战争进化史系列入口的Android 目标下二十五张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -95,7 +98,7 @@ mkdir -p artifacts/logs
 
 使用同样命令将 `-executeMethod` 替换成 `XanaduYonder.EditorTools.PersistenceChecks.Run`，可以在 Unity 运行真实存档验证。批处理前关闭此项目的交互编辑器，避免同一工程被两个进程占用。
 
-## 大厅、启动交接与成语整合验证
+## 大厅、启动交接与成语整合验证（v0.8.0 历史记录）
 
 v0.8.0 保留 17 个游戏入口。大厅支持双列卡片、分类目录、单列大卡；固定分类和组内顺序，整卡进入游戏，选择浮层与游戏输入隔离。启动层在大厅布局和输入就绪后同步解除遮挡及射线拦截，避免大厅已显示却不能滚动或点击。
 
@@ -162,7 +165,7 @@ source scripts/project-version.sh
 
 07 扫雷已包含在正式 v0.5.0 的十款游戏合集中。当前独立测试包沿用 `ProjectBuild.Version` 与 `ProjectBuild.VersionCode`，不因生成测试包创建发布版本。玩法与数据契约见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)，实际验证结果与未完成项统一记录在[扫雷验证记录](verification-minesweeper.md)。
 
-本轮开发、测试和构建只使用 `/Users/bytedance/.codex/worktrees/minesweeper/XanaduYonder`；不切换、清理、构建或修改其他工作树，不共享其他检出的 Library/Temp。以下命令均从这一本工作树根目录执行：
+以下命令从当前工作树根目录执行，不与其他检出共享 Library/Temp，也不并行运行同一工作树的 Unity 编辑器。早期扫雷开发工作树和实际结果保留在对应验证记录中：
 
 ```bash
 scripts/test-minesweeper.sh
@@ -262,8 +265,8 @@ source scripts/project-version.sh
 在仓库根目录构建独立 Debug；连接已授权的 ARM64 安卓真机后可同时构建并安装：
 
 ```bash
-./scripts/build-android.sh
-./scripts/build-android.sh --install DEVICE_SERIAL
+./scripts/build.sh android
+./scripts/build.sh android --install DEVICE_SERIAL
 ```
 
 两种命令都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，包名为 `com.duanyao.xanaduyonder.debug`，名称为 **XanaduYonder Debug**。`--install` 在产物校验成功后使用 `adb install -r` 安装并启动；再次安装更新同包名、同签名的 Debug，保留其进度。Debug 与正式应用并存，各有独立的数据目录和存档。它使用本地 debug 签名，但关闭 Unity Development 与 Android debuggable，不带开发控制台或 PlayerConnection，也不能作为 `run-as` 诊断包。
@@ -286,10 +289,10 @@ source scripts/project-version.sh
 连接已授权的 ARM64 安卓真机，在项目目录构建并覆盖安装同包名、同签名的正式应用：
 
 ```bash
-./scripts/build-release.sh --install DEVICE_SERIAL
+./scripts/build.sh android --configuration release --install DEVICE_SERIAL
 ```
 
-省略序列号时，脚本优先使用 `ANDROID_SERIAL`，否则自动选择唯一已授权的 ARM64 真机。只打包时运行 `./scripts/build-release.sh`。Release 使用原主包 `com.duanyao.xanaduyonder` 与既有私有 release 签名；通过 `adb install -r` 覆盖同包名、同签名正式应用并保留存档，独立 Debug 应用不受影响。
+省略序列号时，脚本优先使用 `ANDROID_SERIAL`，否则自动选择唯一已授权的 ARM64 真机。只打包时运行 `./scripts/build.sh android --configuration release`。Release 使用原主包 `com.duanyao.xanaduyonder` 与既有私有 release 签名；通过 `adb install -r` 覆盖同包名、同签名正式应用并保留存档，独立 Debug 应用不受影响。
 
 脚本默认读取本机私有文件 `~/Library/Application Support/XanaduYonder/signing/release-signing.json`。JSON 对象使用下表的四个键，值均为字符串。也可以通过环境变量传入一整套签名配置。只要设置了其中任意一个环境变量，脚本就要求四项齐全，防止混用两套签名。配置文件和口令留在仓库外。
 

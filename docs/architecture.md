@@ -1,6 +1,22 @@
 # 架构与存档契约
 
-正式版本记录为 0.9.4、Android versionCode 13，包含 20 个大厅入口，见[v0.9.4 发布记录](releases/v0.9.4.md)。当前开发分支加入第 23 个入口赵云与阿斗，属于未发布预览；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+当前源码共用 Unity 工程，版本为 0.9.5 / build 14，Android 包含 25 个入口，iOS 包含 19 个入口，差异见[统一构建说明](building.md)。最近正式 Android 发布仍为 v0.9.4 / versionCode 13 / 20 入口，见[发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+
+## 源码与构建目录
+
+| 目录 | 职责 |
+| --- | --- |
+| `Assets/Scripts/Core/` | 平台无关规则、状态与存档契约 |
+| `Assets/Scripts/Runtime/` | 共用大厅、Unity 页面、游戏表现与生命周期 |
+| `Assets/Scripts/Runtime/Platform/iOS/` | iOS 托管触感桥与首次启动音频输出恢复 |
+| `Assets/Plugins/iOS/` | iOS 原生音频／触感接口，仅 iOS 导入 |
+| `Assets/Plugins/Android/`、`ThirdParty/` | Android 容器与固定来源内容，各模块保留独立构建和许可 |
+| `Assets/Editor/` | Unity 构建、资源准备与编辑器验证入口 |
+| `scripts/build.sh`、`scripts/build/` | 统一公共构建入口、平台后端及共用工具定位 |
+| `docs/` | 当前使用文档与按版本／阶段保留的验证证据，见[导航](README.md) |
+
+iOS 资源过滤在副本内完成，源码保留 Android 的全部内容。C# 文件按 Unity 目标宏编译；目录整理保留现有 `.meta` GUID，不改变脚本类型或存档协议。
+
 
 | 模块 | 规则 / 表现 | 独立文件 | 记录 |
 | --- | --- | --- | --- |
@@ -22,7 +38,7 @@
 | Flappy Bird | `Core/FlappyBird` / `FlappySession`、`FlappyBirdPage` | `flappy-bird-v1.json` | 最高纪录；不跨进程保存对局 |
 | 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v2.json` | 轻松／挑战 × 五关共十槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩；严格迁移 v1 六槽 |
 | 飞机大战 | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
-| 赵云与阿斗（预览） | 原 Laya 游戏 / 独立 Android WebView | 独立 origin 的 localStorage：`xanadu.zhaoyun-adou.player.v1` | 金币、段位、武器/武将与设置；不跨进程保存战场 |
+| 赵云与阿斗（Android） | 原 Laya 游戏 / 独立 Android WebView | 独立 origin 的 localStorage：`xanadu.zhaoyun-adou.player.v1` | 金币、段位、武器/武将与设置；不跨进程保存战场 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -35,7 +51,7 @@ Zuma 模块见[原版 UI、横屏与独立续局设计](superpowers/specs/2026-1
 - 普通游戏页顶部导航在居中 720 单位列中使用统一几何：返回图标 `(56,34,58,58)`，右侧辅助图标 x536、设置 x606，顶部均为 34。带文字的返回入口可保留自身宽度，但左上位置一致。同排标题应对齐导航中心；标题字号、下方棋盘与操作区由各游戏自行布局。输入页继续保持键盘避让策略；扫雷专注布局的工具栏按其触控尺寸要求单独布局。
 - `BoardView`、`JumpSceneView` 和 `SheepBoardView` 显示对应规则模型，不计算胜负。各页面在暂停、失焦、离开时终止尚未提交的输入或结束动画，并按最终模型重绘。shell 切换时使其他游戏页面离开，跳一跳同时关闭独立相机。
 - `SwipeGesture` 保存一次触摸的所有权。只有从棋盘开始、超过阈值、由原手指正常结束的操作可以提交。UGUI 会把取消触摸派发为 pointerUp，适配层因此还会核对 `TouchPhase.Canceled`。
-- `GameFeedback` 合成短音效，并通过 Android 系统触感接口反馈合并；开关由公共存档保存，不申请网络服务。
+- `GameFeedback` 合成短音效，按平台调用 Android 系统触感接口或 iOS `IOSHaptics`；开关由公共存档保存，不申请网络服务。iOS 首次启动的音频输出恢复由 `Platform/iOS/IOSAudioOutputBootstrap` 负责，后续生命周期仍交由 Unity 管理；已验证效果和未证明的底层根因分开记录在 [iOS 验证文档](verification-ios-native.md)。
 - `JsonSaveCodec` 使用 Unity 官方 Newtonsoft JSON 包的实际解析器，逐项校验 token 类型；`LocalSaveStore` 负责临时文件、原子替换和备份恢复。
 - Dino由独立安全区根节点承载横／竖屏布局，公共竖屏框架不承载其横屏场景。`AppController` 负责方向请求、路由和公共设置数据；`DinoPage` 自己展示设置、暂停和结算，使用注入的委托读写共用开关，不向公共 UI 基类添加Dino业务分支。
 

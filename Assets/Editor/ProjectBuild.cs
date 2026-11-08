@@ -528,7 +528,7 @@ namespace XanaduYonder.EditorTools
             });
         }
 
-        // Called by build-release.sh. This intermediate is not a distributable release:
+        // Called by scripts/build.sh android --configuration release. This intermediate is not a distributable release:
         // the script replaces its debug signature with the private release identity.
         public static void BuildAndroidRelease()
         {

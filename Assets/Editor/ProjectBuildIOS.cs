@@ -10,7 +10,7 @@ using UnityEngine.Rendering;
 
 namespace XanaduYonder.EditorTools
 {
-    // Run through scripts/build-ios.sh: only the filtered project copy is changed.
+    // Run through scripts/build.sh ios: only the filtered project copy is changed.
     public static class ProjectBuildIOS
     {
         public const string BundleIdentifier = "com.duanyao.xanaduyonder.iosnative";
@@ -47,7 +47,7 @@ namespace XanaduYonder.EditorTools
             var artifactDirectory = Path.GetDirectoryName(project);
             var manifestPath = Path.Combine(artifactDirectory, "staging-manifest.json");
             if (!File.Exists(manifestPath))
-                throw new BuildFailedException("Missing filtered staging manifest. Run scripts/build-ios.sh.");
+                throw new BuildFailedException("Missing filtered staging manifest. Run scripts/build.sh ios.");
             var manifest = JsonUtility.FromJson<StagingManifest>(File.ReadAllText(manifestPath));
             if (manifest == null || string.IsNullOrEmpty(manifest.staging_root) ||
                 Path.GetFullPath(manifest.staging_root) != project ||
