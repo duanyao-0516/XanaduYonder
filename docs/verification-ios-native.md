@@ -22,7 +22,7 @@ xcodebuild -project artifacts/ios/xcode/Unity-iPhone.xcodeproj \
   -derivedDataPath artifacts/ios/DerivedData \
   -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
   "DEVELOPMENT_TEAM=${XANADU_IOS_TEAM_ID:?请设置个人 Team ID}" \
-  CODE_SIGN_STYLE=Automatic build
+  CODE_SIGN_STYLE=Automatic clean build
 
 xcrun devicectl device install app --device "$XANADU_IOS_DEVICE_ID" \
   artifacts/ios/DerivedData/Build/Products/Release-iphoneos/XanaduYonder.app
@@ -31,7 +31,7 @@ xcrun devicectl device process launch --device "$XANADU_IOS_DEVICE_ID" \
   com.duanyao.xanaduyonder.iosnative
 ```
 
-Xcode 必须仍有可用的账号登录状态。重新构建后应核对描述文件有效期；自动续签尚未配置。生成工程中的个人团队配置与证书/描述文件均不提交到 Git。
+Xcode 必须仍有可用的账号登录状态。重新构建后应核对描述文件有效期和严格签名校验；本机已配置官方工具链自动续签，详见 [自动续签运行说明](ios-auto-renew.md)。生成工程中的个人团队配置与证书/描述文件均不提交到 Git。
 
 构建记录：`artifacts/logs/build-ios.log`；副本清单：`artifacts/ios/staging-manifest.json`；实际打包资源：`artifacts/ios/packed-assets.txt`；导出摘要：`artifacts/ios/export-summary.txt`。
 
@@ -48,7 +48,7 @@ Xcode 必须仍有可用的账号登录状态。重新构建后应核对描述�
 - 2026-11-08：用户完成 Xcode 许可/账号初始化及手机 Developer Mode 重启确认；设备再次报告 `enabled`、`paired` 和 DDI services available。Xcode 的 iOS 平台组件最初未下载完，导致 destination 检查失败；组件就绪后原命令成功，无需修改游戏代码。
 - Xcode 26.6 / iPhoneOS 26.5 SDK 的 `Release` 真机编译退出码 0，日志含 `BUILD SUCCEEDED`。产物为 `artifacts/ios/DerivedData/Build/Products/Release-iphoneos/XanaduYonder.app`，原生编译日志 `artifacts/logs/build-ios-native.log`。
 - 最终 `.app` 校验通过：Bundle ID 正确，版本 `0.9.5` / build `14`，iPhoneOS 平台，设备族 `1,2`，主程序与 UnityFramework 均含 ARM64，`codesign --verify --deep --strict` 通过；embedded profile 包含目标 iPhone，签名 app identifier / team 与 profile 一致。报告 `artifacts/ios/signed-app-verification.json`。
-- 实际 profile 的 `LocalProvision=true`、有效时长 168 小时，到期时间 `2026-11-14T16:12:20Z`，即北京时间 **2026-11-15 00:12:20**。这是当前这一份签名的期限。
+- 首装 profile 的 `LocalProvision=true`、有效时长 168 小时，到期时间 `2026-11-14T16:12:20Z`，即北京时间 **2026-11-15 00:12:20**。后续实际续签期限见文末记录。
 - `devicectl` 安装成功，设备 app 列表确认版本 `0.9.5` / `14`。首次启动被 iOS 的 developer trust 检查拒绝；用户在手机信任后，同一安装包成功启动，进程 PID 744，随后进程检查仍在运行。证据分别为 `artifacts/ios/device-install.json`、`installed-app.json`、`device-launch.json`、`device-running-process.json`。
 - 通过 Xcode 原生 `Take Screenshot` 获取实际 iPhone 17 Pro 大厅画面：显示“全部游戏 · 19 款”，可见数独、数字华容道、2048 等卡片。截图为 `artifacts/ios/iphone17pro-lobby.png`。这证明真机渲染成功，不等于所有游戏触控与存档均已回归。
 - 已打包开发签名 IPA：`artifacts/builds/XanaduYonder-0.9.5-ios-native.ipa`，281791343 字节（约 281.8 MB），ZIP 完整性检查通过；SHA-256 记录在 `artifacts/ios/ipa-summary.json`。该包受当前个人签名的授权设备和有效期约束。
@@ -97,4 +97,6 @@ Apple Personal Team 的描述文件有效期为 7 天，每台设备最多安装
 - [AltStore Classic Remote AltServer](https://faq.altstore.io/altstore-classic/remote-altservers)：完成设置后，Wi-Fi 与 LocalDevVPN 开启时可不依赖自己的电脑在线。后台刷新不能视为每次必然成功。
 - [SideStore 当前准备条件](https://docs.sidestore.io/docs/installation/prerequisites)：首次借助电脑安装，日常刷新使用 Wi-Fi、LocalDevVPN 和有效配对数据。
 
-本轮未登录任何第三方签名服务，未配置自动续签，也未上传设备配对秘密。
+本轮未登录任何第三方签名服务，也未上传设备配对秘密。已使用 Xcode 官方工具链和 Codex 本地定时任务配置自动续签：每 6 小时检查，已安装授权剩余 72 小时以内才尝试，手机不可达时延期重试。Mac 需开机联网、Codex 需运行，Xcode 登录和签名身份需有效；无线服务在当前网络尚未连通，目前已验证 USB 路径。
+
+2026-11-08 15:30，正式执行器在 iPhone 锁屏状态下完成真实续签和覆盖安装，期限延长到北京时间 **2026-11-15 15:29:15**，签名证书不变。安装前后 29 份存档及备份文件逐字节一致。固定快照、执行器校验、失败恢复、版本保护、计划任务与实证路径见 [自动续签运行说明](ios-auto-renew.md)。这次验证没有主动启动应用；玩法验收结论仍以此前明确记录为准。
