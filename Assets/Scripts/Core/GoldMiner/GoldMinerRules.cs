@@ -2,16 +2,25 @@ using System;
 
 namespace XanaduYonder.Core.GoldMiner
 {
+    // Legacy and Native retain the v3 mechanics/economy, with their respective accepted target curves.
+    public enum GoldMinerBalanceProfile { Legacy = 1, Native = 3, Classic = 4 }
+
     public static class GoldMinerRules
     {
-        public const int Version = 3, LevelCount = 10, TicksPerSecond = 60, LevelTicks = 3600, MaxEntities = 128, MaxBombs = 9;
+        public const int Version = 4, LevelCount = 10, TicksPerSecond = 60, LevelTicks = 3600, MaxEntities = 128, MaxBombs = 9;
         // Speeds are world units per second. Heavy loads should consume a meaningful part of
         // the one-minute round; strength and dynamite trade shop cash for that lost time.
         public const double TickSeconds = 1.0 / 60, IdleLength = .2, HookRadius = .09, ExtendSpeed = 7.2, EmptyRetractSpeed = 5, LoadedRetractSpeed = 2.4;
         public const double MaxAngle = 80 * Math.PI / 180, SwingSpeed = Math.PI / 3;
-        // Targets remain cumulative wallet balances. Each mode has its own measured curve.
-        static readonly long[] targets = { 1200, 3000, 5100, 7600, 10400, 13600, 17200, 21200, 25600, 30400 };
-        static readonly long[] coopTargets = { 2400, 6000, 10200, 15200, 20800, 27200, 34400, 42400, 51200, 60800 };
+        // Targets remain cumulative wallet balances. V4 preserves the v3 income-pressure
+        // proportions after changing denominations, then proves every existing layout in Core.
+        static readonly long[] nativeTargets = { 1200, 3000, 5100, 7600, 10400, 13600, 17200, 21200, 25600, 30400 };
+        static readonly long[] nativeCoopTargets = { 2400, 6000, 10200, 15200, 20800, 27200, 34400, 42400, 51200, 60800 };
+        static readonly long[] targets = { 750, 2050, 3550, 5450, 7750, 10450, 13500, 16950, 20800, 25050 };
+        static readonly long[] coopTargets = { 1600, 4300, 7400, 11300, 15900, 21250, 27400, 34300, 41950, 50400 };
+        static readonly long[] classicValues = { 50, 100, 500, 11, 20, 600, 100, 2, 602 };
+        // A fixed three-item rotation gives explicit progression without consuming either RNG stream.
+        static readonly int[] shelves = { 7, 11, 21, 19, 13, 19, 25, 7, 19 };
         static readonly long[] legacyTargets =
         {
             650,
@@ -236,11 +245,15 @@ namespace XanaduYonder.Core.GoldMiner
             return mode == GoldMinerMode.Solo ? "solo" : "coop";
         }
 
-        public static long Target(GoldMinerMode mode, int level)
+        public static long Target(GoldMinerMode mode, int level, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
             ValidateLevel(level);
             PlayerCount(mode);
-            return (mode == GoldMinerMode.Coop ? coopTargets : targets)[level - 1];
+            ValidateProfile(profile);
+            if (profile == GoldMinerBalanceProfile.Legacy) return LegacyTarget(mode, level);
+            return (profile == GoldMinerBalanceProfile.Native
+                ? (mode == GoldMinerMode.Coop ? nativeCoopTargets : nativeTargets)
+                : (mode == GoldMinerMode.Coop ? coopTargets : targets))[level - 1];
         }
 
         internal static long LegacyTarget(GoldMinerMode mode, int level)
@@ -252,7 +265,26 @@ namespace XanaduYonder.Core.GoldMiner
 
         internal static bool IsSupportedTarget(GoldMinerMode mode, int level, long target)
         {
-            return target == Target(mode, level) || target == LegacyTarget(mode, level);
+            return target == Target(mode, level) || target == Target(mode, level, GoldMinerBalanceProfile.Native) || target == LegacyTarget(mode, level);
+        }
+
+        public static bool ValidProfile(GoldMinerBalanceProfile profile)
+        {
+            return profile == GoldMinerBalanceProfile.Legacy || profile == GoldMinerBalanceProfile.Native || profile == GoldMinerBalanceProfile.Classic;
+        }
+
+        static void ValidateProfile(GoldMinerBalanceProfile profile)
+        {
+            if (!ValidProfile(profile)) throw new ArgumentOutOfRangeException("profile");
+        }
+
+        // Runtime's strict save migration uses this across the Core assembly boundary.
+        public static GoldMinerBalanceProfile ProfileForTarget(GoldMinerMode mode, int level, long target)
+        {
+            if (target == LegacyTarget(mode, level)) return GoldMinerBalanceProfile.Legacy;
+            if (target == Target(mode, level, GoldMinerBalanceProfile.Native)) return GoldMinerBalanceProfile.Native;
+            if (target == Target(mode, level)) return GoldMinerBalanceProfile.Classic;
+            throw new ArgumentException("Unsupported campaign target.");
         }
 
         public static int Count(GoldMinerMode mode, int level, GoldMinerKind kind)
@@ -276,10 +308,11 @@ namespace XanaduYonder.Core.GoldMiner
             return weights[(int)kind];
         }
 
-        public static long BaseValue(GoldMinerKind kind)
+        public static long BaseValue(GoldMinerKind kind, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
             ValidateKind(kind);
-            return values[(int)kind];
+            ValidateProfile(profile);
+            return (profile == GoldMinerBalanceProfile.Classic ? classicValues : values)[(int)kind];
         }
 
         public static bool IsAnimal(GoldMinerKind kind)
@@ -293,11 +326,11 @@ namespace XanaduYonder.Core.GoldMiner
             return .65 + .05 * (level - 3);
         }
 
-        public static long Value(GoldMinerEntity e, GoldMinerBuffs b)
+        public static long Value(GoldMinerEntity e, GoldMinerBuffs b, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
             if (e == null || b == null)
                 throw new ArgumentNullException();
-            long v = e.Kind == GoldMinerKind.MysteryBag ? e.BagValue.Value : BaseValue(e.Kind);
+            long v = e.Kind == GoldMinerKind.MysteryBag ? e.BagValue.Value : BaseValue(e.Kind, profile);
             if (b.RockBook && (e.Kind == GoldMinerKind.RockSmall || e.Kind == GoldMinerKind.RockLarge))
                 v *= 3;
             if (b.DiamondOil && (e.Kind == GoldMinerKind.Diamond || e.Kind == GoldMinerKind.DiamondMole))
@@ -305,10 +338,24 @@ namespace XanaduYonder.Core.GoldMiner
             return v;
         }
 
-        public static long Price(GoldMinerItem item, int completedLevel)
+        public static long Price(GoldMinerItem item, int completedLevel, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
             if (completedLevel < 1 || completedLevel >= LevelCount)
                 throw new ArgumentOutOfRangeException("completedLevel");
+            ValidateProfile(profile);
+            if (profile == GoldMinerBalanceProfile.Classic)
+            {
+                int step = completedLevel - 1;
+                switch (item)
+                {
+                    case GoldMinerItem.Dynamite: return 80 + 15 * step;
+                    case GoldMinerItem.Strength: return 180 + 30 * step;
+                    case GoldMinerItem.Clover: return 60 + 10 * step;
+                    case GoldMinerItem.RockBook: return 40 + 5 * step;
+                    case GoldMinerItem.DiamondOil: return 220 + 40 * step;
+                    default: throw new ArgumentOutOfRangeException("item");
+                }
+            }
             switch (item)
             {
                 case GoldMinerItem.Dynamite:
@@ -326,14 +373,29 @@ namespace XanaduYonder.Core.GoldMiner
             }
         }
 
-        public static long ShopMaximum(int level)
+        public static int ShopStock(GoldMinerMode mode, GoldMinerItem item, int completedLevel,
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
-            return Price(GoldMinerItem.Dynamite, level) * 3 + Price(GoldMinerItem.Strength, level) + Price(GoldMinerItem.Clover, level) + Price(GoldMinerItem.RockBook, level) + Price(GoldMinerItem.DiamondOil, level);
+            Price(item, completedLevel, profile); // Validate level, item and profile.
+            int players = PlayerCount(mode);
+            if (profile != GoldMinerBalanceProfile.Classic) return item == GoldMinerItem.Dynamite ? 3 : 1;
+            if ((shelves[completedLevel - 1] & (1 << (int)item)) == 0) return 0;
+            return item == GoldMinerItem.Dynamite ? players : 1;
         }
 
-        public static long RequiredIncome(GoldMinerMode mode, int level)
+        public static long ShopMaximum(int level, GoldMinerMode mode = GoldMinerMode.Solo,
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
-            return level == 1 ? Target(mode, 1) : Target(mode, level) - Target(mode, level - 1) + ShopMaximum(level - 1);
+            long total = 0;
+            foreach (GoldMinerItem item in Enum.GetValues(typeof(GoldMinerItem)))
+                total += Price(item, level, profile) * ShopStock(mode, item, level, profile);
+            return total;
+        }
+
+        public static long RequiredIncome(GoldMinerMode mode, int level,
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
+        {
+            return level == 1 ? Target(mode, 1, profile) : Target(mode, level, profile) - Target(mode, level - 1, profile) + ShopMaximum(level - 1, mode, profile);
         }
 
         public static double OriginX(GoldMinerMode mode, int playerId)

@@ -225,7 +225,7 @@ namespace XanaduYonder.Runtime.Idiom
         {
             Save();
             var recoverCurrent = Game != null && store != null && store.NeedsRecovery;
-            var panel = Dialog("成语接龙 · 设置", recoverCurrent ? 730 : 634, null);
+            var panel = Dialog("成语接龙 · 设置", recoverCurrent ? 808 : 712, null);
             IdiomPreferenceSwitch.Create(panel, "发送后收起键盘", 114, data == null || data.CloseKeyboardAfterSend, data != null, value =>
             {
                 data.CloseKeyboardAfterSend = value; Save();
@@ -234,8 +234,12 @@ namespace XanaduYonder.Runtime.Idiom
             {
                 data.ShowPinyin = value; Save(); Refresh();
             });
-            IdiomUi.Button(panel, "玩法说明", 32, 278, 532, 72, ShowHelp);
-            var finish = IdiomUi.Button(panel, "结束本轮", 32, 374, 258, 72, () =>
+            IdiomPreferenceSwitch.Create(panel, "双人对战发送固定右侧", 270, data == null || data.FixedLocalActionSides, data != null, value =>
+            {
+                data.FixedLocalActionSides = value; Save(); Refresh();
+            });
+            IdiomUi.Button(panel, "玩法说明", 32, 356, 532, 72, ShowHelp);
+            var finish = IdiomUi.Button(panel, "结束本轮", 32, 452, 258, 72, () =>
             {
                 Confirm("结束这一轮？", "已完成的成语仍可回看，\n生词本会一直保留。", "回顾本轮", () =>
                 {
@@ -243,10 +247,10 @@ namespace XanaduYonder.Runtime.Idiom
                 }, ShowMenu);
             });
             finish.interactable = Game != null && Game.IsStarted && !Game.IsEnded;
-            var restart = IdiomUi.Button(panel, "新一局", 306, 374, 258, 72, () => { CloseDialog(); Restart(); }, true);
+            var restart = IdiomUi.Button(panel, "新一局", 306, 452, 258, 72, () => { CloseDialog(); Restart(); }, true);
             restart.interactable = Game != null;
             if (recoverCurrent)
-                IdiomUi.Button(panel, "保留旧档，保存当前进度", 32, 470, 532, 72, ConfirmCurrentGameRecovery, false, 23);
+                IdiomUi.Button(panel, "保留旧档，保存当前进度", 32, 548, 532, 72, ConfirmCurrentGameRecovery, false, 23);
             IdiomUi.Button(panel, "继续", 32, panel.rect.height - 104, 532, 62, ReturnFromDialog);
         }
 

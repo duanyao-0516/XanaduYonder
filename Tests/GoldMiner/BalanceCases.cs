@@ -36,10 +36,56 @@ internal static partial class Program
             Assert(normal - strong >= 3.5 && normal - dynamite >= 10, "shop tools need a tangible payoff");
             Near(strong / normal, 2.0 / 3, .003);
         });
+        Check("each shop exposes three products with increasing prices and no RNG consumption", () =>
+        {
+            int[] masks = { 7, 11, 21, 19, 13, 19, 25, 7, 19 };
+            foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
+            for (int level = 1; level < 10; level++)
+            {
+                var run = mode == GoldMinerMode.Solo ? Run(level, 100000) : CompetingRun(false);
+                if (mode == GoldMinerMode.Coop)
+                {
+                    run.Current.LevelIndex = level;
+                    run.Current.Cash = 100000;
+                }
+                uint layout = run.Current.LayoutRng, bags = run.Current.BagRng;
+                var shop = GoldMinerEconomy.CreateShop(run);
+                int mask = 0; long total = 0;
+                foreach (var offer in shop.Offers)
+                {
+                    if (offer.Remaining > 0) mask |= 1 << (int)offer.ItemId;
+                    total += offer.Price * offer.Remaining;
+                    if (level > 1) Assert(offer.Price > GoldMinerRules.Price(offer.ItemId, level - 1));
+                }
+                Assert(mask == masks[level - 1]);
+                Assert(shop.Offers[0].Remaining == GoldMinerRules.PlayerCount(mode));
+                Assert(total == GoldMinerRules.ShopMaximum(level, mode));
+                Assert(run.Current.LayoutRng == layout && run.Current.BagRng == bags);
+            }
+        });
+        Check("old run profiles retain old values targets prices and full shelves", () =>
+        {
+            foreach (var profile in new[] { GoldMinerBalanceProfile.Legacy, GoldMinerBalanceProfile.Native })
+            {
+                var run = Run(); run.BalanceProfile = profile;
+                run.Current.Target = GoldMinerRules.Target(run.Mode, 1, profile);
+                run.Current.Phase = GoldMinerPhase.Running;
+                run.Current.Hooks[0].AngleRadians = 0;
+                var game = new GoldMinerGame(run);
+                Assert(game.TryLaunch(0, 1));
+                while (game.GetStateSnapshot().Cash == 0 && !game.SettlementReady) game.Step();
+                Assert(game.GetStateSnapshot().Cash == 100);
+                string reason; Assert(game.GetSnapshot().TryValidate(out reason), reason);
+                var shop = GoldMinerEconomy.CreateShop(run);
+                Assert(shop.Offers[0].Remaining == 3 && shop.Offers[0].Price == 70);
+                for (int i = 1; i < 5; i++) Assert(shop.Offers[i].Remaining == 1);
+            }
+        });
         Check("validated v1 saves upgrade without changing either slot or transaction progress", () =>
         {
             var legacy = new GoldMinerRootSnapshot { RulesVersion = 1, Solo = DeadlineRun(GoldMinerMode.Solo),
                 Coop = DeadlineRun(GoldMinerMode.Coop), TxnSeq = 19 };
+            legacy.Solo.BalanceProfile = legacy.Coop.BalanceProfile = GoldMinerBalanceProfile.Legacy;
             legacy.Solo.Current.Target = GoldMinerRules.LegacyTarget(GoldMinerMode.Solo, 1);
             legacy.Coop.Current.Target = GoldMinerRules.LegacyTarget(GoldMinerMode.Coop, 1);
             string reason;

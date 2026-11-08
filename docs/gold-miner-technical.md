@@ -1,8 +1,10 @@
 # 黄金矿工技术契约与验收矩阵
 
-状态：**游戏实现、资源装配、240 张参考图及真实 Core 见证、独立测试、Unity UI、隔离 APK 干净构建与包体增量核验已落地；物理手机、人工两模式十关及 Android 性能验收尚未完成。** 2026-10-27 已合并 `origin/master`，当前 HEAD 为 `b793fe8`，沿用 v0.4.0 构建版本。最终源码 APK（含最新长屏修复）大小为 94.09 MiB，相同配置干净基线增量为 34.317892 MiB，SHA-256 与方法见 §8；该干净 APK 已在 emulator-5560 通过 Android 2373×1080 商店与真实 IO 失败购买原子性复验。具体命令、产物和未覆盖项见[验证记录](verification-gold-miner.md)；本地构建不代表发布。
+2026-11-08 数值更新：原生新挑战采用 [v4 经济规则及验证](gold-miner/economy-v4.md)，经典矿物面值、按关卡三类货架和渐进定价已经落地；旧挑战固定保留自己的 profile。本文下方 APK/UI/设备记录属于历史交付，本轮没有进行 Unity 构建或设备验收。
 
-[首版玩法与数值方案](superpowers/specs/2026-10-27-gold-miner-design.md)记录初始设计；当前累计目标与旧档兼容以 [v3 经济调整及实测](gold-miner/economy-v3.md)和 Core 规则为准。资源、切片和音频见 [资源接入](gold-miner-assets.md)，执行顺序见 [实施计划](superpowers/plans/2026-10-27-gold-miner.md)。本文记录已实现的技术边界、状态与数据契约以及仍须满足的验收标准；金额、速度、概率、目标和物件数量从规则版本读取，不另设一份数值表。
+历史交付状态：**游戏实现、资源装配、240 张参考图及真实 Core 见证、独立测试、Unity UI、隔离 APK 干净构建与包体增量核验已落地；物理手机、人工两模式十关及 Android 性能验收尚未完成。** 2026-10-27 已合并 `origin/master`，当前 HEAD 为 `b793fe8`，沿用 v0.4.0 构建版本。最终源码 APK（含最新长屏修复）大小为 94.09 MiB，相同配置干净基线增量为 34.317892 MiB，SHA-256 与方法见 §8；该干净 APK 已在 emulator-5560 通过 Android 2373×1080 商店与真实 IO 失败购买原子性复验。具体命令、产物和未覆盖项见[验证记录](verification-gold-miner.md)；本地构建不代表发布。
+
+[首版玩法与数值方案](superpowers/specs/2026-10-27-gold-miner-design.md)记录初始设计；当前累计目标与旧档兼容以 [v4 经济规则及验证](gold-miner/economy-v4.md)和 Core 规则为准；[v3 记录](gold-miner/economy-v3.md)保留为旧挑战依据。资源、切片和音频见 [资源接入](gold-miner-assets.md)，执行顺序见 [实施计划](superpowers/plans/2026-10-27-gold-miner.md)。本文记录已实现的技术边界、状态与数据契约以及仍须满足的验收标准；金额、速度、概率、目标和物件数量从规则版本读取，不另设一份数值表。
 
 ## 1. 接入边界与现有基础
 
@@ -19,7 +21,7 @@
 
 | 路径（相对 `Assets/Scripts`） | 职责 |
 | --- | --- |
-| `Core/GoldMiner/GoldMinerRules.cs` | `rulesVersion=3` 的只读规则、对象目录、关卡表、价格和布局配置；内容对应玩法稿和 v3 经济调整 |
+| `Core/GoldMiner/GoldMinerRules.cs` | `rulesVersion=4` 的只读规则、对象目录、关卡表、价格与货架；按 run 的 balanceProfile 保留历史经济 |
 | `Core/GoldMiner/GoldMinerTypes.cs` | 模式、游戏阶段、钩状态、物件状态、命令结果和事件类型 |
 | `Core/GoldMiner/GoldMinerGame.cs` | 一场挑战当前关的唯一运动状态来源；固定步推进、出钩、炸药和结算条件 |
 | `Core/GoldMiner/GoldMinerCollision.cs` | 钩尖与运动物件的相对扫掠、首次接触排序、边界和独占认领 |
@@ -151,11 +153,11 @@
 
 ### 6.1 文件与根对象
 
-文件仅为 `Application.persistentDataPath/gold-miner-v1.json` 及同名 `.bak/.tmp`。固定 `gameId="gold-miner"`、`schemaVersion=1`，新会话使用 `rulesVersion=3`。文件名保持 v1，因 JSON 格式与字段未变。合法 `rulesVersion=1/2` 存档由 Session 在完整校验后的私有副本上升级到 3，保留双槽、余额、道具、记录、在途钩、剩余 tick、布局及检查点；标记 dirty，走原有持久化事务并保留旧 `.bak`。升级后沿用 v2 的回收速度；旧挑战的本关、重试和后续关卡全部沿用旧目标曲线，仅新开挑战采用 v3 曲线，不补发或扣减时间/资金。历史最佳纪录继续使用明确支持的旧曲线作为合法性下限。不读写其他游戏文件，不迁移第三方黄金矿工存档。
+文件仅为 `Application.persistentDataPath/gold-miner-v1.json` 及同名 `.bak/.tmp`。固定 `gameId="gold-miner"`、`schemaVersion=1`，新会话使用 `rulesVersion=4`。v4 在每个非空槽新增必需的 `balanceProfile`，文件名保持不变；字段集合由 rulesVersion 明确分支。v1/v2 只接受旧字段和旧目标，解码为 `legacy`；v3 只接受旧字段，根据该槽已接受目标解码为 `legacy` 或 `native`；v4 必须显式给出合法 profile，缺失、未知或与目标不一致均拒绝。迁移只在完整校验后的私有副本上完成，Session 将 rulesVersion 升至 4 并标记 dirty，沿用原有原子保存和备份。所有已有余额、物件价值、道具、商店报价/供应、记录、在途钩、时间、布局及检查点不重算；重试与后续关卡继续同一 profile，直到玩家明确新开挑战。新挑战使用 `classic`，不读写第三方经典矿工的独立存档。
 
 | 根字段 | 类型与语义 |
 | --- | --- |
-| `schemaVersion` / `rulesVersion` | JSON 整数；schema 仅支持 1，rules 支持旧档 1/2 和当前 3，未知版本仍拒绝 |
+| `schemaVersion` / `rulesVersion` | JSON 整数；schema 仅支持 1，rules 支持旧档 1/2/3 和当前 4，未知版本仍拒绝 |
 | `gameId` | 固定字符串 `gold-miner` |
 | `txnSeq` | 非负 Int64 十进制字符串，最近一次已提交离散事务序号 |
 | `lastMode` | `solo` 或 `coop`，仅用于默认选择展示 |
@@ -171,6 +173,7 @@
 | 槽位字段 | 类型与约束 |
 | --- | --- |
 | `runId` | 32 个小写十六进制字符；新挑战生成新 ID，重试本关保持不变 |
+| `balanceProfile` | v4 必需枚举：`legacy`、`native`、`classic`；只在新挑战创建时选择，换关和重试不变 |
 | `mode` | 必须与所在槽键一致 |
 | `runSeed` | 非零 uint；仅新挑战重置 |
 | `attemptIndex` | 0～Int32.MaxValue，本关重试递增；换关归零，不从检查点回退；达到上限拒绝重试事务并可开始新挑战，不能环绕 |
@@ -184,7 +187,7 @@
 | --- | --- |
 | `phase`、`levelIndex`、`layoutProfileId` | 阶段枚举、有效关卡、与模式匹配的版本化世界布局 ID |
 | `layoutId`、`catalogVersion`、`layoutContentHash` | 已选矿图的稳定 ID、目录整数版本、来源分片的 64 字符小写十六进制 SHA-256；current/checkpoint 必须一致 |
-| `cash`、`target`、`shopSpent` | 金额字符串；rules 1/2 的 target 必须等于旧曲线；rules 3 的 target 必须等于该模式/关卡明确的旧或新目标，未知目标拒绝；累计消费不能超过总毛收入 |
+| `cash`、`target`、`shopSpent` | 金额字符串；rules 1/2 的 target 必须等于旧曲线；rules 3 的 target 只接受历史两条曲线；rules 4 必须精确匹配 balanceProfile 的该模式/关卡目标，未知目标拒绝；累计消费不能超过总毛收入 |
 | `remainingTicks`、`simulationTick` | 前者在 0～3600；后者在 0～`GoldMinerRules.MaximumSimulationTicks(mode)`，当前 Solo 上限 4853、Coop 上限 5346；还须满足阶段与剩余回收时间约束（§6.4），不能只检查 Int32 范围；只保存模拟步 |
 | `layoutRng`、`bagRng` | 两个独立非零 uint 状态；使用玩法稿固定的 xorshift32 算法，不存在商店 RNG |
 | `patternId`、`previousPatternId`、`levelLayoutSeed` | 当前/前关图案及本关布局初始随机状态；第一关前图案为 null，后续图案去重 |
@@ -197,11 +200,11 @@
 
 实体字段固定为 `id`、`kind`、`status`、`x`、`y`、`moveDirection`、`bagValue`、`ownerPlayerId`。kind 来自规则对象目录；坐标是有限 double。非动物 moveDirection 为 0，动物为 −1/1；非袋子 bagValue 为 null，袋子金额必须是规则允许值；仅 Held 有 ownerPlayerId，其余必须为 null。携钻动物是一个实体和一个负载，外观钻石不是第二个可独立认领实体。
 
-半径、重量、动物速度和基础价值不重复持久化，由 kind+rulesVersion 唯一派生；最终收入由规则加 activeBuffs 计算，袋子直接使用已定的 bagValue，携钻动物按动物部分/钻石部分分别应用规则。袋子在最终选图后一次抽值，保存其结果。物件当前位置可以变化，但未被认领静态物件必须留在世界内；运动动物、钩长度和角度按规则边界校验。Collected/Destroyed 不再参与抓取。
+半径、重量、动物速度和基础价值不重复持久化，由 kind+balanceProfile 派生（物理参数三个 profile 共用）；最终收入由规则加 activeBuffs 计算，袋子直接使用已定的 bagValue，携钻动物按动物部分/钻石部分分别应用规则。袋子在最终选图后一次抽值，保存其结果。物件当前位置可以变化，但未被认领静态物件必须留在世界内；运动动物、钩长度和角度按规则边界校验。Collected/Destroyed 不再参与抓取。
 
 金额一致性：`cash = sum(players.totalCollected) − shopSpent`；`levelCollected` 不超过对应 totalCollected。回收时共享现金、个人本关贡献和个人挑战毛收入原子增加同一金额。购货只增加 shopSpent 并减少 cash，不减个人贡献。
 
-Shop 的字段固定为 `id`（runId/关卡）、`entryCash`、`entryShopSpent`、`entryBombs`（每项 playerId/bombs）、`spent`、`offers`。每个 offer 固定为 `itemId`、`price`、`remaining`、`purchased`、`allocations`；只有炸药 allocations 为按玩家排序的 `{playerId,count}` 数组，其余为 null。固定五种 offer 及价格从当前关卡规则反算校验；剩余库存与已购数之和等于初始库存。炸药分配合计等于已购数，玩家库存等于入店库存加分配；已购增益与 pendingBuffs 对应。`spent=sum(price×purchased)`、`entryCash−spent=current.cash`、`entryShopSpent+spent=current.shopSpent`，不能加载半事务。
+Shop 的字段固定为 `id`（runId/关卡）、`entryCash`、`entryShopSpent`、`entryBombs`（每项 playerId/bombs）、`spent`、`offers`。每个 offer 固定为 `itemId`、`price`、`remaining`、`purchased`、`allocations`；只有炸药 allocations 为按玩家排序的 `{playerId,count}` 数组，其余为 null。固定五种 offer，价格与初始库存按模式、关卡、balanceProfile 反算校验；剩余库存与已购数之和等于该初始库存。classic 每店只有三类有货，未上架项 remaining/purchased 都为 0，页面显示“本店未售”；旧 profile 继续五类全供。炸药分配合计等于已购数，玩家库存等于入店库存加分配；已购增益与 pendingBuffs 对应。`spent=sum(price×purchased)`、`entryCash−spent=current.cash`、`entryShopSpent+spent=current.shopSpent`，不能加载半事务。
 
 Settlement 的字段固定为 `id`（runId/levelIndex/attemptIndex）、`outcome`（won/failed/completed）、`cash`、`target`、`contributions`（每项 playerId/amount）、`runGrossIncome`、`recordCommitted`。金额逐项等于 current/players 的值；成功结果 recordCommitted 必须 true，失败必须 false。结果与根 records 同次提交，重复打开结果只展示已存数据。
 
@@ -238,7 +241,7 @@ Settlement 的字段固定为 `id`（runId/levelIndex/attemptIndex）、`outcome
 首版已离线产出两模式×10 关×12 图，共 240 图，且全部通过同一生产 Core 见证重放；每关三种图案各 4 图。手机仅选图，不调用 Generator/Planner 或计时超时回退，因此相同种子不受设备速度影响。离线候选/搜索预算使用玩法稿；预算耗尽即生成失败，缺少任何一图或成功见证都阻止资源交付。
 
 - 文件为 UTF-8、无压缩 JSON：`Levels/catalog.json` 以及 `solo-01.json`～`solo-10.json`、`coop-01.json`～`coop-10.json`。目录最多 64 KiB，每个分片最多 512 KiB；运行时只解码当前 mode/level 分片，离开后释放。
-- catalog 根字段固定为 `schemaVersion`、`rulesVersion`、`catalogVersion`、`shards`；当前 schemaVersion/catalogVersion 为 1、rulesVersion 为 3（首版均为 1），shards 恰好 20 项，每项 `{mode,levelIndex,file,sha256}`。file 只允许上述固定文件名；sha256 对应分片原始 UTF-8 字节，不允许任意路径或联网下载。
+- catalog 根字段固定为 `schemaVersion`、`rulesVersion`、`catalogVersion`、`shards`；当前 schemaVersion/catalogVersion 为 1、rulesVersion 为 4（首版均为 1），shards 恰好 20 项，每项 `{mode,levelIndex,file,sha256}`。file 只允许上述固定文件名；sha256 对应分片原始 UTF-8 字节，不允许任意路径或联网下载。
 - 分片根固定为 `schemaVersion`、`rulesVersion`、`catalogVersion`、`mode`、`levelIndex`、`layouts`；layouts 恰好 12 项，按 ID 排序，且每种图案恰好 4 项。每图字段为 `id`、`patternId`、`variantSeed`、`entities`、`witness`；id 采用 `{mode}-{两位关卡}-{patternId}-{0至3变体}`。entities 为完整初始实体，袋子先按保底金额保存，运行时选中后才覆盖一次袋子抽值。
 - witness 字段为 `requiredIncome`、`inputs`、`expectedIncome`、`endTick`；每条 input 是 `{tick,playerId,action}`，action 只允许 launch（保底见证不使用炸药），按 tick/playerId 排序，同刻同玩家最多一条。输入在对应 Step 前执行，内部使用递增 commandSeq。每图最多 1024 条输入、128 个实体；结束 tick 为有限非负整数。以无增益、袋子保底值和同一生产 Core 重放，真实取得 requiredIncome 才通过。
 - 加载先验证目录版本、分片大小及 SHA-256，再严格解码结构/图案/边界；坏档停留准备状态并给重试/返回，不消耗会话随机状态，不生成临时替代地图。快照的 layoutContentHash 指该图所在分片的 SHA-256，配合 layoutId 唯一标记来源。
@@ -329,7 +332,7 @@ Settlement 的字段固定为 `id`（runId/levelIndex/attemptIndex）、`outcome
 | C07 | 倒计时归零时仍在伸出 | 已出发整次动作完成，动物仍动，空闲钩不摆；最后收入参加结算 |
 | C08 | Draining 带载使用炸药 | 仅本玩家库存减一、负载销毁且不入账；空钩/无库存不消费 |
 | C09 | 提前达标/提前清场 | 达标继续采矿；无可采集物且钩全闲置可提前结算 |
-| C10 | 五商品逐项购买与售罄 | 现金、库存、增益/指定玩家炸药同次提交；规则价格、上限与剩余需求一致 |
+| C10 | 按关卡货架购买、未上架与售罄 | 现金、库存、增益/指定玩家炸药同次提交；规则价格、上限与剩余需求一致 |
 | C11 | 余额不足、炸药上限、重复事务 | 不扣钱不发货；同 txnSeq/旧候选不能重复消费 |
 | C12 | 袋子恢复/重试/换玩家抓 | 同一个袋子价值不重抽；layout RNG 与 bag RNG 互不污染 |
 | C13 | 下一关增益与重试 | 只影响规则指定关卡；同关重试恢复增益，不重买；成功换关后旧增益失效 |

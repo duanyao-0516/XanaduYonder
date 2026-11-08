@@ -10,13 +10,14 @@ namespace XanaduYonder.Runtime.Tetris
         public TetrisSnapshot Game;
         public long BestScore;
         public bool ResultRecorded;
+        public bool SwapControls;
 
         public TetrisSaveData Copy()
         {
             return new TetrisSaveData {
                 SchemaVersion = SchemaVersion, GameId = GameId,
                 Game = Game == null ? null : Game.Copy(), BestScore = BestScore,
-                ResultRecorded = ResultRecorded
+                ResultRecorded = ResultRecorded, SwapControls = SwapControls
             };
         }
 

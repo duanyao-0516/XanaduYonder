@@ -81,6 +81,29 @@ namespace XanaduYonder.EditorTools
                 Require(texture != null && texture.width > 0, "Approved fruit loads: " + fruit);
                 Require(texture.filterMode == FilterMode.Bilinear && texture.wrapMode == TextureWrapMode.Clamp && texture.mipmapCount == 1, "Fruit import settings preserve UI quality: " + fruit + " (" + texture.filterMode + ", " + texture.wrapMode + ", mips=" + texture.mipmapCount + ")");
             }
+            using (var f = new Fixture(388, 784))
+            {
+                var profile = new LinkMatchProfile(); var page = f.MakePage(profile); page.Enter(); yield return null;
+                foreach (int category in new[] { 1, 2, 8, 16 })
+                {
+                    var choice=f.Find("Pattern category "+category); f.RevealEntry(choice); f.Click(choice); yield return null;
+                }
+                Require(profile.SelectedCategories==4 && CountSlots(profile)==0,"Real category switches select animals without starting a run");
+                f.Capture("patterns-animals"); page.StartLevel(LinkMatchMode.Relaxed,"level-01"); yield return null;
+                var mapping=page.Session.PatternIds;
+                Require(mapping.All(id=>LinkMatchPatterns.CategoryFor(id)==4),"New run uses only selected category");
+                for(int i=0;i<24;i++)
+                {
+                    var graphic=f.Find("Tile "+i).GetComponentInChildren<RawImage>();
+                    Require(graphic.texture==Resources.Load<Texture2D>("LinkMatch/Sprites/"+mapping[page.Session.Game.TileAt(i)]),"Actual tile uses persisted logical mapping "+i);
+                }
+                f.Capture("animals-24"); string attempt=page.Session.AttemptId;
+                page.ShowEntry();profile.SelectedCategories=16;page.ContinueGame();yield return null;
+                Require(page.Session.AttemptId==attempt && page.Session.PatternIds.SequenceEqual(mapping),"Continuation keeps prior visual identities");
+                page.StartLevel(LinkMatchMode.Relaxed,"level-05");yield return null;
+                Require(page.IsEntry && page.HasDialog && HasText(f,"再选一些图案"),"Insufficient category pool explains requirement without starting or replacing a run");
+                Require(profile.GetSlot(LinkMatchMode.Relaxed,"level-01").AttemptId==attempt,"Insufficient selection preserves existing attempt");
+            }
             foreach (Vector2Int size in new[] { new Vector2Int(388, 784), new Vector2Int(360, 640), new Vector2Int(720, 1455) })
             using (var f = new Fixture(size.x, size.y))
             {
@@ -95,7 +118,7 @@ namespace XanaduYonder.EditorTools
                 f.Click(f.Find("Mode challenge"));
                 Require(profile.SelectedMode == LinkMatchMode.Challenge && CountSlots(profile) == 0, "Mode selection only updates the selected mode");
                 f.Capture("entry-challenge");
-                f.Click(f.Find("Entry level level-03")); page.LayoutNow(); yield return null;
+                f.RevealEntry(f.Find("Entry level level-03")); f.Click(f.Find("Entry level level-03")); page.LayoutNow(); yield return null;
                 Require(!page.IsEntry && page.Session.Mode == LinkMatchMode.Challenge && page.Session.Game.Level.Id == "level-03" && page.Session.Game.Remaining == 48, "Selected challenge level opens its actual 48-tile game");
                 Require(page.CompletedCount == 0 && !page.Session.IsTerminal && !page.HasDialog, "Last level cannot display a win before it is cleared");
                 CheckGeometry(f, page, false); f.Capture("game-challenge-48");
@@ -438,7 +461,7 @@ namespace XanaduYonder.EditorTools
         private static int Remaining(LinkMatchSessionData state) { int count = 0; foreach (int tile in state.Tiles) if (tile >= 0) count++; return count; }
         private static LinkMatchSessionData Snapshot(LinkMatchLevel level, LinkMatchMode mode, int[] tiles, double seconds)
         {
-            return new LinkMatchSessionData { AttemptId = Guid.NewGuid().ToString("D"), Mode = mode, LevelId = level.Id, Columns = level.Columns, Rows = level.Rows, Tiles = tiles, ElapsedSeconds = seconds, RemainingSeconds = mode == LinkMatchMode.Challenge ? level.ChallengeSeconds - seconds : 0, RandomState = 1709, ActivityOrder = 1 };
+            return new LinkMatchSessionData { AttemptId = Guid.NewGuid().ToString("D"), Mode = mode, LevelId = level.Id, Columns = level.Columns, Rows = level.Rows, Tiles = tiles, PatternIds = LinkMatchPatterns.Legacy(level.Kinds), ElapsedSeconds = seconds, RemainingSeconds = mode == LinkMatchMode.Challenge ? level.ChallengeSeconds - seconds : 0, RandomState = 1709, ActivityOrder = 1 };
         }
         private static LinkMatchProfile ProfileWith(LinkMatchSessionData state)
         {

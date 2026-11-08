@@ -9,6 +9,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         private LinkMatchSaveData data;
         public LinkMatchMode SelectedMode { get { return data.SelectedMode; } set { if (!LinkMatchSessionData.ValidMode(value)) throw new ArgumentOutOfRangeException(nameof(value)); data.SelectedMode = value; } }
         public string SelectedLevelId { get { return data.SelectedLevelId; } set { LinkMatchLevel.Get(value); data.SelectedLevelId = value; } }
+        public int SelectedCategories { get { return data.SelectedCategories; } set { if (!LinkMatchPatterns.ValidCategories(value)) throw new ArgumentOutOfRangeException(nameof(value)); data.SelectedCategories = value; } }
         public int CompletedCount { get { int count = 0; foreach (var record in data.Records) if (record.Wins > 0) count++; return count; } }
         public LinkMatchProfile() { data = new LinkMatchSaveData(); }
         public LinkMatchProfile(LinkMatchSaveData saved)
@@ -21,7 +22,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         public LinkMatchSession Start(LinkMatchMode mode, string levelId, uint seed, bool fresh = false)
         {
             int index = LinkMatchSaveData.SlotIndex(mode, levelId); var prior = data.Slots[index];
-            var session = !fresh && prior != null && prior.Outcome == LinkMatchOutcome.Playing ? new LinkMatchSession(prior) : new LinkMatchSession(LinkMatchLevel.Get(levelId), mode, seed);
+            var session = !fresh && prior != null && prior.Outcome == LinkMatchOutcome.Playing ? new LinkMatchSession(prior) : new LinkMatchSession(LinkMatchLevel.Get(levelId), mode, seed, data.SelectedCategories);
             // Replacing is authorized only here; Capture rejects callbacks from superseded attempts.
             var next = data.Copy(); next.Slots[index] = session.Export(); data = next; Capture(session); SelectedMode = mode; SelectedLevelId = levelId; return session;
         }

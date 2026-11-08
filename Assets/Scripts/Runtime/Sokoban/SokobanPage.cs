@@ -86,6 +86,7 @@ namespace XanaduYonder.Runtime.Sokoban
         private void Home() { CancelInput(); feedback.Stop(); Save(); returnLobby(); }
         internal void StartLevel(string levelId,bool fresh=false)
         {
+            ResultPresentation.Clear(this);
             CancelInput(); CloseDialog(); feedback.Stop();
             if(!hasStarted||session==null||session.Game.Level.LevelId!=levelId||fresh)
             { if(hasStarted&&session!=null) profile.Capture(session); session=profile.StartLevel(levelId); facing=Direction.Down; }
@@ -128,6 +129,7 @@ namespace XanaduYonder.Runtime.Sokoban
         }
         internal void Restart()
         {
+            ResultPresentation.Clear(this);
             CancelInput(); CloseDialog(); feedback.Stop(); session.Restart(); session.Enter(); facing=Direction.Down; resultDismissed=false;
             Save(); Refresh(); board.Render(session.Game,viewport,facing); RenderView();
         }

@@ -292,6 +292,7 @@ namespace XanaduYonder.Runtime.Watermelon
 
         private void Restart()
         {
+            ResultPresentation.Clear(this);
             world?.Dispose(); world = null;
             game = new WatermelonGame(NewSeed());
             data.GoalAcknowledged = false;
@@ -306,17 +307,21 @@ namespace XanaduYonder.Runtime.Watermelon
             var snapshot = game.GetSnapshot();
             if (!snapshot.GameOver && (!game.HasWatermelon || data.GoalAcknowledged)) { resultShown = false; return; }
             if (resultShown) return;
-            resultShown = true; Suspend(); Save();
+            Suspend();Save();
+            var ended=game;var results=ResultPresentation.For(this,(RectTransform)transform);
+            if(!results.Gate(ended,()=>visible&&acceptsInput()&&game==ended&&(game.GameOver||(game.HasWatermelon&&!data.GoalAcknowledged)),
+                ()=>{resultShown=false;CheckEndState();}))return;
+            resultShown = true;
             if (snapshot.GameOver)
             {
                 dialog("这一局，很丰盛。", "小球持续越过警戒线，本局结束。\n本局得分  " + snapshot.Score + "  ·  最高纪录  " + data.BestScore,
-                    "再来一局", Restart, "返回大厅", lobby);
+                    "再来一局", Restart, "查看最终局面", ()=>results.Inspect(closeModal));
                 Play(loseSound);
             }
             else
             {
                 dialog(data.Theme == 0 ? "大西瓜，合成了！" : "第 11 级，达成！", "本局得分  " + snapshot.Score + "\n你可以继续合成，挑战更高的纪录。",
-                    "继续挑战", () => { data.GoalAcknowledged = true; resultShown = false; dirty = true; Save(); }, "返回大厅", lobby);
+                    "继续挑战", () => { ResultPresentation.Clear(this); data.GoalAcknowledged = true; resultShown = false; dirty = true; Save(); }, "查看最终局面", ()=>results.Inspect(closeModal));
                 Play(winSound);
             }
         }

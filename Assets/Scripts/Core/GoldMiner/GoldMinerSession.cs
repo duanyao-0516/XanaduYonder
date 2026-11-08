@@ -253,10 +253,7 @@ namespace XanaduYonder.Core.GoldMiner
             var next = candidate.GetRun(ActiveMode);
             // Cumulative targets must stay on the accepted campaign curve. Switching a legacy
             // wallet to a later v3 target can require more income than the entire mine contains.
-            bool legacyCurve = c.Target == GoldMinerRules.LegacyTarget(ActiveMode, c.LevelIndex)
-                && c.Target != GoldMinerRules.Target(ActiveMode, c.LevelIndex);
-            long target = legacyCurve ? GoldMinerRules.LegacyTarget(ActiveMode, start.LevelIndex)
-                : GoldMinerRules.Target(ActiveMode, start.LevelIndex);
+            long target = GoldMinerRules.Target(ActiveMode, start.LevelIndex, run.BalanceProfile);
             next.Current = start.CreateState(ActiveMode, target);
             next.Checkpoint = start.Copy();
             next.AttemptIndex = 0;

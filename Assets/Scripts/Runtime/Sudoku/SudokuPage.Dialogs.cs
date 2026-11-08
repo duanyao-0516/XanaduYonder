@@ -92,6 +92,9 @@ namespace XanaduYonder.Runtime.Sudoku
             if (!visible || choosing || session == null || dialog != null || !session.Foreground || session.Paused || resultDismissed) return;
             if (session.Game.Phase == SudokuPhase.Playing) return;
             CancelHint(); Save();
+            var ended=session;var results=ResultPresentation.For(this,root);
+            if(!results.Gate(ended,()=>visible&&!choosing&&session==ended&&dialog==null&&session.Foreground&&!session.Paused,
+                ()=>{resultDismissed=false;CheckEndState();}))return;
             var puzzle = session.Game.Puzzle;
             bool won = session.Game.Phase == SudokuPhase.Won;
             string message = Difficulties[puzzle.Difficulty] + " · 第 " + puzzle.Level + " 关\n用时 " + FormatTime(session.ElapsedSeconds) +
@@ -101,7 +104,7 @@ namespace XanaduYonder.Runtime.Sudoku
                 won ? puzzle.Level < 500 ? "下一关" : "返回关卡" : "重新挑战", () => {
                     if (won && puzzle.Level == 500) ReturnToSelection();
                     else StartLevel(won ? catalog.Get(puzzle.Difficulty, puzzle.Level + 1) : puzzle, true);
-                }, "查看盘面", () => { resultDismissed = true; Refresh(); });
+                }, "查看盘面", () => results.Inspect(()=>{resultDismissed=true;CloseDialog();Refresh();}));
             UiFactory.Button(panel, "关卡", 440, 36, 124, 48, ReturnToSelection);
             if (won) UiFactory.Button(panel, "重玩", 32, 36, 124, 48, () => StartLevel(puzzle, true));
         }

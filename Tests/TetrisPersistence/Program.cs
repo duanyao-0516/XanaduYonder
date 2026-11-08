@@ -13,6 +13,7 @@ internal static class Program
     {
         Run("preview round trip never creates a run", PreviewRoundTrip);
         Run("long scores preserve all 64 bits", LongScores);
+        Run("control preference is optional only for old saves and strictly boolean", ControlPreference);
         Run("strict JSON rejects extensions and trailing data", StrictJson);
         Run("schema shape rejects missing null wrong duplicate unknown fields", Shape);
         Run("future versions are recognized before current schema validation", Versions);
@@ -63,6 +64,25 @@ internal static class Program
         Check(decoded.Game == null && decoded.BestScore == 0 && !decoded.ResultRecorded, "preview became an active game");
         Check(decoded.SchemaVersion == 1 && decoded.GameId == "tetris", "identity");
     }
+    private static void ControlPreference()
+    {
+        var root = JObject.Parse(Preview());
+        Check(root["swapControls"] != null && root["swapControls"].Type == JTokenType.Boolean && !(bool)root["swapControls"], "new preference defaults to false");
+        root["swapControls"] = true;
+        Check((bool)JObject.Parse(Encode(Decode(root.ToString())))["swapControls"], "preference round trips");
+        var game = new TetrisGame(91); game.Execute(TetrisCommand.Left); for (int i = 0; i < 17; i++) game.Tick(false);
+        var active = JObject.Parse(Encode(new TetrisSaveData { Game = game.GetSnapshot(), BestScore = game.GetSnapshot().Score }));
+        string board = active["game"].ToString(); active["swapControls"] = true;
+        Check(JObject.Parse(Encode(Decode(active.ToString())))["game"].ToString() == board, "preference change preserves the complete active board");
+        WithStore((store, directory) => {
+            var preference = Decode(root.ToString()); Check(store.TrySave(preference, out var error), error);
+            Check((bool)JObject.Parse(Encode(store.Load().Data))["swapControls"], "preference persists to disk");
+        });
+        root.Remove("swapControls");
+        Check(!(bool)JObject.Parse(Encode(Decode(root.ToString())))["swapControls"], "old save defaults to false");
+        foreach (var value in new JToken[] { JValue.CreateNull(), 0, 1, "true", "false", new JArray(), new JObject() })
+        { root["swapControls"] = value; Rejected(root.ToString()); }
+    }
     private static void LongScores()
     {
         var data = new TetrisSaveData { BestScore = long.MaxValue };
@@ -87,7 +107,7 @@ internal static class Program
         var root = JObject.Parse(Preview());
         foreach (var property in root.Properties())
         {
-            var missing = (JObject)root.DeepClone(); missing.Remove(property.Name); Rejected(missing.ToString());
+            if (property.Name != "swapControls") { var missing = (JObject)root.DeepClone(); missing.Remove(property.Name); Rejected(missing.ToString()); }
             if (property.Name != "game") { var nil = (JObject)root.DeepClone(); nil[property.Name] = null; Rejected(nil.ToString()); }
         }
         var extra = (JObject)root.DeepClone(); extra["extra"] = false; Rejected(extra.ToString());

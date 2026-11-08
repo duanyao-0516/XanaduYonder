@@ -20,7 +20,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             float padding=(layout.Compact?13:16)*s,cardHeight=(layout.Compact?150:176)*s,mainHeight=(layout.Compact?70:84)*s,ctaHeight=(layout.Compact?42:44)*s;
             var card=Button(list,"Continue game",0,y,w,cardHeight,ContinueGame,17*s,UiFactory.Hex("E6ECDF"));
             var border=card.GetComponent<LinkMatchGraphic>();border.BorderWidth=s;border.BorderColor=UiFactory.Hex("D5DFCC");
-            Label(card.transform,resume?"接着上次的"+ModeName(mode):"从第一对水果开始",padding,padding,w-2*padding-95*s,17*s,10,UiFactory.Hex("6E8066"));
+            Label(card.transform,resume?"接着上次的"+ModeName(mode):"从第一对图案开始",padding,padding,w-2*padding-95*s,17*s,10,UiFactory.Hex("6E8066"));
             Label(card.transform,resume?"第 "+LinkMatchLevel.Get(active.LevelId).Number.ToString("00")+" 关":"来一局"+ModeName(mode)+"连连看",padding,padding+25*s,w-2*padding-95*s,30*s,layout.Compact?18:20,UiFactory.Ink);
             string detail=resume?CountRemaining(active.Tiles)+" 张待配 · 已用时 "+Clock(System.Math.Floor(active.ElapsedSeconds)):"第 01 关 · 24 张 · "+(mode==LinkMatchMode.Relaxed?"不限时":"90 秒");
             Label(card.transform,detail,padding,padding+58*s,w-2*padding,17*s,10,UiFactory.Muted);
@@ -44,6 +44,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             y+=tabHeight+8*s;
             Label(list,profile.SelectedMode==LinkMatchMode.Relaxed?"不限时 · 提示和洗牌随心用":"限时完成 · 每关 3 次提示、2 次洗牌",2*s,y,w-4*s,18*s,10,UiFactory.Muted);
             y+=(layout.Compact?31:36)*s;
+            BuildPatternChoices(list,w,ref y);
             Label(list,"挑一关开始",2*s,y,w/2,19*s,13,UiFactory.Ink);
             Label(list,"全部开放",w-100*s,y,98*s,19*s,10,UiFactory.Hex("8B9586"),TextAnchor.MiddleRight);y+=29*s;
             foreach(var level in LinkMatchLevel.All)
@@ -59,6 +60,34 @@ namespace XanaduYonder.Runtime.LinkMatch
                 y+=height+8*s;
             }
             list.sizeDelta=new Vector2(w,y);scroll.verticalNormalizedPosition=1;
+        }
+        private void BuildPatternChoices(RectTransform list,float width,ref float y)
+        {
+            float s=S;
+            int selectedCount=LinkMatchPatterns.Pool(profile.SelectedCategories).Length;
+            Label(list,"图案搭配 · 已选 "+selectedCount+" 种",2*s,y,width,23*s,13,UiFactory.Ink);y+=27*s;
+            Label(list,"可多选，至少一类；只用于新开局，续局保持原图案。",2*s,y,width,23*s,10,UiFactory.Muted);y+=30*s;
+            for(int index=0;index<LinkMatchPatterns.CategoryNames.Length;index++)
+            {
+                int category=1<<index;var pool=LinkMatchPatterns.Pool(category);
+                bool chosen=(profile.SelectedCategories&category)!=0;
+                var button=Button(list,"Pattern category "+category,0,y,width,48*s,()=>
+                {
+                    int next=profile.SelectedCategories^category;
+                    if(next==0)return;
+                    profile.SelectedCategories=next;Save();LayoutNow();
+                },10*s,UiFactory.Hex(chosen?"E6ECDF":"FAF9F3"));
+                button.interactable=profile.SelectedCategories!=category;
+                Label(button.transform,chosen?"✓":"○",10*s,0,20*s,48*s,14,UiFactory.Accent,TextAnchor.MiddleCenter);
+                Label(button.transform,LinkMatchPatterns.CategoryNames[index]+" · "+pool.Length,38*s,0,82*s,48*s,12,UiFactory.Ink);
+                for(int j=0;j<4;j++)
+                {
+                    int icon=System.Array.IndexOf(LinkMatchBoardView.FruitIds,pool[j]);
+                    Fruit(button.transform,"Category preview "+j,icon,width-(4-j)*37*s-7*s,9*s,30*s);
+                }
+                y+=55*s;
+            }
+            y+=15*s;
         }
         private static int CountRemaining(int[] tiles) {int count=0;foreach(int tile in tiles)if(tile>=0)count++;return count;}
     }

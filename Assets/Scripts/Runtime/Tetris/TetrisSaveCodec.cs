@@ -27,7 +27,8 @@ namespace XanaduYonder.Runtime.Tetris
             var root = new JObject {
                 ["schemaVersion"] = copy.SchemaVersion, ["gameId"] = copy.GameId,
                 ["game"] = copy.Game == null ? JValue.CreateNull() : (JToken)EncodeGame(copy.Game),
-                ["bestScore"] = Decimal(copy.BestScore), ["resultRecorded"] = copy.ResultRecorded
+                ["bestScore"] = Decimal(copy.BestScore), ["resultRecorded"] = copy.ResultRecorded,
+                ["swapControls"] = copy.SwapControls
             };
             string encoded = root.ToString(Formatting.None);
             if (Encoding.UTF8.GetByteCount(encoded) > MaximumLength) { error = "Tetris save exceeds the size limit."; return false; }
@@ -55,11 +56,17 @@ namespace XanaduYonder.Runtime.Tetris
                     (root["gameId"] != null && root["gameId"].Type == JTokenType.String && (string)root["gameId"] != "tetris") ||
                     (root["game"] is JObject && UnsupportedVersion(root["game"]["rulesVersion"])))
                 { status = TetrisLoadStatus.UnsupportedVersion; error = "Tetris save was written for an unsupported game or version."; return false; }
+                // Only this preference is optional in the existing v1 schema.
+                // Missing means the original control layout; explicit null or a wrong type is corrupt.
+                var preference = root.Property("swapControls");
+                bool swapControls = preference != null && Boolean(preference.Value);
+                if (preference != null) root.Remove("swapControls");
                 RequireFields(root, RootFields);
                 var candidate = new TetrisSaveData {
                     SchemaVersion = Integer(root["schemaVersion"]), GameId = Text(root["gameId"]),
                     Game = root["game"].Type == JTokenType.Null ? null : DecodeGame(Object(root["game"])),
-                    BestScore = DecimalInteger(root["bestScore"]), ResultRecorded = Boolean(root["resultRecorded"])
+                    BestScore = DecimalInteger(root["bestScore"]), ResultRecorded = Boolean(root["resultRecorded"]),
+                    SwapControls = swapControls
                 };
                 if (!candidate.TryValidate(out error)) return false;
                 data = candidate; status = TetrisLoadStatus.Loaded; return true;

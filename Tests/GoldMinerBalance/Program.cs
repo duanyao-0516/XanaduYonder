@@ -68,13 +68,13 @@ internal static class Program
         var campaigns = new JArray();
         foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
         foreach (var profile in new[] { SimulationPolicy.Coarse, SimulationPolicy.Focused })
-        foreach (bool legacy in new[] { true, false })
-        foreach (bool shop in new[] { false, true })
+        foreach (var balance in new[] { GoldMinerBalanceProfile.Legacy, GoldMinerBalanceProfile.Native, GoldMinerBalanceProfile.Classic })
+        foreach (var shop in new[] { "none", "all-available", "selective" })
         for (int sample = 1; sample <= 60; sample++)
-            campaigns.Add(Campaign(catalog, mode, profile, legacy, shop, (uint)(sample * 7919)));
+            campaigns.Add(Campaign(catalog, mode, profile, balance, shop, (uint)(sample * 7919)));
         var report = new JObject { ["rulesVersion"] = GoldMinerRules.Version,
             ["scope"] = "All 240 original geometries, real production Core. Per-layout policies: no buffs/bombs, bags=100, five fixed seeds each. Coarse=300ms,+-4deg,70% reaction; focused=100ms,+-2deg,95%. These synthetic aiming policies are not human win rates, nor optimal upper bounds.",
-            ["campaignScope"] = "960 actual Core/Session campaigns: two modes x two policies x old/current targets x no shop/buy every available item x 60 fixed seeds. Same current geometry for both curves; only the accepted target is overridden to the supported legacy value for the old control. Real Catalog RNG, bags, buffs, inventory caps, spending and cumulative carry. Policies do not use dynamite, but purchases obey real caps. A campaign stops on its first genuine failure; no retries or adaptive target changes.",
+            ["campaignScope"] = "2160 actual Core/Session campaigns: two modes x two aiming policies x three complete balance profiles x no shop/all available/selective strength-oil-clover purchases x 60 fixed seeds. Every profile controls target, ore values, prices and shelf stock on the same unchanged geometry. Real Catalog RNG, bags, buffs, inventory caps, spending and cumulative carry. Policies do not use dynamite, but purchases obey real caps. A campaign stops on its first genuine failure; no retries or adaptive target changes.",
             ["summary"] = summary, ["layouts"] = rows, ["campaigns"] = campaigns };
         string output = "artifacts/validation/gold-miner/balance.json"; Directory.CreateDirectory(Path.GetDirectoryName(output));
         File.WriteAllText(output, report.ToString(Formatting.Indented) + "\n");
@@ -87,7 +87,7 @@ internal static class Program
             ["q90"] = values[(int)(values.Count * .9)] };
     }
     static JObject Campaign(GoldMinerLevelCatalog catalog, GoldMinerMode mode, SimulationPolicy.Profile profile,
-        bool legacy, bool shop, uint seed)
+        GoldMinerBalanceProfile balance, string shop, uint seed)
     {
         var session = new GoldMinerSession(); var levels = new JArray();
         Require(session.Commit(session.PrepareNewRun(mode, seed.ToString("x32"), seed, catalog.CreateStart(mode, 1, seed))), session.LastError);
@@ -95,7 +95,7 @@ internal static class Program
         for (int level = 1; level <= 10; level++)
         {
             var root = session.GetSnapshot(); var initial = root.GetRun(mode);
-            if (legacy) initial.Current.Target = GoldMinerRules.LegacyTarget(mode, level);
+            initial.BalanceProfile = balance; initial.Current.Target = GoldMinerRules.Target(mode, level, balance);
             long opening = initial.Current.Cash, target = initial.Current.Target;
             var result = SimulationPolicy.Run(initial, profile, (int)seed + level * 7919, false, Math.Max(0, target - opening));
             if (mode == GoldMinerMode.Solo) root.Solo = result.FinalRun; else root.Coop = result.FinalRun;
@@ -107,16 +107,19 @@ internal static class Program
                 ["passed"] = success, ["startedAboveTarget"] = opening >= target, ["shopSpent"] = state.ShopSpent });
             if (!success || level == 10) break;
             Require(session.Commit(session.PrepareEnterShop()), session.LastError);
-            if (shop)
+            if (shop != "none")
             {
-                foreach (var item in new[] { GoldMinerItem.Strength, GoldMinerItem.DiamondOil, GoldMinerItem.Clover, GoldMinerItem.RockBook, GoldMinerItem.Dynamite })
+                var items = shop == "selective"
+                    ? new[] { GoldMinerItem.Strength, GoldMinerItem.DiamondOil, GoldMinerItem.Clover }
+                    : new[] { GoldMinerItem.Strength, GoldMinerItem.DiamondOil, GoldMinerItem.Clover, GoldMinerItem.RockBook, GoldMinerItem.Dynamite };
+                foreach (var item in items)
                     while (true) { var buy = session.PreparePurchase(item, 0); if (buy == null) break; Require(session.Commit(buy), session.LastError); }
             }
             var prior = session.GetRunSnapshot();
             Require(session.Commit(session.PrepareNextLevel(catalog.CreateStart(mode, level + 1, seed, prior))), session.LastError);
         }
         return new JObject { ["mode"] = GoldMinerRules.ModeId(mode), ["profile"] = profile.Name,
-            ["curve"] = legacy ? "legacy" : "v3", ["shop"] = shop ? "all-available" : "none", ["seed"] = seed,
+            ["curve"] = balance.ToString(), ["shop"] = shop, ["seed"] = seed,
             ["completed"] = session.GetStateSnapshot().Phase == GoldMinerPhase.Completed, ["levels"] = levels };
     }
     static void Require(bool condition, string reason) { if (!condition) throw new Exception(reason); }

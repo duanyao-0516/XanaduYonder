@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import zipfile
 from content_stable_baseline import validate_certificate
+from runtime_inputs import runtime_source_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "ThirdParty/KingdomRushRuntime"
@@ -101,6 +102,7 @@ def main():
         if not dependency.is_file():
             raise SystemExit("Required Unity Android dependency missing: " + str(dependency))
 
+    source_sha256 = runtime_source_sha256(ROOT)
     metadata = json.loads((SOURCE / "provenance.json").read_text())
     native = SOURCE / "prebuilt/arm64-v8a"
     prepare_native(native, metadata, args.source_apk)
@@ -127,14 +129,17 @@ def main():
                 raise SystemExit("JNI declarations differ from original APK: " + class_name)
 
         jni = stage / "libjni_android.so"
-        run([clang, "-shared", "-fPIC", "-O2", "-Wall", "-Wextra", "-Werror", "-fvisibility=hidden", "-I", SOURCE / "include", SOURCE / "native/jni_android.c", "-L", native, "-lluajit", "-lSDL3", "-Wl,--no-undefined", "-Wl,-z,max-page-size=16384", "-Wl,-soname,libjni_android.so", "-o", jni])
+        run([clang, "-shared", "-fPIC", "-O2", "-Wall", "-Wextra", "-Werror", "-fvisibility=hidden", "-I", SOURCE / "include", SOURCE / "native/jni_android.c", "-L", native, "-lluajit", "-lSDL3", "-lopenal", "-Wl,--no-undefined", "-Wl,-z,max-page-size=16384", "-Wl,-soname,libjni_android.so", "-o", jni])
         entries = {"AndroidManifest.xml": SOURCE / "AndroidManifest.xml", "classes.jar": classes_jar,
                    "proguard.txt": b"-keep class org.libsdl.app.** { *; }\n-keep class org.love2d.** { *; }\n-keep class com.xanaduyonder.kingdomrush.** { *; }\n",
                    "jni/arm64-v8a/libjni_android.so": jni}
         entries.update({"jni/arm64-v8a/" + name: native / name for name in metadata["nativeLibraries"]})
         archive(OUTPUT / "KingdomRushRuntime.aar", entries)
 
-    result = {"runtimeAarSha256": digest(OUTPUT / "KingdomRushRuntime.aar"), "originalApkSha256": metadata["sourceApkSha256"],
+    if runtime_source_sha256(ROOT) != source_sha256:
+        raise SystemExit("Runtime sources changed while compiling; rerun build-runtime.py.")
+    result = {"runtimeAarSha256": digest(OUTPUT / "KingdomRushRuntime.aar"), "runtimeSourceSha256": source_sha256,
+              "originalApkSha256": metadata["sourceApkSha256"],
               "unityCxxSha256": digest(cxx), "verifiedRequiredCxxSymbolCount": len(metadata["cxxRequiredSymbols"]),
               "verifiedOriginalJniMethodCount": sum(len(methods) for methods in contract.values()),
               "javaSourceCount": len(java_files), "validation": "Java and native bridge compilation; source binary hashes; C++ symbol coverage. No gameplay execution."}

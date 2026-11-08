@@ -223,7 +223,7 @@ namespace XanaduYonder.Runtime.Idiom
                 input.interactable = Game.IsStarted && !Game.IsEnded;
                 var hintCount = IsLocal ? Game.HintCountFor(Game.NextActor) : Game.HintCount;
                 IdiomUi.Caption(hint, Game.HintQuotaExhausted ? "认输" : Game.CurrentHint == null ? "提示 " + hintCount + "/3" : "查看提示");
-                var leftTurn = IsLocal && Game.NextActor == IdiomActor.Left;
+                var leftTurn = IsLocal && !data.FixedLocalActionSides && Game.NextActor == IdiomActor.Left;
                 IdiomUi.Place(send.GetComponent<RectTransform>(), leftTurn ? 0 : 524, 0, 132, 70);
                 IdiomUi.Place(hint.GetComponent<RectTransform>(), leftTurn ? 524 : 0, 0, 132, 70);
                 ((Text)input.placeholder).text = IsLocal ? TurnName + "输入成语…" : "输入四字成语…";

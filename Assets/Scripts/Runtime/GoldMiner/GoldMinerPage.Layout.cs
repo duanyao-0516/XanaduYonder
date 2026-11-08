@@ -287,7 +287,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         {
             NewView(run.Mode == GoldMinerMode.Coop ? "bg-shop-landscape" : "bg-shop-portrait", run.Mode);
             var safe = layout.Safe;
-            long nextTarget = GoldMinerRules.Target(run.Mode, run.Current.LevelIndex + 1);
+            long nextTarget = GoldMinerRules.Target(run.Mode, run.Current.LevelIndex + 1, run.BalanceProfile);
             if (layout.Cooperative)
             {
                 var sign = ArtPanel(view, "Shop title", safe.x + 100, safe.y + 34, 360, 88);
@@ -339,6 +339,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             string[] files = { "item_dynamite", "item_strength", "item_lucky_clover", "item_rock_book", "item_diamond_polish" };
             string[] descriptions = { "炸掉钩上物品", "下关回收更快", "下关福袋更幸运", "下关石头价值 ×3", "下关钻石更值钱" };
             var offer = run.Current.Shop.Offers[index];
+            bool unavailable = offer.Remaining == 0 && offer.Purchased == 0;
             var panel = ArtPanel(view, ids[index], x, y, width, height);
             // Shop cards have tighter corners than the large glowing dialog frame.
             panel.GetComponent<Image>().pixelsPerUnitMultiplier = 2.8f;
@@ -364,9 +365,15 @@ namespace XanaduYonder.Runtime.GoldMiner
             float priceWidth = compact ? width * .5f - 10 : width - 32;
             var price = BorderedPanel(panel, "Price row", priceX, priceY, priceWidth, 36,
                 UiFactory.Hex("F4DEB0"), UiFactory.Hex("E8CDA0"), 14, 0);
-            ArtIcon(price.transform, "Price coin", "objects/ui_gold_coin", priceWidth * .5f - 57, 1, 34, 34);
-            TextLabel(price.transform, offer.Remaining == 0 ? "已售罄" : offer.Price.ToString(), priceWidth * .5f - 15, 0,
-                priceWidth * .5f + 6, 36, 24, Forest, TextAnchor.MiddleLeft, true);
+            if (offer.Remaining == 0)
+                TextLabel(price.transform, unavailable ? "本店未售" : "已售罄", 8, 0,
+                    priceWidth - 16, 36, 24, Forest, TextAnchor.MiddleCenter, true);
+            else
+            {
+                ArtIcon(price.transform, "Price coin", "objects/ui_gold_coin", priceWidth * .5f - 57, 1, 34, 34);
+                TextLabel(price.transform, offer.Price.ToString(), priceWidth * .5f - 15, 0,
+                    priceWidth * .5f + 6, 36, 24, Forest, TextAnchor.MiddleLeft, true);
+            }
             bool affordable = offer.Remaining > 0 && run.Current.Cash >= offer.Price;
             if (index == 0 && run.Mode == GoldMinerMode.Coop)
             {
@@ -382,7 +389,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             else
             {
                 bool full = index == 0 && run.Current.Players[0].Bombs >= GoldMinerRules.MaxBombs;
-                string label = offer.Remaining == 0 ? "已购买" : full ? "库存已满" : affordable ? "购买" : "资金不足";
+                string label = unavailable ? "本店未售" : offer.Remaining == 0 ? "已购买" : full ? "库存已满" : affordable ? "购买" : "资金不足";
                 var button = ActionButton(panel, label, 16, buttonY, width - 32, buttonHeight, () => Purchase(offer.ItemId, 0), true);
                 button.interactable = affordable && !full;
             }

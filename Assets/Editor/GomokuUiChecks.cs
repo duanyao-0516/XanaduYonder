@@ -369,7 +369,7 @@ namespace XanaduYonder.EditorTools
                 g.Click("确认开始"); g.TapCell(82);
                 f.Click(SharedIcon(g.Root, UiIconKind.Settings));
                 var modal = Get<GameObject>(host.Shell, "modal");
-                Require(modal != null && HasText(modal, "设置在所有游戏中共用"), "Gomoku Settings invokes the actual AppController settings modal");
+                Require(modal != null && HasText(modal, "声音与触感说明"), "Gomoku Settings invokes the actual AppController settings modal");
                 Require(g.Session.Paused && !g.Session.SelectedIndex.HasValue && !g.Session.CanSelect &&
                     Get<bool>(g.Page, "settingsOpen") && !Get<GomokuBoardView>(g.Page, "board").Interactable,
                     "Real host CreateModal/StopAnimation suspends the selected game before showing shared settings");
@@ -482,6 +482,8 @@ namespace XanaduYonder.EditorTools
                 Require(g.Session.Game.MoveCount == count && !g.Session.SelectedIndex.HasValue, "Terminal board clicks cannot select or place another move");
                 if (!draw) RequireMeshColor(f, g, UiFactory.Hex("BD8450"), "Winning line appears in the production board mesh");
                 f.Capture(draw ? "draw-board" : "won-board"); g.ClickField("confirmButton");
+                Require(g.Dialog==null,"The completed board remains visible before its result");
+                var results=g.Page.GetComponent<ResultPresentation>();results.Advance(0);results.Advance(.81f);
                 Require(g.Dialog != null && HasText(g.Dialog, draw ? "和棋" : "玩家 1 获胜"), "Result dialog names the actual terminal result");
                 f.Capture(draw ? "draw-result" : "won-result");
                 g.Click("查看棋盘"); g.Page.SetForeground(false); g.Page.SetForeground(true);

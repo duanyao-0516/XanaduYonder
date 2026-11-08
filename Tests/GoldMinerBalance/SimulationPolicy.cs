@@ -45,7 +45,7 @@ internal static class SimulationPolicy
                 double angle = run.Current.Hooks[player].AngleRadians +
                     (random.NextDouble() * 2 - 1) * profile.ErrorDegrees * Math.PI / 180;
                 var entity = PredictTarget(run, player, angle);
-                if (entity == null || GoldMinerRules.Value(entity, run.Current.ActiveBuffs) < 100) continue;
+                if (entity == null || GoldMinerRules.Value(entity, run.Current.ActiveBuffs, run.BalanceProfile) < 100) continue;
                 if (game.TryLaunch(player, run.LastCommandSeq + 1))
                     inputs.Add(new GoldMinerWitnessInput { Tick = run.Current.SimulationTick, PlayerId = player });
             }

@@ -70,6 +70,7 @@ namespace XanaduYonder.Runtime.Dino
 
         public void Leave()
         {
+            ResultPresentation.Clear(this);
             if (!active) return;
             Save(); active = false;
             ClearPhysicalInputs(); clock.Reset(); sound.Stop();
@@ -298,6 +299,7 @@ namespace XanaduYonder.Runtime.Dino
 
         private void StartNewGame()
         {
+            ResultPresentation.Clear(this);
             double worldWidth = Math.Min(4096, new DinoPageLayout(viewport.Width, viewport.Height).WorldWidth);
             if (!WindowFits(worldWidth))
             {
@@ -557,11 +559,13 @@ namespace XanaduYonder.Runtime.Dino
         }
         private void ShowResult()
         {
+            var ended=game;var results=ResultPresentation.For(this,root);
+            if(!results.Gate(ended,()=>active&&foreground()&&game==ended&&game.IsGameOver&&phase==Phase.Finished&&overlay==null,ShowResult))return;
             var panel=OpenPanel(game.Score > startingBest ? "新纪录！" : "这一局，很精彩",510);
             PanelLabel(panel,"本局  "+game.Score+"\n"+(landscape?"横屏":"竖屏")+"最高  "+profile.GetBest(landscape),105,125,34);
             PanelButton(panel,"再来一局",250,()=>{CloseOverlay();StartNewGame();},true);
             PanelButton(panel,"更换方向",334,()=>BeginTurn(false,Destination.Selection));
-            PanelButton(panel,"返回大厅",418,()=>BeginTurn(false,Destination.Lobby));
+            PanelButton(panel,"查看最终局面",418,()=>results.Inspect(CloseOverlay));
             overlayBack=()=>BeginTurn(false,Destination.Selection);
         }
         private void UpdateRecord()

@@ -106,7 +106,7 @@ internal static partial class Program
     {
         var current = JObject.Parse(LinkMatchSaveCodec.Encode(actual)); Eq(actual.Slots.Length, 10); Eq(actual.Records.Length, 10);
         foreach (string field in new[] { "selectedMode", "selectedLevelId", "activitySequence" }) Assert(JToken.DeepEquals(old[field], current[field]), "Migration changed " + field);
-        for (int i = 0; i < 6; i++) { int mapped = i < 3 ? i : i + 2; Assert(JToken.DeepEquals(old["slots"][i], current["slots"][mapped]), "Migration changed legacy slot " + i); Assert(JToken.DeepEquals(old["records"][i], current["records"][mapped]), "Migration changed legacy record " + i); }
+        for (int i = 0; i < 6; i++) { int mapped = i < 3 ? i : i + 2; if(current["slots"][mapped] is JObject slot) { Assert(actual.Slots[mapped].PatternIds.SequenceEqual(LinkMatchPatterns.Legacy(LinkMatchLevel.Get(actual.Slots[mapped].LevelId).Kinds))); slot.Remove("patternIds"); } Assert(JToken.DeepEquals(old["slots"][i], current["slots"][mapped]), "Migration changed legacy slot " + i); Assert(JToken.DeepEquals(old["records"][i], current["records"][mapped]), "Migration changed legacy record " + i); }
         foreach (int index in new[] { 3, 4, 8, 9 }) { Assert(actual.Slots[index] == null); Eq(actual.Records[index].Wins, 0); Eq(actual.Records[index].Losses, 0); Assert(actual.Records[index].BestAttemptId == null); }
         Assert(actual.ContentVersion == "2"); Eq((int)current["schemaVersion"], 2);
     }

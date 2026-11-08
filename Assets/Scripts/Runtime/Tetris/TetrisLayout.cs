@@ -18,8 +18,12 @@ namespace XanaduYonder.Runtime.Tetris
         public double ControlsHeight { get; private set; }
         public double StatusTop { get; private set; }
         public double MinimumTarget { get; private set; }
+        public double DirectionGroupLeft { get; private set; }
+        public double DirectionStep { get; private set; }
+        public double RotationLeft { get; private set; }
+        public double RotationSize { get; private set; }
 
-        public TetrisLayout(double width, double height, bool warning)
+        public TetrisLayout(double width, double height, bool warning, bool swapControls = false)
         {
             if (double.IsNaN(width) || double.IsInfinity(width) || width <= 0)
                 throw new ArgumentOutOfRangeException("width");
@@ -41,6 +45,11 @@ namespace XanaduYonder.Runtime.Tetris
             BoardTop = (ArenaHeight - BoardHeight) / 2;
             StatusTop = ArenaTop + ArenaHeight;
             MinimumTarget = 48 * Scale;
+            DirectionStep = 56 * Scale;
+            double groupWidth = 160 * Scale;
+            DirectionGroupLeft = swapControls ? ContentWidth - groupWidth : 0;
+            RotationSize = 80 * Scale;
+            RotationLeft = (swapControls ? 0 : ContentWidth - groupWidth) + (groupWidth - RotationSize) / 2;
         }
     }
 }

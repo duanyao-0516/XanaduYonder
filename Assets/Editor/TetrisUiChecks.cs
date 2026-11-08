@@ -70,9 +70,9 @@ namespace XanaduYonder.EditorTools
                 Invoke(shell,"BuildLobby");
                 LobbyDesignChecks.SetModeForCheck(shell,2);
                 var cards = frame.GetComponentsInChildren<RectTransform>(true).Where(r=>r.name.EndsWith(" game card") && LobbyDesignChecks.ActiveWithin(frame,r)).ToArray();
-                Require(cards.Length==17 && cards.Last().name=="Idiom game card","Lobby retains all seventeen entries in category order");
+                Require(cards.Count(r=>r.name=="Tetris game card")==1,"Lobby contains exactly one Tetris entry");
                 var tetrisCard=cards.Single(r=>r.name=="Tetris game card");
-                Require(cards[10]==tetrisCard && tetrisCard.GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("15")),"Tetris preserves ordinal 15 within the synthesis category");
+                Require(tetrisCard.GetComponentsInChildren<Text>(true).Any(t=>t.text.StartsWith("15")),"Tetris preserves ordinal 15");
                 Require(tetrisCard.GetComponentsInChildren<TetrisPage>(true).Length==0,"Lobby preview creates no live session");
                 Require(tetrisCard.GetComponent<Button>()!=null && tetrisCard.GetComponentsInChildren<Button>(true).Length==1,
                     "Tetris uses its whole card as the sole entry");
@@ -85,7 +85,7 @@ namespace XanaduYonder.EditorTools
                 typeof(AppController).GetField("tetrisPreview",Flags).SetValue(shell,new TetrisLoadResult{Status=TetrisLoadStatus.Missing,CanWrite=true,Data=new TetrisSaveData()});
                 Invoke(shell,"RefreshTetrisRecord");
                 CaptureLobby(frame);
-                string[] help = { "左右移动，双向旋转，填满横行即可消除。\n每消除 10 行提速，堆到顶部结束。\n左侧暂存每块一次，右侧预览 3 块。\n描边是落点；软降慢落，底部按钮直落。", "单 / 双 / 三 / 四行：\n100 / 300 / 500 / 800 × 当前等级。\n软降每格 1 分，直落每格 2 分。\n不加算 T-spin、连击、B2B、全清分。" };
+                string[] help = { TetrisPage.ControlsHelp, "单 / 双 / 三 / 四行：\n100 / 300 / 500 / 800 × 当前等级。\n软降每格 1 分，直落每格 2 分。\n不加算 T-spin、连击、B2B、全清分。" };
                 foreach (var body in help)
                 {
                     Invoke(shell,"ShowDialog","俄罗斯方块",body,"知道了",(Action)(()=>{}),"返回",(Action)(()=>{}));
@@ -161,7 +161,21 @@ namespace XanaduYonder.EditorTools
                 Require(Math.Abs(layout.BoardWidth*388/720-(height==784?237:194))<1,"Expected board width at "+height);
                 Require(view.BoardRect.rect.height>0 && view.BoardRect.rect.width>0,"Board has real UGUI geometry");
                 var targets=view.ActionTargets.Values.ToArray();
-                Require(targets.Length==7,"Seven touch targets including Hold");
+                Require(targets.Length==5,"Four control targets plus Hold");
+                Require(!view.ActionTargets.ContainsKey(TetrisAction.CounterClockwise) && !view.ActionTargets.ContainsKey(TetrisAction.HardDrop),"No counterclockwise or separate hard-drop target");
+                foreach(var action in new[]{TetrisAction.Left,TetrisAction.Right,TetrisAction.SoftDrop,TetrisAction.Clockwise})
+                    Require(!view.ActionTargets[action].GetComponentsInChildren<Text>().Any(t=>!string.IsNullOrEmpty(t.text)),"Control area uses icons without instructions: "+action);
+                var boardBefore=Bounds(view.BoardRect);
+                foreach(bool swapped in new[]{false,true})
+                {
+                    view.SetSwapControls(swapped);view.RefreshLayout();Canvas.ForceUpdateCanvases();
+                    var left=Bounds(view.ActionTargets[TetrisAction.Left]);var right=Bounds(view.ActionTargets[TetrisAction.Right]);
+                    var down=Bounds(view.ActionTargets[TetrisAction.SoftDrop]);var rotate=Bounds(view.ActionTargets[TetrisAction.Clockwise]);
+                    Require(left.center.x<down.center.x&&down.center.x<right.center.x&&down.center.y<left.center.y,"Three-direction layout has only left/right/down");
+                    Require(swapped?rotate.xMax<left.xMin:right.xMax<rotate.xMin,"Direction and rotation groups exchange sides");
+                    Require(Bounds(view.BoardRect)==boardBefore,"Control swap preserves exact board geometry");
+                }
+                view.SetSwapControls(false);view.RefreshLayout();
                 foreach(var t in targets)Require(t.rect.width>=layout.MinimumTarget-.1 && t.rect.height>=layout.MinimumTarget-.1,"48px target "+t.name);
                 for(int i=0;i<targets.Length;i++)for(int j=i+1;j<targets.Length;j++)Require(!Bounds(targets[i]).Overlaps(Bounds(targets[j])),"No gameplay hit overlap "+i+"/"+j);
                 var icons=frame.GetComponentsInChildren<UiIconGraphic>(true);
@@ -210,6 +224,12 @@ namespace XanaduYonder.EditorTools
                 page.SetForeground(false);page.SetForeground(true);Require(page.Session.Phase==TetrisSessionPhase.Paused,"Foreground return remains paused");
                 var loaded=new TetrisSaveStore(directory).Load();Require(loaded.Status==TetrisLoadStatus.Loaded,"Page commits valid independent save");
                 Require(loaded.Data.Game.ElapsedTicks==ticks && loaded.Data.Game.Score==1240,"Page saves full current dynamics");
+                string beforeSwap=JsonUtility.ToJson(page.Session.Snapshot);
+                page.SetSwapControls(true);
+                Require(page.SwapControls&&new TetrisSaveStore(directory).Load().Data.SwapControls,"Control preference is committed through the actual page/store");
+                Require(JsonUtility.ToJson(page.Session.Snapshot)==beforeSwap,"Changing preference preserves every board field");
+                Invoke(page,"Load");Require(page.SwapControls,"Reload restores saved control preference");
+                page.SetSwapControls(false);
                 Invoke(page,"OpenHelp");Invoke(page,"OpenSettings");Require(page.Session.Phase==TetrisSessionPhase.Paused,"Help/settings preserve pause");
                 page.SetHostSaveWarning("公共设置暂未保存，请检查剩余空间。");page.View.RefreshLayout();Invoke(page,"Refresh");Capture("warning");
                 Require(frame.GetComponentsInChildren<Text>(true).Any(t=>t.text.Contains("公共设置暂未保存")),"Shared warning remains visible");
@@ -219,6 +239,20 @@ namespace XanaduYonder.EditorTools
                 var ended=new TetrisGame(11);int tries=0;while(!ended.GameOver && tries++<100)ended.Execute(TetrisCommand.HardDrop);
                 Require(ended.GameOver,"Real core produces terminal board");Invoke(page,"SetSession",ended,true);Invoke(page,"Refresh");Capture("game-over");
                 Require(page.Session.Phase==TetrisSessionPhase.Ended,"Terminal snapshot shows ended phase");
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Terminal board is visible before the result delay");
+                var presentation=page.GetComponent<ResultPresentation>();
+                presentation.Advance(0);presentation.Advance(.79f);
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Result remains hidden before 0.8 seconds");
+                presentation.Advance(.02f);
+                Require(page.View.OverlayRoot.gameObject.activeSelf,"Result opens after the delay through the production presentation path");
+                string terminal=JsonUtility.ToJson(page.Session.Snapshot);
+                Invoke(page,"InspectResult");Invoke(page,"Refresh");
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Inspect keeps the final board unobscured");
+                var reopen=page.GetComponentsInChildren<Button>().Single(b=>b.name=="Reopen result");
+                Require(page.View.ActionTargets.Values.All(t=>!t.GetComponent<Button>().interactable),"Inspecting final board cannot resume gameplay");
+                reopen.onClick.Invoke();Require(page.View.OverlayRoot.gameObject.activeSelf,"Explicit result entry reopens the result");
+                Require(JsonUtility.ToJson(page.Session.Snapshot)==terminal,"Inspect and reopen never mutate the final snapshot");
+                page.Suspend();Require(!page.View.OverlayRoot.gameObject.activeSelf,"Suspending clears the presented result and starts no immediate reopen");
                 page.Leave();Require(!page.gameObject.activeSelf,"Leave deactivates page");page.Enter();Require(page.Session.Phase==TetrisSessionPhase.Ended,"Reentry cannot resume terminal game");
                 string file=Path.Combine(directory,"tetris-v1.json");
                 string future="{\"schemaVersion\":2}";File.WriteAllText(file,future);Invoke(page,"Load");Invoke(page,"Begin");page.Save();Capture("future-save");

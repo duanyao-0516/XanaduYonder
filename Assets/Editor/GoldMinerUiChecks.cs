@@ -195,6 +195,7 @@ namespace XanaduYonder.EditorTools
                 yield return fixture.CheckResponsiveHeaderArtwork(mode, "result");
                 yield return fixture.Click(fixture.Button("进入商店"));
                 Require(session.GetStateSnapshot().Phase == GoldMinerPhase.Shop, prefix + " result enters shop");
+                fixture.CheckShopStock();
                 fixture.Capture(prefix + "-shop");
                 fixture.CheckReleasedView("GoldMiner/backgrounds/" + (coop ? "bg-coop" : "bg-solo"));
                 fixture.CheckButtonsInsideSafeArea();
@@ -207,7 +208,7 @@ namespace XanaduYonder.EditorTools
                 long transaction = session.GetSnapshot().TxnSeq;
                 fixture.CheckPurchaseFailure(GoldMinerItem.Dynamite, player);
                 Invoke(page, "Purchase", GoldMinerItem.Dynamite, player);
-                Require(session.GetStateSnapshot().Cash == cash - GoldMinerRules.Price(GoldMinerItem.Dynamite, 1), prefix + " shop deducts exact price");
+                Require(session.GetStateSnapshot().Cash == cash - GoldMinerRules.Price(GoldMinerItem.Dynamite, 1, session.GetRunSnapshot().BalanceProfile), prefix + " shop deducts exact price");
                 Require(session.GetStateSnapshot().Players[player].Bombs == bombs + 1, prefix + " shop credits chosen inventory");
                 Require(session.GetSnapshot().TxnSeq == transaction + 1 && page.SaveError == null,
                     prefix + " failed purchase retry commits exactly once and clears save error");
@@ -367,8 +368,8 @@ namespace XanaduYonder.EditorTools
             public void CheckLobby()
             {
                 var content = Lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "Idiom" };
-                int[] numbers = { 6, 7, 14, 12, 10, 18, 19, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 5 };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
+                int[] numbers = { 6, 7, 14, 12, 10, 18, 19, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 24, 22, 20, 25, 5 };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -476,6 +477,30 @@ namespace XanaduYonder.EditorTools
                 Require(session.GetRunSnapshot().LastCommandSeq == sequence, "Modal consumes mine pointer without a command");
                 if (blocked.pointerPress != null) ExecuteEvents.Execute(blocked.pointerPress, blocked, ExecuteEvents.pointerUpHandler);
                 yield return Click(Button("继续游戏"));
+            }
+
+            public void CheckShopStock()
+            {
+                var run = Get<GoldMinerSession>(Page, "session").GetRunSnapshot();
+                int available = 0;
+                foreach (var offer in run.Current.Shop.Offers)
+                {
+                    int expected = GoldMinerRules.ShopStock(run.Mode, offer.ItemId, run.Current.LevelIndex, run.BalanceProfile);
+                    Require(offer.Remaining + offer.Purchased == expected, "Shop inventory follows the run profile");
+                    Require(offer.Price == GoldMinerRules.Price(offer.ItemId, run.Current.LevelIndex, run.BalanceProfile),
+                        "Shop displayed price follows the run profile");
+                    if (expected > 0) available++;
+                }
+                Require(available == 3, "The new first shop offers exactly three product categories");
+                var view = Get<RectTransform>(Page, "view");
+                foreach (string name in new[] { "石头收藏书", "钻石油" })
+                {
+                    var card = view.Find(name);
+                    bool marked = false;
+                    foreach (var text in card.GetComponentsInChildren<Text>()) marked |= text.text == "本店未售";
+                    Require(marked, name + " is marked unavailable, not purchased");
+                    foreach (var button in card.GetComponentsInChildren<Button>()) Require(!button.interactable, name + " cannot be bought");
+                }
             }
 
             public IEnumerator CheckDeadlineGuards(GoldMinerMode mode)

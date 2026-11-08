@@ -6,7 +6,7 @@ namespace XanaduYonder.Runtime.LinkMatch
 {
     internal sealed class LinkMatchBoardView
     {
-        internal static readonly string[] FruitIds={"strawberry","red-apple","tangerine","lemon","banana","watermelon","grapes","cherries","peach","pear","pineapple","avocado","croissant","hamburger","pizza","doughnut","cupcake","carrot","broccoli","ear-of-corn","mushroom","cheese-wedge","egg","peanuts","dog-face","cat-face","fox","panda","frog","lion","pig-face","unicorn","butterfly","lady-beetle","octopus","tropical-fish","sunflower","hibiscus","four-leaf-clover","cactus","rainbow","fire","soccer-ball","basketball","rocket","wrapped-gift","musical-note","gem-stone"};
+        internal static readonly string[] FruitIds=LinkMatchPatterns.Legacy(48);
         private readonly RectTransform parent;
         private readonly RectTransform[] tiles;
         private readonly LinkMatchGraphic[] faces;
@@ -14,12 +14,12 @@ namespace XanaduYonder.Runtime.LinkMatch
         private readonly Texture2D[] textures;
         private readonly LinkMatchGraphic route;
         internal RectTransform Content { get; private set; }
-        internal LinkMatchBoardView(RectTransform parent,LinkMatchLevel level)
+        internal LinkMatchBoardView(RectTransform parent,LinkMatchLevel level,string[] patternIds)
         {
             this.parent=parent;
             int count=level.Columns*level.Rows;
             tiles=new RectTransform[count];faces=new LinkMatchGraphic[count];fruits=new RawImage[count];textures=new Texture2D[level.Kinds];
-            for(int i=0;i<textures.Length;i++) { textures[i]=Resources.Load<Texture2D>("LinkMatch/Sprites/"+FruitIds[i]); if(textures[i]==null) throw new InvalidOperationException("Missing LinkMatch pattern: "+FruitIds[i]); }
+            for(int i=0;i<textures.Length;i++) { textures[i]=Resources.Load<Texture2D>("LinkMatch/Sprites/"+patternIds[i]); if(textures[i]==null) throw new InvalidOperationException("Missing LinkMatch pattern: "+patternIds[i]); }
             Content=UiFactory.Rect(parent,"LinkMatch tiles",0,0,parent.rect.width,parent.rect.height); UiFactory.Stretch(Content);
             for(int i=0;i<tiles.Length;i++)
             {

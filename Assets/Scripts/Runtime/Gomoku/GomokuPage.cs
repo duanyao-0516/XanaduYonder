@@ -43,6 +43,7 @@ namespace XanaduYonder.Runtime.Gomoku
 
         private void RestoreSelected()
         {
+            ResultPresentation.Clear(this);
             CancelSearch(); CloseDialog(false);
             var saved = data.Slots[(int)data.SelectedMode];
             session = saved == null ? null : new GomokuSession(saved);
@@ -53,6 +54,7 @@ namespace XanaduYonder.Runtime.Gomoku
 
         internal void StartGame(GomokuMode mode, GomokuDifficulty difficulty, GomokuStone humanStone, int blackPlayer)
         {
+            ResultPresentation.Clear(this);
             CancelSearch(); CloseDialog(false);
             invalidSave = false; warning = null; aiError = null;
             data.SelectedMode = mode; data.PreferredDifficulty = difficulty;
@@ -72,7 +74,11 @@ namespace XanaduYonder.Runtime.Gomoku
         {
             if (!Allowed) return;
             if (session == null) { ShowSetup(false); return; }
-            if (session.Game.State != GomokuState.Playing) { ShowResult(); return; }
+            if (session.Game.State != GomokuState.Playing)
+            {
+                if(ResultPresentation.IsInspecting(this))ResultPresentation.For(this,root).Reopen();else ShowResult();
+                return;
+            }
             if (session.Paused) { aiError = null; session.Resume(); Refresh(); EnsureSearch(); return; }
             if (!session.ConfirmSelection()) return;
             Committed();

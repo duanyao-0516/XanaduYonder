@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using XanaduYonder.Core;
+using XanaduYonder.Runtime;
 
 internal static class Program
 {
@@ -9,6 +10,29 @@ internal static class Program
 
     private static int Main()
     {
+        Run("Result presentation waits only while available", () => {
+            var state=new ResultPresentationState();var key=new object();
+            if(state.Request(key))throw new Exception("Must first preserve the terminal frame");
+            if(state.Advance(.7,true))throw new Exception("Result opened too early");
+            if(state.Advance(1,false))throw new Exception("Hidden page opened a result");
+            if(state.Advance(.7,true)||!state.Advance(.1,true)||!state.Request(key))throw new Exception("Foreground result delay failed");
+        });
+        Run("Result presentation ignores the first resumed frame duration", () => {
+            var state=new ResultPresentationState();var key=new object();state.Request(key);state.Advance(.7,true);
+            state.Interrupt();if(state.Advance(30,true))throw new Exception("Background duration opened the result");
+            if(state.Advance(.7,true)||!state.Advance(.1,true))throw new Exception("Fresh foreground delay was not respected");
+        });
+        Run("Inspection suppresses automatic reopen and explicit reopen restores it", () => {
+            var state=new ResultPresentationState();var key=new object();state.Request(key);state.Advance(.8,true);state.Request(key);state.Inspect();
+            if(state.Request(key)||state.Advance(5,true)||!state.IsInspecting)throw new Exception("Inspection was interrupted");
+            state.Reopen();if(!state.Request(key)||state.IsInspecting)throw new Exception("Explicit result reopen failed");
+        });
+        Run("Result reset and new identity discard old presentation", () => {
+            var state=new ResultPresentationState();var old=new object();state.Request(old);state.Advance(.7,true);state.Reset();
+            if(state.Advance(1,true)||state.IsInspecting)throw new Exception("Reset retained an old callback");
+            state.Request(old);state.Advance(.8,true);state.Inspect();
+            if(state.Request(new object())||state.IsInspecting||state.Advance(.7,true))throw new Exception("New game inherited the old presentation");
+        });
         Run("New game creates exactly two tiles", NewGameCreatesTwoTiles);
         Run("New game rejects null randomness", () => Throws<ArgumentNullException>(() => new Game2048(null)));
         Run("Restore rejects null randomness", () => Throws<ArgumentNullException>(() => new Game2048(Snapshot(), null)));

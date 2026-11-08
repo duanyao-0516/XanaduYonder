@@ -28,8 +28,8 @@ namespace XanaduYonder.Core.GoldMiner
                 var offer = new GoldMinerOffer
                 {
                     ItemId = (GoldMinerItem)i,
-                    Price = GoldMinerRules.Price((GoldMinerItem)i, state.LevelIndex),
-                    Remaining = i == 0 ? 3 : 1
+                    Price = GoldMinerRules.Price((GoldMinerItem)i, state.LevelIndex, run.BalanceProfile),
+                    Remaining = GoldMinerRules.ShopStock(run.Mode, (GoldMinerItem)i, state.LevelIndex, run.BalanceProfile)
                 };
                 if (i == 0)
                 {
@@ -59,7 +59,7 @@ namespace XanaduYonder.Core.GoldMiner
             var offer = state.Shop.Offers[(int)item];
             if (offer.Remaining == 0)
             {
-                reason = "Sold out.";
+                reason = offer.Purchased == 0 ? "Not offered in this shop." : "Sold out.";
                 return false;
             }
 

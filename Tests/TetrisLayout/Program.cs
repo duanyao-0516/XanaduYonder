@@ -39,8 +39,20 @@ internal static class Program
                 context + "Next preview within arena");
             Require(layout.ArenaTop + layout.ArenaHeight + (warning ? 26 * scale : 0) + 16 * scale <=
                 layout.ControlsTop + .00001, context + "warning and arena separated from controls");
-            Require((layout.ContentWidth - 32 * scale) / 5 >= layout.MinimumTarget,
-                context + "five action targets retain minimum width");
+            foreach (bool swapped in new[] { false, true })
+            {
+                var controls = new TetrisLayout(width, cssHeight * scale, warning, swapped);
+                Near(controls.BoardWidth, layout.BoardWidth, context + "swapping controls preserves board width");
+                Near(controls.BoardHeight, layout.BoardHeight, context + "swapping controls preserves board height");
+                Require(controls.DirectionGroupLeft >= 0 && controls.DirectionGroupLeft + 2 * controls.DirectionStep + controls.MinimumTarget <= controls.ContentWidth + .00001,
+                    context + "three-direction group remains inside the control band");
+                Require(controls.DirectionStep + controls.MinimumTarget <= controls.ControlsHeight + .00001,
+                    context + "down key fits below left/right with no up key");
+                Require(controls.RotationSize >= controls.MinimumTarget && controls.RotationLeft >= 0 && controls.RotationLeft + controls.RotationSize <= controls.ContentWidth,
+                    context + "rotation target remains usable");
+                Require(swapped ? controls.RotationLeft + controls.RotationSize < controls.DirectionGroupLeft : controls.DirectionGroupLeft + 2 * controls.DirectionStep + controls.MinimumTarget < controls.RotationLeft,
+                    context + "direction and rotation groups exchange sides without overlap");
+            }
             Near(layout.ControlsTop + layout.ControlsHeight + 12 * scale, cssHeight * scale,
                 context + "bottom margin");
         }

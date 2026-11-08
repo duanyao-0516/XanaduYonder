@@ -101,10 +101,12 @@ namespace XanaduYonder.Runtime.Gomoku
         }
         private void ShowResult()
         {
+            var ended=session;var results=ResultPresentation.For(this,root);
+            if(!results.Gate(ended,()=>Allowed&&session==ended&&session.Game.State!=GomokuState.Playing,ShowResult))return;
             resultShown = true;
             var game = session.Game;
             ShowDialog(ResultTitle(), "本局共 " + game.MoveCount + " 手\n" + (game.State == GomokuState.Draw ? "棋盘已满，双方都未连成五子。" : "获胜连线已在棋盘上标记。"),
-                "再来一局", () => ShowSetup(true), "查看棋盘", () => { }, "返回大厅", RequestLeave);
+                "再来一局", () => ShowSetup(true), "查看棋盘", () => results.Inspect(()=>CloseDialog(false)), "返回大厅", RequestLeave);
         }
         private void ShowInvalidSave()
         {

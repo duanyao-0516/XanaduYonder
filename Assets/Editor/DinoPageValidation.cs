@@ -310,7 +310,19 @@ namespace XanaduYonder.EditorTools
             Require(f.Game.IsGameOver && f.Game.Score > 0, "Real collision produces a scored terminal run");
             long score = f.Game.Score;
             Invoke(f.Page, "UpdateRecord"); Invoke(f.Page, "EndRun");
+            var result = f.Page.GetComponent<ResultPresentation>();
+            Require(f.Page.CurrentPhase == "Finished" && Get<RectTransform>(f.Page, "overlay") == null, "Terminal track stays visible before result delay");
+            result.Advance(0); result.Advance(.79f);
+            Require(Get<RectTransform>(f.Page, "overlay") == null, "Dino result waits for 0.8 foreground seconds");
+            result.Advance(.02f);
             Require(f.Page.CurrentPhase == "Finished" && f.HasText("新纪录！"), "Result compares against run-start record after saving");
+            var ended = f.Game; long terminalTick = ended.Tick;
+            FindText(Get<RectTransform>(f.Page, "overlay"), "查看最终局面").GetComponentInParent<Button>().onClick.Invoke();
+            Require(Get<RectTransform>(f.Page, "overlay") == null && ResultPresentation.IsInspecting(f.Page), "Inspect exposes the final track");
+            Invoke(f.Page, "JumpDown", 29); Invoke(f.Page, "JumpUp", 29);
+            Require(ReferenceEquals(ended, f.Game) && f.Game.Tick == terminalTick && f.Game.IsGameOver, "Inspect input preserves terminal gameplay");
+            FindText(f.Page.transform, "查看结算").GetComponentInParent<Button>().onClick.Invoke();
+            Require(f.HasText("新纪录！") && !ResultPresentation.IsInspecting(f.Page), "Explicit entry returns to the same result");
             bool landscape = Get<bool>(f.Page, "landscape");
             var profile = Get<DinoSaveData>(f.Page, "profile");
             Require(profile.GetBest(landscape) == score && profile.GetBest(!landscape) == 0, "Only the current orientation record changes");
@@ -327,8 +339,9 @@ namespace XanaduYonder.EditorTools
                 Require(text.text == "竖屏最高 " + profile.BestPortraitScore + " · 横屏最高 " + profile.BestLandscapeScore, "Actual shell displays both orientation records");
             }
             finally { Object.DestroyImmediate(shellObject); }
-            Invoke(f.Page, "StartNewGame");
+            FindText(Get<RectTransform>(f.Page, "overlay"), "再来一局").GetComponentInParent<Button>().onClick.Invoke();
             Require(Get<long>(f.Page, "startingBest") == score && !f.Game.IsStarted, "Restart starts fresh and remembers the previous record baseline");
+            Require(!ResultPresentation.IsInspecting(f.Page) && FindText(f.Page.transform, "查看结算") == null, "Restart clears the old result entry");
         }
 
         private static void ReadyDuckSprite(Fixture f)

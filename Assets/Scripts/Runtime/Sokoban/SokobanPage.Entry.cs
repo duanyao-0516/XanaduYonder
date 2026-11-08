@@ -18,6 +18,7 @@ namespace XanaduYonder.Runtime.Sokoban
 
         internal void ShowEntry()
         {
+            ResultPresentation.Clear(this);
             CancelInput(); CloseDialog(); feedback.Stop(); isEntry=true; session.Leave(); Save();
             SetViewVisibility(); Refresh(); LayoutNow();
         }

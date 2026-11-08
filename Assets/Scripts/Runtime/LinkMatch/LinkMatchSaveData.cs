@@ -14,6 +14,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         public string LevelId;
         public int Columns, Rows;
         public int[] Tiles;
+        public string[] PatternIds;
         public double ElapsedSeconds, RemainingSeconds;
         public int HintsUsed, ShufflesUsed;
         public uint RandomState;
@@ -21,12 +22,13 @@ namespace XanaduYonder.Runtime.LinkMatch
         public bool ResultRecorded;
         public long ActivityOrder;
         public LinkMatchSessionData Copy()
-        { var copy = (LinkMatchSessionData)MemberwiseClone(); copy.Tiles = Tiles == null ? null : (int[])Tiles.Clone(); return copy; }
+        { var copy = (LinkMatchSessionData)MemberwiseClone(); copy.Tiles = Tiles == null ? null : (int[])Tiles.Clone(); copy.PatternIds = PatternIds == null ? null : (string[])PatternIds.Clone(); return copy; }
         public bool TryValidate(out string reason)
         {
             reason = null;
             if (!ValidAttempt(AttemptId) || !ValidMode(Mode) || !KnownLevel(LevelId)) return Fail("Unknown attempt, mode or level identity.", out reason);
             var level = LinkMatchLevel.Get(LevelId);
+            if (!LinkMatchPatterns.ValidMapping(PatternIds, level.Kinds)) return Fail("Invalid pattern mapping.", out reason);
             if (Columns != level.Columns || Rows != level.Rows || Tiles == null || Tiles.Length != Columns * Rows) return Fail("Board dimensions do not match its level.", out reason);
             int remaining = 0; var counts = new int[level.Kinds];
             foreach (int tile in Tiles) { if (tile == -1) continue; if (tile < 0 || tile >= counts.Length) return Fail("Unknown fruit ID.", out reason); counts[tile]++; remaining++; }
@@ -79,6 +81,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         public string ContentVersion = CurrentContentVersion;
         public LinkMatchMode SelectedMode;
         public string SelectedLevelId = "level-01";
+        public int SelectedCategories = LinkMatchPatterns.AllCategories;
         public long ActivitySequence;
         // Index uses the current catalog; legacy indices are mapped explicitly by the codec.
         public static int SlotCount { get { return 2 * LinkMatchLevel.Count; } }
@@ -98,7 +101,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         public bool TryValidate(out string reason)
         {
             reason = null;
-            if (ContentVersion != CurrentContentVersion || !LinkMatchSessionData.ValidMode(SelectedMode) || !LinkMatchSessionData.KnownLevel(SelectedLevelId) || ActivitySequence < 0 || Slots == null || Slots.Length != SlotCount || Records == null || Records.Length != SlotCount) return LinkMatchSessionData.Fail("Invalid profile schema or selection.", out reason);
+            if (!LinkMatchPatterns.ValidCategories(SelectedCategories) || ContentVersion != CurrentContentVersion || !LinkMatchSessionData.ValidMode(SelectedMode) || !LinkMatchSessionData.KnownLevel(SelectedLevelId) || ActivitySequence < 0 || Slots == null || Slots.Length != SlotCount || Records == null || Records.Length != SlotCount) return LinkMatchSessionData.Fail("Invalid profile schema or selection.", out reason);
             var attempts = new HashSet<string>(StringComparer.Ordinal); var orders = new HashSet<long>(); var bestAttempts = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < SlotCount; i++)
             {

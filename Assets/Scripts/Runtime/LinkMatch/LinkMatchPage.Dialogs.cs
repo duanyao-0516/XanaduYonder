@@ -37,6 +37,13 @@ namespace XanaduYonder.Runtime.LinkMatch
             height=Math.Min(height,root.rect.height-48*s);
             var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,20*s,UiFactory.Paper);
             panel.BorderWidth=s;panel.BorderColor=UiFactory.Hex("D9DFD0");
+            if(dialogKind=="patterns")
+            {
+                Label(panel.transform,"再选一些图案",24*s,31*s,width-48*s,38*s,22,UiFactory.Ink,TextAnchor.MiddleCenter);
+                Label(panel.transform,patternWarning,24*s,88*s,width-48*s,110*s,13,UiFactory.Muted,TextAnchor.MiddleCenter);
+                DialogButton(panel.transform,"Choose more patterns","选择图案类别",24*s,234*s,width-48*s,()=>{CloseDialog();RefreshBoard();},true);
+                return;
+            }
             if(help||dialogKind=="pause")
             {
                 // Dismiss preserves the paused attempt; only the primary action resumes play.

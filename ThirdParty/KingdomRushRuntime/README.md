@@ -67,6 +67,19 @@ Android-driven recreation is also checked inside SDLActivity itself; a rejected
 new instance finishes without touching the previous instance's static runtime.
 Activity pause/resume and input remain owned by the matching SDL3 implementation.
 
+The local JNI module additionally watches SDL application background/foreground
+events and pauses/resumes the current OpenAL device. The pinned LÖVE binary's
+audio lifecycle hook expects window-minimized/restored events, while this SDL3
+Android runtime emits application lifecycle events. The watch runs when SDL
+queues the event, before its Android event pump blocks, so it also covers title
+and map music. It leaves source playback state and saved sound settings intact.
+The watcher is registered once per real Lua runtime and removed by its registry
+userdata finalizer; it resolves the current device on each transition and never
+retains an OpenAL device beyond that callback. Closing a background game removes
+the watcher without restarting music. See the pinned SDL3
+[Android event path](https://github.com/love2d/megasource/blob/9618942ec0fdeea41c0835c2104bcd6d0686effc/libs/SDL3/src/video/android/SDL_androidevents.c)
+and [synchronized watcher lifetime](https://github.com/love2d/megasource/blob/9618942ec0fdeea41c0835c2104bcd6d0686effc/libs/SDL3/src/events/SDL_eventwatch.c).
+
 ## Data and JNI
 
 `getFilesDir()` exposes only the dedicated `files/kingdom-rush-1` directory to
@@ -113,6 +126,14 @@ Generated, ignored outputs are `Assets/Plugins/Android/KingdomRushRuntime.aar`,
 The first AAR holds Java and native libraries; the second stores `assets/game.love`
 without an extra ZIP deflate layer. Source hashes, JNI declarations, Java/native
 compilation and C++ symbol coverage are checked on every build.
+The report's `runtimeSourceSha256` binds the AAR to the current Java/native
+sources, headers, manifest, provenance, JNI contract, and runtime build/gate
+scripts. It excludes `prebuilt/` and this README; original library hashes remain
+checked against provenance. `verify-build-input.py` rejects a missing or stale
+source fingerprint before Android builds, even when an older AAR still matches
+its older report. Rerun `build-runtime.py` after changing these inputs. Use the
+normal mode for an Android build: `--runtime-only` writes a runtime-only report
+without the required content validation certificate.
 The Unity Gradle postprocessor keeps `.love` uncompressed in the final APK and
 uses extracted native libraries, matching the real Lua module search path.
 Both AAR manifests explicitly declare minSdk 26 and targetSdk 36. This prevents

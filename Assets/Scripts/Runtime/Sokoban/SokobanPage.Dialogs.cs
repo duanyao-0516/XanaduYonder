@@ -27,10 +27,10 @@ namespace XanaduYonder.Runtime.Sokoban
             if(dialog!=null) { dialog.SetActive(false); dialog.transform.SetParent(null,false); Destroy(dialog); dialog=null; }
             choosing=false; dismissDialog=null; if(!settingsBlocked) session?.SetBlocked(false);
         }
-        private void ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,float height=325)
+        private void ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,float height=325,string tertiary=null,Action tertiaryAction=null)
         {
             var panel=BeginDialog(title,height); float s=Scale,h=panel.rect.height,w=panel.rect.width-58*s;
-            float primaryY=h-(secondary==null?73:125)*s;
+            float primaryY=h-(secondary==null?73:125)*s-(tertiary==null?0:52*s);
             var body=Label(panel,message,29*s,88*s,w,Mathf.Max(1,primaryY-100*s),13,UiFactory.Hex("64756B"),TextAnchor.UpperLeft);
             body.horizontalOverflow=HorizontalWrapMode.Wrap; body.supportRichText=false;
             var main=ActionButton(panel,"Dialog primary",29*s,primaryY,w,44*s,()=>{ CloseDialog(); primaryAction?.Invoke(); Refresh(); },11*s);
@@ -40,6 +40,11 @@ namespace XanaduYonder.Runtime.Sokoban
             {
                 var second=ActionButton(panel,"Dialog secondary",29*s,primaryY+52*s,w,44*s,()=>{ CloseDialog(); secondaryAction?.Invoke(); Refresh(); },11*s);
                 Label(second.transform,secondary,0,0,w,44*s,13,UiFactory.Ink,TextAnchor.MiddleCenter);
+            }
+            if(tertiary!=null)
+            {
+                var third=ActionButton(panel,"Dialog inspection",29*s,primaryY+104*s,w,44*s,()=>{CloseDialog();tertiaryAction?.Invoke();Refresh();},11*s);
+                Label(third.transform,tertiary,0,0,w,44*s,13,UiFactory.Ink,TextAnchor.MiddleCenter);
             }
             dismissDialog=()=>{ CloseDialog(); secondaryAction?.Invoke(); Refresh(); };
         }
@@ -114,13 +119,16 @@ namespace XanaduYonder.Runtime.Sokoban
         internal void CheckEndState()
         {
             if(!visible||isEntry||!hasStarted||!foreground||settingsBlocked||session==null||!session.Game.Won||resultDismissed||dialog!=null||board.Animating||!acceptsInput()) return;
+            var ended=session;var results=ResultPresentation.For(this,root);
+            if(!results.Gate(ended,()=>visible&&!isEntry&&hasStarted&&foreground&&!settingsBlocked&&session==ended&&session.Game.Won&&dialog==null&&!board.Animating&&acceptsInput(),
+                ()=>{resultDismissed=false;CheckEndState();}))return;
             resultDismissed=true; queued=null; Save();
             string id=session.Game.Level.LevelId; int index=CatalogIndex(id);
             string message=DisplayLevelLabel(id)+"\n"+session.Game.Moves+" 步 · "+session.Game.Pushes+" 次推动\n已完成 "+CompletedCount+" / "+catalog.Count+" 关"+(session.IsNewBest?"\n刷新了个人最佳纪录":"");
             if(index+1<catalog.Count)
-                ShowDialog("全部归位",message,"下一关",()=>StartLevel(catalog.At(index+1).LevelId,true),"重玩本关",()=>StartLevel(id,true),325);
-            else ShowDialog("全部归位",message,"返回关卡入口",ShowEntry,"重玩本关",()=>StartLevel(id,true),325);
-            dismissDialog=()=>{ CloseDialog(); Refresh(); };
+                ShowDialog("全部归位",message,"下一关",()=>StartLevel(catalog.At(index+1).LevelId,true),"重玩本关",()=>StartLevel(id,true),377,"查看最终局面",()=>results.Inspect(()=>{CloseDialog();Refresh();}));
+            else ShowDialog("全部归位",message,"返回关卡入口",ShowEntry,"重玩本关",()=>StartLevel(id,true),377,"查看最终局面",()=>results.Inspect(()=>{CloseDialog();Refresh();}));
+            dismissDialog=()=>results.Inspect(()=>{CloseDialog();Refresh();});
         }
     }
 }

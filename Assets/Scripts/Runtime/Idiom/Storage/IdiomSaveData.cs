@@ -8,6 +8,7 @@ namespace XanaduYonder.Runtime.Idiom
         public IdiomMatchKind ActiveMatchKind { get; set; }
         public bool CloseKeyboardAfterSend { get; set; } = true;
         public bool ShowPinyin { get; set; }
+        public bool FixedLocalActionSides { get; set; } = true;
         public IdiomModeSave Character { get; set; }
         public IdiomModeSave Sound { get; set; }
         public IdiomModeSave LocalCharacter { get; set; }

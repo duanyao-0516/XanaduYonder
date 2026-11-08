@@ -19,7 +19,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         // Reflection only reads/writes these public DTO fields; it never instantiates a type from JSON.
         private static readonly Dictionary<Type, FieldInfo[]> Schemas = new Dictionary<Type, FieldInfo[]> {
             { typeof(GoldMinerRecord), Fields<GoldMinerRecord>("BestClearedLevel BestRunGrossIncome CompletionCount") },
-            { typeof(GoldMinerRunSnapshot), Fields<GoldMinerRunSnapshot>("RunId Mode RunSeed AttemptIndex LastCommandSeq Current Checkpoint") },
+            { typeof(GoldMinerRunSnapshot), Fields<GoldMinerRunSnapshot>("RunId BalanceProfile Mode RunSeed AttemptIndex LastCommandSeq Current Checkpoint") },
             { typeof(GoldMinerState), Fields<GoldMinerState>("Phase LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash Cash Target ShopSpent RemainingTicks SimulationTick LayoutRng BagRng PatternId PreviousPatternId LevelLayoutSeed Players Hooks Entities ActiveBuffs PendingBuffs Shop Settlement") },
             { typeof(GoldMinerLevelStart), Fields<GoldMinerLevelStart>("LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash PatternId PreviousPatternId LevelLayoutSeed OpeningCash OpeningShopSpent OpeningPlayers ActiveBuffs InitialHooks InitialEntities LayoutRng BagRng") },
             { typeof(GoldMinerPlayer), Fields<GoldMinerPlayer>("PlayerId Bombs TotalCollected LevelCollected") },
@@ -47,6 +47,9 @@ namespace XanaduYonder.Runtime.GoldMiner
                 ["records"] = new JObject { ["solo"] = Write(value.SoloRecord), ["coop"] = Write(value.CoopRecord) },
                 ["slots"] = new JObject { ["solo"] = Write(value.Solo), ["coop"] = Write(value.Coop) }
             };
+            if (value.RulesVersion < 4)
+                foreach (var mode in new[] { "solo", "coop" })
+                    if (root["slots"][mode] is JObject run) run.Remove("balanceProfile");
             var json = root.ToString(Formatting.None);
             if (Utf8.GetByteCount(json) > MaximumLength) throw new ArgumentException("Gold miner snapshot exceeds 1 MiB.", nameof(snapshot));
             return json;
@@ -73,6 +76,22 @@ namespace XanaduYonder.Runtime.GoldMiner
                 Require(root, "schemaVersion rulesVersion gameId txnSeq lastMode records slots");
                 var records = Object(root["records"]); Require(records, "solo coop");
                 var slots = Object(root["slots"]); Require(slots, "solo coop");
+                int rules = (int)Read(root["rulesVersion"], typeof(int));
+                if (rules < 1 || rules > GoldMinerRules.Version) throw new FormatException("Unsupported rules version.");
+                if (rules < 4)
+                    foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
+                    {
+                        var token = slots[Camel(mode.ToString())];
+                        if (token.Type == JTokenType.Null) continue;
+                        var run = Object(token);
+                        Require(run, "runId mode runSeed attemptIndex lastCommandSeq current checkpoint");
+                        var current = Object(run["current"]);
+                        int level = (int)Read(current["levelIndex"], typeof(int));
+                        long target = (long)Read(current["target"], typeof(long));
+                        var profile = GoldMinerRules.ProfileForTarget(mode, level, target);
+                        if (profile == GoldMinerBalanceProfile.Classic) throw new FormatException("Legacy save cannot contain a new campaign target.");
+                        run.Add("balanceProfile", Camel(profile.ToString()));
+                    }
                 var candidate = new GoldMinerRootSnapshot {
                     SchemaVersion = (int)Read(root["schemaVersion"], typeof(int)),
                     RulesVersion = (int)Read(root["rulesVersion"], typeof(int)),

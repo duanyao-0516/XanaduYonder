@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 import zipfile
@@ -28,6 +29,13 @@ class BuildGates(unittest.TestCase):
         original_validation['stable_baseline'] = validate_archive(game)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            source = root / 'ThirdParty/KingdomRushRuntime'
+            shutil.copytree(ROOT / 'ThirdParty/KingdomRushRuntime', source,
+                            ignore=shutil.ignore_patterns('prebuilt', 'README.md', '.DS_Store'))
+            scripts = root / 'scripts/kingdom-rush'
+            scripts.mkdir(parents=True)
+            for name in ('build-runtime.py', 'verify-build-input.py', 'runtime_inputs.py'):
+                shutil.copyfile(HERE / name, scripts / name)
             plugins = root / 'Assets/Plugins/Android'
             plugins.mkdir(parents=True)
             reports = root / 'artifacts/kingdom-rush-1'
@@ -45,6 +53,38 @@ class BuildGates(unittest.TestCase):
             certificate_path = reports / 'runtime-build.json'
             certificate_path.write_text(json.dumps(certificate))
             gate = load('verify-build-input')
+            with self.assertRaisesRegex(SystemExit, 'rerun build-runtime.py'):
+                gate.validate(root)
+            certificate['runtimeSourceSha256'] = gate.runtime_source_sha256(root)
+            certificate_path.write_text(json.dumps(certificate))
+            self.assertEqual(gate.validate(root), original_validation['content_sha256'])
+            # Any source-side build input makes an otherwise certified old AAR stale.
+            inputs = [source / 'native/jni_android.c', next((source / 'src').rglob('*.java')),
+                      source / 'include/lua.h', source / 'AndroidManifest.xml',
+                      source / 'provenance.json', source / 'jni-contract.json']
+            inputs += list(scripts.glob('*.py'))
+            for path in inputs:
+                with self.subTest(changed=path.relative_to(root).as_posix()):
+                    original = path.read_bytes()
+                    path.write_bytes(original + b'\nchanged build input\n')
+                    with self.assertRaisesRegex(SystemExit, 'rerun build-runtime.py'):
+                        gate.validate(root)
+                    path.write_bytes(original)
+            added = source / 'native/added.c'
+            added.write_text('new native input')
+            with self.assertRaisesRegex(SystemExit, 'rerun build-runtime.py'):
+                gate.validate(root)
+            added.unlink()
+            deleted = source / 'native/jni_android.c'
+            original = deleted.read_bytes(); deleted.unlink()
+            with self.assertRaisesRegex(SystemExit, 'rerun build-runtime.py'):
+                gate.validate(root)
+            deleted.write_bytes(original)
+            # Documentation and imported binaries have separate ownership/provenance checks.
+            (source / 'README.md').write_text('documentation only')
+            (source / 'prebuilt').mkdir()
+            (source / 'prebuilt/unused.so').write_bytes(b'not source')
+            self.assertEqual(gate.runtime_source_sha256(root), certificate['runtimeSourceSha256'])
             self.assertEqual(gate.validate(root), original_validation['content_sha256'])
             runtime.write_bytes(b'changed runtime')
             with self.assertRaisesRegex(AssertionError, 'AAR changed'):

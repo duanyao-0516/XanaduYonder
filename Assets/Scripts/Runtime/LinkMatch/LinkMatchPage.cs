@@ -19,7 +19,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         private Func<bool> acceptsInput,soundEnabled,hapticsEnabled;
         private GameFeedback feedback;
         private bool visible,foreground=true,isEntry=true,settingsBlocked,saveFailed;
-        private string warning,hostSaveWarning,dialogKind;
+        private string warning,hostSaveWarning,dialogKind,patternWarning;
         private GameObject dialog;
         private Vector2 lastSize;
         private int selected=-1,hintA=-1,hintB=-1;
@@ -91,6 +91,12 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         internal void StartLevel(LinkMatchMode mode,string levelId,bool fresh=false)
         {
+            var prior=profile.GetSlot(mode,levelId);
+            int needed=LinkMatchLevel.Get(levelId).Kinds,available=LinkMatchPatterns.Pool(profile.SelectedCategories).Length;
+            if((fresh||prior==null||prior.Outcome!=LinkMatchOutcome.Playing)&&available<needed)
+            {
+                ShowEntry();patternWarning="这一关需要 "+needed+" 种图案，当前选了 "+available+" 种。\n请在选关页增加图案类别，再开始这一关。";ShowDialog("patterns");return;
+            }
             TickClock();CancelTransient();CloseDialog();if(session!=null) {session.Leave();profile.Capture(session);}
             seedCounter=unchecked(seedCounter*1664525u+1013904223u);
             needsRecovery=false;session=profile.Start(mode,levelId,seedCounter,fresh);profile.SelectedMode=mode;profile.SelectedLevelId=levelId;

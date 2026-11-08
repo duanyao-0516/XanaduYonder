@@ -6,21 +6,29 @@ internal static partial class Program
     static int passed, failed;
     static void Main()
     {
+        Check("new challenges use classic ore denominations", () =>
+        {
+            Assert(GoldMinerRules.BaseValue(GoldMinerKind.GoldSmall) == 50);
+            Assert(GoldMinerRules.BaseValue(GoldMinerKind.GoldMedium) == 100);
+            Assert(GoldMinerRules.BaseValue(GoldMinerKind.RockSmall) == 11);
+            Assert(GoldMinerRules.BaseValue(GoldMinerKind.DiamondMole) == 602);
+        });
         RunBalanceCases();
         Check("rules match the approved targets, weights and economy", () =>
         {
-            long[] curve = { 1200, 3000, 5100, 7600, 10400, 13600, 17200, 21200, 25600, 30400 };
-            Assert(GoldMinerRules.Version == 3);
+            long[] curve = { 750, 2050, 3550, 5450, 7750, 10450, 13500, 16950, 20800, 25050 };
+            long[] coop = { 1600, 4300, 7400, 11300, 15900, 21250, 27400, 34300, 41950, 50400 };
+            Assert(GoldMinerRules.Version == 4);
             for (int level = 1; level <= 10; level++)
             {
                 Assert(GoldMinerRules.Target(GoldMinerMode.Solo, level) == curve[level - 1]);
-                Assert(GoldMinerRules.Target(GoldMinerMode.Coop, level) == curve[level - 1] * 2);
+                Assert(GoldMinerRules.Target(GoldMinerMode.Coop, level) == coop[level - 1]);
             }
             Assert(GoldMinerRules.Count(GoldMinerMode.Coop, 1, GoldMinerKind.GoldSmall) == 7);
             Near(GoldMinerRules.Weight(GoldMinerKind.GoldLarge), 4);
-            Assert(GoldMinerRules.Price(GoldMinerItem.Dynamite, 1) == 70);
-            Assert(GoldMinerRules.RequiredIncome(GoldMinerMode.Solo, 2) == 2470);
-            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.DiamondMole }, new GoldMinerBuffs { DiamondOil = true }) == 930);
+            Assert(GoldMinerRules.Price(GoldMinerItem.Dynamite, 1) == 80);
+            Assert(GoldMinerRules.RequiredIncome(GoldMinerMode.Solo, 2) == 1620);
+            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.DiamondMole }, new GoldMinerBuffs { DiamondOil = true }) == 902);
         });
         Check("new root has two independent records and validates", () =>
         {
@@ -78,10 +86,10 @@ internal static partial class Program
             }
 
             var s = g.GetSnapshot().Current;
-            Assert(caught && s.Cash == 100 && s.Players[0].LevelCollected == 100);
+            Assert(caught && s.Cash == 50 && s.Players[0].LevelCollected == 50);
             for (int i = 0; i < 5; i++)
                 g.Step();
-            Assert(g.GetSnapshot().Current.Cash == 100);
+            Assert(g.GetSnapshot().Current.Cash == 50);
         });
         Check("deadline preserves in-flight catch and final income", () =>
         {
@@ -96,7 +104,7 @@ internal static partial class Program
             Assert(g.GetSnapshot().Current.Phase == GoldMinerPhase.Draining);
             for (int i = 0; i < 200; i++)
                 g.Step();
-            Assert(g.GetSnapshot().Current.Cash == 100);
+            Assert(g.GetSnapshot().Current.Cash == 50);
             Assert(g.GetSnapshot().Current.RemainingTicks == 0);
         });
         Check("dynamite during draining destroys only the held object", () =>
@@ -203,14 +211,14 @@ internal static partial class Program
             Assert(s.Commit(s.PrepareEnterShop()));
             Assert(s.Commit(s.PreparePurchase(GoldMinerItem.Strength, 0)));
             var r = s.GetSnapshot().Solo;
-            Assert(r.Current.Cash == 1860 && r.Current.ShopSpent == 140 && r.Current.PendingBuffs.Strength);
+            Assert(r.Current.Cash == 1820 && r.Current.ShopSpent == 180 && r.Current.PendingBuffs.Strength);
             string reason;
             Assert(s.GetSnapshot().TryValidate(out reason), reason);
             Assert(s.PreparePurchase(GoldMinerItem.Strength, 0) == null);
-            Assert(s.Commit(s.PreparePurchase(GoldMinerItem.DiamondOil, 0)));
+            Assert(s.PreparePurchase(GoldMinerItem.DiamondOil, 0) == null);
             Assert(s.Commit(s.PreparePurchase(GoldMinerItem.Clover, 0)));
-            Assert(s.Commit(s.PreparePurchase(GoldMinerItem.RockBook, 0)));
-            Assert(s.GetSnapshot().Solo.Current.Cash == 1540);
+            Assert(s.PreparePurchase(GoldMinerItem.RockBook, 0) == null);
+            Assert(s.GetSnapshot().Solo.Current.Cash == 1760);
             Assert(s.GetSnapshot().TryValidate(out reason), reason);
         });
         Check("completion increments record once and forbids a final shop", () =>
@@ -346,10 +354,10 @@ internal static partial class Program
             Assert(session.Commit(session.PrepareEnterShop()));
             Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Dynamite, 1)));
             Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Dynamite, 0)));
-            Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Dynamite, 1)));
+            Assert(session.PreparePurchase(GoldMinerItem.Dynamite, 1) == null);
             Assert(session.PreparePurchase(GoldMinerItem.Dynamite, 0) == null);
             var c = session.GetSnapshot().Coop.Current;
-            Assert(c.Players[0].Bombs == 2 && c.Players[1].Bombs == 3 && c.Cash == 2790);
+            Assert(c.Players[0].Bombs == 2 && c.Players[1].Bombs == 2 && c.Cash == 2840);
             string why;
             Assert(session.GetSnapshot().TryValidate(out why), why);
         });
@@ -370,11 +378,11 @@ internal static partial class Program
             next.ActiveBuffs = c.PendingBuffs.Copy();
             Assert(s.Commit(s.PrepareNextLevel(next)), s.LastError);
             var r = s.GetSnapshot().Solo;
-            Assert(r.Current.ActiveBuffs.Strength && r.Current.PendingBuffs.IsEmpty && r.Current.Cash == 1860 && r.Current.ShopSpent == 140);
+            Assert(r.Current.ActiveBuffs.Strength && r.Current.PendingBuffs.IsEmpty && r.Current.Cash == 1820 && r.Current.ShopSpent == 180);
             Assert(r.Current.Target == GoldMinerRules.Target(GoldMinerMode.Solo, 2), "A new v3 campaign keeps its new curve on next level.");
             Assert(s.Commit(s.PrepareRetryLevel()));
             r = s.GetSnapshot().Solo;
-            Assert(r.Current.ActiveBuffs.Strength && r.Current.Cash == 1860 && r.Current.ShopSpent == 140);
+            Assert(r.Current.ActiveBuffs.Strength && r.Current.Cash == 1820 && r.Current.ShopSpent == 180);
             Assert(r.Current.Target == GoldMinerRules.Target(GoldMinerMode.Solo, 2), "Retry keeps the new campaign target.");
         });
         Check("new run resets only selected mode and keeps records", () =>
@@ -504,10 +512,10 @@ internal static partial class Program
                 RockBook = true,
                 DiamondOil = true
             };
-            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.RockSmall }, buffs) == 60);
-            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.RockLarge }, buffs) == 150);
+            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.RockSmall }, buffs) == 33);
+            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.RockLarge }, buffs) == 60);
             Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.Diamond }, buffs) == 900);
-            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.Mole }, buffs) == 30);
+            Assert(GoldMinerRules.Value(new GoldMinerEntity { Kind = GoldMinerKind.Mole }, buffs) == 2);
             var r = Run();
             r.Current.Phase = GoldMinerPhase.Running;
             r.Current.Hooks[0].AngleRadians = 0;
@@ -644,7 +652,7 @@ internal static partial class Program
                     Assert(steps <= DrainTickLimit(mode) - GoldMinerRules.LevelTicks + 1);
                 }
                 while (!game.SettlementReady);
-                Assert(game.GetStateSnapshot().Cash == 50, "Expected the heavy rock income, got " + game.GetStateSnapshot().Cash);
+                Assert(game.GetStateSnapshot().Cash == 20, "Expected the heavy rock income, got " + game.GetStateSnapshot().Cash);
                 var ended = RootFor(mode, game.GetSnapshot());
                 ended.GetRun(mode).Current.SimulationTick = DrainTickLimit(mode);
                 Assert(ended.TryValidate(out reason), "The inclusive idle draining boundary must remain valid: " + reason);

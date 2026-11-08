@@ -86,7 +86,12 @@ namespace XanaduYonder.Runtime.Minesweeper
         }
         public void SetForeground(bool foreground)
         {
-            if(!foreground) { CancelInput(); ExitOverview(); CloseDialog(); feedback?.Stop(); }
+            if(!foreground)
+            {
+                CancelInput(); ExitOverview();
+                if(dialog!=null&&session!=null&&session.IsTerminal&&resultDismissed)ResultPresentation.For(this,root).Inspect(CloseDialog);else CloseDialog();
+                feedback?.Stop();
+            }
             session?.SetForeground(foreground);
             if(!foreground) Save();
             if(visible&&!choosing) Refresh();
@@ -102,23 +107,31 @@ namespace XanaduYonder.Runtime.Minesweeper
         }
         private void ReturnToSelection()
         {
+            ResultPresentation.Clear(this);
             CancelInput(); ExitOverview(); CloseDialog(); session?.Leave(); feedback.Stop(); Save();
             choosing=true; gameRoot.SetActive(false); selectionRoot.SetActive(true); fullscreenChanged?.Invoke(false);
             RefreshSelection(); setStatus(warning??"");
         }
         internal void StartGame(int difficulty,bool fresh)
         {
+            ResultPresentation.Clear(this);
             CancelInput(); ExitOverview(); CloseDialog();
             if(session!=null) { session.Leave(); Save(); }
             var saved=fresh?null:profile.GetSlot(difficulty);
             session=saved==null?new MinesweeperSession(difficulty,random):new MinesweeperSession(saved,random);
             // Older saves may have used fullscreen even for the beginner board.
             profile.SelectedDifficulty=difficulty; fullscreen=session.Fullscreen&&SupportsExpandedView;
-            resultDismissed=session.IsTerminal; choosing=false; visible=true;
+            resultDismissed=false; choosing=false; visible=true;
             selectionRoot.SetActive(false); gameRoot.SetActive(true);
             SetupBoard();
             if(saved==null) viewport.RestoreNormal(1,Math.Min(session.Game.Width/2.0,viewport.Width/(2*viewport.CellSize)),Math.Min(session.Game.Height/2.0,viewport.Height/(2*viewport.CellSize)));
             fullscreenChanged?.Invoke(fullscreen); Save(); Refresh();
+            if(session.IsTerminal)
+            {
+                CheckEndState();
+                ResultPresentation.For(this,root).Inspect(CloseDialog);
+                resultDismissed=true;
+            }
         }
         private void RequestNew(int difficulty)
         {
@@ -206,10 +219,13 @@ namespace XanaduYonder.Runtime.Minesweeper
         public void CheckEndState()
         {
             if(!visible||choosing||session==null||!session.IsTerminal||resultDismissed||dialog!=null||!acceptsInput()||!session.Foreground) return;
+            var ended=session;var results=ResultPresentation.For(this,root);
+            if(!results.Gate(ended,()=>visible&&!choosing&&session==ended&&session.IsTerminal&&dialog==null&&acceptsInput()&&session.Foreground,
+                ()=>{resultDismissed=false;CheckEndState();}))return;
             resultDismissed=true;
             bool won=session.Game.State==MinesweeperState.Won;
             ShowDialog(won?"排雷成功":"触雷了",MinesweeperRules.Get(session.Game.GetSnapshot().Difficulty).Name+" · "+session.Game.MineCount+" 雷\n用时 "+FormatTime(session.ElapsedMilliseconds,true)+(session.IsNewBest?"\n刷新本档最佳纪录":""),
-                "再来一局",()=>StartGame(session.Game.GetSnapshot().Difficulty,true),"选择难度",ReturnToSelection,"查看棋盘",()=>{});
+                "再来一局",()=>StartGame(session.Game.GetSnapshot().Difficulty,true),"选择难度",ReturnToSelection,"查看棋盘",()=>results.Inspect(CloseDialog));
         }
         public void Save()
         {

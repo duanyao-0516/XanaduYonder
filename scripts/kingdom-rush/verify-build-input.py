@@ -3,9 +3,18 @@
 import argparse,hashlib,json,zipfile
 from pathlib import Path
 from content_stable_baseline import validate_certificate
+from runtime_inputs import runtime_source_sha256
 
 def validate(root):
     report=json.loads((root/'artifacts/kingdom-rush-1/runtime-build.json').read_text())
+    if not report.get('runtimeSourceSha256'):
+        raise SystemExit('This runtime has no source fingerprint; rerun build-runtime.py before building Android.')
+    try:
+        current_source=runtime_source_sha256(root)
+    except OSError as error:
+        raise SystemExit('Runtime source inputs are missing or unreadable; restore them and rerun build-runtime.py.') from error
+    if report['runtimeSourceSha256']!=current_source:
+        raise SystemExit('Runtime source inputs changed after packaging; rerun build-runtime.py before building Android.')
     if not {'gamePath','contentValidationReport','contentValidationSha256'} <= report.keys():
         raise SystemExit('This Android content has no current validation certificate. Validate game.love and rerun build-runtime.py.')
     validation_path=Path(report['contentValidationReport'])

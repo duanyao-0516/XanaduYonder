@@ -42,6 +42,7 @@ namespace XanaduYonder.Core.GoldMiner
     public sealed class GoldMinerRunSnapshot
     {
         public string RunId;
+        public GoldMinerBalanceProfile BalanceProfile = GoldMinerBalanceProfile.Classic;
         public GoldMinerMode Mode;
         public uint RunSeed;
         public int AttemptIndex;
@@ -184,9 +185,9 @@ namespace XanaduYonder.Core.GoldMiner
         internal static bool Root(GoldMinerRootSnapshot s, out string reason)
         {
             reason = null;
-            // V3 retains the wire format and each already accepted level target.
-            // Both legacy rules versions can upgrade without rewriting either mode's progress.
-            if (s == null || s.SchemaVersion != 1 || (s.RulesVersion != 1 && s.RulesVersion != 2 && s.RulesVersion != GoldMinerRules.Version) || s.GameId != "gold-miner" || s.TxnSeq < 0 || !GoldMinerRules.ValidMode(s.LastMode))
+            // V4 adds an explicit per-run economy profile. The codec accepts historical
+            // field sets only under their original rules versions, then infers their profile.
+            if (s == null || s.SchemaVersion != 1 || (s.RulesVersion < 1 || s.RulesVersion > GoldMinerRules.Version) || s.GameId != "gold-miner" || s.TxnSeq < 0 || !GoldMinerRules.ValidMode(s.LastMode))
                 return Bad("Unsupported root or version.", out reason);
             if (!Record(s.SoloRecord, GoldMinerMode.Solo) || !Record(s.CoopRecord, GoldMinerMode.Coop))
                 return Bad("Invalid records.", out reason);
@@ -205,6 +206,8 @@ namespace XanaduYonder.Core.GoldMiner
                     return Bad(reason ?? "Slot mode mismatch.", out reason);
                 if (s.RulesVersion < 3 && run.Current.Target != GoldMinerRules.LegacyTarget(mode, run.Current.LevelIndex))
                     return Bad("Legacy rules cannot contain a new target.", out reason);
+                if (s.RulesVersion < 4 && run.BalanceProfile == GoldMinerBalanceProfile.Classic)
+                    return Bad("Legacy rules cannot contain a new balance profile.", out reason);
                 var r = s.GetRecord(mode);
                 var phase = run.Current.Phase;
                 if (phase == GoldMinerPhase.Won || phase == GoldMinerPhase.Completed || phase == GoldMinerPhase.Shop)
@@ -236,12 +239,14 @@ namespace XanaduYonder.Core.GoldMiner
         internal static bool Run(GoldMinerRunSnapshot r, out string reason)
         {
             reason = null;
-            if (r == null || !Hex(r.RunId, 32) || !GoldMinerRules.ValidMode(r.Mode) || r.RunSeed == 0 || r.AttemptIndex < 0 || r.LastCommandSeq < 0)
+            if (r == null || !Hex(r.RunId, 32) || !GoldMinerRules.ValidMode(r.Mode) || !GoldMinerRules.ValidProfile(r.BalanceProfile) || r.RunSeed == 0 || r.AttemptIndex < 0 || r.LastCommandSeq < 0)
                 return Bad("Invalid run identity or sequence.", out reason);
             if (!State(r.Current, r.Mode, out reason) || !Checkpoint(r.Checkpoint, r.Mode, out reason))
                 return false;
             var c = r.Current;
             var p = r.Checkpoint;
+            if (c.Target != GoldMinerRules.Target(r.Mode, c.LevelIndex, r.BalanceProfile))
+                return Bad("Campaign profile and target disagree.", out reason);
             if (c.LevelIndex != p.LevelIndex || c.LayoutProfileId != p.LayoutProfileId || c.LayoutId != p.LayoutId || c.CatalogVersion != p.CatalogVersion || c.LayoutContentHash != p.LayoutContentHash || c.PatternId != p.PatternId || c.PreviousPatternId != p.PreviousPatternId || c.LevelLayoutSeed != p.LevelLayoutSeed || c.LayoutRng != p.LayoutRng || c.BagRng != p.BagRng)
                 return Bad("Current/checkpoint identity mismatch.", out reason);
             if (c.Entities.Length != p.InitialEntities.Length)
@@ -261,7 +266,7 @@ namespace XanaduYonder.Core.GoldMiner
             long collected = 0;
             foreach (var e in c.Entities)
                 if (e.Status == GoldMinerEntityStatus.Collected)
-                    collected = checked(collected + GoldMinerRules.Value(e, p.ActiveBuffs));
+                    collected = checked(collected + GoldMinerRules.Value(e, p.ActiveBuffs, r.BalanceProfile));
             long contributions = 0;
             for (int i = 0; i < c.Players.Length; i++)
             {
@@ -284,7 +289,7 @@ namespace XanaduYonder.Core.GoldMiner
                 return Bad("Ready must match checkpoint.", out reason);
             if (c.Shop != null && c.Shop.EntryShopSpent != p.OpeningShopSpent)
                 return Bad("Shop entry spending changed from checkpoint.", out reason);
-            if (c.Shop != null && !Shop(c, r.RunId, out reason))
+            if (c.Shop != null && !Shop(c, r.RunId, r.Mode, r.BalanceProfile, out reason))
                 return false;
             int consumed = 0, destroyed = 0;
             foreach (var e in c.Entities)
@@ -374,7 +379,7 @@ namespace XanaduYonder.Core.GoldMiner
             long potentialIncome = 0;
             foreach (var e in s.Entities)
                 if (e.Status == GoldMinerEntityStatus.Available || e.Status == GoldMinerEntityStatus.Held)
-                    potentialIncome += GoldMinerRules.Value(e, s.ActiveBuffs);
+                    potentialIncome += GoldMinerRules.Value(e, s.ActiveBuffs, GoldMinerRules.ProfileForTarget(mode, s.LevelIndex, s.Target));
             if (gross > long.MaxValue - potentialIncome)
                 return Bad("Income would overflow during a legal collection.", out reason);
             var held = new HashSet<int>();
@@ -506,7 +511,7 @@ namespace XanaduYonder.Core.GoldMiner
             return true;
         }
 
-        static bool Shop(GoldMinerState c, string runId, out string reason)
+        static bool Shop(GoldMinerState c, string runId, GoldMinerMode mode, GoldMinerBalanceProfile profile, out string reason)
         {
             reason = null;
             var shop = c.Shop;
@@ -517,8 +522,8 @@ namespace XanaduYonder.Core.GoldMiner
             for (int i = 0; i < 5; i++)
             {
                 var o = shop.Offers[i];
-                int stock = i == 0 ? 3 : 1;
-                if (o == null || o.ItemId != (GoldMinerItem)i || o.Price != GoldMinerRules.Price(o.ItemId, c.LevelIndex) || o.Remaining < 0 || o.Purchased < 0 || o.Remaining + o.Purchased != stock)
+                int stock = GoldMinerRules.ShopStock(mode, (GoldMinerItem)i, c.LevelIndex, profile);
+                if (o == null || o.ItemId != (GoldMinerItem)i || o.Price != GoldMinerRules.Price(o.ItemId, c.LevelIndex, profile) || o.Remaining < 0 || o.Purchased < 0 || o.Remaining + o.Purchased != stock)
                     return Bad("Invalid shop offer.", out reason);
                 spent += o.Price * o.Purchased;
                 if (i == 0)

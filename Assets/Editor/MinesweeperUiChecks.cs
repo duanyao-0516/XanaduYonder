@@ -680,6 +680,8 @@ namespace XanaduYonder.EditorTools
                 var root = Get<GameObject>(page, "gameRoot").transform;
                 var expected = won ? MinesweeperState.Won : MinesweeperState.Lost;
                 Require(session.Game.State == expected, "Real final cell press reaches " + expected);
+                Require(Get<GameObject>(page,"dialog")==null,"The terminal minefield is visible during the result delay");
+                var results=page.GetComponent<ResultPresentation>();results.Advance(0);results.Advance(.81f);
                 var dialog = Get<GameObject>(page, "dialog");
                 Require(dialog != null && ContainsText(dialog.transform, won ? "排雷成功" : "触雷了"), "Real result dialog describes " + expected);
                 Require(ContainsText(dialog.transform, "再来一局") && ContainsText(dialog.transform, "选择难度") && ContainsText(dialog.transform, "查看棋盘"),
@@ -711,6 +713,18 @@ namespace XanaduYonder.EditorTools
                 Require(won ? record.Wins == 1 && record.Losses == 0 : record.Losses == 1 && record.Wins == 0,
                     "Repeated result viewing and saves account for exactly one outcome");
                 f.Capture(won ? "won-board" : "lost-board");
+                page.Back();page.StartGame(1,false);
+                Require(game.Session.SessionId==session.SessionId&&game.Session.IsTerminal&&ResultPresentation.IsInspecting(page)&&
+                    Get<GameObject>(page,"dialog")==null,"Viewing a restored completed slot opens the unchanged board with an explicit result entry");
+                results=page.GetComponent<ResultPresentation>();results.Advance(2f);
+                Require(Get<GameObject>(page,"dialog")==null,"Restored inspection stays on the board until explicitly reopened");
+                f.Click(Find(page.transform,"Reopen result"));
+                Require(Get<GameObject>(page,"dialog")!=null,"A restored completed slot can reopen its original result");
+                record=game.Profile.GetRecord(1);
+                Require(won?record.Wins==1&&record.Losses==0:record.Losses==1&&record.Wins==0,
+                    "Restored result reopening does not record a second outcome");
+                page.Back();
+                Require(Get<bool>(page,"choosing"),"Result Back retains the original select-difficulty action");
             }
         }
 
@@ -782,7 +796,7 @@ namespace XanaduYonder.EditorTools
                 var session = game.Session;
                 f.Click(SharedIcon(root, UiIconKind.Settings).transform as RectTransform);
                 var modal = Get<GameObject>(host.Shell, "modal");
-                Require(modal != null && ContainsText(modal.transform, "设置在所有游戏中共用"), "Page settings opens the actual shared host modal");
+                Require(modal != null && ContainsText(modal.transform, "声音与触感说明"), "Page settings opens the actual shared host modal");
                 Require(session.Blocked && session.Paused, "Actual shared settings blocks and pauses Active before display");
                 CheckOpaqueCover(f, root, false);
                 f.Capture("host-settings-active");
@@ -818,6 +832,7 @@ namespace XanaduYonder.EditorTools
                 for (int i = 0; i < board.Width * board.Height; i++) if (board.IsMine(i)) { mine = i; break; }
                 game.PressCell(mine);
                 Require(session.Game.State == MinesweeperState.Lost, "Shared-host fixture reaches Lost through the real board");
+                game.Page.GetComponent<ResultPresentation>().Advance(0);game.Page.GetComponent<ResultPresentation>().Advance(.81f);
                 f.Click(ButtonWithText(Get<GameObject>(game.Page, "dialog").transform, "查看棋盘").transform as RectTransform);
                 long elapsed = session.ElapsedMilliseconds;
                 f.Click(SharedIcon(root, UiIconKind.Settings).transform as RectTransform);

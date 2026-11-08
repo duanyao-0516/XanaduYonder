@@ -235,7 +235,7 @@ namespace XanaduYonder.Core.GoldMiner
                 return;
             if (entity != null)
             {
-                long value = GoldMinerRules.Value(entity, run.Current.ActiveBuffs);
+                long value = GoldMinerRules.Value(entity, run.Current.ActiveBuffs, run.BalanceProfile);
                 var player = run.Current.Players[hook.PlayerId];
                 checked
                 {

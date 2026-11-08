@@ -312,8 +312,9 @@ internal static class Program
         Assert(session.Commit(session.PrepareEnterShop()), session.LastError);
         if (purchases)
         {
-            Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Strength)), session.LastError);
-            Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Clover)), session.LastError);
+            foreach (var item in new[] { GoldMinerItem.Strength, GoldMinerItem.Clover })
+                if (session.GetStateSnapshot().Shop.Offers[(int)item].Remaining > 0)
+                    Assert(session.Commit(session.PreparePurchase(item)), session.LastError);
             Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Dynamite, mode == GoldMinerMode.Coop ? 1 : 0)), session.LastError);
         }
         return session.GetRunSnapshot();

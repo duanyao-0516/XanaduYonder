@@ -27,6 +27,8 @@ namespace XanaduYonder.Runtime.Tetris
         public bool HasActiveGame => session != null && session.HasStarted && !session.Snapshot.GameOver;
         public event Action Changed;
         public TetrisSession Session => session;
+        public bool SwapControls => data != null && data.SwapControls;
+        internal const string ControlsHelp = "左右箭头移动，旋转键顺时针转动。\n长按下键加速；同一块快速三连击下键直落。\n设置可交换两组按键；暂存每块一次。\n描边为落点，侧边预览接下来的3块。";
         internal TetrisView View => view;
         internal void Initialize(RectTransform root, Action onLobby, Action<Action> onSettings,
             Func<bool> acceptsInput, Func<bool> soundEnabled, Func<bool> hapticsEnabled,
@@ -48,6 +50,7 @@ namespace XanaduYonder.Runtime.Tetris
         {
             loaded = store.Load();
             data = loaded.Data ?? new TetrisSaveData();
+            view.SetSwapControls(data.SwapControls);
             loadWarning = loaded.Message;
             SaveError = loaded.CanWrite ? null : loaded.Message;
             SetSession(data.Game == null ? new TetrisGame(Seed()) : new TetrisGame(data.Game), data.Game != null);
@@ -56,6 +59,7 @@ namespace XanaduYonder.Runtime.Tetris
         private static uint Seed() { uint seed = unchecked((uint)Guid.NewGuid().GetHashCode()); return seed == 0 ? 1u : seed; }
         private void SetSession(TetrisGame game, bool started)
         {
+            ResultPresentation.Clear(this);
             if (session != null) session.Stepped -= OnStep;
             session = new TetrisSession(game, started);
             session.Stepped += OnStep;
@@ -70,9 +74,18 @@ namespace XanaduYonder.Runtime.Tetris
         public void Suspend()
         {
             if (session == null) return;
+            ResultPresentation.Clear(this);
             session.Pause(); touch?.Cancel(); view?.ClearVisuals(); feedback?.Stop(); Save(); Refresh();
         }
         public void SetForeground(bool value) { foreground = value; if (!value) Suspend(); }
+        public void SetSwapControls(bool value)
+        {
+            if (loaded == null || !loaded.CanWrite || data.SwapControls == value) return;
+            Suspend();
+            data.SwapControls = value; dirty = true;
+            view.SetSwapControls(value); view.RefreshLayout();
+            touch.Cancel(); Save(); Refresh(); Changed?.Invoke();
+        }
         public void SetHostSaveWarning(string message) { hostWarning = message; RefreshWarning(); }
         public void Back() { HandleSystemBack(null); }
         public void HandleSystemBack(Func<bool> confirmExit)
@@ -108,11 +121,11 @@ namespace XanaduYonder.Runtime.Tetris
         private void OpenHelp()
         {
             Suspend();
-            dialog("俄罗斯方块", "左右移动，双向旋转，填满横行即可消除。\n每消除 10 行提速，堆到顶部结束。\n左侧暂存每块一次，右侧预览 3 块。\n描边是落点；软降慢落，底部按钮直落。", "计分与续局", OpenScoringHelp, "返回游戏", Refresh);
+            dialog("俄罗斯方块", ControlsHelp, "计分与续局", OpenScoringHelp, "返回游戏", Refresh);
         }
         private void OpenScoringHelp()
         {
-            dialog("计分与续局", "单 / 双 / 三 / 四行：\n100 / 300 / 500 / 800 × 当前等级。\n软降每格 1 分，直落每格 2 分。\n不加算 T-spin、连击、B2B、全清分。", "知道了", Refresh, "操作说明", OpenHelp);
+            dialog("计分与续局", "满行消除，每10行提速；行分乘等级。\n单/双/三/四行：100/300/500/800。\n软降每格1分，直落每格2分。\n不额外计 T-spin、连击、B2B、全清分。", "知道了", Refresh, "操作说明", OpenHelp);
         }
 
         private void OpenSettings() { Suspend(); settings(Refresh); }
@@ -176,7 +189,8 @@ namespace XanaduYonder.Runtime.Tetris
             if (view == null || session == null) return;
             view.Render(session.Snapshot, session.GhostY, CanReadRecord ? (long?)BestScore : null);
             view.SetControlsEnabled(loaded.CanWrite && session.Phase == TetrisSessionPhase.Running && visible && foreground && accepts());
-            view.SetPauseLabel(session.Phase == TetrisSessionPhase.Running || session.Phase == TetrisSessionPhase.Countdown);
+            view.SetPauseLabel(session.Phase == TetrisSessionPhase.Running || session.Phase == TetrisSessionPhase.Countdown,
+                session.Phase == TetrisSessionPhase.Ended);
             if (!loaded.CanWrite)
             {
                 bool corrupt = loaded.Status == TetrisLoadStatus.Corrupt;
@@ -190,11 +204,22 @@ namespace XanaduYonder.Runtime.Tetris
                     case TetrisSessionPhase.Ready: view.SetOverlay("慢慢来，先放一块", "填满一行，就向前一点。", "开始游戏", Begin, null, null, true); break;
                     case TetrisSessionPhase.Paused: view.SetOverlay("歇一会儿", "这一局为你留着。", "继续游戏", Begin, "重新开始", NewRound, true); break;
                     case TetrisSessionPhase.Countdown: view.SetOverlay("倒计时：" + session.CountdownNumber, "准备继续", null, null, "保持暂停", Suspend, true); break;
-                    case TetrisSessionPhase.Ended: view.SetOverlay("这一局，很不错", "得分 " + session.Snapshot.Score + " · 消除 " + session.Snapshot.Lines + " 行", "再来一局", NewRound, "返回大厅", Back, true); break;
+                    case TetrisSessionPhase.Ended:
+                        if (ResultPresentation.For(this, (RectTransform)transform).Gate(session, CanShowResult, Refresh))
+                            view.SetOverlay("这一局，很不错", "得分 " + session.Snapshot.Score + " · 消除 " + session.Snapshot.Lines + " 行", "再来一局", NewRound, "返回大厅", Back, true, InspectResult);
+                        else view.SetOverlay(null, null, null, null, null, null, false);
+                        break;
                     default: view.SetOverlay(null,null,null,null,null,null,false); break;
                 }
             }
             RefreshWarning();
+        }
+        private bool CanShowResult()
+        { return visible && foreground && loaded.CanWrite && session.Phase == TetrisSessionPhase.Ended && accepts(); }
+        private void InspectResult()
+        {
+            ResultPresentation.For(this, (RectTransform)transform).Inspect(
+                () => view.SetOverlay(null, null, null, null, null, null, false));
         }
         private void ConfirmReset()
         {
@@ -203,7 +228,7 @@ namespace XanaduYonder.Runtime.Tetris
                 Load(); Changed?.Invoke();
             }, "取消", Refresh);
         }
-        private void OnDisable() { if (session != null) { session.Pause(); touch?.Cancel(); Save(); } }
+        private void OnDisable() { ResultPresentation.Clear(this); if (session != null) { session.Pause(); touch?.Cancel(); Save(); } }
         private void OnDestroy() { if (session != null) session.Stepped -= OnStep; }
     }
 }

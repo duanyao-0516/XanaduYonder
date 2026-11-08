@@ -163,6 +163,7 @@ namespace XanaduYonder.EditorTools
                     yield return new WaitForSeconds(.15f);
                 }
                 Require(page.Session.Game.Won && page.CompletedCount == 1, "Page solves original compact map and records one completion");
+                page.GetComponent<ResultPresentation>().Advance(0);page.GetComponent<ResultPresentation>().Advance(.81f);
                 Require(page.HasDialog, "Cancelling the final animation never suppresses the completion dialog");
                 f.Capture("completed");
                 page.Save(); page.Save(); Require(page.CompletedCount == 1, "Repeated save cannot duplicate completion");
@@ -251,6 +252,7 @@ namespace XanaduYonder.EditorTools
                 var last = catalog.At(catalog.Count - 1); page.StartLevel(last.LevelId, true);
                 foreach (char step in last.Solution) page.Session.Move(SokobanGame.FromChar(step));
                 page.Save(); Invoke(page, "Refresh"); page.CheckEndState();
+                page.GetComponent<ResultPresentation>().Advance(0);page.GetComponent<ResultPresentation>().Advance(.81f);
                 Require(page.Session.Game.Won && page.HasDialog && page.DisplayLevelNumber(last.LevelId) == 100, "Last regular level resolves completion using catalog identity");
                 page.ShowEntry(); page.ContinueGame();
                 Require(!page.IsEntry && page.Session.Game.Level.LevelId == last.LevelId && page.Session.Game.Moves == 0 && !page.Session.Game.Won, "Final entry action replays the existing last level without out-of-range access");

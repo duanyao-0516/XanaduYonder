@@ -89,6 +89,7 @@ internal static class Program
                 var migrated = session.GetSnapshot();
                 Assert(session.Dirty && migrated.RulesVersion == GoldMinerRules.Version && legacy.RulesVersion == 1);
                 expected["rulesVersion"] = GoldMinerRules.Version;
+                AddLegacyProfiles(expected);
                 Assert(JToken.DeepEquals(expected, JObject.Parse(Encode(migrated))),
                     "migration changed saved clocks, money, hooks, layout hash, checkpoint, slots or records");
                 Assert(store.TrySave(migrated, out error), error);
@@ -102,7 +103,7 @@ internal static class Program
                     long expectedIncome = 0;
                     foreach (var entity in run.Current.Entities)
                         if (entity.Status == GoldMinerEntityStatus.Held)
-                            expectedIncome += GoldMinerRules.Value(entity, run.Current.ActiveBuffs);
+                            expectedIncome += GoldMinerRules.Value(entity, run.Current.ActiveBuffs, run.BalanceProfile);
                     Assert((name == "coop-native-cross") == (expectedIncome > 0), "real fixture must retain its claimed/empty in-flight hook");
                     var game = new GoldMinerGame(run);
                     for (int tick = 0; tick < GoldMinerRules.MaximumSimulationTicks(GoldMinerMode.Coop); tick++)
@@ -119,7 +120,7 @@ internal static class Program
             });
         });
         Check("v2 actual device targets and records survive v3 migration and retry", () => {
-            Assert(GoldMinerRules.Version == 3);
+            Assert(GoldMinerRules.Version == 4);
             foreach (var name in new[] { "v2-solo-won-coop-failed", "v2-solo-loaded" })
             WithDirectory(dir => {
                 var original = File.ReadAllText("Tests/GoldMinerPersistence/Fixtures/" + name + ".json");
@@ -127,7 +128,7 @@ internal static class Program
                 string warning, error; var legacy = store.Load(out warning);
                 Assert(legacy != null && warning == null && legacy.RulesVersion == 2);
                 var session = new GoldMinerSession(legacy);
-                var expected = JObject.Parse(original); expected["rulesVersion"] = 3;
+                var expected = JObject.Parse(original); expected["rulesVersion"] = GoldMinerRules.Version; AddLegacyProfiles(expected);
                 Assert(JToken.DeepEquals(expected, JObject.Parse(Encode(session.GetSnapshot()))), "v2 migration changes only rulesVersion");
                 Assert(store.TrySave(session.GetSnapshot(), out error) && File.ReadAllText(store.SavePath + ".bak") == original);
                 foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
@@ -140,7 +141,7 @@ internal static class Program
                     Assert(retried.Current.Target == target && retried.Current.Cash == run.Checkpoint.OpeningCash,
                         "retry preserves the accepted old target and original opening funds");
                     Assert(retried.Current.Target < GoldMinerRules.Target(mode, retried.Current.LevelIndex));
-                    Assert(Decode(Encode(session.GetSnapshot())).RulesVersion == 3);
+                    Assert(Decode(Encode(session.GetSnapshot())).RulesVersion == 4);
                 }
             });
             var bad = JObject.Parse(File.ReadAllText("Tests/GoldMinerPersistence/Fixtures/v2-solo-loaded.json"));
@@ -154,6 +155,7 @@ internal static class Program
             for (int level = 1; level < GoldMinerRules.LevelCount; level++)
             {
                 var run = Run(mode, level, GoldMinerRules.LegacyTarget(mode, level));
+                run.BalanceProfile = GoldMinerBalanceProfile.Legacy;
                 run.Current.Target = GoldMinerRules.LegacyTarget(mode, level);
                 run.Current.Phase = GoldMinerPhase.Draining; run.Current.RemainingTicks = 0; run.Current.SimulationTick = 3600;
                 var root = new GoldMinerRootSnapshot { RulesVersion = version, LastMode = mode };
@@ -184,6 +186,49 @@ internal static class Program
                 Assert(restored.GetStateSnapshot().Target == GoldMinerRules.Target(mode, 1) && restored.GetStateSnapshot().Cash == 0);
                 Assert(restored.GetSnapshot().GetRecord(mode).BestClearedLevel == record.BestClearedLevel &&
                     restored.GetSnapshot().GetRecord(mode).BestRunGrossIncome == record.BestRunGrossIncome);
+            }
+        });
+        Check("v3 native campaigns preserve old values shops and every next target after v4 migration", () => {
+            foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
+            for (int level = 1; level < 10; level++)
+            {
+                long target = GoldMinerRules.Target(mode, level, GoldMinerBalanceProfile.Native);
+                var run = Run(mode, level, target); run.BalanceProfile = GoldMinerBalanceProfile.Native;
+                run.Current.Target = target; run.Current.Phase = GoldMinerPhase.Draining;
+                run.Current.RemainingTicks = 0; run.Current.SimulationTick = 3600;
+                var original = new GoldMinerRootSnapshot { RulesVersion = 3, LastMode = mode };
+                if (mode == GoldMinerMode.Solo) original.Solo = run; else original.Coop = run;
+                string bytes = Encode(original); Assert(!bytes.Contains("balanceProfile"));
+                var session = new GoldMinerSession(Decode(bytes));
+                Assert(session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Native);
+                Assert(session.Commit(session.PrepareSettlement())); Assert(session.Commit(session.PrepareEnterShop()));
+                var shop = session.GetStateSnapshot();
+                Assert(shop.Shop.Offers[0].Remaining == 3 && shop.Shop.Offers[0].Price == 60 + 10 * level);
+                foreach (var offer in shop.Shop.Offers) Assert(offer.Remaining > 0);
+                Assert(session.Commit(session.PreparePurchase(GoldMinerItem.Strength)));
+                var paid = session.GetStateSnapshot();
+                var next = Start(mode, level + 1, paid.Cash);
+                next.PatternId = "left"; next.LayoutId = GoldMinerRules.ModeId(mode) + "-" + (level + 1).ToString("00") + "-left-0";
+                next.PreviousPatternId = paid.PatternId; next.OpeningShopSpent = paid.ShopSpent;
+                next.ActiveBuffs = paid.PendingBuffs.Copy();
+                for (int p = 0; p < next.OpeningPlayers.Length; p++)
+                {
+                    next.OpeningPlayers[p].Bombs = paid.Players[p].Bombs;
+                    next.OpeningPlayers[p].TotalCollected = paid.Players[p].TotalCollected;
+                }
+                Assert(session.Commit(session.PrepareNextLevel(next)), session.LastError);
+                var restored = new GoldMinerSession(Decode(Encode(session.GetSnapshot())));
+                Assert(restored.GetStateSnapshot().Target == GoldMinerRules.Target(mode, level + 1, GoldMinerBalanceProfile.Native));
+                Assert(restored.Commit(restored.PrepareRetryLevel()));
+                var flying = restored.GetRunSnapshot(); flying.Current.Phase = GoldMinerPhase.Running;
+                flying.Current.Hooks[0].AngleRadians = 0;
+                var game = new GoldMinerGame(flying); Assert(game.TryLaunch(0, flying.LastCommandSeq + 1));
+                long before = flying.Current.Cash;
+                while (game.GetStateSnapshot().Cash == before && !game.SettlementReady) game.Step();
+                Assert(game.GetStateSnapshot().Cash == before + 100, "old ore still credits its original denomination");
+                var collected = restored.GetSnapshot();
+                if (mode == GoldMinerMode.Solo) collected.Solo = game.GetSnapshot(); else collected.Coop = game.GetSnapshot();
+                Assert(Encode(Decode(Encode(collected))) == Encode(collected), "old collected ledger remains valid");
             }
         });
         Check("oversized characters bytes and arrays never restore partial data", () => {
@@ -227,7 +272,12 @@ internal static class Program
             Assert(result.Solo.Current.Entities[0].X==root.Solo.Checkpoint.InitialEntities[0].X);
         });
         Check("shop below the old target preserves purchases allocations and pending buffs", () => {
-            var session = new GoldMinerSession(Shop());
+            var legacy = Draining(true); legacy.Solo.BalanceProfile = GoldMinerBalanceProfile.Native;
+            legacy.Solo.Current.Target = GoldMinerRules.Target(GoldMinerMode.Solo, 1, GoldMinerBalanceProfile.Native);
+            legacy.Solo.Current.Cash = legacy.Solo.Checkpoint.OpeningCash = 1550;
+            legacy.Solo.Current.Players[0].TotalCollected = legacy.Solo.Checkpoint.OpeningPlayers[0].TotalCollected = 1550;
+            var session = new GoldMinerSession(legacy);
+            Assert(session.Commit(session.PrepareSettlement())); Assert(session.Commit(session.PrepareEnterShop()));
             foreach (var item in new[] { GoldMinerItem.Strength, GoldMinerItem.Clover, GoldMinerItem.RockBook, GoldMinerItem.DiamondOil, GoldMinerItem.Dynamite, GoldMinerItem.Dynamite, GoldMinerItem.Dynamite }) Assert(session.Commit(session.PreparePurchase(item)), session.LastError);
             var root = Decode(Encode(session.GetSnapshot())); Assert(root.Solo.Current.Cash < root.Solo.Current.Target); Assert(root.Solo.Current.Players[0].Bombs == 4);
             Assert(root.Solo.Current.PendingBuffs.Strength && root.Solo.Current.PendingBuffs.DiamondOil);
@@ -337,6 +387,12 @@ internal static class Program
         Console.WriteLine("GoldMinerPersistence: "+passed+" passed, "+failed+" failed");if(failed!=0)Environment.Exit(1);
     }
 
+    static void AddLegacyProfiles(JObject root)
+    {
+        foreach (var mode in new[] { "solo", "coop" })
+            if (root["slots"][mode] is JObject run) run["balanceProfile"] = "legacy";
+    }
+
     static GoldMinerLevelStart Start(GoldMinerMode mode=GoldMinerMode.Solo,int level=1,long opening=0)
     {
         var count=GoldMinerRules.PlayerCount(mode);var players=new GoldMinerOpeningPlayer[count];for(var i=0;i<count;i++)players[i]=new GoldMinerOpeningPlayer {PlayerId=i,Bombs=1,TotalCollected=i==0?opening:0};
@@ -354,7 +410,7 @@ internal static class Program
     {
         var root=new GoldMinerRootSnapshot {Coop=run,LastMode=GoldMinerMode.Coop};var decoded=Decode(Encode(root));var a=new GoldMinerGame(run);var b=new GoldMinerGame(decoded.Coop);
         for(var i=0;i<300;i++) {a.Step();b.Step();Assert(Encode(new GoldMinerRootSnapshot {Coop=a.GetSnapshot()})==Encode(new GoldMinerRootSnapshot {Coop=b.GetSnapshot()}),"diverged at step "+i);}
-        Assert(a.GetSnapshot().Current.Cash==200);
+        Assert(a.GetSnapshot().Current.Cash==100);
     }
     static string Encode(GoldMinerRootSnapshot root) {return GoldMinerSaveCodec.Encode(root);}
     static GoldMinerRootSnapshot Decode(string json) {GoldMinerRootSnapshot root;string error;Assert(GoldMinerSaveCodec.TryDecode(json,out root,out error),error);return root;}

@@ -25,7 +25,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅按固定分类纵向滚动，支持双列卡片、分类目录、单列大卡；直接点击整张卡片进入游戏。规则、公共设置和各自存档逻辑均与手机共用。
 
-大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。战争进化史已经是共用系列入口；王国保卫战是 Android 专属入口。当前大厅为 Android 25 项、iOS 19 项，详见[平台构建矩阵](building.md)。
+大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。战争进化史已经是共用系列入口；王国保卫战是 Android 专属入口。当前大厅为 Android 26 项、iOS 20 项，详见[平台构建矩阵](building.md)。
 
 ## 命令
 
@@ -84,7 +84,7 @@ scripts/test-link-match-ui.sh
 
 默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.6，Android versionCode 为 15。无参数构建与 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
 
-全部 25 个 APK 构建入口，包括 Debug、Release 及小游戏 validation/preview，都关闭 Unity Development、脚本调试、Profiler 连接和 Deep Profiling。产物不带 Android debuggable、Development Console 或 PlayerConnection；debug 仅指本地签名，不提供 `run-as` 数据访问。小游戏测试包继续保留各自独立包名。黄金矿工帧性能日志、旸了个旸生成耗时日志受 `DEVELOPMENT_BUILD || UNITY_EDITOR` 控制，当前 APK 不包含这些诊断日志，编辑器仍保留。
+全部 APK 构建入口，包括 Debug、Release 及小游戏 validation/preview，都关闭 Unity Development、脚本调试、Profiler 连接和 Deep Profiling。产物不带 Android debuggable、Development Console 或 PlayerConnection；debug 仅指本地签名，不提供 `run-as` 数据访问。小游戏测试包继续保留各自独立包名。黄金矿工帧性能日志、旸了个旸生成耗时日志受 `DEVELOPMENT_BUILD || UNITY_EDITOR` 控制，当前 APK 不包含这些诊断日志，编辑器仍保留。
 
 如需单独创建/检查启动场景与构建设置：
 
@@ -398,3 +398,5 @@ scripts/build-sliding-puzzle-validation.sh
 ```
 
 后两项启动 Unity，必须串行执行；环境脚本隔离本树 Gradle 缓存和 ADB 服务，UI 夹具使用内存 profile 或独立临时目录。UI 检查需要图形渲染，不加 `-nographics`。验证包使用 `com.duanyao.xanaduyonder.slidingpuzzletest`；输出文件名从 `ProjectBuild.Version` 读取，格式为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-sliding-puzzle-validation.apk`，旧版 APK 不作为新构建成功的依据。设备安装需指定实际 ADB 服务端口和设备序列号，不覆盖正式包或其他小游戏测试包。
+
+贪吃蛇规则/存档/UI 定向验证入口为 `scripts/test-snake.sh`、`scripts/test-snake-persistence.sh`、`scripts/test-snake-ui.sh`。本轮交互契约见[操作与体验整理](gameplay-polish.md)。

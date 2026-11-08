@@ -14,8 +14,8 @@ namespace XanaduYonder.Runtime.Tetris
         private readonly List<TetrisPointer> contacts = new List<TetrisPointer>();
         private readonly List<RaycastResult> hits = new List<RaycastResult>();
         private bool waitMouseRelease;
-        private static readonly KeyCode[] Keys = { KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.DownArrow, KeyCode.Z, KeyCode.X, KeyCode.Space, KeyCode.C };
-        private static readonly TetrisAction[] Actions = { TetrisAction.Left, TetrisAction.Right, TetrisAction.SoftDrop, TetrisAction.CounterClockwise, TetrisAction.Clockwise, TetrisAction.HardDrop, TetrisAction.Hold };
+        private static readonly KeyCode[] Keys = { KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.DownArrow, KeyCode.X, KeyCode.C };
+        private static readonly TetrisAction[] Actions = { TetrisAction.Left, TetrisAction.Right, TetrisAction.SoftDrop, TetrisAction.Clockwise, TetrisAction.Hold };
         public void Configure(Dictionary<TetrisAction, RectTransform> actionTargets) { targets = actionTargets; Cancel(); }
         public void Cancel() { Session?.Invoke()?.Input.Cancel(); waitMouseRelease = true; }
         private void Update()
@@ -45,7 +45,7 @@ namespace XanaduYonder.Runtime.Tetris
                     if (Input.GetKey(Keys[i]) || Input.GetKeyUp(Keys[i]))
                         contacts.Add(new TetrisPointer(-10 - i, Actions[i], Input.GetKeyDown(Keys[i]) ? TetrisPointerPhase.Began : Input.GetKeyUp(Keys[i]) ? TetrisPointerPhase.Ended : TetrisPointerPhase.Stationary, true));
             }
-            session.Input.ProcessFrame(contacts, AcceptsInput != null && AcceptsInput(), session.Snapshot.PieceSerial);
+            session.Input.ProcessFrame(contacts, AcceptsInput != null && AcceptsInput(), session.Snapshot.PieceSerial, Time.unscaledTimeAsDouble);
         }
         private TetrisPointer Pointer(int id, Vector2 position, TetrisPointerPhase phase)
         {

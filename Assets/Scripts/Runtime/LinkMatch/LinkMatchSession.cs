@@ -8,6 +8,8 @@ namespace XanaduYonder.Runtime.LinkMatch
     {
         public const double MaximumElapsedSeconds = 315576000;
         private uint randomState;
+        private string[] patternIds;
+        public string[] PatternIds { get { return (string[])patternIds.Clone(); } }
         private long activityOrder;
         private bool automaticShuffle;
         public string AttemptId { get; private set; }
@@ -27,10 +29,11 @@ namespace XanaduYonder.Runtime.LinkMatch
         public bool IsNewBest { get; private set; }
         public bool IsTerminal { get { return Outcome != LinkMatchOutcome.Playing; } }
         public bool CanInteract { get { return Visible && Foreground && !Blocked && !automaticShuffle && !IsTerminal; } }
-        public LinkMatchSession(LinkMatchLevel level, LinkMatchMode mode, uint seed)
+        public LinkMatchSession(LinkMatchLevel level, LinkMatchMode mode, uint seed, int categories = LinkMatchPatterns.AllCategories)
         {
             if (level == null) throw new ArgumentNullException(nameof(level));
             if (!LinkMatchSessionData.ValidMode(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+            patternIds = LinkMatchPatterns.Choose(level.Kinds, categories, seed);
             randomState = seed == 0 ? 0x9e3779b9u : seed;
             Game = new LinkMatchGame(level, LinkMatchGenerator.Generate(level, NextSeed()).Tiles);
             Mode = mode; AttemptId = Guid.NewGuid().ToString("D"); Foreground = true;
@@ -39,6 +42,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         {
             if (saved == null) throw new ArgumentNullException(nameof(saved));
             var copy = saved.Copy(); if (!copy.TryValidate(out var reason)) throw new ArgumentException(reason, nameof(saved));
+            patternIds = copy.PatternIds;
             Game = new LinkMatchGame(LinkMatchLevel.Get(copy.LevelId), copy.Tiles); AttemptId = copy.AttemptId; Mode = copy.Mode; Outcome = copy.Outcome;
             ElapsedSeconds = copy.ElapsedSeconds; HintsUsed = copy.HintsUsed; ShufflesUsed = copy.ShufflesUsed; randomState = copy.RandomState;
             ResultRecorded = copy.ResultRecorded; activityOrder = copy.ActivityOrder; Foreground = true;
@@ -81,7 +85,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         public LinkMatchSessionData Export()
         {
-            return new LinkMatchSessionData { AttemptId = AttemptId, Mode = Mode, LevelId = Game.Level.Id, Columns = Game.Level.Columns, Rows = Game.Level.Rows, Tiles = Game.GetTiles(), ElapsedSeconds = ElapsedSeconds, RemainingSeconds = RemainingSeconds, HintsUsed = HintsUsed, ShufflesUsed = ShufflesUsed, RandomState = randomState, Outcome = Outcome, ResultRecorded = ResultRecorded, ActivityOrder = activityOrder };
+            return new LinkMatchSessionData { AttemptId = AttemptId, Mode = Mode, LevelId = Game.Level.Id, Columns = Game.Level.Columns, Rows = Game.Level.Rows, Tiles = Game.GetTiles(), PatternIds = PatternIds, ElapsedSeconds = ElapsedSeconds, RemainingSeconds = RemainingSeconds, HintsUsed = HintsUsed, ShufflesUsed = ShufflesUsed, RandomState = randomState, Outcome = Outcome, ResultRecorded = ResultRecorded, ActivityOrder = activityOrder };
         }
         internal void MarkResultRecorded(bool isNewBest) { ResultRecorded = true; IsNewBest = isNewBest; }
         internal void SetActivityOrder(long order) { activityOrder = order; }

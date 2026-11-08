@@ -313,18 +313,18 @@ internal static class Program
     {
         WithDirectory(dir => {
             dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
-            Assert(data.CloseKeyboardAfterSend && !data.ShowPinyin,"New saves must close after sending and hide chat pinyin by default");
+            Assert(data.CloseKeyboardAfterSend && !data.ShowPinyin && data.FixedLocalActionSides,"New saves must close after sending and hide chat pinyin by default");
             Load(store); Save(store,data);
             var original=JObject.Parse(File.ReadAllText((string)store.SavePath));
-            original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin");
-            foreach(bool close in new[]{false,true}) foreach(bool pinyin in new[]{false,true})
+            original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin"); original.Remove("fixedLocalActionSides");
+            foreach(bool close in new[]{false,true}) foreach(bool pinyin in new[]{false,true}) foreach(bool fixedSides in new[]{false,true})
             {
-                data.CloseKeyboardAfterSend=close; data.ShowPinyin=pinyin; Save(store,data);
+                data.CloseKeyboardAfterSend=close; data.ShowPinyin=pinyin; data.FixedLocalActionSides=fixedSides; Save(store,data);
                 dynamic restored=Load(New("IdiomSaveStore",dir,lexicon));
-                Assert(restored.CloseKeyboardAfterSend==close && restored.ShowPinyin==pinyin,"Preference values did not survive a fresh disk load");
+                Assert(restored.CloseKeyboardAfterSend==close && restored.ShowPinyin==pinyin && restored.FixedLocalActionSides==fixedSides,"Preference values did not survive a fresh disk load");
                 var written=JObject.Parse(File.ReadAllText((string)store.SavePath));
                 Assert(written["closeKeyboardAfterSend"].Type==JTokenType.Boolean && written["showPinyin"].Type==JTokenType.Boolean,"Preferences must be JSON booleans");
-                written.Remove("closeKeyboardAfterSend"); written.Remove("showPinyin");
+                written.Remove("closeKeyboardAfterSend"); written.Remove("showPinyin"); written.Remove("fixedLocalActionSides");
                 Assert(JToken.DeepEquals(original,written),"Changing preferences altered games, drafts, notebook or learning profile");
             }
         });
@@ -335,19 +335,20 @@ internal static class Program
             dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
             Load(store); Save(store,data);
             string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path));
-            foreach(int mask in new[]{0,1,2})
+            foreach(int mask in new[]{0,1,2,4,5,6})
             {
                 var original=(JObject)root.DeepClone();
-                original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin");
+                original.Remove("closeKeyboardAfterSend"); original.Remove("showPinyin"); original.Remove("fixedLocalActionSides");
                 if((mask&1)!=0) original["closeKeyboardAfterSend"]=false;
                 if((mask&2)!=0) original["showPinyin"]=true;
+                if((mask&4)!=0) original["fixedLocalActionSides"]=false;
                 File.WriteAllText(path,original.ToString()); if(File.Exists(path+".bak")) File.Delete(path+".bak");
                 store=New("IdiomSaveStore",dir,lexicon); dynamic restored=Load(store);
                 Assert(restored!=null && store.CanWrite && !store.NeedsRecovery,"Preference-free aggregate was rejected");
-                Assert(restored.CloseKeyboardAfterSend==((mask&1)==0) && restored.ShowPinyin==((mask&2)!=0),"One missing preference reset another setting or used the wrong default");
+                Assert(restored.CloseKeyboardAfterSend==((mask&1)==0) && restored.ShowPinyin==((mask&2)!=0) && restored.FixedLocalActionSides==((mask&4)==0),"One missing preference reset another setting or used the wrong default");
                 Save(store,restored);
                 var rewritten=JObject.Parse(File.ReadAllText(path));
-                foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin"}) { original.Remove(field);rewritten.Remove(field); }
+                foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin","fixedLocalActionSides"}) { original.Remove(field);rewritten.Remove(field); }
                 Assert(JToken.DeepEquals(original,rewritten),"Defaulting missing preferences changed existing records");
             }
         });
@@ -357,7 +358,7 @@ internal static class Program
         WithDirectory(dir => {
             dynamic lexicon=Lexicon(),data=LearningData(lexicon),store=New("IdiomSaveStore",dir,lexicon);
             Load(store); Save(store,data); string path=store.SavePath; var root=JObject.Parse(File.ReadAllText(path));
-            foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin"})
+            foreach(string field in new[]{"closeKeyboardAfterSend","showPinyin","fixedLocalActionSides"})
             {
                 foreach(var bad in new JToken[]{JValue.CreateNull(),"true","false",0,1,1.0,new JArray(),new JObject()})
                 {
@@ -616,7 +617,7 @@ internal static class Program
                 foreach(var property in current.Properties())
                 {
                     var changed=(JObject)root.DeepClone(); var target=section.Length==0?changed:(JObject)changed.SelectToken(section);
-                    if(section.Length!=0 || property.Name!="closeKeyboardAfterSend" && property.Name!="showPinyin")
+                    if(section.Length!=0 || property.Name!="closeKeyboardAfterSend" && property.Name!="showPinyin" && property.Name!="fixedLocalActionSides")
                     { target.Remove(property.Name); RejectGameDocument(dir,lexicon,changed.ToString()); }
                     changed=(JObject)root.DeepClone(); target=section.Length==0?changed:(JObject)changed.SelectToken(section);
                     if(property.Value.Type!=JTokenType.Null) { target[property.Name]=JValue.CreateNull(); RejectGameDocument(dir,lexicon,changed.ToString()); }

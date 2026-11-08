@@ -106,11 +106,11 @@ namespace XanaduYonder.EditorTools
         }
 
         private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou",
-            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
+            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterCutTheRope", "EnterZhaoyunAdou",
-            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterFruitSlice", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 11, 13, 24, 22, 20, 25, 5 };
-        private static string Category(int i) { return i < 9 ? "逻辑策略" : i < 15 ? "合成消除" : i < 24 ? "敏捷挑战" : "文字语言"; }
+            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterFruitSlice", "EnterIdiom" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 24, 22, 20, 25, 5 };
+        private static string Category(int i) { return i < 9 ? "逻辑策略" : i < 15 ? "合成消除" : i < 25 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {

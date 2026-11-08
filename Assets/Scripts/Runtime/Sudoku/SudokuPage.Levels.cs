@@ -102,6 +102,7 @@ namespace XanaduYonder.Runtime.Sudoku
         }
         private void ReturnToSelection()
         {
+            ResultPresentation.Clear(this);
             CancelHint(); ClearFlash(); CloseDialog(); session.Pause(); choosing = true;
             gameRoot.SetActive(false); selectionRoot.SetActive(true); Save(); RefreshSelection();
         }
@@ -127,6 +128,7 @@ namespace XanaduYonder.Runtime.Sudoku
         }
         private void StartLevel(SudokuPuzzle puzzle, bool fresh)
         {
+            ResultPresentation.Clear(this);
             if (puzzle == null) return;
             CancelHint(); ClearFlash(); CloseDialog(); session.Pause(); Save();
             session = new SudokuSession(profile.CreateGame(puzzle), false); sessionStarted = true;

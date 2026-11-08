@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 包含 25 个入口，iOS 包含 19 个入口，差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 包含 26 个入口，iOS 包含 20 个入口，差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 ## 源码与构建目录
 
@@ -35,6 +35,7 @@ iOS 资源过滤在副本内完成，源码保留 Android 的全部内容。C# �
 | 黄金矿工 | `Core/GoldMiner`、`GoldMinerSession`、`GoldMinerPage` | `gold-miner-v1.json` | 单人/合作两局、钩与动物、商店、检查点与纪录 |
 | 数字华容道 | `Core/SlidingPuzzle` / `SlidingPuzzleSession`、`SlidingPuzzleProfile`、`SlidingPuzzlePage` | `sliding-puzzle-v1.json` | 三个自由槽与一个闯关槽、完整当前移动历史、撤回计数、计时、连续解锁进度和两项成绩元组 |
 | 俄罗斯方块 | `Core/Tetris`、`TetrisSession`、`TetrisPage`、`TetrisView` | `tetris-v1.json` | 完整棋盘/活动块、七袋/RNG、Next/Hold、规则计时、分数与最高分、结果标记；`game: null` 表示未开始 |
+| 贪吃蛇 | `Core/Snake` / `SnakeSession`、`SnakePage`、`SnakeBoardView` | `snake-v1.json` | 经典六槽与闯关槽、输入和棋盘状态、纪录与吃食物停一帧偏好；瞬时冻结不写盘 |
 | Flappy Bird | `Core/FlappyBird` / `FlappySession`、`FlappyBirdPage` | `flappy-bird-v1.json` | 最高纪录；不跨进程保存对局 |
 | 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v2.json` | 轻松／挑战 × 五关共十槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩；严格迁移 v1 六槽 |
 | 飞机大战 | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
@@ -281,3 +282,13 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 `ThirdParty/ZhaoyunAdouContent` 中的适配代码拥有离线业务规则。上游资源和 bundle 固定 SHA；构建仅导出必要原类并在初始化前安装适配，不交付解混淆副本。普通经济与 AI 仍由原引擎执行；仅取消广告、体力和功能跨天等待，保留真实日期、段位/碎片门槛及每日奖励。首次四类武器和领取标志、每日段位金币和领取标志分别经单次存档写入并读回核验，失败不能先标记成功。
 
 独立 origin `https://zhaoyun-adou.xanadu.invalid/` 下的 `xanadu.zhaoyun-adou.player.v1` 保存长期进度。损坏 JSON 保留原值并显示错误。后台恢复战斗需点击继续；退出按原退出结算语义执行一次，返回大厅或进程回收后只恢复主菜单及长期进度。内容、原生 AAR 与最终 APK 均校验完整输入指纹；实际验证范围见[离线接入记录](verification-zhaoyun-adou.md)。
+
+## 本轮交互与存档扩展
+
+`ResultPresentation` / `ResultPresentationState` 仅负责终局等待、查看局面和重新打开结算，不拥有计分、暂停或通用弹窗。当前仅由数独、扫雷、推箱子、五子棋、2048、合成大西瓜、俄罗斯方块、贪吃蛇和 Dino 显式接入；不自动扩散到其他原生玩法或外部容器。各页面显式传入本局身份与可展示条件，先冻结游戏并完成原有成绩落盘；重开与离开清理瞬时状态。
+
+成语保存可选布尔 `fixedLocalActionSides`：旧档缺字段默认为 true，显式 null 和非布尔拒绝。俄罗斯方块方向/旋转换边为独立偏好，不改活动方块和规则。贪吃蛇旧档缺少吃食物停帧偏好时默认为 false，模拟与插值共同冻结一个前台帧。
+
+连连看继续使用 `link-match-v2.json`：根对象新增类别位掩码 `selectedCategories`，每个对局新增稳定资源名 `patternIds`。旧档缺字段时分别使用全部类别和旧图案顺序；显式错误值拒绝。新开局从所选类别取足关卡要求的图案，独立随机流不影响牌阵/洗牌 RNG。续局只读已保存映射；选定图案不足时不替换已有对局，回到选关页提示增加类别。
+
+黄金矿工 rulesVersion 4 的每个 run 明确保存 balanceProfile；新挑战使用经典数值，v1-v3 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束。详细参数与证据见[本轮说明](gameplay-polish.md)。

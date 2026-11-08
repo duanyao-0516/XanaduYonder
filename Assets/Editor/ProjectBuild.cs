@@ -77,6 +77,27 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidSnakeValidation()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId=PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName=PlayerSettings.productName;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,PackageName+".snaketest");
+                    PlayerSettings.productName="Xanadu 贪吃蛇测试";
+                    BuildApk("-snake-validation.apk",BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,applicationId);
+                    PlayerSettings.productName=productName;AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
         public static void BuildAndroidSheepValidation()
         {
             RunOrFail(() =>

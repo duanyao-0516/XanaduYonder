@@ -19,6 +19,39 @@ internal static partial class Program
             Console.WriteLine("Legacy verification: " + migrated.Slots.Count(x => x != null) + " preserved attempts, " + migrated.Slots.Count(x => x != null && x.Outcome != LinkMatchOutcome.Playing) + " terminal attempts, " + migrated.Records.Count(x => x.Wins > 0 || x.Losses > 0) + " nonempty records, 4 empty new slots. All original fields match.");
             return;
         }
+        Check("selected categories affect new attempts only and survive reload", () => {
+            var p = new LinkMatchProfile(); p.SelectedCategories = 4;
+            var first = p.Start(LinkMatchMode.Relaxed, "level-01", 7);
+            Assert(first.PatternIds.All(id => LinkMatchPatterns.CategoryFor(id) == 4));
+            p.SelectedCategories = 16;
+            var restored = new LinkMatchProfile(Decode(LinkMatchSaveCodec.Encode(p.Export())));
+            Eq(restored.SelectedCategories, 16);
+            var resumed = restored.Start(LinkMatchMode.Relaxed, "level-01", 19);
+            Assert(first.PatternIds.SequenceEqual(resumed.PatternIds));
+            var fresh = restored.Start(LinkMatchMode.Relaxed, "level-01", 19, true);
+            Assert(fresh.PatternIds.All(id => LinkMatchPatterns.CategoryFor(id) == 16));
+            Throws(() => restored.Start(LinkMatchMode.Relaxed, "level-05", 19, true));
+            var exported = fresh.Export(); exported.PatternIds[0] = "bad";
+            Assert(fresh.PatternIds.All(id => id != "bad"));
+        });
+        Check("patterns do not change game randomness and legacy mapping remains stable", () => {
+            var a = new LinkMatchProfile(); a.SelectedCategories = 1;
+            var b = new LinkMatchProfile(); b.SelectedCategories = 4;
+            var sa = a.Start(LinkMatchMode.Relaxed, "level-01", 81); var sb = b.Start(LinkMatchMode.Relaxed, "level-01", 81);
+            Assert(sa.Game.GetTiles().SequenceEqual(sb.Game.GetTiles())); Eq(sa.Export().RandomState, sb.Export().RandomState);
+            var old = JObject.Parse(LinkMatchSaveCodec.Encode(a.Export())); old.Remove("selectedCategories");
+            ((JObject)old["slots"][0]).Remove("patternIds");
+            var migrated = Decode(old.ToString()); Eq(migrated.SelectedCategories, LinkMatchPatterns.AllCategories);
+            Assert(migrated.Slots[0].PatternIds.SequenceEqual(LinkMatchPatterns.Legacy(6)));
+            foreach (var invalid in new JToken[] { JValue.CreateNull(), "1", 0, 32, -1 }) {
+                var bad = (JObject)old.DeepClone(); bad["selectedCategories"] = invalid;
+                Assert(!LinkMatchSaveCodec.TryDecode(bad.ToString(), out var ignored, out var reason));
+            }
+            foreach (var invalid in new JToken[] { JValue.CreateNull(), new JArray("bad"), new JArray(Enumerable.Repeat("strawberry", 6)) }) {
+                var bad = (JObject)old.DeepClone(); bad["slots"][0]["patternIds"] = invalid;
+                Assert(!LinkMatchSaveCodec.TryDecode(bad.ToString(), out var ignored, out var reason));
+            }
+        });
         Check("preview does not create attempts", () => { var p = new LinkMatchProfile(); p.SelectedMode = LinkMatchMode.Challenge; p.SelectedLevelId = "level-03"; var d = Decode(LinkMatchSaveCodec.Encode(p.Export())); Assert(d.Slots.All(x => x == null)); Assert(p.GetLatestActive() == null); Eq(p.CompletedCount, 0); });
         Check("effective clock requires ready visible foreground unblocked session", () => { var s = New(); s.Tick(5); Eq(s.ElapsedSeconds, 0); s.Enter(); s.Tick(2); s.SetBlocked(true); s.Tick(20); s.SetBlocked(false); s.Tick(3); s.Leave(); s.Tick(20); s.Enter(); s.SetForeground(false); s.Tick(20); s.SetForeground(true); s.Tick(20); Eq(s.ElapsedSeconds, 5); Assert(!s.CanInteract); s.SetBlocked(false); s.Tick(1); Eq(s.ElapsedSeconds, 6); });
         Check("invalid deltas cannot corrupt the clock", () => { var s = New(); s.Enter(); foreach (double n in new[] { -1d, double.NaN, double.PositiveInfinity }) Throws(() => s.Tick(n)); Eq(s.ElapsedSeconds, 0); });
@@ -33,7 +66,7 @@ internal static partial class Program
         Check("win capture and restored copies cannot double count", () => { var s = LastPair(LinkMatchMode.Challenge, 6); var p = new LinkMatchProfile(); p.Capture(s); s.Enter(); s.TryMatch(0, 1, out var path); var unrecorded = s.Export(); p.Capture(s); p.Capture(s); p.Capture(new LinkMatchSession(unrecorded)); Eq(p.GetRecord(s.Mode, "level-01").Wins, 1); Eq(p.CompletedCount, 1); Assert(p.GetLatestActive() == null); Assert(s.ResultRecorded); var q = new LinkMatchProfile(Decode(LinkMatchSaveCodec.Encode(p.Export()))); q.Capture(new LinkMatchSession(q.GetSlot(s.Mode, "level-01"))); Eq(q.GetRecord(s.Mode, "level-01").Wins, 1); });
         Check("best record keeps time and aids from the same winning attempt", () => { var p = new LinkMatchProfile(); Win(p, 10, 2, 1); var first = p.GetRecord(LinkMatchMode.Challenge, "level-01"); Win(p, 20, 0, 0); var slower = p.GetRecord(LinkMatchMode.Challenge, "level-01"); Eq(slower.BestElapsedSeconds.Value, 10); Eq(slower.BestHintsUsed, 2); Assert(slower.BestAttemptId == first.BestAttemptId); Win(p, 5, 1, 2); var best = p.GetRecord(LinkMatchMode.Challenge, "level-01"); Eq(best.Wins, 3); Eq(best.BestElapsedSeconds.Value, 5); Eq(best.BestHintsUsed, 1); Eq(best.BestShufflesUsed, 2); });
         Check("timeout capture is idempotent and does not produce a best", () => { var p = new LinkMatchProfile(); var s = p.Start(LinkMatchMode.Challenge, "level-01", 1); s.Enter(); s.Tick(100); p.Capture(s); p.Capture(s); var r = p.GetRecord(s.Mode, "level-01"); Eq(r.Losses, 1); Eq(r.Wins, 0); Assert(!r.BestElapsedSeconds.HasValue && p.GetLatestActive() == null); });
-        Check("all required fields and unknown fields are strictly checked", () => { var root = JObject.Parse(LinkMatchSaveCodec.Encode(Fixture())); foreach (var path in new[] { "", "slots[0]", "records[0]" }) { var obj = path == "" ? root : (JObject)root.SelectToken(path); foreach (var property in obj.Properties()) { var copy = (JObject)root.DeepClone(); (path == "" ? copy : (JObject)copy.SelectToken(path)).Remove(property.Name); Reject(copy.ToString()); } var extra = (JObject)root.DeepClone(); (path == "" ? extra : (JObject)extra.SelectToken(path))["unknown"] = 1; Reject(extra.ToString()); } });
+        Check("all required fields and unknown fields are strictly checked", () => { var root = JObject.Parse(LinkMatchSaveCodec.Encode(Fixture())); foreach (var path in new[] { "", "slots[0]", "records[0]" }) { var obj = path == "" ? root : (JObject)root.SelectToken(path); foreach (var property in obj.Properties()) { if (property.Name == "selectedCategories" || property.Name == "patternIds") continue; var copy = (JObject)root.DeepClone(); (path == "" ? copy : (JObject)copy.SelectToken(path)).Remove(property.Name); Reject(copy.ToString()); } var extra = (JObject)root.DeepClone(); (path == "" ? extra : (JObject)extra.SelectToken(path))["unknown"] = 1; Reject(extra.ToString()); } });
         Check("JSON malformed duplicate comments trailing commas and text reject", () => { var j = LinkMatchSaveCodec.Encode(Fixture()); Reject(j + "{}"); Reject(j.Replace("\"schemaVersion\":2", "\"schemaVersion\":2,\"schemaVersion\":2")); Reject(j.Replace("\"schemaVersion\"", "'schemaVersion'")); Reject(j.Replace("\"schemaVersion\":2", "\"schemaVersion\":2/*x*/")); Reject(j.Substring(0, j.Length - 1) + ",}"); Reject("null"); });
         Check("null wrong scalar types and unknown identifiers reject", () => { foreach (var path in new[] { "schemaVersion", "slots[0].columns", "slots[0].rows", "slots[0].hintsUsed", "slots[0].randomState", "records[0].wins" }) foreach (var token in new JToken[] { JValue.CreateNull(), new JValue("1"), new JValue(1.5), new JValue(-1) }) Mutate(path, token); Mutate("slots[0].mode", new JValue("other")); Mutate("slots[0].levelId", new JValue("01")); Mutate("slots[0].outcome", new JValue("Paused")); Mutate("slots[0].resultRecorded", new JValue(1)); Mutate("slots[0].attemptId", new JValue("invalid")); Mutate("contentVersion", new JValue("future")); });
         Check("board null length values and parity reject but legitimate deadlock loads", () => { Mutate("slots[0].tiles", JValue.CreateNull()); Mutate("slots[0].tiles", new JArray()); Mutate("slots[0].tiles[0]", JValue.CreateNull()); Mutate("slots[0].tiles[0]", new JValue(99)); var d = Fixture(); var a = d.Slots[0]; a.Tiles = Enumerable.Repeat(-1, 24).ToArray(); a.Tiles[5] = 0; a.Tiles[6] = 1; a.Tiles[9] = 1; a.Tiles[10] = 0; Decode(LinkMatchSaveCodec.Encode(d)); a.Tiles[5] = -1; Throws(() => LinkMatchSaveCodec.Encode(d)); });

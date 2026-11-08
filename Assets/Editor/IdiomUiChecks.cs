@@ -345,9 +345,9 @@ namespace XanaduYonder.EditorTools
             var fieldBounds = WorldRect(field);
             Require(!sendBounds.Overlaps(fieldBounds) && !hintBounds.Overlaps(fieldBounds) && !sendBounds.Overlaps(hintBounds),
                 label + " real composer rectangles never overlap");
-            var leftTurn = game.MatchKind == IdiomMatchKind.Local && game.NextActor == IdiomActor.Left;
+            var leftTurn = game.MatchKind == IdiomMatchKind.Local && !Get<IdiomSaveData>(page, "data").FixedLocalActionSides && game.NextActor == IdiomActor.Left;
             Require(leftTurn ? sendBounds.xMax < fieldBounds.xMin && hintBounds.xMin > fieldBounds.xMax :
-                hintBounds.xMax < fieldBounds.xMin && sendBounds.xMin > fieldBounds.xMax, label + " send and hint mirror current actor");
+                hintBounds.xMax < fieldBounds.xMin && sendBounds.xMin > fieldBounds.xMax, label + " send and hint respect fixed-side preference");
             Near(Center(send).y, Center(field).y, label + " send aligned vertically");
             Near(Center(hint).y, Center(field).y, label + " hint aligned vertically");
             Require(WorldRect(Get<RectTransform>(page, "footer")).yMin >= WorldRect(fixture.Root).yMin,
@@ -416,6 +416,10 @@ namespace XanaduYonder.EditorTools
                 fixture.Click(Center((RectTransform)Get<RectTransform>(page, "gameRoot").Find("Settings button")));
                 var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
                 var close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
+                var fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧 switch");
+                Require(data.FixedLocalActionSides, "Action sides default to fixed");
+                Require(!WorldRect((RectTransform)fixedSides.transform).Overlaps(WorldRect((RectTransform)close.transform)) &&
+                    !WorldRect((RectTransform)fixedSides.transform).Overlaps(WorldRect((RectTransform)show.transform)), "Fixed-side switch has its own target");
                 Require(!WorldRect((RectTransform)show.transform).Overlaps(WorldRect((RectTransform)close.transform)),
                     "Preference switches have separate touch targets");
                 fixture.Click(Center((RectTransform)show.transform));
@@ -434,9 +438,12 @@ namespace XanaduYonder.EditorTools
                 close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
                 fixture.Click(Center((RectTransform)close.transform));
                 Require(!data.CloseKeyboardAfterSend, "Real settings switch keeps keyboard after sending");
+                fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧 switch");
+                fixture.Click(Center((RectTransform)fixedSides.transform));
+                Require(!data.FixedLocalActionSides, "Real switch enables alternating sides");
                 var persisted = new IdiomSaveStore(directory, lexicon).Load(out warning);
-                Require(persisted != null && persisted.ShowPinyin && !persisted.CloseKeyboardAfterSend,
-                    "Both real settings clicks persist through a fresh disk read");
+                Require(persisted != null && persisted.ShowPinyin && !persisted.CloseKeyboardAfterSend && !persisted.FixedLocalActionSides,
+                    "All three real settings clicks persist through a fresh disk read");
                 show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
                 fixture.Click(Center((RectTransform)show.transform));
                 Require(!data.ShowPinyin, "Pinyin can be switched off again");
@@ -444,6 +451,20 @@ namespace XanaduYonder.EditorTools
                 Near(firstRow.Root.rect.height, compactHeight, "Disabling pinyin restores compact row height");
                 Require(game.History.Count == historyCount && !game.IsEnded, "Settings toggles preserve the live game");
                 Invoke(page, "ReturnFromDialog");
+                data.ActiveMatchKind = IdiomMatchKind.Local;
+                var local = Get<IdiomGame>(page, "localCharacterGame");
+                Require(local.Start(IdiomActor.Left).Success, "Local preference fixture starts");
+                foreach (bool fixedValue in new[] { true, false })
+                {
+                    data.FixedLocalActionSides = fixedValue; Invoke(page, "Refresh", true);
+                    CheckComposer(fixture, page, local, "Local left fixed=" + fixedValue);
+                }
+                Require(local.Submit("一心一意").Success, "Local fixture changes actor");
+                foreach (bool fixedValue in new[] { true, false })
+                {
+                    data.FixedLocalActionSides = fixedValue; Invoke(page, "Refresh", true);
+                    CheckComposer(fixture, page, local, "Local right fixed=" + fixedValue);
+                }
             }
             finally
             {

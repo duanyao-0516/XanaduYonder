@@ -48,10 +48,10 @@ internal static class Program
                 Check(complete.GetRun(mode).Current.Phase == GoldMinerPhase.Completed, "both stored challenges are complete");
                 Check(complete.GetRecord(mode).BestClearedLevel == 10 && complete.GetRecord(mode).CompletionCount == 1, "both records contain one ten-level completion");
             }
-            foreach (var mode in Modes()) RunAllItemsBranch(catalog, mode);
-            Check(completedLevels.Count == 20 && purchases.Count == 2, "two complete base campaigns plus two all-item purchase branches");
+            foreach (var mode in Modes()) RunFirstShopBranch(catalog, mode);
+            Check(completedLevels.Count == 20 && purchases.Count == 2, "two complete base campaigns plus two first-shop purchase branches");
             passed = true;
-            Console.WriteLine("PASS GoldMiner campaign: " + checks + " checks; 20 complete levels; 2 all-item shop/failure/retry branches; " + transactions + " durable transactions; " + reloads + " reloads.");
+            Console.WriteLine("PASS GoldMiner campaign: " + checks + " checks; 20 complete levels; 2 first-shop shop/failure/retry branches; " + transactions + " durable transactions; " + reloads + " reloads.");
             return 0;
         }
         catch (Exception exception) { Console.Error.WriteLine("FAIL GoldMiner campaign: " + exception); return 1; }
@@ -63,7 +63,7 @@ internal static class Program
                 ["elapsedSeconds"] = timer.Elapsed.TotalSeconds, ["checks"] = checks, ["durableTransactions"] = transactions,
                 ["reloads"] = reloads, ["baseCampaignLevels"] = completedLevels, ["allItemBranches"] = purchases,
                 ["saveDirectory"] = savesDirectory,
-                ["coverageBoundary"] = "The two complete ten-level campaigns purchase no items and execute shipped witnesses through production Session. Separate branches purchase every item, activate all buffs in level 2, genuinely lose after a real collection, reload, retry, and reproduce that collection. Buffed ten-level completion is not claimed."
+                ["coverageBoundary"] = "The two complete ten-level campaigns purchase no items and execute shipped witnesses through production Session. Separate branches purchase every item, activate first-shop buffs in level 2, genuinely lose after a real collection, reload, retry, and reproduce that collection. Buffed ten-level completion is not claimed."
             };
             File.WriteAllText(Path.Combine(OutputDirectory, "campaign.json"), report.ToString(Formatting.Indented) + "\n", new UTF8Encoding(false));
         }
@@ -115,7 +115,7 @@ internal static class Program
         var record = session.GetSnapshot().SoloRecord;
         Commit(session, store, session.PrepareNewRun(GoldMinerMode.Solo, "33333333333333333333333333333333", Seed,
             catalog.CreateStart(GoldMinerMode.Solo, 1, Seed)), GoldMinerMode.Solo, "new challenge after v2 migration");
-        Check(session.GetStateSnapshot().Cash == 0 && session.GetStateSnapshot().Target == 1200, "new challenge uses v3 first target");
+        Check(session.GetStateSnapshot().Cash == 0 && session.GetStateSnapshot().Target == 750, "new challenge uses v4 first target");
         Check(session.GetSnapshot().SoloRecord.BestRunGrossIncome == record.BestRunGrossIncome &&
             session.GetSnapshot().SoloRecord.BestClearedLevel == record.BestClearedLevel, "new challenge retains historical v2 records");
     }
@@ -216,29 +216,29 @@ internal static class Program
         Check(Encode(session.GetSnapshot()) == Encode(final), "duplicate result requests do not increment records");
     }
 
-    static void RunAllItemsBranch(GoldMinerLevelCatalog catalog, GoldMinerMode mode)
+    static void RunFirstShopBranch(GoldMinerLevelCatalog catalog, GoldMinerMode mode)
     {
         var session = new GoldMinerSession(firstWins[mode]);
-        var store = new GoldMinerSaveStore(Path.Combine(savesDirectory, "all-items-" + GoldMinerRules.ModeId(mode)));
+        var store = new GoldMinerSaveStore(Path.Combine(savesDirectory, "first-shops-" + GoldMinerRules.ModeId(mode)));
         Save(session, store); string other = Other(session.GetSnapshot(), mode);
         Commit(session, store, session.PrepareEnterShop(), mode, "branch enters real first shop");
         var before = session.GetRunSnapshot();
-        Check(before.Current.Cash >= GoldMinerRules.ShopMaximum(1), "real first-level earnings fund all first-shop inventory");
+        Check(before.Current.Cash >= GoldMinerRules.ShopMaximum(1, mode), "real first-level earnings fund all first-shop inventory");
         var bought = new JArray();
-        foreach (var item in new[] { GoldMinerItem.Strength, GoldMinerItem.Clover, GoldMinerItem.RockBook, GoldMinerItem.DiamondOil })
+        foreach (var item in new[] { GoldMinerItem.Strength, GoldMinerItem.Clover })
         {
             Commit(session, store, session.PreparePurchase(item), mode, "purchase " + item);
             bought.Add(item.ToString());
         }
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < GoldMinerRules.PlayerCount(mode); i++)
         {
             int player = i % GoldMinerRules.PlayerCount(mode);
             Commit(session, store, session.PreparePurchase(GoldMinerItem.Dynamite, player), mode, "purchase allocated dynamite");
             bought.Add("Dynamite:P" + (player + 1));
         }
         var shop = session.GetRunSnapshot();
-        Check(shop.Current.Shop.Offers.All(o => o.Remaining == 0) && shop.Current.Shop.Spent == GoldMinerRules.ShopMaximum(1), "all inventory sold with exact rule spending");
-        Check(before.Current.Cash - shop.Current.Cash == shop.Current.Shop.Spent, "all-item shop consumes real balance");
+        Check(shop.Current.Shop.Offers.All(o => o.Remaining == 0) && shop.Current.Shop.Spent == GoldMinerRules.ShopMaximum(1, mode), "all inventory sold with exact rule spending");
+        Check(before.Current.Cash - shop.Current.Cash == shop.Current.Shop.Spent, "first-shop shop consumes real balance");
         string sold = Encode(session.GetSnapshot());
         foreach (GoldMinerItem item in Enum.GetValues(typeof(GoldMinerItem))) Check(session.PreparePurchase(item) == null, "sold-out purchase cannot be repeated");
         Check(Encode(session.GetSnapshot()) == sold, "failed purchase requests cannot mutate cash/inventory");
@@ -247,7 +247,7 @@ internal static class Program
         var next = catalog.CreateStart(mode, 2, Seed, shop);
         Commit(session, store, session.PrepareNextLevel(next), mode, "activate purchased buffs in second level");
         var ready = session.GetRunSnapshot();
-        Check(ready.Current.ActiveBuffs.Strength && ready.Current.ActiveBuffs.Clover && ready.Current.ActiveBuffs.RockBook && ready.Current.ActiveBuffs.DiamondOil && ready.Current.PendingBuffs.IsEmpty, "all purchased buffs activate once");
+        Check(ready.Current.ActiveBuffs.Strength && ready.Current.ActiveBuffs.Clover && !ready.Current.ActiveBuffs.RockBook && !ready.Current.ActiveBuffs.DiamondOil && ready.Current.PendingBuffs.IsEmpty, "all purchased first-shop buffs activate once");
         Check(ready.Current.Cash == shop.Current.Cash && ready.Current.ShopSpent == shop.Current.ShopSpent, "next checkpoint preserves actual shop cash and spending");
         Check(ready.Current.Players.Select(p => p.Bombs).SequenceEqual(shop.Current.Players.Select(p => p.Bombs)), "allocated bombs survive next checkpoint");
         string checkpoint = JsonConvert.SerializeObject(ready.Checkpoint);
