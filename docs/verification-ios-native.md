@@ -97,6 +97,8 @@ Apple Personal Team 的描述文件有效期为 7 天，每台设备最多安装
 - [AltStore Classic Remote AltServer](https://faq.altstore.io/altstore-classic/remote-altservers)：完成设置后，Wi-Fi 与 LocalDevVPN 开启时可不依赖自己的电脑在线。后台刷新不能视为每次必然成功。
 - [SideStore 当前准备条件](https://docs.sidestore.io/docs/installation/prerequisites)：首次借助电脑安装，日常刷新使用 Wi-Fi、LocalDevVPN 和有效配对数据。
 
-本轮未登录任何第三方签名服务，也未上传设备配对秘密。已使用 Xcode 官方工具链和 Codex 本地定时任务配置自动续签：每 6 小时检查，已安装授权剩余 72 小时以内才尝试，手机不可达时延期重试。Mac 需开机联网、Codex 需运行，Xcode 登录和签名身份需有效；无线服务在当前网络尚未连通，目前已验证 USB 路径。
+本轮未登录任何第三方签名服务，也未上传设备配对秘密。已使用 Xcode 官方工具链配置自动续签；随后按用户要求将调度从 Codex 改为 macOS LaunchAgent，原 Codex 任务已暂停。每天本机时间 00:15、06:15、12:15、18:15 检查，登录时也检查，已安装授权剩余 72 小时以内才尝试，手机不可达时延期重试。Mac 需登录当前用户、执行时联网，Xcode 登录和签名钥匙串需有效；Codex 无需运行。无线服务在当前网络尚未连通，目前已验证 USB 路径。
 
 2026-11-08 15:30，正式执行器在 iPhone 锁屏状态下完成真实续签和覆盖安装，期限延长到北京时间 **2026-11-15 15:29:15**，签名证书不变。安装前后 29 份存档及备份文件逐字节一致。固定快照、执行器校验、失败恢复、版本保护、计划任务与实证路径见 [自动续签运行说明](ios-auto-renew.md)。这次验证没有主动启动应用；玩法验收结论仍以此前明确记录为准。
+
+15:46，改用 macOS LaunchAgent 后又完成一次真实后台续签及 USB 覆盖安装，当前期限为北京时间 **2026-11-15 15:39:32**，证书不变，29 份文件仍逐字节一致。固定运行依赖已移到用户 Library，原 Codex 任务暂停；最终正式任务启动检查为 `not_due`、退出码 0，临时验证任务已卸载。完整汇总为 `artifacts/ios/auto-renew/launchd-completion-verification.json`。睡眠、关机和下一次日历触发没有主动实测，行为说明依据 Apple 文档与本机 man。
