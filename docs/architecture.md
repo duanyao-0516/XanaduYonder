@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码共用 Unity 工程，版本为 0.9.5 / build 14，Android 包含 25 个入口，iOS 包含 19 个入口，差异见[统一构建说明](building.md)。最近正式 Android 发布仍为 v0.9.4 / versionCode 13 / 20 入口，见[发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 包含 25 个入口，iOS 包含 19 个入口，差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 ## 源码与构建目录
 

@@ -8,9 +8,9 @@
 
 ## 当前状态
 
-当前源码版本为 **0.9.5**（build **14**），Android 包含 **25 个大厅入口**，iOS 包含 **19 个入口**。iOS 暂不包含切水果、只有一道门、经典黄金矿工、赵云与阿斗、割绳子、王国保卫战；Unity 原生黄金矿工保留。平台入口与专属资源均由构建流程处理。
+当前源码版本为 **0.9.6**（build **15**），Android 包含 **25 个大厅入口**，iOS 包含 **19 个入口**。iOS 暂不包含切水果、只有一道门、经典黄金矿工、赵云与阿斗、割绳子、王国保卫战；Unity 原生黄金矿工保留。平台入口与专属资源均由构建流程处理。
 
-最近一次正式 Android 发布为 **0.9.4**，versionCode 为 **13**，包含 **20 个大厅入口**；这是历史发布范围，与当前源码和本地构建分开记录。应用名为 **XanaduYonder**，正式包名为 `com.duanyao.xanaduyonder`，沿用既有正式签名，采用非 Development 构建。安装包为 `XanaduYonder-0.9.4-android-arm64.apk`；该次交付范围与当时未执行的验证见[v0.9.4 发布记录](docs/releases/v0.9.4.md)。
+当前发布版本为 **0.9.6**（build **15**）：Android 提供沿用正式签名的 ARM64 APK，iOS 提供 Release 配置构建的 ARM64 未签名 IPA，需使用自己的 Apple 签名后安装。Android 正式包名为 `com.duanyao.xanaduyonder`，iOS 为 `com.duanyao.xanaduyonder.iosnative`。下载与本轮范围见[v0.9.6 发布记录](docs/releases/v0.9.6.md)；历史 v0.9.4 的 20 入口范围见[旧发布记录](docs/releases/v0.9.4.md)。
 
 构建统一从以下入口开始，必须显式选择平台：
 

@@ -82,7 +82,7 @@ scripts/test-link-match-ui.sh
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.5，Android versionCode 为 14。无参数构建与 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
+默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.6，Android versionCode 为 15。无参数构建与 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
 
 全部 25 个 APK 构建入口，包括 Debug、Release 及小游戏 validation/preview，都关闭 Unity Development、脚本调试、Profiler 连接和 Deep Profiling。产物不带 Android debuggable、Development Console 或 PlayerConnection；debug 仅指本地签名，不提供 `run-as` 数据访问。小游戏测试包继续保留各自独立包名。黄金矿工帧性能日志、旸了个旸生成耗时日志受 `DEVELOPMENT_BUILD || UNITY_EDITOR` 控制，当前 APK 不包含这些诊断日志，编辑器仍保留。
 
