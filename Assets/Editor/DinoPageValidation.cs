@@ -7,6 +7,7 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core.Dino;
 using XanaduYonder.Runtime;
@@ -65,6 +66,9 @@ namespace XanaduYonder.EditorTools
                 Check("background resize is applied on return and preserves the paused picture", BackgroundResize);
                 Check("unsafe resize preserves progress and refuses continuation", UnsafeResize);
                 Check("result uses run-start record and updates the actual shell summary", ResultAndRecords);
+                foreach(var size in new[]{new Vector2Int(720,1320),new Vector2Int(720,1582),new Vector2Int(1320,720)})
+                foreach(bool record in new[]{true,false})
+                    Check("terminal screenshots "+size+" "+(record?"new record":"ordinary"),f=>TerminalScreenshots(f,size,record));
                 Check("Ready duck uses duck UV and release returns to idle", ReadyDuckSprite);
                 Check("new run rejects wrong orientation and insufficient headroom before saving preference", BlockedNewRun);
                 Check("near-square landscape separates jump duck and pause targets", NearSquareControls);
@@ -342,6 +346,61 @@ namespace XanaduYonder.EditorTools
             FindText(Get<RectTransform>(f.Page, "overlay"), "再来一局").GetComponentInParent<Button>().onClick.Invoke();
             Require(Get<long>(f.Page, "startingBest") == score && !f.Game.IsStarted, "Restart starts fresh and remembers the previous record baseline");
             Require(!ResultPresentation.IsInspecting(f.Page) && FindText(f.Page.transform, "查看结算") == null, "Restart clears the old result entry");
+        }
+
+        private static void TerminalScreenshots(Fixture f,Vector2Int size,bool newRecord)
+        {
+            bool landscape=size.x>size.y;bool foreground=true;
+            Set(f.Page,"foreground",(Func<bool>)(()=>foreground));
+            if(!newRecord)Get<DinoSaveData>(f.Page,"profile").Record(landscape,1000000);
+            f.EnableRendering(size.x,size.y);f.ReadyAt(size.x,size.y);f.PrepareRenderViewport(size.x,size.y);
+            f.PressJump();
+            for(int step=0;step<2400&&!f.Game.IsGameOver;step++)f.Game.Step();
+            Require(f.Game.IsGameOver,"Screenshot reaches an actual collision at "+size);
+            Get<DinoTrackView>(f.Page,"track").Render(f.Game,0);
+            Invoke(f.Page,"UpdateRecord");Invoke(f.Page,"RefreshScore");Invoke(f.Page,"EndRun");
+            string name="terminal-"+(newRecord?"new-record":"ordinary");f.Capture(name+"-delay");
+            var results=f.Page.GetComponent<ResultPresentation>();results.Advance(0);results.Advance(.4f);
+            foreground=false;Invoke(f.Page,"Update");results.Advance(30);
+            Require(Get<RectTransform>(f.Page,"overlay")==null,"Background cannot consume terminal delay at "+size);
+            foreground=true;Invoke(f.Page,"Update");results.Advance(0);results.Advance(.79f);
+            Require(Get<RectTransform>(f.Page,"overlay")==null,"Fresh foreground delay remains pending at "+size);
+            results.Advance(.02f);
+            Require(f.HasText(newRecord?"新纪录！":"这一局，很精彩"),"Correct terminal result title at "+size);
+            f.Capture(name+"-result");long tick=f.Game.Tick,score=f.Game.Score;var ended=f.Game;
+            f.Click(FindText(Get<RectTransform>(f.Page,"overlay"),"查看最终局面").GetComponentInParent<Button>());
+            results.Advance(0);
+            Require(Get<RectTransform>(f.Page,"overlay")==null&&ResultPresentation.IsInspecting(f.Page),"Terminal inspection exposes the actual track at "+size);
+            var reopen=FindText(f.Page.transform,"查看结算").GetComponentInParent<Button>();
+            f.Capture(name+"-inspect");
+            var layoutProblems=TerminalInspectionProblems(f,reopen);
+            Invoke(f.Page,"JumpDown",29);Invoke(f.Page,"JumpUp",29);results.Advance(2);
+            Require(ReferenceEquals(ended,f.Game)&&f.Game.Tick==tick&&f.Game.Score==score&&f.Game.IsGameOver,
+                "Inspection cannot resume terminal input or score at "+size);
+            f.Click(reopen);f.Capture(name+"-reopen");
+            Require(f.HasText(newRecord?"新纪录！":"这一局，很精彩")&&!ResultPresentation.IsInspecting(f.Page),"Real result entry reopens the same terminal result at "+size);
+            Require(f.Game.Tick==tick&&f.Game.Score==score,"Reopen preserves the frozen terminal frame at "+size);
+            f.Click(FindText(Get<RectTransform>(f.Page,"overlay"),"再来一局").GetComponentInParent<Button>());
+            Require(!ReferenceEquals(ended,f.Game)&&!ResultPresentation.IsInspecting(f.Page)&&FindText(f.Page.transform,"查看结算")==null,
+                "New run clears terminal inspection controls at "+size);
+            Require(layoutProblems.Count==0,"Terminal result entry geometry at "+size+": "+string.Join(" | ",layoutProblems));
+        }
+        private static List<string> TerminalInspectionProblems(Fixture f,Button reopen)
+        {
+            var problems=new List<string>();var root=Get<RectTransform>(f.Page,"root");
+            Rect entry=RelativeRect(root,reopen.GetComponent<RectTransform>()),safe=root.rect;
+            if(entry.xMin<safe.xMin-.5f||entry.xMax>safe.xMax+.5f||entry.yMin<safe.yMin-.5f||entry.yMax>safe.yMax+.5f)problems.Add("entry outside safe page "+entry);
+            var track=Get<DinoTrackView>(f.Page,"track").GetComponent<RectTransform>();
+            if(entry.Overlaps(RelativeRect(root,track)))problems.Add("entry overlaps final track");
+            foreach(var button in root.GetComponentsInChildren<Button>())
+                if(button!=reopen&&button.gameObject.activeInHierarchy&&entry.Overlaps(RelativeRect(root,button.GetComponent<RectTransform>())))
+                    problems.Add("entry overlaps control "+button.name);
+            foreach(var text in root.GetComponentsInChildren<Text>())
+                if(text.gameObject.activeInHierarchy&&text.enabled&&text.color.a>0&&!string.IsNullOrWhiteSpace(text.text)&&
+                    !text.transform.IsChildOf(reopen.transform)&&entry.Overlaps(RelativeRect(root,text.rectTransform)))
+                    problems.Add("entry overlaps visible text "+text.name+"="+text.text);
+            foreach(var problem in problems)Report.AppendLine("GEOMETRY "+problem);
+            return problems;
         }
 
         private static void ReadyDuckSprite(Fixture f)
@@ -829,6 +888,10 @@ namespace XanaduYonder.EditorTools
             internal int HomeCalls;
             private readonly GameObject root;
             private readonly string directory;
+            private Camera renderCamera;
+            private RenderTexture renderTarget;
+            private EventSystem events;
+            private int renderWidth,renderHeight;
             internal object Viewport { get { return Get<object>(Page, "viewport"); } }
             internal DinoGame Game { get { return Get<DinoGame>(Page, "game"); } }
 
@@ -843,6 +906,53 @@ namespace XanaduYonder.EditorTools
                 Store = new DinoSaveStore(directory);
                 Set(Page, "store", Store); Set(Page, "profile", new DinoSaveData());
                 Set(Page, "localDate", (Func<DateTime>)(() => new DateTime(2026, 10, 27)));
+            }
+            internal void EnableRendering(int width,int height)
+            {
+                renderWidth=width;renderHeight=height;Canvas.sizeDelta=new Vector2(width,height);
+                var canvas=root.AddComponent<UnityEngine.Canvas>();root.AddComponent<GraphicRaycaster>();
+                canvas.renderMode=RenderMode.WorldSpace;
+                renderCamera=new GameObject("Dino validation camera",typeof(Camera)).GetComponent<Camera>();
+                renderCamera.transform.SetParent(root.transform,false);renderCamera.transform.position=new Vector3(0,0,-10);
+                renderCamera.enabled=false;renderCamera.orthographic=true;renderCamera.orthographicSize=height*.5f;
+                renderCamera.aspect=(float)width/height;renderCamera.nearClipPlane=.1f;renderCamera.farClipPlane=100;
+                renderCamera.clearFlags=CameraClearFlags.SolidColor;renderCamera.backgroundColor=UiFactory.Paper;renderCamera.cullingMask=1<<5;
+                renderTarget=new RenderTexture(width,height,24);renderTarget.Create();renderCamera.targetTexture=renderTarget;canvas.worldCamera=renderCamera;
+                events=new GameObject("Dino terminal events",typeof(EventSystem)).GetComponent<EventSystem>();events.transform.SetParent(root.transform,false);
+            }
+            internal void PrepareRenderViewport(int width,int height)
+            {
+                var pageRoot=Get<RectTransform>(Page,"root");
+                pageRoot.anchorMin=pageRoot.anchorMax=pageRoot.pivot=new Vector2(.5f,.5f);
+                pageRoot.localScale=Vector3.one;pageRoot.sizeDelta=new Vector2(width,height);pageRoot.anchoredPosition=Vector2.zero;
+                CacheViewport();FlushRender();
+            }
+            private static void RenderLayer(Transform value)
+            {value.gameObject.layer=5;foreach(Transform child in value)RenderLayer(child);}
+            private void FlushRender()
+            {
+                RenderLayer(root.transform);UnityEngine.Canvas.ForceUpdateCanvases();renderCamera.Render();UnityEngine.Canvas.ForceUpdateCanvases();
+            }
+            internal void Capture(string name)
+            {
+                FlushRender();var previous=RenderTexture.active;RenderTexture.active=renderTarget;
+                var image=new Texture2D(renderWidth,renderHeight,TextureFormat.RGB24,false);
+                try
+                {
+                    image.ReadPixels(new Rect(0,0,renderWidth,renderHeight),0,0);image.Apply();
+                    string output=Path.GetFullPath(Path.Combine(Application.dataPath,"../artifacts/validation/dino-terminal-ui"));Directory.CreateDirectory(output);
+                    string path=Path.Combine(output,name+"-"+renderWidth+"x"+renderHeight+".png");File.WriteAllBytes(path,image.EncodeToPNG());Report.AppendLine("SCREENSHOT "+path);
+                }
+                finally{Object.DestroyImmediate(image);RenderTexture.active=previous;}
+            }
+            internal void Click(Button button)
+            {
+                FlushRender();var rect=button.GetComponent<RectTransform>();
+                var data=new PointerEventData(events){position=RectTransformUtility.WorldToScreenPoint(renderCamera,rect.TransformPoint(rect.rect.center)),button=PointerEventData.InputButton.Left};
+                var hits=new List<RaycastResult>();events.RaycastAll(data,hits);
+                Require(hits.Count>0&&(hits[0].gameObject==button.gameObject||hits[0].gameObject.transform.IsChildOf(button.transform)),
+                    "Top rendered UGUI hit reaches "+button.name+"; actual="+(hits.Count==0?"none":hits[0].gameObject.name));
+                ExecuteEvents.Execute(button.gameObject,data,ExecuteEvents.pointerClickHandler);
             }
             internal void Ready()
             {
@@ -890,7 +1000,10 @@ namespace XanaduYonder.EditorTools
             }
             public void Dispose()
             {
-                Set(Page, "active", false); Page.Save(); Object.DestroyImmediate(root);
+                Set(Page, "active", false); Page.Save();
+                if(renderCamera!=null)renderCamera.targetTexture=null;
+                Object.DestroyImmediate(root);
+                if(renderTarget!=null){renderTarget.Release();Object.DestroyImmediate(renderTarget);}
                 if (Directory.Exists(directory)) Directory.Delete(directory, true);
             }
         }

@@ -39,6 +39,7 @@ namespace XanaduYonder.Runtime.Tetris
             feedback = gameFeedback; status = setStatus; dialog = showDialog;
             store = storeOverride ?? new TetrisSaveStore(Application.persistentDataPath);
             view = new TetrisView(root, Back, OpenHelp, OpenSettings, TogglePause);
+            ResultPresentation.For(this, root).SetReopenSlot(view.ReviewSlot, view.ReviewBrand);
             touch = root.gameObject.AddComponent<TetrisTouchInput>();
             touch.Session = () => session;
             touch.AcceptsInput = () => visible && foreground && loaded.CanWrite && session.Phase == TetrisSessionPhase.Running && accepts();

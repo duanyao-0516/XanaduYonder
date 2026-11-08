@@ -26,6 +26,7 @@ namespace XanaduYonder.EditorTools
         private static readonly StringBuilder report = new StringBuilder();
         private static string output;
         private static int checks;
+        private static readonly List<string> terminalLayoutErrors = new List<string>();
 
         static SnakeUiChecks() { EditorApplication.playModeStateChanged += StateChanged; }
 
@@ -49,7 +50,7 @@ namespace XanaduYonder.EditorTools
             int exit = 0;
             var oldFont = UiFactory.Font;
             checks = 0;
-            report.Clear();
+            report.Clear(); terminalLayoutErrors.Clear();
             output = Path.GetFullPath(Path.Combine(Application.dataPath, "../artifacts/validation/snake-ui"));
             Directory.CreateDirectory(output);
             report.AppendLine("Unity " + Application.unityVersion + "; production UGUI + Camera.Render; temporary save directories");
@@ -207,6 +208,7 @@ namespace XanaduYonder.EditorTools
                 }
                 CheckFullBoardResult(f, type);
                 CheckCampaignResult(f, type);
+                CheckTerminalScreenshotMatrix(f, type);
                 CheckRestartConfirmation(f, type);
                 CheckCampaignPreviewStartAndContinue(f, type);
                 CheckLightweightOverlayReturns(f, type);
@@ -217,6 +219,7 @@ namespace XanaduYonder.EditorTools
                 foreach (var step in CheckCampaignPickerCancellation(f, type)) yield return step;
                 report.AppendLine("PASS 720x" + height + ": production pages, layout, actual dropdown clicks, rule rollback, countdown, lifecycle and growth");
             }
+            Require(terminalLayoutErrors.Count==0,"Terminal inspection layout: "+string.Join(" | ",terminalLayoutErrors));
         }
 
         private static void CheckLobby(Fixture f)
@@ -644,6 +647,104 @@ namespace XanaduYonder.EditorTools
                 CheckImmediateCountdown(p, true, "Next level");
                 CheckCountdownStartsMovement(p);
             }
+        }
+
+        private static void CheckTerminalScreenshotMatrix(Fixture f,Type type)
+        {
+            foreach(var boundary in new[]{SnakeBoundary.Wrap,SnakeBoundary.Solid})
+            foreach(var state in new[]{SnakeState.Lost,SnakeState.WonFullBoard})
+                CheckTerminalScreenshot(f,type,SnakeRules.Classic(1,boundary),-1,state,
+                    "terminal-classic-"+boundary.ToString().ToLowerInvariant()+"-"+state.ToString().ToLowerInvariant());
+            var catalog=SnakeCatalog.Parse(Resources.Load<TextAsset>("Snake/levels").text);
+            foreach(int index in new[]{0,catalog.Count-1})
+            foreach(var state in new[]{SnakeState.Lost,SnakeState.WonTarget})
+                CheckTerminalScreenshot(f,type,catalog.Get(index),index,state,
+                    "terminal-campaign-"+(index+1).ToString("D2")+"-"+state.ToString().ToLowerInvariant());
+        }
+        private static void CheckTerminalScreenshot(Fixture f,Type type,SnakeRules rules,int level,SnakeState state,string name)
+        {
+            using(var p=new PageFixture(f,type))
+            {
+                SnakeSnapshot snapshot;
+                if(state==SnakeState.Lost)
+                {
+                    SnakeGame game;
+                    if(level>0)
+                    {
+                        game=new SnakeGame(rules,123u);game.Step(SnakeDirection.Up);
+                    }
+                    else
+                    {
+                        int[] body=rules.Boundary==SnakeBoundary.Solid?new[]{19,18,17,16}:new[]{21,20,40,41,42,22,23};
+                        game=new SnakeGame(rules,new SnakeSnapshot{Body=body,Direction=SnakeDirection.Right,
+                            State=SnakeState.Playing,Food=100,FoodEaten=body.Length-4,Score=(body.Length-4)*10,TickCount=40,RandomState=123});
+                        game.Step(SnakeDirection.Right);
+                    }
+                    Require(game.State==SnakeState.Lost,"Terminal screenshot loss comes from the actual collision rule: "+name);
+                    snapshot=game.GetSnapshot();
+                }
+                else
+                {
+                    int length=state==SnakeState.WonFullBoard?rules.Capacity:4+rules.TargetFood;
+                    var body=new int[length];
+                    for(int i=0;i<length;i++){int y=i/rules.Width,x=i%rules.Width;body[i]=y*rules.Width+(y%2==0?x:rules.Width-1-x);}
+                    snapshot=new SnakeSnapshot{Body=body,Direction=SnakeDirection.Left,State=state,Food=-1,
+                        FoodEaten=length-4,Score=(length-4)*10,TickCount=length+40,RandomState=123};
+                }
+                var saved=new SnakeSessionData{SessionId=Guid.NewGuid().ToString("D"),ElapsedSeconds=125,Board=snapshot};
+                Require(saved.TryValidate(rules,out var reason),"Terminal screenshot uses a valid actual save contract: "+name+" "+reason);
+                var profile=Get<SnakeProfile>(p.Page,"profile");profile.SelectedMode=level<0?0:1;
+                profile.SelectedDifficulty=rules.Difficulty;profile.SelectedBoundary=rules.Boundary;
+                if(level>=0)
+                {
+                    profile.SelectedLevel=level;profile.UnlockedLevel=level;
+                    if(level>0)profile.CampaignRecords[level-1]=new SnakeRecord{Wins=1,BestScore=80,BestElapsedSeconds=125};
+                }
+                Set(p.Page,"session",new SnakeSession(rules,saved));Set(p.Page,"sessionStarted",true);
+                Invoke(p.Page,"Refresh");
+                // The fixture entered a new run before this restored terminal snapshot was installed.
+                // Drive the production frame path at zero delta so countdown chrome follows the new session.
+                string beforeFrame=JsonUtility.ToJson(p.Session.Game.GetSnapshot());p.Advance(0);
+                Require(!Get<GameObject>(p.Page,"countdown").activeSelf&&p.Session.CountdownSeconds==0&&
+                    JsonUtility.ToJson(p.Session.Game.GetSnapshot())==beforeFrame,"Terminal waiting frame has no stale countdown and advances no simulation: "+name);
+                Invoke(p.Page,"CheckEndState");f.Capture(name+"-delay");CompleteResultDelay(p);
+                f.Capture(name+"-result");
+                string unchanged=JsonUtility.ToJson(p.Session.Game.GetSnapshot());
+                p.ClickDialog("查看最终局面");var results=p.Page.GetComponent<ResultPresentation>();results.Advance(0);
+                var reopen=p.Root.GetComponentsInChildren<Button>().Single(button=>button.name=="Reopen result");
+                f.Capture(name+"-inspect");CheckTerminalInspectionBounds(f,p,reopen,name);
+                Invoke(p.Page,"SetForeground",false);results.Advance(30f);
+                Require(!reopen.gameObject.activeInHierarchy,"Background hides terminal result entry: "+name);
+                Invoke(p.Page,"SetForeground",true);results.Advance(0);
+                Require(reopen.gameObject.activeInHierarchy,"Foreground restores terminal result entry: "+name);
+                p.Advance(.1f);results.Advance(2f);
+                Require(Get<GameObject>(p.Page,"dialog")==null&&JsonUtility.ToJson(p.Session.Game.GetSnapshot())==unchanged,
+                    "Inspection preserves the terminal snapshot and does not reopen: "+name);
+                f.Click(reopen.GetComponent<RectTransform>());
+                Require(Get<GameObject>(p.Page,"dialog")!=null,"Real result entry reopens terminal result: "+name);
+                f.Capture(name+"-reopen");
+                Require(JsonUtility.ToJson(p.Session.Game.GetSnapshot())==unchanged,"Reopened result preserves terminal snapshot: "+name);
+                p.ClickDialog("再来一局","重玩关卡");
+                Require(p.Session.SessionId!=saved.SessionId&&!ResultPresentation.IsInspecting((MonoBehaviour)p.Page)&&
+                    !p.Root.GetComponentsInChildren<Button>().Any(button=>button.name=="Reopen result"),"New run clears terminal result entry: "+name);
+            }
+        }
+        private static void CheckTerminalInspectionBounds(Fixture f,PageFixture p,Button reopen,string context)
+        {
+            Rect entry=f.Bounds(reopen.GetComponent<RectTransform>()),safe=f.Bounds(p.Root);
+            RecordTerminalLayout(entry.xMin>=safe.xMin-.5f&&entry.xMax<=safe.xMax+.5f&&entry.yMin>=safe.yMin-.5f&&entry.yMax<=safe.yMax+.5f,
+                context+" result entry inside safe page "+entry);
+            RecordTerminalLayout(!entry.Overlaps(f.Bounds(Find(p.Root,"Snake board"))),context+" result entry does not overlap board");
+            foreach(var button in p.Root.GetComponentsInChildren<Button>())
+                if(button!=reopen&&button.gameObject.activeInHierarchy)
+                    RecordTerminalLayout(!entry.Overlaps(f.Bounds(button.GetComponent<RectTransform>())),context+" result entry does not overlap control "+button.name);
+            foreach(var text in p.Root.GetComponentsInChildren<Text>())
+                if(text.gameObject.activeInHierarchy&&text.enabled&&text.color.a>0&&!string.IsNullOrWhiteSpace(text.text)&&!text.transform.IsChildOf(reopen.transform))
+                    RecordTerminalLayout(!entry.Overlaps(f.Bounds(text.rectTransform)),context+" result entry does not overlap visible text "+text.name+"="+text.text);
+        }
+        private static void RecordTerminalLayout(bool valid,string reason)
+        {
+            checks++;if(!valid){terminalLayoutErrors.Add(reason);report.AppendLine("FAIL "+reason);}
         }
 
         private static void CheckImmediateCountdown(PageFixture p, bool fresh, string action)
@@ -1184,7 +1285,9 @@ namespace XanaduYonder.EditorTools
                 {
                     image.ReadPixels(new Rect(0, 0, 720, Height), 0, 0);
                     image.Apply();
-                    File.WriteAllBytes(Path.Combine(output, name + "-720x" + Height + ".png"), image.EncodeToPNG());
+                    string path=Path.Combine(output, name + "-720x" + Height + ".png");
+                    File.WriteAllBytes(path, image.EncodeToPNG());
+                    if(name.StartsWith("terminal-",StringComparison.Ordinal))report.AppendLine("SCREENSHOT "+path);
                 }
                 finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }

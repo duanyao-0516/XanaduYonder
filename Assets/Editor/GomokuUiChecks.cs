@@ -71,12 +71,12 @@ namespace XanaduYonder.EditorTools
                     CheckSharedHostLifecycle(fixture);
                     CheckSharedHostSaveStatus(fixture);
                     CheckAiWaiting(fixture);
-                    CheckTerminal(fixture, false);
-                    CheckTerminal(fixture, true);
+                    CheckAllTerminalResults(fixture);
                     CheckSaveFailure(fixture);
                     CheckInvalidSave(fixture);
                     report.AppendLine("PASS 720x" + height + ": navigation, rendered board, confirmation, local consent, setup, independent resume, lifecycle, AI cancellation, terminal, isolated storage failure/recovery");
                 }
+                using (var fixture = new Fixture(1320, .5f)) CheckAllTerminalResults(fixture);
                 new GameObject("Gomoku asynchronous checks runner").AddComponent<Runner>().StartCoroutine(AsynchronousChecks(oldFont));
             }
             catch (Exception error)
@@ -466,35 +466,74 @@ namespace XanaduYonder.EditorTools
             finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
         }
 
-        private static void CheckTerminal(Fixture f, bool draw)
+        private static void CheckAllTerminalResults(Fixture f)
         {
-            var initial = Data(GomokuMode.Local);
-            initial.Slots[(int)GomokuMode.Local] = Slot(GomokuMode.Local,
-                draw ? DrawHistory() : new[] { 110, 95, 111, 96, 112, 97, 113, 98, 114 });
+            foreach (var mode in new[] { GomokuMode.Local, GomokuMode.HumanVsAi })
+            foreach (var state in new[] { GomokuState.BlackWon, GomokuState.WhiteWon, GomokuState.Draw }) CheckTerminal(f, mode, state);
+        }
+
+        private static void CheckTerminal(Fixture f, GomokuMode mode, GomokuState expected)
+        {
+            bool draw = expected == GomokuState.Draw;
+            string prefix = "terminal-" + mode.ToString().ToLowerInvariant() + "-" + expected.ToString().ToLowerInvariant();
+            string title = draw ? "和棋" : mode == GomokuMode.Local ? expected == GomokuState.BlackWon ? "玩家 1 获胜" : "玩家 2 获胜"
+                : expected == GomokuState.BlackWon ? "你赢了！" : "电脑获胜";
+            var initial = Data(mode);
+            initial.Slots[(int)mode] = Slot(mode, draw ? DrawHistory() : expected == GomokuState.BlackWon
+                ? new[] { 110, 95, 111, 96, 112, 97, 113, 98, 114 }
+                : new[] { 0, 95, 2, 96, 4, 97, 6, 98, 15, 99 });
             using (var g = new PageFixture(f, initial))
             {
                 int count = g.Session.Game.MoveCount;
-                Require(g.Session.Game.State == (draw ? GomokuState.Draw : GomokuState.BlackWon), "Injected history reconstructs the expected legal terminal state");
+                Require(g.Session.Game.State == expected, "Injected history reconstructs the expected legal terminal state: " + expected);
                 Require(!Get<GomokuBoardView>(g.Page, "board").Interactable && !Get<Button>(g.Page, "undoButton").interactable &&
                     !Get<Button>(g.Page, "pauseButton").interactable && !Get<GameObject>(g.Page, "pauseCover").activeSelf,
                     "Terminal board is visible and read-only with undo/pause disabled");
                 g.TapCell(82);
                 Require(g.Session.Game.MoveCount == count && !g.Session.SelectedIndex.HasValue, "Terminal board clicks cannot select or place another move");
                 if (!draw) RequireMeshColor(f, g, UiFactory.Hex("BD8450"), "Winning line appears in the production board mesh");
-                f.Capture(draw ? "draw-board" : "won-board"); g.ClickField("confirmButton");
+                f.Capture(prefix + "-board"); g.ClickField("confirmButton");
                 Require(g.Dialog==null,"The completed board remains visible before its result");
+                f.Capture(prefix + "-waiting");
                 var results=g.Page.GetComponent<ResultPresentation>();results.Advance(0);results.Advance(.81f);
-                Require(g.Dialog != null && HasText(g.Dialog, draw ? "和棋" : "玩家 1 获胜"), "Result dialog names the actual terminal result");
-                f.Capture(draw ? "draw-result" : "won-result");
+                Require(g.Dialog != null && HasText(g.Dialog, title), "Result dialog names the actual terminal result");
+                f.Capture(prefix + "-result");
+                g.Click("查看棋盘"); results.Advance(0);
+                Require(g.Dialog == null && ResultPresentation.IsInspecting(g.Page), "Inspect leaves the terminal Gomoku board visible");
+                f.Capture(prefix + "-inspect"); CheckInspectionGeometry(f, g);
+                g.ClickField("confirmButton");
+                Require(g.Dialog != null && HasText(g.Dialog, title) && g.Session.Game.MoveCount == count, "Reopened result preserves the terminal history and outcome");
+                f.Capture(prefix + "-reopen");
                 g.Click("查看棋盘"); g.Page.SetForeground(false); g.Page.SetForeground(true);
                 Require(g.Session.Game.MoveCount == count && !Get<GameObject>(g.Page, "pauseCover").activeSelf,
                     "Terminal foreground cycle preserves the visible completed board");
                 g.ClickField("confirmButton"); g.Click("再来一局");
-                var choice = Find(g.Dialog.transform, "玩家 2 执黑").GetComponent<Image>();
-                Require(choice.color == UiFactory.Accent, "Local rematch defaults to exchanging black and white");
+                if (mode == GomokuMode.Local)
+                {
+                    var choice = Find(g.Dialog.transform, "玩家 2 执黑").GetComponent<Image>();
+                    Require(choice.color == UiFactory.Accent, "Local rematch defaults to exchanging black and white");
+                }
                 g.Click("取消");
                 Require(g.Session.Game.MoveCount == count && g.Session.Game.State != GomokuState.Playing, "Canceling rematch preserves the completed game");
             }
+        }
+
+        private static void CheckInspectionGeometry(Fixture f, PageFixture game)
+        {
+            var reopen = Get<Button>(game.Page, "confirmButton").GetComponent<RectTransform>();
+            Require(reopen.GetComponentInChildren<Text>().text == "查看结果", "Gomoku reuses its existing result action");
+            foreach (var button in game.Root.GetComponentsInChildren<Button>())
+                Require(button.name != "Reopen result", "Gomoku adds no duplicate result button over the board or footer");
+            Rect action = f.Bounds(reopen), root = f.Bounds(game.Root);
+            Require(action.xMin >= root.xMin - .5f && action.xMax <= root.xMax + .5f && action.yMin >= root.yMin - .5f && action.yMax <= root.yMax + .5f,
+                "Result entry stays inside the visible Gomoku page: " + action + " / " + root);
+            Require(!action.Overlaps(f.Bounds(game.Surface)), "Result entry does not obscure the final Gomoku board");
+            foreach (var text in game.Root.GetComponentsInChildren<Text>())
+                if (text.isActiveAndEnabled && !string.IsNullOrWhiteSpace(text.text) && text.color.a > 0 && !text.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds(text.rectTransform)), "Result entry does not overlap visible Gomoku text: " + text.text);
+            foreach (var button in game.Root.GetComponentsInChildren<Button>())
+                if (button.transform != reopen && !button.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds((RectTransform)button.transform)), "Result entry does not cover Gomoku control: " + button.name);
         }
 
         private static void CheckSaveFailure(Fixture f)
@@ -733,10 +772,12 @@ namespace XanaduYonder.EditorTools
             private readonly Camera camera;
             private readonly RenderTexture target;
             private readonly EventSystem events;
+            private readonly int pixelWidth, pixelHeight;
 
-            public Fixture(int height)
+            public Fixture(int height, float captureScale = 1)
             {
                 Height = height; owner = new GameObject("Gomoku UI fixture");
+                pixelWidth = Mathf.RoundToInt(720 * captureScale); pixelHeight = Mathf.RoundToInt(height * captureScale);
                 root = new GameObject("Fixture canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster)).GetComponent<RectTransform>();
                 root.SetParent(owner.transform, false); root.sizeDelta = new Vector2(720, height);
                 camera = new GameObject("Fixture camera", typeof(Camera)).GetComponent<Camera>();
@@ -745,7 +786,7 @@ namespace XanaduYonder.EditorTools
                 camera.orthographicSize = height * .5f; camera.aspect = 720f / height;
                 camera.nearClipPlane = .1f; camera.farClipPlane = 100;
                 camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = UiFactory.Paper;
-                target = new RenderTexture(720, height, 24); target.Create(); camera.targetTexture = target;
+                target = new RenderTexture(pixelWidth, pixelHeight, 24); target.Create(); camera.targetTexture = target;
                 var canvas = root.GetComponent<Canvas>(); canvas.renderMode = RenderMode.WorldSpace; canvas.worldCamera = camera;
                 events = new GameObject("Fixture events", typeof(EventSystem)).GetComponent<EventSystem>();
                 events.transform.SetParent(owner.transform, false);
@@ -754,6 +795,12 @@ namespace XanaduYonder.EditorTools
             public RectTransform Page()
             { var page = UiFactory.Rect(root, "Gomoku fixture page", 0, 0, 720, Height); UiFactory.Stretch(page); return page; }
             public void Flush() { Canvas.ForceUpdateCanvases(); camera.Render(); Canvas.ForceUpdateCanvases(); }
+            public Rect Bounds(RectTransform rect)
+            {
+                Flush(); var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+                var a = RectTransformUtility.WorldToScreenPoint(camera, corners[0]); var b = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+                return Rect.MinMaxRect(a.x, a.y, b.x, b.y);
+            }
 
             public PointerEventData Down(RectTransform rect, Vector2 position, bool requireTarget)
             {
@@ -789,11 +836,11 @@ namespace XanaduYonder.EditorTools
             public void Capture(string name)
             {
                 Flush(); var previous = RenderTexture.active; RenderTexture.active = target;
-                var image = new Texture2D(720, Height, TextureFormat.RGB24, false);
+                var image = new Texture2D(pixelWidth, pixelHeight, TextureFormat.RGB24, false);
                 try
                 {
-                    image.ReadPixels(new Rect(0, 0, 720, Height), 0, 0); image.Apply();
-                    File.WriteAllBytes(Path.Combine(output, name + "-720x" + Height + ".png"), image.EncodeToPNG());
+                    image.ReadPixels(new Rect(0, 0, pixelWidth, pixelHeight), 0, 0); image.Apply();
+                    File.WriteAllBytes(Path.Combine(output, name + "-" + pixelWidth + "x" + pixelHeight + ".png"), image.EncodeToPNG());
                 }
                 finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }

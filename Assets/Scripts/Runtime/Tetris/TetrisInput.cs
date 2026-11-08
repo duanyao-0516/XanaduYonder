@@ -58,6 +58,14 @@ namespace XanaduYonder.Runtime.Tetris
             }
             if (!accepts || invalid || active > 2) { Cancel(); if (active == 0) suppressed = false; return; }
             if (suppressed) { if (active == 0) suppressed = false; return; }
+            // A second contact invalidates the tap gesture before any release can finish it.
+            // Ordinary two-finger movement, rotation and held soft drop still run below.
+            bool multipleContacts = live.Count > 1;
+            if (multipleContacts)
+            {
+                ClearDownTaps();
+                foreach (var c in owners.Values) if (c.Action == TetrisAction.SoftDrop) c.TapEligible = false;
+            }
             removed.Clear();
             foreach (var pair in owners) if (!live.Contains(pair.Key)) removed.Add(pair.Key);
             foreach (var id in removed) Remove(id);
@@ -82,16 +90,9 @@ namespace XanaduYonder.Runtime.Tetris
                 if (existing != null && existing.Action == TetrisAction.SoftDrop && time - existing.StartedAt > MaximumTapSeconds)
                 { existing.TapEligible = false; ClearDownTaps(); }
                 if (p.Phase != TetrisPointerPhase.Began || p.Action == TetrisAction.None || owners.ContainsKey(p.Id)) continue;
-                owners.Add(p.Id, new Contact { Action = p.Action, Order = frameOrder, StartedAt = time, PieceSerial = serial });
+                owners.Add(p.Id, new Contact { Action = p.Action, Order = frameOrder, StartedAt = time, PieceSerial = serial, TapEligible = !multipleContacts });
                 if (p.Action != TetrisAction.SoftDrop && !(newLeft && newRight && (p.Action == TetrisAction.Left || p.Action == TetrisAction.Right)))
                     Queue(p.Id, p.Action, serial);
-            }
-            int downContacts = 0;
-            foreach (var c in owners.Values) if (c.Action == TetrisAction.SoftDrop) downContacts++;
-            if (downContacts > 1)
-            {
-                ClearDownTaps();
-                foreach (var c in owners.Values) if (c.Action == TetrisAction.SoftDrop) c.TapEligible = false;
             }
             RefreshDirection();
         }

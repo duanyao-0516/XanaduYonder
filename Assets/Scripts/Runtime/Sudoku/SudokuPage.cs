@@ -91,7 +91,9 @@ namespace XanaduYonder.Runtime.Sudoku
             var nav = UiFactory.Band(page, "Navigation", 0, 92, 0);
             UiFactory.IconButton(nav, UiIconKind.Back, 56, 34, 58, 58, ReturnToSelection);
             UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
-            UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var brand = UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58), brand);
             UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
             UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
             var heading = UiFactory.Band(page, "Heading", 108, 70, .03f);

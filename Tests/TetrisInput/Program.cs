@@ -40,6 +40,25 @@ class Program
  Test("drag out and missing up clear the tap sequence",()=>{foreach(bool missing in new[]{false,true}){var s=New();Start(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;Frame(s.Input,serial,P(4,TetrisAction.SoftDrop));s.Advance(.05);if(missing)Frame(s.Input,serial);else Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended,false));s.Advance(0);Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);}});
  Test("hold changes piece and resets down tap history",()=>{var s=New();Start(s);Tap(s);Tap(s);Frame(s.Input,s.Snapshot.PieceSerial,P(7,TetrisAction.Hold));s.Advance(0);Frame(s.Input,s.Snapshot.PieceSerial,P(7,TetrisAction.Hold,TetrisPointerPhase.Ended));long serial=s.Snapshot.PieceSerial;Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});
  Test("overlapping down fingers cannot manufacture triple taps",()=>{var s=New();Start(s);Tap(s);long serial=s.Snapshot.PieceSerial;Frame(s.Input,serial,P(1,TetrisAction.SoftDrop),P(2,TetrisAction.SoftDrop));s.Advance(.05);Frame(s.Input,serial,P(1,TetrisAction.SoftDrop,TetrisPointerPhase.Ended),P(2,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));s.Advance(0);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);});
+ Test("another finger clears tap history without blocking movement or soft drop",()=>{
+  var s=New();Start(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;int x=s.Snapshot.X;
+  Frame(s.Input,serial,P(4,TetrisAction.SoftDrop),P(2,TetrisAction.Left));s.Advance(.02);
+  Equal(x-1,s.Snapshot.X);Equal(true,s.Input.SoftDropHeld);
+  Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Stationary),P(2,TetrisAction.Left,TetrisPointerPhase.Ended));s.Advance(.02);
+  Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));s.Advance(0);Equal(serial,s.Snapshot.PieceSerial);
+  Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);
+ });
+ Test("second contact on third release cancels tap before command arbitration",()=>{
+  foreach(var other in new[]{TetrisAction.Left,TetrisAction.Clockwise,TetrisAction.None})foreach(bool reverse in new[]{false,true}) {
+   var input=new TetrisInput();long serial=1;
+   for(int n=0;n<2;n++){input.ProcessFrame(new[]{P(4,TetrisAction.SoftDrop)},true,serial,n*.1);input.ProcessFrame(new[]{P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended)},true,serial,n*.1+.05);}
+   input.ProcessFrame(new[]{P(4,TetrisAction.SoftDrop)},true,serial,.2);
+   var release=P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended);var second=P(2,other);
+   input.ProcessFrame(reverse?new[]{second,release}:new[]{release,second},true,serial,.25);
+   int commands=0;while(input.TryTake(out var action)){Equal(other,action.Action);Equal(serial,action.PieceSerial);commands++;}
+   Equal(other==TetrisAction.None?0:1,commands);
+  }
+ });
  Test("pause clears completed taps and waits for clean release",()=>{var s=New();Start(s);Tap(s);Tap(s);s.Pause();Start(s);for(int i=0;i<30;i++)s.Advance(.1);Frame(s.Input,s.Snapshot.PieceSerial);long serial=s.Snapshot.PieceSerial;Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});
  Test("short hold duration is independent of gap before press",()=>{var s=New();Start(s);Tap(s,4,.05);Wait(s,.18);Tap(s,4,.15);long serial=s.Snapshot.PieceSerial;Tap(s,4,.05);Equal(serial+1,s.Snapshot.PieceSerial);});
  Test("production timestamp measures holds without simulation steps",()=>{var i=new TetrisInput();long serial=1;double time=100;for(int n=0;n<3;n++){i.ProcessFrame(new[]{P(4,TetrisAction.SoftDrop)},true,serial,time);i.ProcessFrame(new[]{P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended)},true,serial,time+.05);time+=.1;}Equal(true,i.TryTake(out var action));Equal(TetrisAction.HardDrop,action.Action);Equal(serial,action.PieceSerial);Equal(false,i.TryTake(out action));});

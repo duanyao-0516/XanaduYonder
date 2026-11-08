@@ -8,7 +8,8 @@ namespace XanaduYonder.Runtime.Minesweeper
     internal sealed partial class MinesweeperPage
     {
         private GameObject normalChrome, focusChrome, pauseCover;
-        private RectTransform toolbar, zoomGroup, hintBand, statusBand;
+        private RectTransform toolbar, zoomGroup, hintBand, statusBand, reviewSlot, focusReviewSlot;
+        private Text reviewBrand;
         private readonly RectTransform[] zoomDividers=new RectTransform[2];
         private Text remaining,focusRemaining,difficulty,timer,focusTimer,hint,compactStatus,pauseText,overviewNote,zoomLabel,overviewLabel;
         private Button revealButton,flagButton,zoomOut,zoomValue,zoomIn,overviewButton,enterFullscreen,exitFullscreen,pauseButton,focusPause,resumeButton;
@@ -22,7 +23,8 @@ namespace XanaduYonder.Runtime.Minesweeper
             var nav=UiFactory.Band(normal,"Navigation",0,92,0);
             UiFactory.IconButton(nav,UiIconKind.Back,56,34,58,58,ReturnToSelection);
             UiFactory.IconButton(nav,UiIconKind.Restart,126,34,58,58,ConfirmRestart);
-            UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
+            reviewBrand = UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
+            reviewSlot = UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58);
             UiFactory.IconButton(nav,UiIconKind.Book,536,34,58,58,ShowRules);
             UiFactory.IconButton(nav,UiIconKind.Settings,606,34,58,58,Settings);
             // These exact heading tokens and geometry are shared with the existing Sudoku page.
@@ -39,6 +41,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             var focus=UiFactory.Rect(page,"Focus chrome",0,0,720,118); focusChrome=focus.gameObject;
             focus.anchorMin=focus.anchorMax=new Vector2(.5f,1); focus.pivot=new Vector2(.5f,1); focus.anchoredPosition=Vector2.zero;
             focusRemaining=UiFactory.Label(focus,"",36,22,280,66,29,UiFactory.Ink);
+            focusReviewSlot = UiFactory.Rect(focus, "Result review slot", 36, 22, 280, 66);
             focusTimer=UiFactory.Label(focus,"00:00",384,22,194,66,29,UiFactory.Ink,TextAnchor.MiddleRight); Fit(focusTimer,20,29);
             focusPause=CompactPauseButton(focus,"Focus pause",600,18,Pause);
             var background=UiFactory.Panel(page,"Minesweeper viewport",36,350,648,762,UiFactory.Hex("F0F3EC"));
@@ -133,6 +136,8 @@ namespace XanaduYonder.Runtime.Minesweeper
             float minimum=(float)MinesweeperControlLayout.TargetSize(DensityDpi(),PixelsPerDesignUnit());
             float controlsHeight=ApplyControlLayout(minimum);
             normalChrome.SetActive(!fullscreen); focusChrome.SetActive(fullscreen);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                fullscreen ? focusReviewSlot : reviewSlot, fullscreen ? focusRemaining : reviewBrand);
             enterFullscreen.gameObject.SetActive(!fullscreen); exitFullscreen.gameObject.SetActive(fullscreen);
             float top=fullscreen?Mathf.Max(112,minimum+30):Mathf.Max(286,194+minimum+12);
             float toolbarTop=height-controlsHeight-96;

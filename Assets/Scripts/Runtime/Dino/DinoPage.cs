@@ -270,8 +270,10 @@ namespace XanaduYonder.Runtime.Dino
             var nav = UiFactory.Rect(content, "Dino navigation", 0, 0, w, 92);
             UiFactory.IconButton(nav, gameControls ? UiIconKind.Back : UiIconKind.Home, 56, 34, 58, 58, Back);
             if (gameControls) UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
-            UiFactory.Label(nav, "XANADU / YONDER", w * .5f - 150, 34, 300, 58, 19,
+            var brand = UiFactory.Label(nav, "XANADU / YONDER", w * .5f - 150, 34, 300, 58, 19,
                 UiFactory.Muted, TextAnchor.MiddleCenter);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(nav, "Result review slot", w * .5f - 116, 34, 232, 58), brand);
             UiFactory.IconButton(nav, UiIconKind.Book, w - 184, 34, 58, 58, ShowHelp);
             UiFactory.IconButton(nav, UiIconKind.Settings, w - 114, 34, 58, 58, ShowSettings);
         }

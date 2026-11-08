@@ -71,6 +71,27 @@ namespace XanaduYonder.EditorTools
             Require(catalogAsset != null, "Campaign resource loads");
             var catalog = SokobanCatalog.Parse(catalogAsset.text);
             Require(catalog.Count == 108, "All 108 production levels load");
+            // Sokoban has successful level/campaign completion, with no loss or draw state.
+            foreach (var size in new[] { new Vector2Int(720, 1320), new Vector2Int(720, 1582), new Vector2Int(360, 640) })
+            foreach (string id in new[] { "tutorial-001", catalog.At(catalog.Count - 1).LevelId })
+            using (var f = new Fixture(size.y, size.x))
+            {
+                var page = f.Root.gameObject.AddComponent<SokobanPage>();
+                page.Initialize(f.Root, () => { }, done => done(), () => true, () => false, () => false,
+                    f.Root.gameObject.AddComponent<GameFeedback>(), _ => { }, initialCatalog: catalog, initialProfile: new SokobanProfile(catalog));
+                page.Enter(); page.StartLevel(id, true); page.LayoutNow();
+                // Replay the shipped solution through the page and finish each real board animation.
+                foreach (char step in catalog.Get(id).Solution)
+                { page.Move(SokobanGame.FromChar(step)); Get<SokobanBoardView>(page, "board").Tick(.11f); }
+                page.Save(); Invoke(page, "Refresh"); page.CheckEndState();
+                string prefix = id == "tutorial-001" ? "terminal-level-won" : "terminal-campaign-won";
+                Require(!page.HasDialog, "Completed Sokoban board remains visible during the result interval");
+                f.Capture(prefix + "-waiting");
+                var results = page.GetComponent<ResultPresentation>(); results.Advance(0); results.Advance(.81f);
+                Require(page.Session.Game.Won && page.HasDialog, "Shipped solution reaches a visible terminal result: " + id);
+                CheckTerminalScreenshots(f, page, prefix);
+                page.Leave();
+            }
             foreach (int height in new[] { 1455, 1320, 1582, 1150 })
             using (var f = new Fixture(height))
             {
@@ -317,6 +338,34 @@ namespace XanaduYonder.EditorTools
                 finally { Object.DestroyImmediate(inert); }
             }
         }
+        private static void CheckTerminalScreenshots(Fixture f, SokobanPage page, string prefix)
+        {
+            int moves = page.Session.Game.Moves, pushes = page.Session.Game.Pushes;
+            long completed = page.CompletedCount;
+            string attempt = page.Session.AttemptId;
+            f.Capture(prefix + "-result");
+            var inspect = f.Find("Dialog inspection");
+            Require(inspect.GetComponentInChildren<Text>().text == "查看最终局面", "Terminal inspection action uses the expected caption");
+            f.Click(inspect); page.GetComponent<ResultPresentation>().Advance(0);
+            Require(!page.HasDialog && ResultPresentation.IsInspecting(page), "Inspect shows the completed Sokoban board");
+            f.Capture(prefix + "-inspect");
+            var reopen = f.Find("Reopen result"); Rect action = f.Bounds(reopen), root = f.Bounds(f.Root);
+            Require(action.xMin >= root.xMin - .5f && action.xMax <= root.xMax + .5f && action.yMin >= root.yMin - .5f && action.yMax <= root.yMax + .5f,
+                "Result entry stays inside the visible Sokoban page: " + action + " / " + root);
+            Require(!action.Overlaps(f.Bounds(f.Find("Sokoban board viewport"))), "Result entry does not obscure the completed Sokoban board");
+            foreach (var text in f.Root.GetComponentsInChildren<Text>())
+                if (text.isActiveAndEnabled && !string.IsNullOrWhiteSpace(text.text) && text.color.a > 0 && !text.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds(text.rectTransform)), "Result entry does not overlap visible Sokoban text: " + text.text);
+            foreach (var button in f.Root.GetComponentsInChildren<Button>())
+                if (button.transform != reopen && !button.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds((RectTransform)button.transform)), "Result entry does not cover Sokoban control: " + button.name);
+            f.CheckHit(reopen); page.Move(Direction.Up);
+            Require(page.Session.Game.Won && page.Session.Game.Moves == moves && page.Session.Game.Pushes == pushes, "Inspect input cannot change the completed Sokoban board");
+            f.Click(reopen);
+            Require(page.HasDialog && page.Session.AttemptId == attempt && page.CompletedCount == completed, "Reopened result preserves attempt and completion accounting");
+            f.Capture(prefix + "-reopen");
+        }
+
         private static void CheckGeometry(Fixture f, SokobanPage page, int height)
         {
             float s = 720f / 388;

@@ -12,7 +12,9 @@ namespace XanaduYonder.Runtime.Snake
             gameInput=surface.gameObject.AddComponent<CanvasGroup>();
             var nav=UiFactory.Band(surface,"Snake navigation",0,92,0);
             UiFactory.IconButton(nav,UiIconKind.Home,56,34,58,58,()=>{if(Available){Suspend();returnLobby();}});
-            UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
+            var brand = UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58), brand);
             UiFactory.IconButton(nav,UiIconKind.Book,536,34,58,58,ShowRules);
             UiFactory.IconButton(nav,UiIconKind.Settings,606,34,58,58,ShowSettings);
             var heading=UiFactory.Band(surface,"Snake heading",108,64,.03f);

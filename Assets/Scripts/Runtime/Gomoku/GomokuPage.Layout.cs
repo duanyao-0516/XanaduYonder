@@ -14,6 +14,7 @@ namespace XanaduYonder.Runtime.Gomoku
 
         private void Build()
         {
+            ResultPresentation.For(this, root).UseExistingReopenAction();
             var nav = UiFactory.Band(root, "Gomoku navigation", 0, 92, 0);
             UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, RequestLeave);
             UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);

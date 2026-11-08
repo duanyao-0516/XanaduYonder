@@ -71,6 +71,8 @@ namespace XanaduYonder.Runtime.Watermelon
         private void Build(RectTransform root, Action settings)
         {
             var navigation = UiFactory.Band(root, "Watermelon navigation", 0, 94, 0);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(navigation, "Result review slot", 244, 34, 232, 58));
             UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, lobby);
             UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, () => { Suspend(); Save(); settings(); });
             var heading = UiFactory.Band(root, "Watermelon title", 108, 76, 0);

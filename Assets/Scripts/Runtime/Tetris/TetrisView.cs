@@ -20,6 +20,8 @@ namespace XanaduYonder.Runtime.Tetris
         }
 
         private readonly RectTransform root, navigation, information, operations, warningBand, dialog;
+        public RectTransform ReviewSlot { get; private set; }
+        public Graphic ReviewBrand => brand;
         private readonly TetrisGraphic arenaBackground;
         private readonly TetrisBoardView board;
         private readonly Text brand, title, warningText, nextLabel, overlayTitle, overlayDetail, overlayBest;
@@ -64,6 +66,7 @@ namespace XanaduYonder.Runtime.Tetris
             helpControl = Navigation("Book", UiIconKind.Book, help);
             settingsControl = Navigation("Settings", UiIconKind.Settings, settings);
             brand = Label(navigation, "Tetris brand", "XANADU / YONDER", 10, UiFactory.Muted, TextAnchor.MiddleCenter);
+            ReviewSlot = UiFactory.Rect(navigation, "Result review slot", 0, 0, 1, 1);
             title = Label(root, "Tetris title", "俄罗斯方块", 26.5f, UiFactory.Ink);
             pauseControl = MakeControl(root, "Tetris pause", "暂停", pause, false, 12);
 
@@ -203,6 +206,7 @@ namespace XanaduYonder.Runtime.Tetris
             LayoutNavigation(helpControl, width - 107.5f * s, s);
             LayoutNavigation(settingsControl, width - 59.5f * s, s);
             Place(brand.rectTransform, 108 * s, 12 * s, 172 * s, 32 * s);
+            Place(ReviewSlot, 128 * s, 6 * s, 132 * s, 44 * s);
             Place(title.rectTransform, 19.5f * s, 56 * s, 264 * s, 44 * s);
             Place(pauseControl.Target, width - 83.5f * s, 54 * s, 64 * s, 48 * s);
             Place(pauseControl.Background.rectTransform, 0, 6 * s, 64 * s, 36 * s);

@@ -79,8 +79,8 @@ namespace XanaduYonder.EditorTools
                     CheckSelectionAndSmallCells(fixture);
                     CheckReadyLifecycle(fixture);
                     CheckFocusOverviewAndPause(fixture);
-                    CheckTerminal(fixture, false);
-                    CheckTerminal(fixture, true);
+                    for (int difficulty = 0; difficulty < 3; difficulty++)
+                    { CheckTerminal(fixture, false, difficulty); CheckTerminal(fixture, true, difficulty); }
                     CheckSharedHostLifecycle(fixture);
                     CheckSharedSaveStatus(fixture);
                     CheckSaveRetryStatus(fixture);
@@ -88,6 +88,9 @@ namespace XanaduYonder.EditorTools
                     CheckTouchTargetLayout(fixture);
                     report.AppendLine("PASS 720x" + height + ": selection, shared chrome, rendered board input, small cells, focus, overview, opaque pause, terminal/lifecycle");
                 }
+                using (var fixture = new Fixture(1320, .5f))
+                    for (int difficulty = 0; difficulty < 3; difficulty++)
+                    { CheckTerminal(fixture, false, difficulty); CheckTerminal(fixture, true, difficulty); }
                 report.AppendLine("MINESWEEPER_UI_CHECKS_PASS: " + checks + " assertions");
             }
             catch (Exception error)
@@ -645,12 +648,13 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static void CheckTerminal(Fixture f, bool won)
+        private static void CheckTerminal(Fixture f, bool won, int difficulty)
         {
             using (var game = new PageFixture(f))
             {
-                game.Start(1);
-                var state = new MinesweeperGame(1, new SeededRandom(157));
+                string prefix = "terminal-difficulty-" + difficulty + (won ? "-won" : "-lost");
+                game.Start(difficulty);
+                var state = new MinesweeperGame(difficulty, new SeededRandom(157));
                 state.Reveal(40);
                 var snapshot = state.GetSnapshot();
                 int target = -1;
@@ -669,7 +673,7 @@ namespace XanaduYonder.EditorTools
                         if (!snapshot.IsMine(i) && !snapshot.IsRevealed(i)) { flags[i] = true; break; }
                 }
                 Require(target >= 0, "Terminal fixture has an actionable final cell");
-                var board = new MinesweeperSnapshot(1, true, 40, MinesweeperState.Active, null, snapshot.Mines, revealed, flags);
+                var board = new MinesweeperSnapshot(difficulty, true, 40, MinesweeperState.Active, null, snapshot.Mines, revealed, flags);
                 Require(board.TryValidate(out var reason), "Terminal fixture is a valid production snapshot: " + reason);
                 game.ReplaceBoard(board, 12345);
                 game.Viewport.RestoreNormal(.5, 8, 8);
@@ -681,27 +685,36 @@ namespace XanaduYonder.EditorTools
                 var expected = won ? MinesweeperState.Won : MinesweeperState.Lost;
                 Require(session.Game.State == expected, "Real final cell press reaches " + expected);
                 Require(Get<GameObject>(page,"dialog")==null,"The terminal minefield is visible during the result delay");
+                f.Capture(prefix + "-waiting");
                 var results=page.GetComponent<ResultPresentation>();results.Advance(0);results.Advance(.81f);
                 var dialog = Get<GameObject>(page, "dialog");
                 Require(dialog != null && ContainsText(dialog.transform, won ? "排雷成功" : "触雷了"), "Real result dialog describes " + expected);
                 Require(ContainsText(dialog.transform, "再来一局") && ContainsText(dialog.transform, "选择难度") && ContainsText(dialog.transform, "查看棋盘"),
                     "Result dialog exposes the three approved actions");
-                f.Capture(won ? "won-dialog" : "lost-dialog");
+                f.Capture(prefix + "-result");
                 f.Click(ButtonWithText(dialog.transform, "查看棋盘").transform as RectTransform);
                 Require(Get<GameObject>(page, "dialog") == null && !session.Paused, "Viewing a terminal board closes the result without a resume gate");
+                results.Advance(0); f.Capture(prefix + "-inspect"); CheckInspectionGeometry(f, game);
+                f.Click(Find(page.transform, "Reopen result"));
+                Require(Get<GameObject>(page, "dialog") != null, "Explicit result entry reopens the same minefield outcome");
+                f.Capture(prefix + "-reopen");
+                f.Click(ButtonWithText(Get<GameObject>(page, "dialog").transform, "查看棋盘").transform as RectTransform);
                 Require(!Find(root, "Pause").GetComponent<Button>().interactable, "Terminal pause control is disabled");
                 string before = BoardFingerprint(session.Game.GetSnapshot());
                 long elapsed = session.ElapsedMilliseconds;
                 game.Clock += 4000;
                 game.PressCell(target);
                 Require(BoardFingerprint(session.Game.GetSnapshot()) == before && session.ElapsedMilliseconds == elapsed, "Terminal board presses cannot change rules or restart time");
-                f.Click(Find(root, "Enter fullscreen"));
-                f.Click(Find(root, "Overview"));
-                Require(Get<bool>(page, "fullscreen") && game.Viewport.IsOverview, "Terminal larger board retains fullscreen and overview actions");
-                f.Capture(won ? "won-overview" : "lost-overview");
-                game.PressAt(game.Viewport.BoardToViewport(new MinesweeperInputPosition(8, 8)), 100);
-                Require(!game.Viewport.IsOverview && session.Game.State == expected && session.ElapsedMilliseconds == elapsed,
-                    "Terminal overview location cannot revive the game");
+                if (difficulty > 0)
+                {
+                    f.Click(Find(root, "Enter fullscreen"));
+                    f.Click(Find(root, "Overview")); results.Advance(0);
+                    Require(Get<bool>(page, "fullscreen") && game.Viewport.IsOverview, "Terminal larger board retains fullscreen and overview actions");
+                    f.Capture(prefix + "-overview"); CheckInspectionGeometry(f, game);
+                    game.PressAt(game.Viewport.BoardToViewport(new MinesweeperInputPosition(8, 8)), 100);
+                    Require(!game.Viewport.IsOverview && session.Game.State == expected && session.ElapsedMilliseconds == elapsed,
+                        "Terminal overview location cannot revive the game");
+                }
                 Require(Get<GameObject>(page, "dialog") == null, "Terminal overview does not reopen the result");
                 page.SetForeground(false);
                 page.SetForeground(true);
@@ -709,23 +722,39 @@ namespace XanaduYonder.EditorTools
                     "Terminal foreground return is direct board viewing");
                 page.Save(); page.CheckEndState(); page.Save();
                 Require(Get<GameObject>(page, "dialog") == null, "Repeated terminal checks do not reopen dismissed results");
-                var record = game.Profile.GetRecord(1);
+                var record = game.Profile.GetRecord(difficulty);
                 Require(won ? record.Wins == 1 && record.Losses == 0 : record.Losses == 1 && record.Wins == 0,
                     "Repeated result viewing and saves account for exactly one outcome");
-                f.Capture(won ? "won-board" : "lost-board");
-                page.Back();page.StartGame(1,false);
+                f.Capture(prefix + "-board");
+                page.Back();page.StartGame(difficulty,false);
                 Require(game.Session.SessionId==session.SessionId&&game.Session.IsTerminal&&ResultPresentation.IsInspecting(page)&&
                     Get<GameObject>(page,"dialog")==null,"Viewing a restored completed slot opens the unchanged board with an explicit result entry");
                 results=page.GetComponent<ResultPresentation>();results.Advance(2f);
                 Require(Get<GameObject>(page,"dialog")==null,"Restored inspection stays on the board until explicitly reopened");
                 f.Click(Find(page.transform,"Reopen result"));
                 Require(Get<GameObject>(page,"dialog")!=null,"A restored completed slot can reopen its original result");
-                record=game.Profile.GetRecord(1);
+                record=game.Profile.GetRecord(difficulty);
                 Require(won?record.Wins==1&&record.Losses==0:record.Losses==1&&record.Wins==0,
                     "Restored result reopening does not record a second outcome");
                 page.Back();
                 Require(Get<bool>(page,"choosing"),"Result Back retains the original select-difficulty action");
             }
+        }
+
+        private static void CheckInspectionGeometry(Fixture f, PageFixture game)
+        {
+            var reopen = Find(game.Page.transform, "Reopen result");
+            Rect action = f.Bounds(reopen), root = f.Bounds(game.Root);
+            Require(action.xMin >= root.xMin - .5f && action.xMax <= root.xMax + .5f && action.yMin >= root.yMin - .5f && action.yMax <= root.yMax + .5f,
+                "Result entry stays inside the visible minefield page: " + action + " / " + root);
+            Require(!action.Overlaps(f.Bounds(Find(game.Page.transform, "Minesweeper viewport"))), "Result entry does not obscure the final minefield");
+            foreach (var text in game.Root.GetComponentsInChildren<Text>())
+                if (text.isActiveAndEnabled && !string.IsNullOrWhiteSpace(text.text) && text.color.a > 0 && !text.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds(text.rectTransform)), "Result entry does not overlap visible minefield text: " + text.text);
+            foreach (var button in game.Root.GetComponentsInChildren<Button>())
+                if (button.transform != reopen && !button.transform.IsChildOf(reopen))
+                    Require(!action.Overlaps(f.Bounds((RectTransform)button.transform)), "Result entry does not cover minefield control: " + button.name);
+            f.RequireTopHit(reopen, reopen.rect.size / 2);
         }
 
         private static void CheckChrome(Fixture f, Transform root)
@@ -1307,10 +1336,12 @@ namespace XanaduYonder.EditorTools
             private readonly Camera camera;
             private readonly RenderTexture target;
             private readonly EventSystem events;
+            private readonly int pixelWidth, pixelHeight;
 
-            public Fixture(int height)
+            public Fixture(int height, float captureScale = 1)
             {
                 Height = height;
+                pixelWidth = Mathf.RoundToInt(720 * captureScale); pixelHeight = Mathf.RoundToInt(height * captureScale);
                 owner = new GameObject("Minesweeper UI fixture");
                 Root = new GameObject("Fixture canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster)).GetComponent<RectTransform>();
                 Root.SetParent(owner.transform, false);
@@ -1327,7 +1358,7 @@ namespace XanaduYonder.EditorTools
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = UiFactory.Paper;
                 camera.cullingMask = ~(1 << 31);
-                target = new RenderTexture(720, height, 24);
+                target = new RenderTexture(pixelWidth, pixelHeight, 24);
                 target.Create();
                 camera.targetTexture = target;
                 var canvas = Root.GetComponent<Canvas>();
@@ -1378,14 +1409,14 @@ namespace XanaduYonder.EditorTools
                 var bounds = Bounds(rect);
                 var previous = RenderTexture.active;
                 RenderTexture.active = target;
-                var image = new Texture2D(720, Height, TextureFormat.RGB24, false);
+                var image = new Texture2D(pixelWidth, pixelHeight, TextureFormat.RGB24, false);
                 try
                 {
-                    image.ReadPixels(new Rect(0, 0, 720, Height), 0, 0);
+                    image.ReadPixels(new Rect(0, 0, pixelWidth, pixelHeight), 0, 0);
                     image.Apply();
                     var counts = new int[4];
-                    for (int y = Mathf.Max(0, Mathf.CeilToInt(bounds.yMin)); y < Mathf.Min(Height, Mathf.FloorToInt(bounds.yMax)); y++)
-                    for (int x = Mathf.Max(0, Mathf.CeilToInt(bounds.xMin)); x < Mathf.Min(720, Mathf.FloorToInt(bounds.xMax)); x++)
+                    for (int y = Mathf.Max(0, Mathf.CeilToInt(bounds.yMin)); y < Mathf.Min(image.height, Mathf.FloorToInt(bounds.yMax)); y++)
+                    for (int x = Mathf.Max(0, Mathf.CeilToInt(bounds.xMin)); x < Mathf.Min(image.width, Mathf.FloorToInt(bounds.xMax)); x++)
                     {
                         var pixel = image.GetPixel(x, y);
                         if (pixel.r < .35f && pixel.g < .5f && pixel.b < .45f)
@@ -1422,12 +1453,12 @@ namespace XanaduYonder.EditorTools
                 Flush();
                 var previous = RenderTexture.active;
                 RenderTexture.active = target;
-                var image = new Texture2D(720, Height, TextureFormat.RGB24, false);
+                var image = new Texture2D(pixelWidth, pixelHeight, TextureFormat.RGB24, false);
                 try
                 {
-                    image.ReadPixels(new Rect(0, 0, 720, Height), 0, 0);
+                    image.ReadPixels(new Rect(0, 0, pixelWidth, pixelHeight), 0, 0);
                     image.Apply();
-                    File.WriteAllBytes(Path.Combine(output, name + "-720x" + Height + ".png"), image.EncodeToPNG());
+                    File.WriteAllBytes(Path.Combine(output, name + "-" + pixelWidth + "x" + pixelHeight + ".png"), image.EncodeToPNG());
                 }
                 finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }

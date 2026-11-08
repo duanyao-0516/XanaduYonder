@@ -23,6 +23,7 @@ namespace XanaduYonder.EditorTools
         private static readonly StringBuilder Report = new StringBuilder();
         private static int checks;
         private static string output;
+        private static readonly System.Collections.Generic.List<string> terminalLayoutErrors=new System.Collections.Generic.List<string>();
         static TetrisUiChecks() { EditorApplication.playModeStateChanged += StateChanged; }
         public static void Run()
         {
@@ -40,7 +41,7 @@ namespace XanaduYonder.EditorTools
         {
             yield return null;
             int exit = 0; output = Path.GetFullPath("artifacts/validation/tetris-ui");
-            Directory.CreateDirectory(output); Report.Clear(); checks = 0;
+            Directory.CreateDirectory(output); Report.Clear(); terminalLayoutErrors.Clear(); checks = 0;
             var oldFont = UiFactory.Font;
             try
             {
@@ -48,6 +49,7 @@ namespace XanaduYonder.EditorTools
                 Require(UiFactory.Font != null, "Bundled CJK font available");
                 foreach (int height in new[] { 784, 688 })
                 using (var fixture = new Fixture(height)) { fixture.CheckLayout(); fixture.CheckStatesAndPersistence(); }
+                Require(terminalLayoutErrors.Count==0,"Terminal inspection layout: "+string.Join(" | ",terminalLayoutErrors));
                 CheckHostWiring();
                 Report.AppendLine("TETRIS_UI_CHECKS_PASS: " + checks + " assertions");
             }
@@ -237,22 +239,18 @@ namespace XanaduYonder.EditorTools
                 var max=page.Session.Snapshot;max.Score=long.MaxValue;((TetrisSaveData)Get(page,"data")).BestScore=long.MaxValue;Invoke(page,"SetSession",new TetrisGame(max),true);Invoke(page,"Refresh");Capture("max-score");
                 foreach(var text in frame.GetComponentsInChildren<Text>(true).Where(t=>t.text.Contains(long.MaxValue.ToString())))Require(text.horizontalOverflow!=HorizontalWrapMode.Wrap || text.resizeTextForBestFit,"Maximum score fits a single line");
                 var ended=new TetrisGame(11);int tries=0;while(!ended.GameOver && tries++<100)ended.Execute(TetrisCommand.HardDrop);
-                Require(ended.GameOver,"Real core produces terminal board");Invoke(page,"SetSession",ended,true);Invoke(page,"Refresh");Capture("game-over");
-                Require(page.Session.Phase==TetrisSessionPhase.Ended,"Terminal snapshot shows ended phase");
-                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Terminal board is visible before the result delay");
-                var presentation=page.GetComponent<ResultPresentation>();
-                presentation.Advance(0);presentation.Advance(.79f);
-                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Result remains hidden before 0.8 seconds");
-                presentation.Advance(.02f);
-                Require(page.View.OverlayRoot.gameObject.activeSelf,"Result opens after the delay through the production presentation path");
-                string terminal=JsonUtility.ToJson(page.Session.Snapshot);
-                Invoke(page,"InspectResult");Invoke(page,"Refresh");
-                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Inspect keeps the final board unobscured");
-                var reopen=page.GetComponentsInChildren<Button>().Single(b=>b.name=="Reopen result");
-                Require(page.View.ActionTargets.Values.All(t=>!t.GetComponent<Button>().interactable),"Inspecting final board cannot resume gameplay");
-                reopen.onClick.Invoke();Require(page.View.OverlayRoot.gameObject.activeSelf,"Explicit result entry reopens the result");
-                Require(JsonUtility.ToJson(page.Session.Snapshot)==terminal,"Inspect and reopen never mutate the final snapshot");
+                Require(ended.GameOver,"Real core produces terminal board");
+                CheckTerminalPresentation(ended,"terminal-lockout");
+                // The codec also accepts a blocked-spawn terminal slot from an earlier run.
+                var supported=new TetrisGame(11).GetSnapshot();supported.ActivePiece=TetrisPiece.O;
+                supported.X=3;supported.Y=0;supported.Rotation=0;supported.Cells=new TetrisPiece[TetrisSnapshot.Width*TetrisSnapshot.Height];
+                supported.Cells[2*TetrisSnapshot.Width+4]=TetrisPiece.J;supported.LockStarted=true;supported.LockTicks=TetrisRules.LockDelayTicks;
+                var locked=new TetrisGame(supported);locked.Execute(TetrisCommand.HardDrop);
+                var blocked=locked.GetSnapshot();blocked.ActivePiece=TetrisPiece.T;
+                Require(blocked.TryValidate(out var terminalReason),"Blocked spawn terminal save remains valid: "+terminalReason);
+                CheckTerminalPresentation(new TetrisGame(blocked),"terminal-restored-blocked-spawn");
                 page.Suspend();Require(!page.View.OverlayRoot.gameObject.activeSelf,"Suspending clears the presented result and starts no immediate reopen");
+                Require(!ResultPresentation.IsInspecting(page)&&!page.GetComponentsInChildren<Button>().Any(button=>button.name=="Reopen result"),"Suspend clears stale terminal inspection controls");
                 page.Leave();Require(!page.gameObject.activeSelf,"Leave deactivates page");page.Enter();Require(page.Session.Phase==TetrisSessionPhase.Ended,"Reentry cannot resume terminal game");
                 string file=Path.Combine(directory,"tetris-v1.json");
                 string future="{\"schemaVersion\":2}";File.WriteAllText(file,future);Invoke(page,"Load");Invoke(page,"Begin");page.Save();Capture("future-save");
@@ -265,11 +263,60 @@ namespace XanaduYonder.EditorTools
                 Require(File.ReadAllText(file)=="{","Corrupt save stays intact before explicit reset");
                 Require(frame.GetComponentsInChildren<Text>(true).Any(t=>t.text=="重置损坏存档"),"Corrupt save exposes explicit reset action");
             }
+            private void CheckTerminalPresentation(TetrisGame ended,string name)
+            {
+                Invoke(page,"SetSession",ended,true);Invoke(page,"Refresh");Capture(name+"-delay");
+                Require(page.Session.Phase==TetrisSessionPhase.Ended&&!page.View.OverlayRoot.gameObject.activeSelf,"Terminal board is visible during delay: "+name);
+                var presentation=page.GetComponent<ResultPresentation>();presentation.Advance(0);presentation.Advance(.4f);
+                page.SetForeground(false);presentation.Advance(30f);
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Background cannot consume terminal delay: "+name);
+                page.SetForeground(true);Invoke(page,"Refresh");presentation.Advance(0);presentation.Advance(.79f);
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Result remains hidden before 0.8 fresh foreground seconds: "+name);
+                presentation.Advance(.02f);Capture(name+"-result");
+                Require(page.View.OverlayRoot.gameObject.activeSelf,"Result opens through the production delay: "+name);
+                string terminal=JsonUtility.ToJson(page.Session.Snapshot);
+                Click(frame.GetComponentsInChildren<Button>().Single(button=>button.name=="Tetris inspect result"));
+                Invoke(page,"Refresh");presentation.Advance(0);
+                Require(!page.View.OverlayRoot.gameObject.activeSelf,"Inspect keeps the final board unobscured: "+name);
+                var reopen=page.GetComponentsInChildren<Button>().Single(button=>button.name=="Reopen result");
+                Capture(name+"-inspect");CheckInspectionBounds(reopen,name);
+                Require(page.View.ActionTargets.Values.All(t=>!t.GetComponent<Button>().interactable),"Final board disables gameplay: "+name);
+                presentation.Advance(2);page.Session.Advance(.2);
+                Require(!page.View.OverlayRoot.gameObject.activeSelf&&JsonUtility.ToJson(page.Session.Snapshot)==terminal,"Inspection stays frozen without automatic reopen: "+name);
+                Click(reopen);Capture(name+"-reopen");
+                Require(page.View.OverlayRoot.gameObject.activeSelf&&JsonUtility.ToJson(page.Session.Snapshot)==terminal,"Real result entry preserves terminal state: "+name);
+            }
+            private void CheckInspectionBounds(Button reopen,string context)
+            {
+                Canvas.ForceUpdateCanvases();Rect entry=Bounds(reopen.GetComponent<RectTransform>()),safe=Bounds(frame);
+                CheckTerminalBounds(entry.xMin>=safe.xMin-.5f&&entry.xMax<=safe.xMax+.5f&&entry.yMin>=safe.yMin-.5f&&entry.yMax<=safe.yMax+.5f,context+" entry stays inside safe page");
+                CheckTerminalBounds(!entry.Overlaps(Bounds(page.View.BoardRect)),context+" entry avoids board");
+                foreach(var button in frame.GetComponentsInChildren<Button>())
+                    if(button!=reopen&&button.gameObject.activeInHierarchy)
+                        CheckTerminalBounds(!entry.Overlaps(Bounds(button.GetComponent<RectTransform>())),context+" entry avoids control "+button.name);
+                foreach(var text in frame.GetComponentsInChildren<Text>())
+                    if(text.gameObject.activeInHierarchy&&text.enabled&&text.color.a>0&&!string.IsNullOrWhiteSpace(text.text)&&!text.transform.IsChildOf(reopen.transform))
+                        CheckTerminalBounds(!entry.Overlaps(Bounds(text.rectTransform)),context+" entry avoids visible text "+text.name+"="+text.text);
+            }
+            private void CheckTerminalBounds(bool valid,string message)
+            {checks++;if(!valid){terminalLayoutErrors.Add("388x"+height+" "+message);Report.AppendLine("FAIL "+message);}}
+            private void Click(Button button)
+            {
+                SetLayer(frame.parent);Canvas.ForceUpdateCanvases();camera.Render();Canvas.ForceUpdateCanvases();
+                var rect=button.GetComponent<RectTransform>();var data=new PointerEventData(EventSystem.current)
+                {position=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center)),button=PointerEventData.InputButton.Left};
+                var hits=new System.Collections.Generic.List<RaycastResult>();EventSystem.current.RaycastAll(data,hits);
+                Require(hits.Count>0&&(hits[0].gameObject==button.gameObject||hits[0].gameObject.transform.IsChildOf(button.transform)),
+                    "Top rendered UGUI hit reaches "+button.name+"; actual="+(hits.Count==0?"none":hits[0].gameObject.name));
+                ExecuteEvents.Execute(button.gameObject,data,ExecuteEvents.pointerClickHandler);
+            }
             private void Capture(string name)
             {
-                page.View.RefreshLayout();Canvas.ForceUpdateCanvases();camera.Render();var old=RenderTexture.active;RenderTexture.active=texture;
+                page.View.RefreshLayout();SetLayer(frame.parent);Canvas.ForceUpdateCanvases();camera.Render();var old=RenderTexture.active;RenderTexture.active=texture;
                 var image=new Texture2D(388,height,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,388,height),0,0);image.Apply();
-                File.WriteAllBytes(Path.Combine(output,name+"-388x"+height+".png"),image.EncodeToPNG());Object.DestroyImmediate(image);RenderTexture.active=old;
+                string path=Path.Combine(output,name+"-388x"+height+".png");File.WriteAllBytes(path,image.EncodeToPNG());
+                if(name.StartsWith("terminal-",StringComparison.Ordinal))Report.AppendLine("SCREENSHOT "+path);
+                Object.DestroyImmediate(image);RenderTexture.active=old;
             }
             public void Dispose(){page.Leave();Object.DestroyImmediate(root);texture.Release();Object.DestroyImmediate(texture);if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }

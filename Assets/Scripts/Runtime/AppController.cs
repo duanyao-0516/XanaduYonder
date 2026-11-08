@@ -1094,7 +1094,9 @@ namespace XanaduYonder.Runtime
             gamePage = root.gameObject;
             var navigation = UiFactory.Band(root, "Game navigation", 0, 92, 0);
             UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, ShowLobby);
-            UiFactory.Label(navigation, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var brand = UiFactory.Label(navigation, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(navigation, "Result review slot", 244, 34, 232, 58), brand);
             UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
             var introduction = UiFactory.Band(root, "Game introduction", 116, 156, .16f);
             UiFactory.Label(introduction, "2048", 56, 0, 608, 111, 86, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);

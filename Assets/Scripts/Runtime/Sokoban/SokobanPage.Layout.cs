@@ -26,6 +26,8 @@ namespace XanaduYonder.Runtime.Sokoban
             NavButton("Settings",UiIconKind.Settings,(388*.95f-44)*s,Settings);
             var brand=Label(navigation,"XANADU / YONDER",(388-180)/2*s,12*s,180*s,32*s,10.3f,UiFactory.Muted,TextAnchor.MiddleCenter);
             brand.name="Sokoban brand";
+            ResultPresentation.For(this, root).SetReopenSlot(
+                UiFactory.Rect(navigation, "Result review slot", 128*s, 6*s, 132*s, 44*s), brand);
             title=Label(root,"推箱子",19.5f*s,63*s,349*s,38.421875f*s,26.5f,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold); title.fontSize=49; title.name="Sokoban title";
             var weight=title.gameObject.AddComponent<Outline>(); weight.effectColor=UiFactory.Ink; weight.effectDistance=new Vector2(.25f*s,.25f*s); weight.useGraphicAlpha=true;
             information=UiFactory.Rect(root,"Sokoban information",19.5f*s,110.421875f*s,349*s,45*s);

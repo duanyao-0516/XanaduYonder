@@ -24,7 +24,7 @@ namespace XanaduYonder.EditorTools
     // Production UGUI rendering and behavior checks. Sudoku never opens a store;
     // Jump initializes with a read-only load, then its store is detached before callbacks.
     [InitializeOnLoad]
-    public static class MiniGameUiChecks
+    public static partial class MiniGameUiChecks
     {
         private const string Pending = "Xanadu.MiniGameUiChecks.Pending";
         private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -60,6 +60,7 @@ namespace XanaduYonder.EditorTools
             var oldFont = UiFactory.Font;
             output = Path.GetFullPath(Path.Combine(Application.dataPath, "../artifacts/validation/minigame-ui"));
             Directory.CreateDirectory(output);
+            foreach (var stale in Directory.GetFiles(output, "terminal-*.png")) File.Delete(stale);
             try
             {
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
@@ -71,6 +72,14 @@ namespace XanaduYonder.EditorTools
                     CheckZumaHostInput(fixture);
                     CheckJump(fixture);
                     CheckSudoku(fixture);
+                    for (int difficulty = 0; difficulty < 4; difficulty++)
+                    {
+                        CheckSudokuTerminal(fixture, true, 1, difficulty);
+                        CheckSudokuTerminal(fixture, false, 1, difficulty);
+                        CheckSudokuTerminal(fixture, true, 500, difficulty);
+                    }
+                    Check2048Terminals(fixture);
+                    CheckWatermelonTerminals(fixture);
                     CheckIcons(fixture);
                     CheckSheep(fixture);
                     report.AppendLine("PASS 720x" + height + ": lobby order, jump callbacks, Sudoku counters/modal/input/timer, icon meshes, sheep renders");
@@ -458,6 +467,55 @@ namespace XanaduYonder.EditorTools
             finally { Object.DestroyImmediate(root.gameObject); }
         }
 
+        private static void CheckSudokuTerminal(Fixture f, bool won, int level, int difficulty)
+        {
+            var root = f.Page("Sudoku terminal fixture");
+            var footer = UiFactory.Label(UiFactory.Band(f.Root, "Status", 1278, 34, 1), "", 56, 0, 608, 34, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var page = root.gameObject.AddComponent<SudokuPage>();
+            var profile = new SudokuProfile();
+            var catalog = SudokuCatalog.Parse(Resources.Load<TextAsset>("Sudoku/puzzles").text);
+            var puzzle = catalog.Get(difficulty, level);
+            Set(page, "root", root); Set(page, "profile", profile); Set(page, "catalog", catalog);
+            Set(page, "session", new SudokuSession(profile.CreateGame(puzzle), false));
+            Set(page, "acceptsInput", (Func<bool>)(() => true)); Set(page, "returnLobby", (Action)(() => {}));
+            Set(page, "openSettings", (Action)(() => {})); Set(page, "setStatus", (Action<string>)(value => footer.text = value));
+            Set(page, "soundEnabled", (Func<bool>)(() => false)); Set(page, "hapticsEnabled", (Func<bool>)(() => false));
+            Set(page, "feedback", root.gameObject.AddComponent<GameFeedback>());
+            Invoke(page, "BuildGame"); Invoke(page, "BuildSelection");
+            try
+            {
+                page.Enter(); Invoke(page, "StartLevel", puzzle, true);
+                var session = Get<SudokuSession>(page, "session");
+                session.Tick(87);
+                for (int i = 0; i < 81 && session.CanPlay; i++)
+                {
+                    if (session.Game.IsGiven(i)) continue;
+                    session.SelectCell(i); session.SelectDigit(won ? puzzle.Solution[i] : puzzle.Solution[i] % 9 + 1);
+                }
+                Require(session.Game.Phase == (won ? SudokuPhase.Won : SudokuPhase.Lost), "Sudoku reaches its real terminal rules state");
+                Invoke(page, "Refresh"); page.CheckEndState();
+                var results = page.GetComponent<ResultPresentation>();
+                string name = "terminal-sudoku-difficulty-" + difficulty + "-" + (won ? "won" : "lost") + "-level-" + level;
+                f.Capture(name + "-waiting");
+                results.Advance(0); results.Advance(.81f);
+                f.Capture(name + "-result");
+                f.Click((RectTransform)FindCaption(root, "查看盘面").transform);
+                f.Capture(name + "-inspect");
+                f.CheckReviewLayout(root);
+                f.Click((RectTransform)FindCaption(root, "查看结算").transform);
+                f.Capture(name + "-reopen");
+                Require(Get<GameObject>(page, "dialog") != null && !session.CanPlay, "Sudoku reopen preserves terminal state");
+            }
+            finally { Object.DestroyImmediate(root.gameObject); Object.DestroyImmediate(footer.transform.parent.gameObject); }
+        }
+
+        private static Button FindCaption(Transform root, string caption)
+        {
+            foreach (var button in root.GetComponentsInChildren<Button>())
+                if (button.GetComponentInChildren<Text>()?.text == caption) return button;
+            throw new InvalidOperationException("Missing button: " + caption);
+        }
+
         private static void CheckCounter(SudokuPage page, int filled, int remaining, string context)
         {
             Require(Get<Text>(page, "remainingText").text == filled + "/" + remaining, "Filled/remaining " + context);
@@ -639,6 +697,30 @@ namespace XanaduYonder.EditorTools
                 try { image.ReadPixels(region, 0, 0); image.Apply(); return image.GetPixels32(); }
                 finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }
+            public void CheckReviewLayout(RectTransform page)
+            {
+                Flush();
+                var button = FindCaption(page, "查看结算");
+                var bounds = ScreenRect((RectTransform)button.transform);
+                foreach (var label in Root.GetComponentsInChildren<Text>())
+                {
+                    if (!label.enabled || string.IsNullOrWhiteSpace(label.text) || label.transform.IsChildOf(button.transform)) continue;
+                    Require(!bounds.Overlaps(ScreenRect(label.rectTransform)), "Review button does not cover visible text: " + label.text);
+                }
+                foreach (var other in Root.GetComponentsInChildren<Button>())
+                {
+                    if (!other.enabled || other == button || other.transform.IsChildOf(button.transform)) continue;
+                    Require(!bounds.Overlaps(ScreenRect((RectTransform)other.transform)), "Review button does not cover another control: " + other.name);
+                }
+                foreach (var region in page.GetComponentsInChildren<RectTransform>())
+                {
+                    if (region.name != "Sudoku board" && region.name != "Swipe board" && region.name != "Bowl") continue;
+                    Require(!bounds.Overlaps(ScreenRect(region)), "Review button does not cover the playfield: " + region.name);
+                }
+                Require(bounds.xMin >= 0 && bounds.yMin >= 0 && bounds.xMax <= 720 && bounds.yMax <= Height,
+                    "Review control stays entirely in the rendered frame");
+            }
+
             public void Capture(string name, bool requireVisibleIcons = false)
             {
                 Flush();
