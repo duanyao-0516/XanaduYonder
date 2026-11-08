@@ -81,7 +81,7 @@ Xcode 必须仍有可用的账号登录状态。重新构建后应核对描述�
 - 新包的 ARM64、应用标识、设备覆盖、描述文件期限与严格签名校验通过；实际签名叶证书包含在描述文件中。二进制中未发现诊断探针标记。报告为 `artifacts/ios/signed-help-app-verification.json`、`help-signature-detail.json`。本次复用了原签名授权，期限仍为北京时间 2026-11-15 00:12:20。
 - 已覆盖安装到 iPhone 17 Pro，没有卸载应用；安装前后 Documents 中 29 份存档与备份文件逐字节一致。保留声音关闭、触感开启的用户选择。证据为 `artifacts/ios/device-install-help.json`、`help-save-verification.json`。
 - IPA 为 `artifacts/builds/XanaduYonder-0.9.5-ios-native-help.ipa`，281793286 字节，ZIP 完整性检查通过，SHA-256 为 `8c9c8667acd835feb9013b1cc21fefacf7d1259a009f5c7b02e289baa6d286d7`。旧的初装包与反馈候选包均保留。
-- 安装后的电脑端启动暂被手机锁屏拒绝；等待解锁后补充本包的启动证据。此前声音与系统触感的实机验收结论不冒充本包重新验收。
+- 安装后的首次启动被手机锁屏拒绝；用户解锁后，同一包于 14:42 成功启动。日志确认存档加载、大厅启动流程完成，以及一次音频输出恢复 `session=1, stopped=True, started=True`，后续进程检查确认 PID 1098 仍在运行。证据为 `artifacts/logs/ios-help-console.log`、`artifacts/ios/device-help-running-process.json`。这是启动与调用链验证，此前声音与系统触感的实机验收结论不冒充本包重新听感／震感验收。
 
 ## 尚待验证
 
