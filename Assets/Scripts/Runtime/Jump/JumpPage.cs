@@ -239,7 +239,7 @@ namespace XanaduYonder.Runtime.Jump
 
         private void ShowHelp()
         {
-            showDialog("找到跳跃的节奏", "按住游戏区域蓄力，松手起跳。\n按得越久，跳得越远。\n落台得 1 分；连续中心得 2、4、6…分。\n落空结束，短跳留在原台可继续。", "知道了", CheckEndState, null, null);
+            showDialog("找到跳跃的节奏", "按住蓄力，松手起跳；按越久跳越远。\n落台得1分；连续中心得2、4、6…分。\n落空结束，短跳留在原台可继续。\n落地或落空有短触感；说明见大厅设置。", "知道了", CheckEndState, null, null);
         }
 
         private void RefreshScores()

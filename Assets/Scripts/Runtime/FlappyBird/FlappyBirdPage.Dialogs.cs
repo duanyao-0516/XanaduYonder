@@ -80,16 +80,17 @@ namespace XanaduYonder.Runtime.FlappyBird
         }
         private void ShowHelpDialog()
         {
-            var panel=BeginDialog(DialogKind.Help,386);
+            var panel=BeginDialog(DialogKind.Help,468);
             DialogHeading(panel,"怎么飞？",26);
             var close=ActionButton(panel,"Close help",256,8,36,36,()=>{ CloseDialog(); Refresh(); },0,true);
             var closeIcon=UiFactory.Rect(close.transform,"Close symbol",9,9,18,18).gameObject.AddComponent<UiIconGraphic>(); closeIcon.Kind=UiIconKind.Close; closeIcon.color=UiFactory.Muted; closeIcon.raycastTarget=false;
             Rule(panel,"1","轻点场地，小鸟就向上拍翼一次。松手后自然下落。",82,48);
             Rule(panel,"2","穿过管道的空隙，每通过一组得 1 分。碰到管道或地面，本局结束。",141,48);
             Rule(panel,"3","随时暂停。回到前台后由你决定何时继续。",201,48);
-            UiFactory.Panel(panel,"Credit divider",24,260,252,1,UiFactory.Hex("DDE3D7"),false);
-            Label(panel,"素材：By Peleila · Flappy bird\n使用作者列出的 CC0 许可选项。",24,272,252,42,10,UiFactory.Muted,TextAnchor.UpperLeft);
-            DialogButton(panel,"知道了",320,()=>{ CloseDialog(); Refresh(); });
+            Rule(panel,"4","触感开启时，得分或碰撞结束会短震，拍翼不触发。\n声音与触感说明见大厅设置。",260,72);
+            UiFactory.Panel(panel,"Credit divider",24,342,252,1,UiFactory.Hex("DDE3D7"),false);
+            Label(panel,"素材：By Peleila · Flappy bird\n使用作者列出的 CC0 许可选项。",24,354,252,42,10,UiFactory.Muted,TextAnchor.UpperLeft);
+            DialogButton(panel,"知道了",402,()=>{ CloseDialog(); Refresh(); });
         }
         private void Rule(RectTransform parent,string number,string copy,float y,float height)
         {

@@ -1237,7 +1237,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowHelp()
         {
-            ShowDialog("让相同的数字相遇", "向一个方向滑动整个棋盘。\n相同的方块相遇，就合成两倍数字。\n每次有效移动后，会出现一个新方块。\n合成 2048 即可获胜，也能继续挑战。", "知道了", CheckEndState);
+            ShowDialog("让相同的数字相遇", "滑动棋盘，相同方块相遇时合成两倍数字。\n每次有效移动后，会出现一个新方块。\n合成 2048 即可获胜，也能继续挑战。\n合并时有短触感；说明见大厅设置。", "知道了", CheckEndState);
         }
 
         private void OpenSettings() { OpenSettings(null); }
@@ -1246,7 +1246,7 @@ namespace XanaduYonder.Runtime
         {
             Action finish = () => { CloseModal(); if (after != null) after(); else CheckEndState(); };
             var panel = CreateModal("简单一点，刚刚好");
-            UiFactory.Label(panel, "设置在所有游戏中共用", 32, 104, 532, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Button(panel, "声音与触感说明", 32, 104, 532, 54, () => ShowFeedbackHelp(after));
             UiFactory.Button(panel, "声音  ·  " + (data.SoundEnabled ? "开启" : "关闭"), 32, 178, 532, 70, () =>
             {
                 data.SoundEnabled = !data.SoundEnabled;

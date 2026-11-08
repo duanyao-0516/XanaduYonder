@@ -92,6 +92,8 @@ namespace XanaduYonder.Runtime
                     }));
                 }
             }
+#elif UNITY_IOS && !UNITY_EDITOR
+            IOSHaptics.Pulse();
 #endif
         }
 

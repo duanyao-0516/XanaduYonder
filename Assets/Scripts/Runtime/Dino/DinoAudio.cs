@@ -67,6 +67,8 @@ namespace XanaduYonder.Runtime.Dino
                         view.Call<bool>("performHapticFeedback", 1);
                 }));
             }
+#elif UNITY_IOS && !UNITY_EDITOR
+            IOSHaptics.Pulse();
 #endif
         }
 
