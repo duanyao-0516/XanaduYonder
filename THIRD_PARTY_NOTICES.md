@@ -4,16 +4,10 @@ The project's original code is licensed under MIT. Third-party software and asse
 
 ## Lobby icons
 
-- The compact lobby and display controls use `lucide-static@1.17.0`, with original SVG geometry and the project's green stroke color. Kingdom Rush and Age of War use the existing `castle` and `swords` icons from the same pinned package.
+- The compact lobby and display controls use `lucide-static@1.17.0`, with original SVG geometry and the project's green stroke color.
 - The complete ISC license, including the package's notice for Feather-derived icons, is retained in [the lobby asset license](docs/design/lobby-v2/lobby-ui-v2-assets/LICENSE). Source URLs, exported PNG hashes and resource mappings are recorded in [the asset map](docs/design/lobby-v2/asset-map.json).
-- The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma, Happy Ball and Kingdom Rush lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
+- The Switch-style fallback controller is original project artwork and is also used for the idiom game's compact icon. User-supplied Zuma and Happy Ball lobby images are retained unchanged; this icon notice does not change the rights of those game assets.
 
-## Fruit Slice (25 · 切水果大师, development preview)
-
-- Source: [4399 game 235576](https://www.4399.com/flash/235576.htm), retrieved on 2026-11-01. The original Laya game scripts, engine libraries, models, textures, scenes, levels and audio retain their original rights; the repository's license does not relicense this content.
-- Fixed original inputs and the download manifest are tracked in `ThirdParty/FruitSliceSource/`; the complete offline runtime is tracked in `Assets/StreamingAssets/fruit-slice/`. `ThirdParty/FruitSliceContent/provenance.json` retains the original acquisition identity. `scripts/fruit-slice/` generates and validates the offline package. [Content notes](ThirdParty/FruitSliceContent/README.md) describe the removal of advertising, telemetry, platform navigation, consent UI and the currency system, plus touch/persistence/lifecycle adaptation.
-- The unchanged large lobby logo uses the small icon from the game's 4399 listing; provenance is recorded in `ThirdParty/FruitSliceHost/artwork.json`. The compact sliced-watermelon line icon is original project artwork matching the existing green rounded-stroke icons.
-- The Unity lobby adapter, Android WebView host, offline entry and content transformation scripts are project integration code. Download completeness, removed files and validation limits are documented in [resource research](docs/research/2026-11-01-fruit-slice-package.md) and [integration verification](docs/verification-fruit-slice.md).
 
 ## Aircraft Fire 2.5 (20 · 飞机大战, development preview)
 
@@ -22,13 +16,6 @@ The project's original code is licensed under MIT. Third-party software and asse
 - The APK's artwork and audio retain their original rights; the repository's MIT license does not apply to these assets. This local reference does not establish an open-source license or redistribution authorization for those materials. The new C# implementation and compact lobby aircraft icon are local project work.
 - No original native binary, DEX, advertising/purchase SDK, online account or leaderboard integration, notification service, recommendation link, or unrelated menu asset is imported.
 
-## Kingdom Rush / FL8.0.5 (19 · 王国保卫战)
-
-- Source: the project owner's downloaded `FL8.0.5手机Lite版-一键安装直玩，更新自动接档.apk`, pinned by SHA-256 in [runtime provenance](ThirdParty/KingdomRushRuntime/provenance.json). Kingdom Rush game content remains attributable to Ironhide and the FL modification's respective contributors; the repository's MIT license does not relicense their game code, artwork, fonts or audio. This integration was requested for personal offline learning and play.
-- The accepted first-generation content is retained under the [content preservation contract](ThirdParty/KingdomRushContent/README.md). The start-screen hook and new help module are local integration code; they reuse the existing Chinese font and music/sound-effects settings. No game font is replaced or newly relicensed.
-- `Assets/Resources/KingdomRush/Logo.png` is the new logo supplied by the project owner for this integration, preserved without cropping, masking or re-encoding. The separate compact castle icon follows the Lucide notice above.
-- The Android runtime imports the pinned original native binaries; it is not presented as a complete source rebuild of the author's custom runtime. Source boundaries and provenance are documented in [the runtime README](ThirdParty/KingdomRushRuntime/README.md). Retained licenses include [SDL](ThirdParty/KingdomRushRuntime/LICENSE.SDL.txt), [LÖVE Android](ThirdParty/KingdomRushRuntime/LICENSE.love-android.txt) and [LuaJIT](ThirdParty/KingdomRushRuntime/LICENSE.LuaJIT.txt); each component retains its original terms.
-- User acceptance, the bounded menu/lobby changes, and validation for the master integration are recorded in [the verification record](docs/verification-kingdom-rush.md). Merging source into master does not create a new GitHub Release.
 
 ## Sokoban archived design and content sources
 
@@ -195,20 +182,11 @@ SOFTWARE.
 - [Assets/Resources/LinkMatch/manifest.json](Assets/Resources/LinkMatch/manifest.json) records each stable asset ID, upstream path and fixed-commit URL, dimensions, byte count and SHA-256, plus the original license hash. The prototype retains the historical twelve-image provenance under `docs/prototypes/link-match/assets/` and the full 48-image ordered source manifest at `docs/prototypes/link-match-density/manifest.json`; new prototype images are referenced from that sibling directory. The full upstream collection is not bundled.
 - Only the listed artwork is reused. Tile backgrounds, selection borders, connecting paths, rules, UGUI integration and persistence are implemented locally; no upstream game implementation is imported. Runtime assets load offline, and existing Watermelon images, level ordering and GUIDs are unchanged.
 
-## Age of War / Age of War 2
 
-- Fixed references: [Age of War, 7k7k 15793](https://www.7k7k.com/swf/15793.htm), SHA-256 `5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1`; [Age of War 2, 7k7k 28601](https://www.7k7k.com/swf/28601.htm), SHA-256 `b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c`. Downloaded 2026-10-30.
-- Original credits, logos, artwork, animation, fonts, music and sound remain attributable to their original creators and publishers, including Louissi, Max Games and music by Waterflame (including Glorious Morning). At the user's request, promotional screens and external navigation are removed from the mobile interface; original attribution remains recorded in this notice. This repository's code license does not grant independent rights to those materials.
-- `Assets/Resources/AgeOfWar/{One,Two}` contains offline-derived sprites, source fonts and audio. `scripts/age-of-war/` records source hashes, character/frame identities, conversion recipes, source and derived audio hashes, sample windows, and reproducible output validation. MP3 streams unsupported by the Unity importer are decoded to PCM; source latency/sample-window adjustments are documented independently.
-- The native C# implementations under `Assets/Scripts/Core/AgeOfWar` are ports of the fixed originals' decompiled rules and animation callbacks. The Unity host, input mapping, asset loader and lifecycle adapter are project integration code. Original quirks are retained where supported by source and runtime evidence.
-- FFDec and Ruffle are offline conversion/reference tools only. Original SWF files, the Flash runtime and Ruffle/WebAssembly are not included in the Android player. Their use for verification does not turn these proprietary game resources into open-source assets. See [asset provenance](docs/age-of-war-assets.md) and [verification scope](docs/verification-age-of-war.md).
+## Source campaign in native Gold Miner
 
-## Classic Gold Miner H5 adaptations
-
-- Sources: [solo, 4399 230816](https://www.4399.com/flash/230816.htm) and [duo, 4399 232532](https://www.4399.com/flash/232532.htm), downloaded on 2026-11-01 at the user's request. Original archive hashes and adaptation scope are recorded in [the content README](ThirdParty/ClassicGoldMinerContent/README.md).
-- The original game code, graphics, font and sound retain their original creators' and publishers' rights, including the solo game's FunnyGames/Fabrique attribution. Public access to the pages does not itself establish a redistribution license. The repository's MIT license applies to its original integration code and does not relicense these games or assets.
-- The bundled Phaser 2.4.6 and Phaser 3.55.2 engines retain their upstream copyright/license notices, including their incorporated library notices. Android uses the user's installed system WebView; no Chrome/Chromium engine is copied into this feature.
-- Advertising/promotional startup, analytics, external navigation and website wrappers are excluded from the adapted gameplay. Source attribution remains here. The old Unity Gold Miner implementation and assets described above remain a separate lobby item; its original source-archive exclusion statement applies to that C# implementation, not this new H5 item.
+- Sources: [solo, 4399 230816](https://www.4399.com/flash/230816.htm) and [duo, 4399 232532](https://www.4399.com/flash/232532.htm). The standalone classic HTML5 game and its Android runtime have been removed. The native game retains the 30 solo layouts and 30 cooperative levels, source rule data, and the required source artwork under `Assets/Resources/GoldMiner/Source/`.
+- Original data and artwork retain their creators' rights, including the solo game's FunnyGames/Fabrique attribution; the repository's MIT license does not relicense them. Input hashes, object counts and migration evidence are recorded in the source campaign manifest and the native Gold Miner migration documentation. The new C# host and migration adapters are local integration code.
 
 ## Zhaoyun Adou (23 · 赵云与阿斗)
 
@@ -222,7 +200,7 @@ SOFTWARE.
 - Original gameplay code, levels, graphics, fonts, animation and audio remain attributable to their original creators, including Unept and the Haxe/OpenFL/Stencyl runtime contributors. This repository's MIT license does not relicense the original game materials. Existing upstream notices in the source are retained.
 - The original `lib/default.pak` and 19 MP3 files are retained byte for byte. Local integration patches remove platform SDKs, advertising/telemetry and external navigation, and adapt input, lifecycle and persistence for the Android collection. Poki SDK files and research fixtures are not included in the production game package.
 - `Assets/Resources/LevelDevil/Logo.png` is the user-supplied 72×72 yellow game logo, preserved unchanged (SHA-256 `1c5a296e47ca21413919f479df696b5373fd34f769c6f5e87c65d9d786a06b58`). The small green line door icon is original project artwork matching the existing lobby style; see [artwork provenance](docs/level-devil-lobby-art.md).
-- The host uses the device's system WebView and AndroidX WebKit 1.18.0. AndroidX is distributed under the Apache License 2.0; the WebView browser engine is supplied by the device and is not bundled in this APK.
+- Android uses the device's system WebView and AndroidX WebKit 1.18.0; iOS uses the system WKWebView. AndroidX is distributed under the Apache License 2.0; the WebView browser engine is supplied by the device and is not bundled in this APK.
 
 ## Cut the Rope (21 · 割绳子)
 

@@ -25,7 +25,7 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅按固定分类纵向滚动，支持双列卡片、分类目录、单列大卡；直接点击整张卡片进入游戏。规则、公共设置和各自存档逻辑均与手机共用。
 
-大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。战争进化史已经是共用系列入口；王国保卫战是 Android 专属入口。当前大厅为 Android 26 项、iOS 20 项，详见[平台构建矩阵](building.md)。
+大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。当前大厅两端均为 22 项，三个网页游戏分别使用各平台 WebView，详见[平台构建矩阵](building.md)。
 
 ## 命令
 
@@ -74,7 +74,7 @@ scripts/test-link-match-ui.sh
 ./scripts/build.sh android --install DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查包含战争进化史系列入口的Android 目标下二十五张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查当前二十二张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -381,7 +381,7 @@ scripts/build-gomoku-validation.sh
 两个 Unity 入口均 source `scripts/gomoku-unity-environment.sh`，使用本工作树的 `Library/GomokuGradle` 及临时私有 ADB 端口。不复用或链接其他工作树的 Library、Temp 和构建产物，不停止共享 ADB / Gradle 服务。安装时明确指定已确认设备序列号和测试包，设备未连接时不要把编辑器测试称为真机验证。实际证据及限制见[五子棋验证记录](verification-gomoku.md)。
 
 
-本次发布入口为 [v0.9.1](releases/v0.9.1.md)，保留十九个大厅入口，修复部分小米系统中跳一跳静止长按无法起跳的问题；正式包与设备验证边界见该记录。[v0.9.0](releases/v0.9.0.md) 新增战争进化史两代与王国保卫战初代，其三视图、大厅清单和菜单内容检查保留在原发布记录。历史 [v0.7.0](releases/v0.7.0.md) 新增四款游戏，发布时未追加整套回归；[v0.6.0](releases/v0.6.0.md) 包含十三款游戏，各版本当时的发布边界保持原记录。黄金矿工开发问题、知识与维护规范简述见[开发复盘](gold-miner-development-notes.md)。
+历史 [v0.9.1](releases/v0.9.1.md) 保留十九个大厅入口，修复部分小米系统中跳一跳静止长按无法起跳的问题；正式包与设备验证边界见该记录。[v0.9.0](releases/v0.9.0.md) 新增战争进化史两代与王国保卫战初代，其三视图、大厅清单和菜单内容检查保留在原发布记录。历史 [v0.7.0](releases/v0.7.0.md) 新增四款游戏，发布时未追加整套回归；[v0.6.0](releases/v0.6.0.md) 包含十三款游戏，各版本当时的发布边界保持原记录。黄金矿工开发问题、知识与维护规范简述见[开发复盘](gold-miner-development-notes.md)。
 
 
 ## 数字华容道独立验证与开发复盘

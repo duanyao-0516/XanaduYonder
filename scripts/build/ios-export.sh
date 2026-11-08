@@ -4,7 +4,7 @@ set -euo pipefail
 if [[ $# -eq 1 && ( $1 == --help || $1 == -h ) ]]; then
     cat <<'HELP'
 Usage: scripts/build.sh ios
-Export the Unity-native games to artifacts/ios/xcode using a filtered project copy.
+Export the Unity games and offline WKWebView games to artifacts/ios/xcode using a filtered project copy.
 This command does not compile, sign, or install an iOS application with Xcode.
 
 Environment:
@@ -91,4 +91,5 @@ else
     printf 'Could not write Unity export log: %s\n' "$LOG_FILE" >&2
     exit "${statuses[1]}"
 fi
+python3 "$PROJECT_ROOT/scripts/verify-removed-games.py" --source-root "$PROJECT_ROOT" --artifact "$XANADU_IOS_XCODE_PATH" --packed-assets "$IOS_ROOT/packed-assets.txt"
 printf 'Xcode project: %s\n' "$XANADU_IOS_XCODE_PATH/Unity-iPhone.xcodeproj"

@@ -7,7 +7,6 @@ ANDROID_AAPT="${ANDROID_AAPT:-/Applications/Unity/Hub/Editor/6000.3.27f1/Playbac
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-zhaoyun-adou.log"
 source "$PROJECT_ROOT/scripts/project-version.sh"
 APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-zhaoyun-adou-preview.apk"
-python3 "$PROJECT_ROOT/scripts/kingdom-rush/verify-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/zhaoyun-adou/verify-build-input.py" --root "$PROJECT_ROOT"
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
 build_marker="$(mktemp "$PROJECT_ROOT/artifacts/builds/.zhaoyun-build-start.XXXXXX")"

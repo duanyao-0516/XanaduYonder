@@ -15,7 +15,7 @@ internal static class Program
     {
         Check("root schema uses exact wrappers and canonical Int64 strings", () => {
             var json = Encode(new GoldMinerRootSnapshot { TxnSeq = long.MaxValue }); var root = JObject.Parse(json);
-            Assert(root.Count == 7 && root["records"]["solo"]["completionCount"].Type == JTokenType.String);
+            Assert(root.Count == 8 && root["records"]["solo"]["completionCount"].Type == JTokenType.String);
             Assert((string)root["txnSeq"] == "9223372036854775807" && root["slots"]["solo"].Type == JTokenType.Null && root["soloRecord"] == null);
             Assert(Decode(json).TxnSeq == long.MaxValue);
         });
@@ -120,7 +120,7 @@ internal static class Program
             });
         });
         Check("v2 actual device targets and records survive v3 migration and retry", () => {
-            Assert(GoldMinerRules.Version == 4);
+            Assert(GoldMinerRules.Version == 5);
             foreach (var name in new[] { "v2-solo-won-coop-failed", "v2-solo-loaded" })
             WithDirectory(dir => {
                 var original = File.ReadAllText("Tests/GoldMinerPersistence/Fixtures/" + name + ".json");
@@ -141,7 +141,7 @@ internal static class Program
                     Assert(retried.Current.Target == target && retried.Current.Cash == run.Checkpoint.OpeningCash,
                         "retry preserves the accepted old target and original opening funds");
                     Assert(retried.Current.Target < GoldMinerRules.Target(mode, retried.Current.LevelIndex));
-                    Assert(Decode(Encode(session.GetSnapshot())).RulesVersion == 4);
+                    Assert(Decode(Encode(session.GetSnapshot())).RulesVersion == 5);
                 }
             });
             var bad = JObject.Parse(File.ReadAllText("Tests/GoldMinerPersistence/Fixtures/v2-solo-loaded.json"));
@@ -389,6 +389,7 @@ internal static class Program
 
     static void AddLegacyProfiles(JObject root)
     {
+        root["sourceRecords"] = JObject.Parse(Encode(new GoldMinerRootSnapshot()))["sourceRecords"].DeepClone();
         foreach (var mode in new[] { "solo", "coop" })
             if (root["slots"][mode] is JObject run) run["balanceProfile"] = "legacy";
     }

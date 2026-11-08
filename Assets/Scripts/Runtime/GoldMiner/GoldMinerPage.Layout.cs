@@ -28,6 +28,7 @@ namespace XanaduYonder.Runtime.GoldMiner
 #endif
             input?.ResetGeneration();
             input = null;
+            scene?.Dispose();
             scene = null;
             notice = null;
             noticePanel = null;
@@ -45,14 +46,15 @@ namespace XanaduYonder.Runtime.GoldMiner
                 releaseAssets = StartCoroutine(ReleasePreviousViewAssets());
         }
 
-        private void NewView(string backgroundKey, GoldMinerMode mode)
+        private void NewView(string backgroundKey, GoldMinerMode mode,
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
             ClearView();
             PrepareCanvas(mode == GoldMinerMode.Coop);
             view = UiFactory.Rect(canvasRoot, "Gold Miner content", 0, 0, 1, 1);
             UiFactory.Stretch(view);
             layout = new GoldMinerLayout(canvasRoot.rect.width, canvasRoot.rect.height,
-                GoldMinerLayout.WindowSafeArea(canvasRoot), mode);
+                GoldMinerLayout.WindowSafeArea(canvasRoot), mode, profile);
             var sprite = art.Get("backgrounds/" + backgroundKey);
             if (backgroundKey == "bg-solo" || backgroundKey == "bg-coop")
             {
@@ -128,6 +130,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             var root = session.GetSnapshot();
             var run = root.GetRun(mode);
             bool hasRun = run != null && run.Current.Phase != GoldMinerPhase.Completed;
+            bool oldRun = hasRun && run.BalanceProfile != GoldMinerBalanceProfile.Source;
             float width = panel.rect.width;
             float textX = width * .42f;
             ArtIcon(panel, "Mode illustration", "backgrounds/mode-" + (coop ? "coop" : "solo") + "-illustration",
@@ -136,17 +139,17 @@ namespace XanaduYonder.Runtime.GoldMiner
             var badge = BorderedPanel(panel, "Mode badge", textX, 76, 134, 30, coop ? UiFactory.Hex("D6E8D9") : UiFactory.Hex("FFE3A0"),
                 coop ? Teal : Amber, 15, 1.5f);
             TextLabel(badge.transform, coop ? "2人 · 横屏" : "1人 · 竖屏", 5, 0, 124, 30, 17, Forest, TextAnchor.MiddleCenter, true);
-            TextLabel(panel, coop ? "左右各自出钩，合力闯关" : "看准时机，挑战你的眼力", textX, 110, width - textX - 22, 40, 18,
+            TextLabel(panel, oldRun ? "原有 10 关挑战 · 可继续进度" : coop ? "30 关矿场 · 左右合力闯关" : "30 张矿场 · 循环进阶", textX, 110, width - textX - 22, 40, 18,
                 UiFactory.Hex("716B59"));
             float bottom = height - 78;
             if (hasRun)
             {
                 TextLabel(panel, "第 " + run.Current.LevelIndex + " 关 · 资金 " + run.Current.Cash, textX, 150,
                     width - textX - 22, Mathf.Max(26, bottom - 150), 17, Forest);
-                TextButton(panel, "重新开始", 24, height - 49, textX - 45, 32,
-                    () => Confirm("重新开始挑战？", "只替换当前模式的挑战，历史纪录会保留。", "重新开始", () => ChooseMode(mode, true), BuildSelection), 17);
+                TextButton(panel, oldRun ? "开始原版矿场" : "重新开始", 24, height - 49, textX - 45, 32,
+                    () => Confirm("开始新的挑战？", "将从原版矿场第 1 关开始，替换当前模式的进度。历史纪录会保留。", "开始新挑战", () => ChooseMode(mode, true), BuildSelection), 17);
             }
-            ActionButton(panel, hasRun ? "继续游戏" : "开始游戏", textX, bottom, width - textX - 24, 58,
+            ActionButton(panel, hasRun ? oldRun ? "继续原有挑战" : "继续游戏" : "开始原版矿场", textX, bottom, width - textX - 24, 58,
                 () => ChooseMode(mode, !hasRun), true);
         }
 
@@ -155,8 +158,9 @@ namespace XanaduYonder.Runtime.GoldMiner
             var run = session.GetRunSnapshot();
             if (run == null) { ShowSelection(); return; }
             renderedPhase = run.Current.Phase;
-            if (renderedPhase == GoldMinerPhase.Shop) { BuildShop(run); return; }
+            if (renderedPhase == GoldMinerPhase.Shop && !AtSourceSaveLimit(run)) { BuildShop(run); return; }
             BuildGameplay(run);
+            if (AtSourceSaveLimit(run) && renderedPhase == GoldMinerPhase.Shop) { ShowResult(run); return; }
             if (renderedPhase == GoldMinerPhase.Ready) ShowReady();
             else if (renderedPhase == GoldMinerPhase.Won || renderedPhase == GoldMinerPhase.Failed || renderedPhase == GoldMinerPhase.Completed) ShowResult(run);
             else if (session.IsSuspended) ShowPause();
@@ -164,9 +168,9 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         private void BuildGameplay(GoldMinerRunSnapshot run)
         {
-            NewView(run.Mode == GoldMinerMode.Coop ? "bg-coop" : "bg-solo", run.Mode);
+            NewView(run.Mode == GoldMinerMode.Coop ? "bg-coop" : "bg-solo", run.Mode, run.BalanceProfile);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            diagnostics = new GoldMinerDiagnostics(run.Mode.ToString());
+            diagnostics = new GoldMinerDiagnostics(run.Mode + "/" + run.BalanceProfile);
 #endif
             var inputArea = UiFactory.Panel(view, "Mine input", 0, 0, layout.Width, layout.Height, Color.clear, false);
             inputArea.raycastTarget = true;
@@ -218,7 +222,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 ArtIcon(button.transform, "Dynamite", "objects/item_dynamite", 12, 4, 55, 55);
                 bombLabels[i] = TextLabel(button.transform, "", 72, 0, width - 80, 64, 22, Forest, TextAnchor.MiddleCenter, true);
                 bombButtons[i] = button;
-                var origin = layout.World(GoldMinerRules.OriginX(run.Mode, i), 0);
+                var origin = layout.World(layout.OriginX(i), 0);
                 if (layout.Cooperative)
                 {
                     var badge = BorderedPanel(view, "Player badge P" + (i + 1), origin.x + (i == 0 ? -149 : 96), layout.Mine.y - 85,
@@ -265,6 +269,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             if (timeText != null)
             {
                 int seconds = (state.RemainingTicks + 59) / 60;
+                if (state.Source != null && !layout.Cooperative) seconds = Math.Max(0, Math.Min(60, seconds - 1));
                 timeText.text = (seconds / 60).ToString("00") + ":" + (seconds % 60).ToString("00");
                 timeText.color = seconds <= 10 ? UiFactory.Hex("AC3E28") : Forest;
                 timeText.rectTransform.localScale = Vector3.one * (seconds <= 5
@@ -274,18 +279,31 @@ namespace XanaduYonder.Runtime.GoldMiner
             {
                 for (int i = 0; i < bombButtons.Length; i++)
                 {
-                    bombLabels[i].text = (layout.Cooperative ? "P" + (i + 1) + " " : "") + "炸药 ×" + state.Players[i].Bombs;
-                    bombButtons[i].interactable = CanAct && state.Players[i].Bombs > 0 && state.Hooks[i].State == GoldMinerHookState.RetractingLoaded;
+                    bool shared = state.Source != null && layout.Cooperative;
+                    int count = shared ? state.Source.SharedBombs : state.Players[i].Bombs;
+                    bombLabels[i].text = (shared ? "共享 " : layout.Cooperative ? "P" + (i + 1) + " " : "") + "炸药 ×" + count;
+                    var hook = state.Hooks[i];
+                    bool available = CanAct && count > 0 && hook.State == GoldMinerHookState.RetractingLoaded;
+                    if (state.Source != null)
+                    {
+                        available &= hook.Source.RewardTicks == 0 && hook.Source.BombTicks == 0;
+                        if (!layout.Cooperative && hook.HeldEntityId.HasValue)
+                            foreach (var entity in state.Entities)
+                                if (entity.Id == hook.HeldEntityId.Value) available &= entity.Source.Weight > 0;
+                    }
+                    bombButtons[i].interactable = available;
                 }
             }
             if (contributionText != null)
-                contributionText.text = state.Phase == GoldMinerPhase.Draining ? "时间到 · 等待钩子收回" : layout.Cooperative ? "" : "— 点击矿区出钩 —";
+                contributionText.text = state.Phase == GoldMinerPhase.Draining
+                    ? state.Source == null ? "时间到 · 等待钩子收回" : "时间到 · 结算本关"
+                    : layout.Cooperative ? "" : "— 点击矿区出钩 —";
         }
 
 
         private void BuildShop(GoldMinerRunSnapshot run)
         {
-            NewView(run.Mode == GoldMinerMode.Coop ? "bg-shop-landscape" : "bg-shop-portrait", run.Mode);
+            NewView(run.Mode == GoldMinerMode.Coop ? "bg-shop-landscape" : "bg-shop-portrait", run.Mode, run.BalanceProfile);
             var safe = layout.Safe;
             long nextTarget = GoldMinerRules.Target(run.Mode, run.Current.LevelIndex + 1, run.BalanceProfile);
             if (layout.Cooperative)
@@ -303,7 +321,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 float gap = 12, width = (safe.width - 168 - gap * 4) / 5;
                 float top = safe.y + 157, height = safe.height - 285;
                 for (int i = 0; i < 5; i++) ShopCard(run, i, safe.x + 84 + i * (width + gap), top, width, height);
-                TextLabel(view, "增益对两人共同生效", safe.x + 240, safe.yMax - 119, safe.width - 480, 33, 21,
+                TextLabel(view, run.Current.Source != null ? "增益和炸药由两人共享" : "增益对两人共同生效", safe.x + 240, safe.yMax - 119, safe.width - 480, 33, 21,
                     UiFactory.Hex("845023"), TextAnchor.MiddleCenter, true);
                 ActionButton(view, "‹  模式选择", safe.x + 28, safe.yMax - 86, 250, 62, () => ConfirmExit(ShowSelection), false);
                 ActionButton(view, "一起进入下一关  ›", safe.xMax - 388, safe.yMax - 95, 360, 70, NextLevel, true);
@@ -327,7 +345,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                     ShopCard(run, i, safe.x + 40 + (i % 2) * (cardWidth + 24), top + (i / 2) * (rowHeight + 15), cardWidth, rowHeight);
                 ShopCard(run, 4, safe.x + 130, top + (rowHeight + 15) * 2, safe.width - 260, (gridHeight - 30) * .25f);
                 ActionButton(view, "进入下一关", safe.x + 56, safe.yMax - 132, safe.width - 112, 84, NextLevel, true);
-                TextLabel(view, "购买会扣除当前资金", safe.x + 48, safe.yMax - 49, safe.width - 96, 24, 17, Cream, TextAnchor.MiddleCenter);
+                TextLabel(view, run.Current.Source != null ? "可以赊购 · 欠款从后续收入抵扣" : "购买会扣除当前资金", safe.x + 48, safe.yMax - 49, safe.width - 96, 24, 17, Cream, TextAnchor.MiddleCenter);
             }
             Notice(safe.yMax - 22);
         }
@@ -338,6 +356,11 @@ namespace XanaduYonder.Runtime.GoldMiner
             string[] names = { "炸药", "大力药", "幸运草", "石头收藏书", "钻石增值剂" };
             string[] files = { "item_dynamite", "item_strength", "item_lucky_clover", "item_rock_book", "item_diamond_polish" };
             string[] descriptions = { "炸掉钩上物品", "下关回收更快", "下关福袋更幸运", "下关石头价值 ×3", "下关钻石更值钱" };
+            if (run.BalanceProfile == GoldMinerBalanceProfile.Source && run.Mode == GoldMinerMode.Coop)
+            {
+                descriptions[3] = "本模式不增加矿物收益";
+                descriptions[4] = "本模式不增加矿物收益";
+            }
             var offer = run.Current.Shop.Offers[index];
             bool unavailable = offer.Remaining == 0 && offer.Purchased == 0;
             var panel = ArtPanel(view, ids[index], x, y, width, height);
@@ -374,8 +397,9 @@ namespace XanaduYonder.Runtime.GoldMiner
                 TextLabel(price.transform, offer.Price.ToString(), priceWidth * .5f - 15, 0,
                     priceWidth * .5f + 6, 36, 24, Forest, TextAnchor.MiddleLeft, true);
             }
-            bool affordable = offer.Remaining > 0 && run.Current.Cash >= offer.Price;
-            if (index == 0 && run.Mode == GoldMinerMode.Coop)
+            bool source = run.BalanceProfile == GoldMinerBalanceProfile.Source;
+            bool affordable = offer.Remaining > 0 && (source && run.Mode == GoldMinerMode.Solo || run.Current.Cash >= offer.Price);
+            if (index == 0 && run.Mode == GoldMinerMode.Coop && !source)
             {
                 float bw = (width - 32) * .5f;
                 for (int playerIndex = 0; playerIndex < 2; playerIndex++)
@@ -388,8 +412,9 @@ namespace XanaduYonder.Runtime.GoldMiner
             }
             else
             {
-                bool full = index == 0 && run.Current.Players[0].Bombs >= GoldMinerRules.MaxBombs;
-                string label = unavailable ? "本店未售" : offer.Remaining == 0 ? "已购买" : full ? "库存已满" : affordable ? "购买" : "资金不足";
+                bool full = !source && index == 0 && run.Current.Players[0].Bombs >= GoldMinerRules.MaxBombs;
+                string label = unavailable ? "本店未售" : offer.Remaining == 0 ? "已购买" : full ? "库存已满"
+                    : affordable ? source && run.Mode == GoldMinerMode.Solo && run.Current.Cash < offer.Price ? "赊购" : "购买" : "资金不足";
                 var button = ActionButton(panel, label, 16, buttonY, width - 32, buttonHeight, () => Purchase(offer.ItemId, 0), true);
                 button.interactable = affordable && !full;
             }

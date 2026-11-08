@@ -5,6 +5,7 @@
   let active = true, soundEnabled = false, visible = !document.hidden;
   let runtime = null, ready = false, exit = null, failed = false;
   let viewportInsets = [0, 0, 0, 0];
+  let hallButtonFirstScreenOnly = false;
   function send(type, extra) {
     const value = JSON.stringify(Object.assign({type}, extra || {}));
     if (window.LevelDevilNative && typeof window.LevelDevilNative.postMessage === 'function') window.LevelDevilNative.postMessage(value);
@@ -26,6 +27,15 @@
       if (values.some(value => typeof value !== 'number' || !Number.isFinite(value) || value < 0)) return;
       viewportInsets = values;
       if (runtime) runtime.resize();
+    },
+    status() {
+      return runtime ? runtime.status() : {ready:false, scene:null, canReturnToHall:false};
+    },
+    setHallButtonFirstScreenOnly(value) {
+      if (typeof value !== 'boolean') return false;
+      hallButtonFirstScreenOnly = value;
+      if (runtime) runtime.refreshHallButton();
+      return true;
     },
     releaseInput() { if (runtime) runtime.releaseInput(); },
     requestExit(requestId) {
@@ -280,9 +290,15 @@
       // can safely persist them even if that first flush failed.
       if (success) tryExit();
     }
-    runtime = {releaseInput, stateChanged, tryExit, resize, cancelHallExit:() => { if (controls) controls.cancelHallExit(); }};
+    function status() {
+      const engine = E.engine, scene = engine && engine.scene;
+      return {ready, scene:scene ? scene.name : null,
+        canReturnToHall:!!(ready && !failed && !exit && engine && engine.sceneInitialized &&
+          !engine.isTransitioning() && scene && scene.ID === 125 && scene.name === 'Z_Choose_1P_2P')};
+    }
+    runtime = {releaseInput, stateChanged, tryExit, resize, status, refreshHallButton:() => { if (controls) controls.layout(); }, cancelHallExit:() => { if (controls) controls.cancelHallExit(); }};
     if (window.__installLevelDevilControls) controls = window.__installLevelDevilControls({Engine:E,Script:C,classes,blocked:() => !hostRunning() || !!exit,
-      viewport:() => layout, hallExit:() => { if (ready && hostRunning() && !exit) { releaseInput(); send('exit-intent'); return true; } return false; }});
+      viewport:() => layout, hallEnabled:() => !hallButtonFirstScreenOnly || !!(E.engine && E.engine.scene && E.engine.scene.ID === 125), hallExit:() => { if (ready && hostRunning() && !exit) { releaseInput(); send('exit-intent'); return true; } return false; }});
     applyAudio();
     return {continueTransition, reward, beginCompletion, finishCompletion};
   };

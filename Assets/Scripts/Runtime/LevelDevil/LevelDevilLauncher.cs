@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace XanaduYonder.Runtime.LevelDevil
 {
-    // Owns only the Android boundary. Original gameplay and saves remain in the
+    // Owns only the native host boundary. Original gameplay and saves remain in the
     // bundled runtime, with a fixed per-game origin maintained by the Activity.
     public sealed class LevelDevilLauncher : MonoBehaviour
     {
@@ -16,7 +16,16 @@ namespace XanaduYonder.Runtime.LevelDevil
         public bool TryOpen(bool soundEnabled)
         {
             if (IsBusy) return true;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+            try
+            {
+                if (!IOSWebGameBridge.Open("level-devil", soundEnabled)) return false;
+                IsBusy = true;
+                nextStatusCheck = Time.unscaledTime + .25f;
+                return true;
+            }
+            catch (Exception error) { Debug.LogException(error); return false; }
+#elif UNITY_ANDROID && !UNITY_EDITOR
             try
             {
                 using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
@@ -39,24 +48,29 @@ namespace XanaduYonder.Runtime.LevelDevil
                 return false;
             }
 #else
-            Debug.LogWarning("Level Devil requires the bundled Android WebView host.");
+            Debug.LogWarning("Level Devil requires a bundled mobile WebView host.");
             return false;
 #endif
         }
 
         private void Update()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
             if (!IsBusy || Time.unscaledTime < nextStatusCheck) return;
             nextStatusCheck = Time.unscaledTime + .25f;
             string failure;
             try
             {
+#if UNITY_IOS
+                if (IOSWebGameBridge.IsRunning()) return;
+                failure = IOSWebGameBridge.GetLastError();
+#else
                 using (var bridge = new AndroidJavaClass(BridgeClass))
                 {
                     if (bridge.CallStatic<bool>("isRunning")) return;
                     failure = bridge.CallStatic<string>("getLastError");
                 }
+#endif
             }
             catch (Exception error)
             {

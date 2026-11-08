@@ -4,6 +4,7 @@
 
 - [项目总览](../README.md)：当前源码版本、Android／iOS 范围与最近正式发布的区别。
 - [双平台整合验证](verification-platform-integration.md)：统一入口构建、Android 已完成的真机范围及明确未覆盖项。
+- [游戏精简与 iOS 网页适配](verification-ios-web-games.md)：当前源码、打包检查和设备验证边界。
 - [统一构建与平台范围](building.md)：总脚本、产物、平台资源选择与签名边界。
 - [本地开发与双平台构建](development.md)：固定环境、编辑器与各玩法专用验证命令。
 - [架构与存档契约](architecture.md)：目录责任、共用逻辑、平台桥接及数据协议。

@@ -2,7 +2,7 @@
 <!-- Based on Unity 6000.3.27f1 Apk/UnityManifest.xml; Activity entry mode. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
-    <application android:extractNativeLibs="true" tools:replace="android:extractNativeLibs">
+    <application>
         <activity android:name="com.xanaduyonder.leveldevil.LevelDevilActivity"
                   android:exported="false"
                   android:screenOrientation="sensorLandscape"
@@ -10,26 +10,19 @@
                   android:hardwareAccelerated="true"
                   android:enableOnBackInvokedCallback="true"
                   android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
-        <activity android:name="com.xanaduyonder.fruitslice.FruitSliceActivity"
-                  android:exported="false"
-                  android:hardwareAccelerated="true"
-                  android:enableOnBackInvokedCallback="true"
-                  android:screenOrientation="portrait"
-                  android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode|density"
-                  android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
         <activity android:name="com.unity3d.player.UnityPlayerActivity" android:theme="@style/UnityThemeSelector">
             <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
             <!-- Xiaomi content capture otherwise rewrites a held touch UP to CANCEL. -->
             <meta-data android:name="catcher_not_fetch" android:value="true" />
         </activity>
-        <activity android:name="com.xanaduyonder.kingdomrush.KingdomRushLauncherActivity"
+        <activity android:name="com.duanyao.xanaduyonder.XanaduLauncherActivity"
                   android:exported="true"
                   android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data android:name="kingdomrush.unity_activity" android:value="com.unity3d.player.UnityPlayerActivity" />
+            <meta-data android:name="xanadu.unity_activity" android:value="com.unity3d.player.UnityPlayerActivity" />
         </activity>
     </application>
 </manifest>

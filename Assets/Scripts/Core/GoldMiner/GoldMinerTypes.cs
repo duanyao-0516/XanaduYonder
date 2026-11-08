@@ -30,7 +30,11 @@ namespace XanaduYonder.Core.GoldMiner
         Diamond,
         MysteryBag,
         Mole,
-        DiamondMole
+        DiamondMole,
+        Gold250,
+        Bone,
+        Skull,
+        Tnt
     }
 
     public enum GoldMinerHookState
@@ -140,9 +144,12 @@ namespace XanaduYonder.Core.GoldMiner
         public GoldMinerHookState State;
         public double AngleRadians, Length;
         public int? HeldEntityId;
+        public GoldMinerSourceHook Source;
         public GoldMinerHook Copy()
         {
-            return (GoldMinerHook)MemberwiseClone();
+            var copy = (GoldMinerHook)MemberwiseClone();
+            copy.Source = Source == null ? null : Source.Copy();
+            return copy;
         }
     }
 
@@ -155,9 +162,12 @@ namespace XanaduYonder.Core.GoldMiner
         public double X, Y;
         public long? BagValue;
         public int? OwnerPlayerId;
+        public GoldMinerSourceEntity Source;
         public GoldMinerEntity Copy()
         {
-            return (GoldMinerEntity)MemberwiseClone();
+            var copy = (GoldMinerEntity)MemberwiseClone();
+            copy.Source = Source == null ? null : Source.Copy();
+            return copy;
         }
     }
 

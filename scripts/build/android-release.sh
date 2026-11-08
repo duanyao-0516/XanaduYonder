@@ -115,7 +115,10 @@ if [[ ! -s "$signed_apk" ]]; then
     printf 'The verified release APK is empty.\n' >&2
     exit 1
 fi
+python3 "$PROJECT_ROOT/scripts/verify-removed-games.py" --artifact "$signed_apk" \
+    --packed-assets "$INTERMEDIATE_APK.packed-assets.txt"
 mv -f "$signed_apk" "$APK_FILE"
+mv -f "$INTERMEDIATE_APK.packed-assets.txt" "$APK_FILE.packed-assets.txt"
 printf 'Release APK: %s\n' "$APK_FILE"
 shasum -a 256 "$APK_FILE"
 

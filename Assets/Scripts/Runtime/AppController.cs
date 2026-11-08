@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core;
 using XanaduYonder.Core.Sokoban;
+using XanaduYonder.Core.GoldMiner;
 using XanaduYonder.Core.LinkMatch;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
@@ -69,6 +70,7 @@ namespace XanaduYonder.Runtime
         private SokobanPage sokobanPage;
         private LinkMatchPage linkMatchPage;
         private GoldMinerPage goldMinerPage;
+        private GoldMinerRootSnapshot goldMinerPreview;
         private TetrisPage tetrisPage;
         private TetrisLoadResult tetrisPreview;
         private FlappyBirdPage flappyBirdPage;
@@ -77,7 +79,7 @@ namespace XanaduYonder.Runtime
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AgeOfWarOne, AgeOfWarTwo, AgeOfWarSelection, AircraftFire, Snake }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -187,12 +189,8 @@ namespace XanaduYonder.Runtime
                 LobbyGame("sliding-puzzle", "SlidingPuzzle", "数字华容道", "14", "逻辑策略", "数字归位", "留一格空白，理顺每一步。", "", "", EnterSlidingPuzzle, LobbyPreviews.SlidingPuzzle),
                 LobbyGame("sokoban", "Sokoban", "推箱子", "12", "逻辑策略", "经典推箱", "把每一只箱子，推回它的位置。", "", "", EnterSokoban, AddSokobanPreview),
                 LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
-                LobbyGame("age-of-war", "AgeOfWar", "战争进化史", "18", "逻辑策略", "时代进化", "从石器时代，走向未来战场。", "一代 / 二代 · 横屏战斗", "一代 / 二代", ShowAgeOfWarSelection, AddAgeOfWarPreview),
-#if !UNITY_IOS
-                LobbyGame("kingdom-rush", "KingdomRush", "王国保卫战", "19", "逻辑策略", "初代塔防", "守住每一条通往王国的路。", "32 关 · 三种挑战 · 13 位英雄", "32 关 · 三种挑战", EnterKingdomRush, AddKingdomRushPreview),
                 CutTheRopeEntry(),
                 LobbyGame("zhaoyun-adou", "ZhaoyunAdou", "赵云与阿斗", "23", "逻辑策略", "合成布阵", "合兵布阵，与阿斗守住战场。", "离线人机 · 兵种合成 · 武器成长", "离线人机 · 合成布阵", EnterZhaoyunAdou, AddZhaoyunAdouPreview),
-#endif
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
                 LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
                 LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
@@ -204,15 +202,9 @@ namespace XanaduYonder.Runtime
                 LobbyGame("flappy-bird", "FlappyBird", "Flappy Bird", "16", "敏捷挑战", "轻点飞行", "轻点一下，再飞远一点。", "", "", EnterFlappyBird, AddFlappyPreview),
                 LobbyGame("snake", "Snake", "贪吃蛇", "26", "敏捷挑战", "经典贪吃蛇", "穿过边界，绕过障碍。", "经典无限 · 障碍闯关", "经典无限 / 12 关挑战", EnterSnake, AddSnakePreview),
                 LobbyGame("happy-ball", "HappyBall", "欢乐球球", "11", "敏捷挑战", "轻巧下落", "转动高塔，穿过层层豁口。", "", "", EnterHappyBall, LobbyPreviews.HappyBall),
-                LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人竖屏 / 双人横屏合作 · 10 关挑战", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
-#if !UNITY_IOS
-                LobbyGame("classic-gold-miner", "ClassicGoldMiner", "经典黄金矿工", "24", "敏捷挑战", "经典寻宝", "重温熟悉的矿场，一起满载而归。", "单人 / 双人 · 随时续局", "单人 / 双人", EnterClassicGoldMiner, AddClassicGoldMinerPreview),
+                LobbyGame("gold-miner", "Gold Miner", "黄金矿工", "13", "敏捷挑战", "一起寻宝", "看准时机，把宝藏带回家。", "单人循环闯关 / 双人 30 关合作", "单人 / 双人", EnterGoldMiner, AddGoldMinerPreview),
                 LobbyGame("level-devil", "LevelDevil", "只有一道门", "22", "敏捷挑战", "小心下一步", "越过意想不到的机关，走到门前。", "横屏离线 · 单人 / 双人 · 触屏操作", "单人 / 双人", EnterLevelDevil, AddLevelDevilPreview),
-#endif
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
-#if !UNITY_IOS
-                LobbyGame("fruit-slice", "FruitSlice", "切水果大师", "25", "敏捷挑战", "指尖切果", "划出一道刀光，切开缤纷水果。", "三种模式 · 免费刀光 · 离线畅玩", "三种模式 · 离线畅玩", EnterFruitSlice, AddFruitSlicePreview),
-#endif
                 LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
             };
             lobbyView = root.gameObject.AddComponent<LobbyView>();
@@ -220,6 +212,7 @@ namespace XanaduYonder.Runtime
             lobbyScroll = lobbyView.Scroll;
             lobbyStatus = lobbyView.StatusLabel;
             RefreshDinoRecord();
+            RefreshGoldMinerRecord();
         }
 
         private static LobbyEntry LobbyGame(string id, string objectName, string name, string number,
@@ -306,11 +299,32 @@ namespace XanaduYonder.Runtime
                     value => { data.SoundEnabled = value; if (!value) feedback.Stop(); Save(); },
                     value => { data.HapticsEnabled = value; Save(); },
                     () => feedback.Land(false, false, data.HapticsEnabled));
+                goldMinerPage.Changed += RefreshGoldMinerRecord;
             }
             activePage = Page.GoldMiner;
             frame.gameObject.SetActive(false);
             goldMinerPage.SetForeground(focused, paused);
             goldMinerPage.Enter();
+        }
+
+        private void RefreshGoldMinerRecord()
+        {
+            if (lobbyView == null) return;
+            var progress = goldMinerPage != null ? goldMinerPage.GetProgressSnapshot() : null;
+            if (progress == null)
+            {
+                if (goldMinerPreview == null)
+                {
+                    string ignored;
+                    goldMinerPreview = new GoldMinerSaveStore(Application.persistentDataPath).Load(out ignored) ?? new GoldMinerRootSnapshot();
+                }
+                progress = goldMinerPreview;
+            }
+            var solo = progress.GetRecord(GoldMinerMode.Solo, GoldMinerBalanceProfile.Source);
+            var coop = progress.GetRecord(GoldMinerMode.Coop, GoldMinerBalanceProfile.Source);
+            if (solo.BestClearedLevel == 0 && coop.BestClearedLevel == 0) return;
+            lobbyView.SetRecord("gold-miner", "原版纪录 · 单人 " + solo.BestClearedLevel + " 关 · 双人 " + coop.BestClearedLevel + "/30 关",
+                "单人 " + solo.BestClearedLevel + " · 双人 " + coop.BestClearedLevel + "/30");
         }
 
         private static void AddGomokuPreview(Transform parent)
@@ -1164,8 +1178,6 @@ namespace XanaduYonder.Runtime
         {
             ResultPresentation.Clear(this);
             ResetBackExitConfirmation();
-            if (IsAgeOfWarPage && ageOfWarPage != null && ageOfWarPage.IsVisible) { ageOfWarPage.Exit(); return; }
-            if(ageOfWarSelection!=null)ageOfWarSelection.SetActive(false);
             LeaveAircraftFire();
             linkMatchPage?.Leave();
             tetrisPage?.Leave();
@@ -1377,6 +1389,7 @@ namespace XanaduYonder.Runtime
             RefreshWatermelonRecord();
             RefreshSudokuRecord();
             RefreshDinoRecord();
+            RefreshGoldMinerRecord();
             RefreshMinesweeperRecord();
             RefreshSnakeRecord();
             RefreshSokobanRecord();
@@ -1457,7 +1470,6 @@ namespace XanaduYonder.Runtime
         private void StopAnimation()
         {
             aircraftFirePage?.Suspend();
-            ageOfWarPage?.Suspend();
             tetrisPage?.Suspend();
             flappyBirdPage?.Suspend();
             happyBallPage?.Suspend();
@@ -1502,7 +1514,6 @@ namespace XanaduYonder.Runtime
         private void HandleBackCore()
         {
             if (IsExternalGameRunning) return;
-            if (IsAgeOfWarPage) { ageOfWarPage.HandleSystemBack(ConfirmSystemBackExit); return; }
             var splash = GetComponent<BrandSplash>();
             if (splash != null && splash.BlocksInput) return;
             if (activePage == Page.Lobby && lobbyView != null && lobbyView.HasDisplayOptions)
@@ -1536,7 +1547,6 @@ namespace XanaduYonder.Runtime
             paused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
-            ageOfWarPage?.HostActivity(!paused && focused);
             if (value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch || activePage == Page.AircraftFire || activePage == Page.Snake)) CloseModal();
             aircraftFirePage?.SetForeground(!paused && focused);
             tetrisPage?.SetForeground(!paused && focused);
@@ -1559,7 +1569,6 @@ namespace XanaduYonder.Runtime
             focused = value;
             goldMinerPage?.SetForeground(focused, paused);
             zumaPage?.HostActivity(!paused && focused);
-            ageOfWarPage?.HostActivity(!paused && focused);
             if (!value && (activePage == Page.Minesweeper || activePage == Page.Gomoku || activePage == Page.HappyBall || activePage == Page.Sokoban || activePage == Page.SlidingPuzzle || activePage == Page.Tetris || activePage == Page.FlappyBird || activePage == Page.LinkMatch || activePage == Page.AircraftFire || activePage == Page.Snake)) CloseModal();
             aircraftFirePage?.SetForeground(!paused && focused);
             tetrisPage?.SetForeground(!paused && focused);
@@ -1587,15 +1596,12 @@ namespace XanaduYonder.Runtime
         {
             ResetBackExitConfirmation();
             ReleaseAircraftFire();
-            ReleaseKingdomRushLauncher();
-            ReleaseFruitSliceLauncher();
-            ReleaseClassicGoldMinerLauncher();
             ReleaseLevelDevilLauncher();
             ReleaseCutTheRopeLauncher();
             ReleaseZhaoyunAdouLauncher();
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
         }
 
-        private void OnApplicationQuit() { snakePage?.Suspend(); aircraftFirePage?.Suspend(); ageOfWarPage?.Suspend(); zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
+        private void OnApplicationQuit() { snakePage?.Suspend(); aircraftFirePage?.Suspend(); zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
     }
 }

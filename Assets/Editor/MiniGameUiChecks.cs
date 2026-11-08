@@ -155,8 +155,8 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = LobbyDesignChecks.RecordForCheck(shell, "Sudoku").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
-                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterFruitSlice", "EnterIdiom" };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "AircraftFire", "Idiom" };
+                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterIdiom" };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {

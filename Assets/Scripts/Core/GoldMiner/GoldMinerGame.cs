@@ -37,7 +37,7 @@ namespace XanaduYonder.Core.GoldMiner
         {
             get
             {
-                return run.Current.Phase == GoldMinerPhase.Draining && AllIdle();
+                return run.Current.Phase == GoldMinerPhase.Draining && (run.BalanceProfile == GoldMinerBalanceProfile.Source || AllIdle());
             }
         }
 
@@ -53,6 +53,11 @@ namespace XanaduYonder.Core.GoldMiner
         {
             if (!ConsumeCommand(playerId, commandSeq))
                 return false;
+            if (run.BalanceProfile == GoldMinerBalanceProfile.Source) {
+                bool launched=GoldMinerSourceSimulation.Launch(run,playerId);
+                if(launched)pendingEvents.Add(new GoldMinerEvent(GoldMinerEventKind.Launched,playerId));
+                return launched;
+            }
             var state = run.Current;
             var hook = state.Hooks[playerId];
             if (state.Phase != GoldMinerPhase.Running || hook.State != GoldMinerHookState.Swinging)
@@ -66,6 +71,7 @@ namespace XanaduYonder.Core.GoldMiner
         {
             if (!ConsumeCommand(playerId, commandSeq))
                 return false;
+            if (run.BalanceProfile == GoldMinerBalanceProfile.Source) return GoldMinerSourceSimulation.Bomb(run,playerId,pendingEvents);
             var state = run.Current;
             var hook = state.Hooks[playerId];
             if ((state.Phase != GoldMinerPhase.Running && state.Phase != GoldMinerPhase.Draining) || hook.State != GoldMinerHookState.RetractingLoaded || state.Players[playerId].Bombs == 0)
@@ -99,6 +105,7 @@ namespace XanaduYonder.Core.GoldMiner
         {
             var events = new List<GoldMinerEvent>(pendingEvents);
             pendingEvents.Clear();
+            if (run.BalanceProfile == GoldMinerBalanceProfile.Source) return GoldMinerSourceSimulation.Step(run,events);
             var state = run.Current;
             if ((state.Phase != GoldMinerPhase.Running && state.Phase != GoldMinerPhase.Draining) || SettlementReady)
                 return new GoldMinerStepResult(false, SettlementReady, events);

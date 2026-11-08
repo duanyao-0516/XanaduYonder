@@ -12,11 +12,14 @@ namespace XanaduYonder.Core.GoldMiner
         public GoldMinerMode LastMode;
         public GoldMinerRecord SoloRecord = new GoldMinerRecord(), CoopRecord = new GoldMinerRecord();
         public GoldMinerRunSnapshot Solo, Coop;
+        public GoldMinerRecord SourceSoloRecord = new GoldMinerRecord(), SourceCoopRecord = new GoldMinerRecord();
         public GoldMinerRootSnapshot Copy()
         {
             var c = (GoldMinerRootSnapshot)MemberwiseClone();
             c.SoloRecord = SoloRecord == null ? null : SoloRecord.Copy();
             c.CoopRecord = CoopRecord == null ? null : CoopRecord.Copy();
+            c.SourceSoloRecord = SourceSoloRecord == null ? null : SourceSoloRecord.Copy();
+            c.SourceCoopRecord = SourceCoopRecord == null ? null : SourceCoopRecord.Copy();
             c.Solo = Solo == null ? null : Solo.Copy();
             c.Coop = Coop == null ? null : Coop.Copy();
             return c;
@@ -32,8 +35,9 @@ namespace XanaduYonder.Core.GoldMiner
             return mode == GoldMinerMode.Solo ? Solo : Coop;
         }
 
-        public GoldMinerRecord GetRecord(GoldMinerMode mode)
+        public GoldMinerRecord GetRecord(GoldMinerMode mode, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
+            if (profile == GoldMinerBalanceProfile.Source) return mode == GoldMinerMode.Solo ? SourceSoloRecord : SourceCoopRecord;
             return mode == GoldMinerMode.Solo ? SoloRecord : CoopRecord;
         }
     }
@@ -77,6 +81,7 @@ namespace XanaduYonder.Core.GoldMiner
         public GoldMinerBuffs ActiveBuffs, PendingBuffs;
         public GoldMinerShop Shop;
         public GoldMinerSettlement Settlement;
+        public GoldMinerSourceState Source;
         public GoldMinerState Copy()
         {
             var c = (GoldMinerState)MemberwiseClone();
@@ -87,6 +92,7 @@ namespace XanaduYonder.Core.GoldMiner
             c.PendingBuffs = PendingBuffs == null ? null : PendingBuffs.Copy();
             c.Shop = Shop == null ? null : Shop.Copy();
             c.Settlement = Settlement == null ? null : Settlement.Copy();
+            c.Source = Source == null ? null : Source.Copy();
             return c;
         }
 
@@ -107,20 +113,22 @@ namespace XanaduYonder.Core.GoldMiner
         public GoldMinerBuffs ActiveBuffs;
         public GoldMinerHook[] InitialHooks;
         public GoldMinerEntity[] InitialEntities;
+        public GoldMinerSourceState Source;
         public GoldMinerLevelStart Copy()
         {
             var c = (GoldMinerLevelStart)MemberwiseClone();
             c.OpeningPlayers = GoldMinerCopies.Array(OpeningPlayers, x => x.Copy());
             c.InitialHooks = GoldMinerCopies.Array(InitialHooks, x => x.Copy());
             c.InitialEntities = GoldMinerCopies.Array(InitialEntities, x => x.Copy());
+            c.Source = Source == null ? null : Source.Copy();
             c.ActiveBuffs = ActiveBuffs == null ? null : ActiveBuffs.Copy();
             return c;
         }
 
         public GoldMinerState CreateState(GoldMinerMode mode, long? acceptedTarget = null)
         {
-            long target = acceptedTarget ?? GoldMinerRules.Target(mode, LevelIndex);
-            if (!GoldMinerRules.IsSupportedTarget(mode, LevelIndex, target))
+            long target = acceptedTarget ?? (Source == null ? GoldMinerRules.Target(mode, LevelIndex) : GoldMinerSourceRules.Target(mode, LevelIndex));
+            if (Source == null ? !GoldMinerRules.IsSupportedTarget(mode, LevelIndex, target) : target != GoldMinerSourceRules.Target(mode, LevelIndex))
                 throw new ArgumentException("Unsupported checkpoint target.", "acceptedTarget");
             var p = OpeningPlayers == null ? null : new GoldMinerPlayer[OpeningPlayers.Length];
             if (p != null)
@@ -148,7 +156,8 @@ namespace XanaduYonder.Core.GoldMiner
                 Cash = OpeningCash,
                 ShopSpent = OpeningShopSpent,
                 Target = target,
-                RemainingTicks = GoldMinerRules.LevelTicks,
+                RemainingTicks = Source == null ? GoldMinerRules.LevelTicks : GoldMinerSourceRules.DurationTicks(mode),
+                Source = Source == null ? null : Source.Copy(),
                 Players = p,
                 Hooks = GoldMinerCopies.Array(InitialHooks, x => x.Copy()),
                 Entities = GoldMinerCopies.Array(InitialEntities, x => x.Copy()),
@@ -189,7 +198,7 @@ namespace XanaduYonder.Core.GoldMiner
             // field sets only under their original rules versions, then infers their profile.
             if (s == null || s.SchemaVersion != 1 || (s.RulesVersion < 1 || s.RulesVersion > GoldMinerRules.Version) || s.GameId != "gold-miner" || s.TxnSeq < 0 || !GoldMinerRules.ValidMode(s.LastMode))
                 return Bad("Unsupported root or version.", out reason);
-            if (!Record(s.SoloRecord, GoldMinerMode.Solo) || !Record(s.CoopRecord, GoldMinerMode.Coop))
+            if (!Record(s.SoloRecord, GoldMinerMode.Solo) || !Record(s.CoopRecord, GoldMinerMode.Coop) || !GoldMinerSourceValidation.Record(s.SourceSoloRecord, GoldMinerMode.Solo) || !GoldMinerSourceValidation.Record(s.SourceCoopRecord, GoldMinerMode.Coop))
                 return Bad("Invalid records.", out reason);
             foreach (var mode in new[]
             {
@@ -206,9 +215,10 @@ namespace XanaduYonder.Core.GoldMiner
                     return Bad(reason ?? "Slot mode mismatch.", out reason);
                 if (s.RulesVersion < 3 && run.Current.Target != GoldMinerRules.LegacyTarget(mode, run.Current.LevelIndex))
                     return Bad("Legacy rules cannot contain a new target.", out reason);
+                if (s.RulesVersion < 5 && run.BalanceProfile == GoldMinerBalanceProfile.Source) return Bad("Source campaign requires rules 5.", out reason);
                 if (s.RulesVersion < 4 && run.BalanceProfile == GoldMinerBalanceProfile.Classic)
                     return Bad("Legacy rules cannot contain a new balance profile.", out reason);
-                var r = s.GetRecord(mode);
+                var r = s.GetRecord(mode, run.BalanceProfile);
                 var phase = run.Current.Phase;
                 if (phase == GoldMinerPhase.Won || phase == GoldMinerPhase.Completed || phase == GoldMinerPhase.Shop)
                 {
@@ -238,7 +248,9 @@ namespace XanaduYonder.Core.GoldMiner
 
         internal static bool Run(GoldMinerRunSnapshot r, out string reason)
         {
+            if (r != null && r.BalanceProfile == GoldMinerBalanceProfile.Source) return GoldMinerSourceValidation.Run(r, out reason);
             reason = null;
+            if (r != null && ((r.Current != null && r.Current.Source != null) || (r.Checkpoint != null && r.Checkpoint.Source != null))) return Bad("Source state needs the source profile.", out reason);
             if (r == null || !Hex(r.RunId, 32) || !GoldMinerRules.ValidMode(r.Mode) || !GoldMinerRules.ValidProfile(r.BalanceProfile) || r.RunSeed == 0 || r.AttemptIndex < 0 || r.LastCommandSeq < 0)
                 return Bad("Invalid run identity or sequence.", out reason);
             if (!State(r.Current, r.Mode, out reason) || !Checkpoint(r.Checkpoint, r.Mode, out reason))
@@ -312,6 +324,7 @@ namespace XanaduYonder.Core.GoldMiner
 
         internal static bool Checkpoint(GoldMinerLevelStart p, GoldMinerMode mode, out string reason)
         {
+            if (p != null && p.Source != null) return GoldMinerSourceValidation.Checkpoint(p, mode, out reason);
             reason = null;
             if (p == null || !GoldMinerRules.ValidMode(mode) || p.LevelIndex < 1 || p.LevelIndex > 10)
                 return Bad("Missing checkpoint.", out reason);
@@ -333,6 +346,7 @@ namespace XanaduYonder.Core.GoldMiner
 
         internal static bool State(GoldMinerState s, GoldMinerMode mode, out string reason)
         {
+            if (s != null && s.Source != null) return GoldMinerSourceValidation.State(s, mode, out reason);
             reason = null;
             if (s == null || !GoldMinerRules.ValidMode(mode) || (int)s.Phase < 0 || (int)s.Phase > 6 || s.LevelIndex < 1 || s.LevelIndex > 10)
                 return Bad("Invalid state/phase/level.", out reason);

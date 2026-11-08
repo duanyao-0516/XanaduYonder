@@ -7,15 +7,21 @@ namespace XanaduYonder.Runtime.GoldMiner
     {
         public Rect Safe { get; private set; }
         public Rect Mine { get; private set; }
+        public Rect SourceCanvas { get; private set; }
         public Rect Hud { get; private set; }
         public bool Cooperative { get; private set; }
         public float Scale { get; private set; }
         public float Width { get; private set; }
         public float Height { get; private set; }
+        public bool SourceCampaign { get; private set; }
+        private readonly GoldMinerMode mode;
 
         // All page coordinates are top-left anchored design units, not physical pixels.
-        public GoldMinerLayout(float width, float height, Rect safe, GoldMinerMode mode)
+        public GoldMinerLayout(float width, float height, Rect safe, GoldMinerMode mode,
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
+            this.mode = mode;
+            SourceCampaign = profile == GoldMinerBalanceProfile.Source;
             Width = width;
             Height = height;
             Safe = safe;
@@ -24,11 +30,20 @@ namespace XanaduYonder.Runtime.GoldMiner
             var mineTop = safe.y + (Cooperative ? 174 : Mathf.Clamp(safe.height * .17f, 208, 270));
             var available = new Rect(safe.x + 22, mineTop, safe.width - 44,
                 Mathf.Max(120, safe.yMax - 96 - mineTop));
-            Scale = Mathf.Min(available.width / (float)GoldMinerRules.Width(mode),
-                available.height / (float)GoldMinerRules.Height(mode));
-            var mineWidth = Scale * (float)GoldMinerRules.Width(mode);
+            float worldWidth = (float)(SourceCampaign ? GoldMinerSourceRules.Width(mode) : GoldMinerRules.Width(mode));
+            float worldHeight = (float)(SourceCampaign ? GoldMinerSourceRules.Height(mode) : GoldMinerRules.Height(mode));
+            Scale = Mathf.Min(available.width / worldWidth, available.height / worldHeight);
+            var mineWidth = Scale * worldWidth;
             Mine = new Rect(available.center.x - mineWidth * .5f, available.y,
-                mineWidth, Scale * (float)GoldMinerRules.Height(mode));
+                mineWidth, Scale * worldHeight);
+            // The source canvas includes sky above the hook origin (46/55 source pixels).
+            float sky = SourceCampaign ? (mode == GoldMinerMode.Solo ? .46f : .55f) * Scale : 0;
+            SourceCanvas = new Rect(Mine.x, Mine.y - sky, Mine.width, Mine.height + sky);
+        }
+
+        public double OriginX(int player)
+        {
+            return SourceCampaign ? GoldMinerSourceRules.OriginX(mode, player) : GoldMinerRules.OriginX(mode, player);
         }
 
         public Vector2 World(double x, double y)

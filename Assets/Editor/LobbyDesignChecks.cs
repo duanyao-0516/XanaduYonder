@@ -14,8 +14,6 @@ using XanaduYonder.Runtime;
 using XanaduYonder.Core;
 using XanaduYonder.Core.Sudoku;
 using XanaduYonder.Runtime.Jump;
-using XanaduYonder.Runtime.KingdomRush;
-using XanaduYonder.Runtime.ClassicGoldMiner;
 using XanaduYonder.Runtime.ZhaoyunAdou;
 using XanaduYonder.Runtime.LevelDevil;
 using XanaduYonder.Runtime.CutTheRope;
@@ -77,8 +75,6 @@ namespace XanaduYonder.EditorTools
                     CheckModes(fixture);
                     CheckRecords(fixture);
                     CheckOptions(fixture);
-                    CheckKingdomRushLifecycle(fixture);
-                    CheckClassicGoldMinerLifecycle(fixture);
                     CheckZhaoyunAdouLifecycle(fixture);
                     CheckCutTheRopeLifecycle(fixture);
                     report.AppendLine("PASS production lobby at 720x" + height);
@@ -105,12 +101,12 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou",
-            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
-        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "ShowAgeOfWarSelection", "EnterKingdomRush", "EnterCutTheRope", "EnterZhaoyunAdou",
-            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterClassicGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterFruitSlice", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 18, 19, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 24, 22, 20, 25, 5 };
-        private static string Category(int i) { return i < 9 ? "逻辑策略" : i < 15 ? "合成消除" : i < 25 ? "敏捷挑战" : "文字语言"; }
+        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou",
+            "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "AircraftFire", "Idiom" };
+        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterCutTheRope", "EnterZhaoyunAdou",
+            "EnterGame", "EnterWatermelon", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterAircraftFire", "EnterIdiom" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 20, 5 };
+        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 13 ? "合成消除" : i < 21 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -234,7 +230,6 @@ namespace XanaduYonder.EditorTools
                     foreach (var decoration in card.GetComponentsInChildren<Graphic>())
                         if (decoration.transform != card) Require(!decoration.raycastTarget, "Decorative children cannot steal taps: " + decoration.name);
                 }
-                CheckKingdomRushArtwork(f, mode);
                 CheckAircraftFireArtwork(f, mode);
                 CheckZhaoyunAdouArtwork(f, mode);
                 CheckCutTheRopeArtwork(f, mode);
@@ -270,16 +265,13 @@ namespace XanaduYonder.EditorTools
                 else Near(firstBounds.y, logicalFrame.rect.width - 18, "Single cards retain the shared right margin");
                 f.Scroll.content.anchoredPosition = Vector2.zero; f.Flush();
                 f.Capture("mode-" + mode + "-top");
-                f.ShowCard(FindCard(f.View.transform, "KingdomRush")); f.Capture("mode-" + mode + "-kingdom-rush");
                 f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
-                f.ShowCard(FindCard(f.View.transform, "ClassicGoldMiner")); f.Capture("mode-" + mode + "-classic-gold-miner");
                 f.ShowCard(FindCard(f.View.transform, "CutTheRope")); f.Capture("mode-" + mode + "-cut-the-rope");
                 if (mode == 2)
                 {
                     f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma");
                     f.ShowCard(FindCard(f.View.transform, "ZhaoyunAdou")); f.Capture("mode-2-zhaoyun-adou");
                     f.ShowCard(FindCard(f.View.transform, "LevelDevil")); f.Capture("mode-2-level-devil");
-                    f.ShowCard(FindCard(f.View.transform, "FruitSlice")); f.Capture("mode-2-fruit-slice");
                 }
                 // Every route receives actual module-driven taps/jitter/drags after each rebuild.
                 foreach (var card in cards)
@@ -424,7 +416,7 @@ namespace XanaduYonder.EditorTools
             if (mode != 2) return;
             var reference = Named(FindCard(f.View.transform, "AircraftFire"), "Game logo")
                 .GetComponentsInChildren<Mask>().Single().GetComponent<Image>();
-            foreach (var name in new[] { "AircraftFire", "CutTheRope", "ZhaoyunAdou", "ClassicGoldMiner", "LevelDevil", "FruitSlice" })
+            foreach (var name in new[] { "AircraftFire", "CutTheRope", "ZhaoyunAdou", "LevelDevil" })
             {
                 var slot = Named(FindCard(f.View.transform, name), "Game logo");
                 Near(slot.rect.width, 63, name + " rounded logo uses the shared slot width");
@@ -462,130 +454,11 @@ namespace XanaduYonder.EditorTools
                     }
                 }
             }
-            var miner = Named(FindCard(f.View.transform, "ClassicGoldMiner"), "Classic Gold Miner logo").GetComponent<Image>();
-            Require(miner.sprite == Resources.Load<Sprite>("Lobby/ClassicGoldMinerLogo"),
-                "Classic Gold Miner retains its supplied logo");
-            var fruit = Named(FindCard(f.View.transform, "FruitSlice"), "FruitSlice original logo").GetComponent<RawImage>();
-            Require(fruit.texture == Resources.Load<Texture2D>("Lobby/Icons/fruit-slice-logo"),
-                "Fruit Slice uses the replacement logo at its existing resource path");
+
         }
 
-        private static void CheckKingdomRushArtwork(Fixture f, int mode)
-        {
-            Require(f.Host.GetComponent<KingdomRushLauncher>() == null,
-                "Building or switching lobby views never creates the native Kingdom Rush launcher");
-            var card = FindCard(f.View.transform, "KingdomRush");
-            Require(Named(card, "Game name").GetComponent<Text>().text == "王国保卫战", "Kingdom Rush retains its Chinese title in every view");
-            if (mode != 2)
-            {
-                var icon = Named(card, "Game icon").GetComponent<Image>();
-                var approvedIcon = Resources.Load<Sprite>("Lobby/Icons/kingdom-rush");
-                Require(approvedIcon != null && icon.sprite == approvedIcon, "Compact Kingdom Rush views use the approved castle icon");
-                return;
-            }
-            var slot = Named(card, "Game logo");
-            var zumaCard = FindCard(f.View.transform, "Zuma");
-            var zumaSlot = Named(zumaCard, "Game logo");
-            Near(slot.anchoredPosition.x, zumaSlot.anchoredPosition.x, "Kingdom Rush and Zuma logos share horizontal placement");
-            Near(slot.anchoredPosition.y, zumaSlot.anchoredPosition.y, "Kingdom Rush and Zuma logos share vertical placement");
-            Near(slot.rect.width, 63, "Kingdom Rush uses the shared 63-unit logo width");
-            Near(slot.rect.height, 63, "Kingdom Rush uses the shared 63-unit logo height");
-            var artwork = slot.GetComponentsInChildren<RawImage>().Single();
-            var zumaArtwork = zumaSlot.GetComponentsInChildren<RawImage>().Single();
-            var approvedLogo = Resources.Load<Texture2D>("KingdomRush/Logo");
-            Require(approvedLogo != null && artwork.texture == approvedLogo, "Single Kingdom Rush view uses the user-supplied logo directly");
-            Require(artwork.uvRect == new Rect(0, 0, 1, 1), "The supplied Kingdom Rush logo is not cropped");
-            Require(slot.GetComponentsInChildren<Mask>().Length == 0 && slot.GetComponentsInChildren<RectMask2D>().Length == 0,
-                "Kingdom Rush does not add a mask to the supplied logo");
-            Require(slot.GetComponentsInChildren<Graphic>().Length == 1, "Kingdom Rush artwork has no extra background panel");
-            var corners = new Vector3[4]; var zumaCorners = new Vector3[4];
-            artwork.rectTransform.GetWorldCorners(corners); zumaArtwork.rectTransform.GetWorldCorners(zumaCorners);
-            for (int i = 0; i < corners.Length; i++)
-            {
-                var local = card.InverseTransformPoint(corners[i]);
-                var zumaLocal = zumaCard.InverseTransformPoint(zumaCorners[i]);
-                Near(local.x, zumaLocal.x, "Kingdom Rush and Zuma rendered logo corner x " + i);
-                Near(local.y, zumaLocal.y, "Kingdom Rush and Zuma rendered logo corner y " + i);
-            }
-        }
 
-        private static void CheckKingdomRushLifecycle(Fixture f)
-        {
-            var pageField = typeof(AppController).GetField("activePage", Members);
-            object lobbyPage = pageField.GetValue(f.Host);
-            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
-            Invoke(f.Host, "EnterKingdomRush");
-            Require(f.Host.GetComponent<KingdomRushLauncher>() == null, "A stale Kingdom Rush action cannot launch from another page");
-            pageField.SetValue(f.Host, lobbyPage);
 
-            Invoke(f.Host, "EnsureKingdomRushLauncher");
-            Invoke(f.Host, "EnsureKingdomRushLauncher");
-            var launcher = f.Host.GetComponent<KingdomRushLauncher>();
-            Require(launcher != null && f.Host.GetComponents<KingdomRushLauncher>().Length == 1, "Repeated lazy initialization owns one launcher");
-            var returnedField = typeof(KingdomRushLauncher).GetField("Returned", Members);
-            Require(((Delegate)returnedField.GetValue(launcher)).GetInvocationList().Length == 1, "The native return callback is subscribed once");
-            typeof(KingdomRushLauncher).GetProperty("IsBusy").SetValue(launcher, true);
-            Invoke(f.Host, "EnterZhaoyunAdou");
-            Require(f.Host.GetComponent<ZhaoyunAdouLauncher>() == null, "Kingdom Rush blocks a concurrent WebView launch");
-            Invoke(f.Host, "SetExternalGameLobbyInput", false);
-            SetModeForCheck(f.Host, 0); f.Flush();
-            Require(!FindCard(f.View.transform, "KingdomRush").GetComponent<Button>().IsInteractable(),
-                "A lobby rebuild cannot reactivate cards while the native game is opening");
-            var modalBefore = Property(f.Host, "modal");
-            Invoke(f.Host, "EnterKingdomRush"); Invoke(f.Host, "HandleBack");
-            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) && launcher.IsBusy,
-                "Repeated entry and Back do not open a second session or a lobby dialog during a native session");
-            typeof(KingdomRushLauncher).GetProperty("IsBusy").SetValue(launcher, false);
-            ((Action<string>)returnedField.GetValue(launcher))(null);
-            Require(FindCard(f.View.transform, "KingdomRush").GetComponent<Button>().IsInteractable(),
-                "The actual native return callback restores the rebuilt lobby card");
-            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
-            ((Action<string>)returnedField.GetValue(launcher))(KingdomRushLauncher.OpenFailureMessage);
-            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) &&
-                pageField.GetValue(f.Host).Equals(Enum.Parse(pageField.FieldType, "Game2048")),
-                "A delayed native error cannot replace another active page or its dialog");
-            pageField.SetValue(f.Host, lobbyPage);
-            Invoke(f.Host, "ReleaseKingdomRushLauncher");
-            Require(returnedField.GetValue(launcher) == null, "Host teardown releases the native return subscription");
-        }
-
-        private static void CheckClassicGoldMinerLifecycle(Fixture f)
-        {
-            var pageField = typeof(AppController).GetField("activePage", Members);
-            object lobbyPage = pageField.GetValue(f.Host);
-            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
-            Invoke(f.Host, "EnterClassicGoldMiner");
-            Require(f.Host.GetComponent<ClassicGoldMinerLauncher>() == null, "A stale Classic Gold Miner action cannot launch from another page");
-            pageField.SetValue(f.Host, lobbyPage);
-
-            Invoke(f.Host, "EnsureClassicGoldMinerLauncher");
-            Invoke(f.Host, "EnsureClassicGoldMinerLauncher");
-            var launcher = f.Host.GetComponent<ClassicGoldMinerLauncher>();
-            Require(launcher != null && f.Host.GetComponents<ClassicGoldMinerLauncher>().Length == 1, "Repeated lazy initialization owns one launcher");
-            var returnedField = typeof(ClassicGoldMinerLauncher).GetField("Returned", Members);
-            Require(((Delegate)returnedField.GetValue(launcher)).GetInvocationList().Length == 1, "The native return callback is subscribed once");
-            typeof(ClassicGoldMinerLauncher).GetProperty("IsBusy").SetValue(launcher, true);
-            Invoke(f.Host, "SetExternalGameLobbyInput", false);
-            SetModeForCheck(f.Host, 0); f.Flush();
-            Require(!FindCard(f.View.transform, "ClassicGoldMiner").GetComponent<Button>().IsInteractable(),
-                "A lobby rebuild cannot reactivate cards while the native game is opening");
-            var modalBefore = Property(f.Host, "modal");
-            Invoke(f.Host, "EnterClassicGoldMiner"); Invoke(f.Host, "HandleBack");
-            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) && launcher.IsBusy,
-                "Repeated entry and Back do not open a second session or a lobby dialog during a native session");
-            typeof(ClassicGoldMinerLauncher).GetProperty("IsBusy").SetValue(launcher, false);
-            ((Action<string>)returnedField.GetValue(launcher))(null);
-            Require(FindCard(f.View.transform, "ClassicGoldMiner").GetComponent<Button>().IsInteractable(),
-                "The actual native return callback restores the rebuilt lobby card");
-            pageField.SetValue(f.Host, Enum.Parse(pageField.FieldType, "Game2048"));
-            ((Action<string>)returnedField.GetValue(launcher))(ClassicGoldMinerLauncher.OpenFailureMessage);
-            Require(ReferenceEquals(modalBefore, Property(f.Host, "modal")) &&
-                pageField.GetValue(f.Host).Equals(Enum.Parse(pageField.FieldType, "Game2048")),
-                "A delayed native error cannot replace another active page or its dialog");
-            pageField.SetValue(f.Host, lobbyPage);
-            Invoke(f.Host, "ReleaseClassicGoldMinerLauncher");
-            Require(returnedField.GetValue(launcher) == null, "Host teardown releases the native return subscription");
-        }
 
         private static void CheckZhaoyunAdouArtwork(Fixture f, int mode)
         {
@@ -641,14 +514,14 @@ namespace XanaduYonder.EditorTools
             SetModeForCheck(f.Host, 2); f.Flush();
             Require(!FindCard(f.View.transform, "ZhaoyunAdou").GetComponent<Button>().IsInteractable(),
                 "Rebuilt lobby remains locked during the WebView session");
-            int nativeLaunchers = f.Host.GetComponents<KingdomRushLauncher>().Length;
+            int nativeLaunchers = f.Host.GetComponents<CutTheRopeLauncher>().Length;
             var modal = Property(f.Host, "modal");
-            Invoke(f.Host, "EnterKingdomRush"); Invoke(f.Host, "EnterZhaoyunAdou");
+            Invoke(f.Host, "EnterCutTheRope"); Invoke(f.Host, "EnterZhaoyunAdou");
             Invoke(f.Host, "EnterAircraftFire"); Invoke(f.Host, "HandleBack");
-            Require(nativeLaunchers == f.Host.GetComponents<KingdomRushLauncher>().Length &&
+            Require(nativeLaunchers == f.Host.GetComponents<CutTheRopeLauncher>().Length &&
                 ReferenceEquals(modal, Property(f.Host, "modal")) && pageField.GetValue(f.Host).Equals(lobby),
                 "A WebView session blocks both external and Unity entries and lobby Back");
-            Invoke(f.Host, "OnKingdomRushReturned", new object[] { null });
+            Invoke(f.Host, "OnCutTheRopeReturned", new object[] { null });
             Require(!FindCard(f.View.transform, "ZhaoyunAdou").GetComponent<Button>().IsInteractable(),
                 "A stale return from another host cannot release the WebView input lock");
             typeof(ZhaoyunAdouLauncher).GetProperty("IsBusy").SetValue(launcher, false);

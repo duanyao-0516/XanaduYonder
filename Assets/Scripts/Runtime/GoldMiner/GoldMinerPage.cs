@@ -39,6 +39,13 @@ namespace XanaduYonder.Runtime.GoldMiner
 #endif
         public string SaveError { get; private set; }
         public event Action Changed;
+        public GoldMinerRootSnapshot GetProgressSnapshot() { return session?.GetSnapshot(); }
+
+        private static bool AtSourceSaveLimit(GoldMinerRunSnapshot run)
+        {
+            return run.BalanceProfile == GoldMinerBalanceProfile.Source && run.Mode == GoldMinerMode.Solo &&
+                run.Current.LevelIndex >= GoldMinerSourceRules.MaximumSoloLevel;
+        }
 
         public void Initialize(Action goLobby, Func<bool> sound, Func<bool> haptics,
             Action<bool> soundSetter, Action<bool> hapticsSetter, Action haptic)
@@ -270,6 +277,11 @@ namespace XanaduYonder.Runtime.GoldMiner
                     sound?.Play(cue);
                 }
                 else if (item.Kind == GoldMinerEventKind.Countdown) sound?.Play("countdown");
+                else if (item.Kind == GoldMinerEventKind.Dynamite && session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Source)
+                {
+                    scene?.SourceExplosion(session.GetRunSnapshot(), item.EntityId);
+                    sound?.Play("explosion");
+                }
             }
             if (result.SettlementReady)
             {
@@ -323,8 +335,11 @@ namespace XanaduYonder.Runtime.GoldMiner
             if (run == null || run.LastCommandSeq == long.MaxValue) return;
             if (session.TryUseDynamite(player, run.LastCommandSeq + 1))
             {
-                scene?.Explode(run, player);
-                sound?.Play("explosion");
+                if (run.BalanceProfile != GoldMinerBalanceProfile.Source)
+                {
+                    scene?.Explode(run, player);
+                    sound?.Play("explosion");
+                }
             }
             else sound?.Play("unavailable");
         }
@@ -387,7 +402,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                         EnsureCatalog();
                         uint seed = BitConverter.ToUInt32(Guid.NewGuid().ToByteArray(), 0);
                         if (seed == 0) seed = 1;
-                        var start = catalog.CreateStart(mode, 1, seed);
+                        var start = catalog.CreateSourceStart(mode, 1, seed);
                         var runId = Guid.NewGuid().ToString("N");
                         CreateChallenge(mode, runId, seed, start);
                         return;
@@ -417,7 +432,10 @@ namespace XanaduYonder.Runtime.GoldMiner
             {
                 EnsureCatalog();
                 var run = session.GetRunSnapshot();
-                var start = catalog.CreateStart(run.Mode, run.Current.LevelIndex + 1, run.RunSeed, run);
+                if (AtSourceSaveLimit(run)) { BuildGameplay(run); ShowResult(run); return; }
+                var start = run.BalanceProfile == GoldMinerBalanceProfile.Source
+                    ? catalog.CreateSourceStart(run.Mode, run.Current.LevelIndex + 1, run.RunSeed, run)
+                    : catalog.CreateStart(run.Mode, run.Current.LevelIndex + 1, run.RunSeed, run);
                 if (Apply(() => session.PrepareNextLevel(start))) RebuildRun();
             }
             catch (Exception error)

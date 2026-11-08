@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace XanaduYonder.Runtime.ZhaoyunAdou
 {
-    // Only the Android Activity boundary belongs here; game rules and saves remain in the offline web content.
+    // Only the native host boundary belongs here; game rules and saves remain in the offline web content.
     public sealed class ZhaoyunAdouLauncher : MonoBehaviour
     {
         public const string OpenFailureMessage = "赵云与阿斗暂时无法打开，请稍后重试。";
@@ -15,7 +15,16 @@ namespace XanaduYonder.Runtime.ZhaoyunAdou
         public bool TryOpen(bool soundEnabled, bool hapticsEnabled)
         {
             if (IsBusy) return true;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+            try
+            {
+                if (!IOSWebGameBridge.Open("zhaoyun-adou", soundEnabled)) return false;
+                IsBusy = true;
+                nextStatusCheck = Time.unscaledTime + .25f;
+                return true;
+            }
+            catch (Exception error) { Debug.LogException(error); return false; }
+#elif UNITY_ANDROID && !UNITY_EDITOR
             try
             {
                 using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
@@ -38,19 +47,23 @@ namespace XanaduYonder.Runtime.ZhaoyunAdou
                 return false;
             }
 #else
-            Debug.LogWarning("Zhaoyun Adou requires the bundled Android runtime.");
+            Debug.LogWarning("Zhaoyun Adou requires a bundled mobile WebView host.");
             return false;
 #endif
         }
 
         private void Update()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
             if (!IsBusy || Time.unscaledTime < nextStatusCheck) return;
             nextStatusCheck = Time.unscaledTime + .25f;
             string failure;
             try
             {
+#if UNITY_IOS
+                if (IOSWebGameBridge.IsRunning()) return;
+                failure = IOSWebGameBridge.GetLastError();
+#else
                 using (var bridge = new AndroidJavaClass(BridgeClass))
                 {
                     // open() marks the queued UI-thread launch as running too. This
@@ -58,6 +71,7 @@ namespace XanaduYonder.Runtime.ZhaoyunAdou
                     if (bridge.CallStatic<bool>("isRunning")) return;
                     failure = bridge.CallStatic<string>("getLastError");
                 }
+#endif
             }
             catch (Exception error)
             {

@@ -1,6 +1,6 @@
 # 架构与存档契约
 
-当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 包含 26 个入口，iOS 包含 20 个入口，差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
+当前源码共用 Unity 工程，版本为 0.9.6 / build 15，Android 与 iOS 均包含 22 个入口，平台宿主差异见[统一构建说明](building.md)。当前 Android／iOS 发布见[v0.9.6 记录](releases/v0.9.6.md)，历史 Android v0.9.4 / versionCode 13 / 20 入口见[旧发布记录](releases/v0.9.4.md)；历史 v0.7.0 的十七款范围保留在[对应记录](releases/v0.7.0.md)。大厅、设置和生命周期由公共 shell 管理，每款游戏独立拥有规则、表现与存档；Dino 只跨进程保存纪录和方向偏好，Flappy Bird 只保存最高纪录，飞机大战只保存分模式最高分与最高到达关卡。
 
 ## 源码与构建目录
 
@@ -39,7 +39,7 @@ iOS 资源过滤在副本内完成，源码保留 Android 的全部内容。C# �
 | Flappy Bird | `Core/FlappyBird` / `FlappySession`、`FlappyBirdPage` | `flappy-bird-v1.json` | 最高纪录；不跨进程保存对局 |
 | 连连看 | `Core/LinkMatch` / `LinkMatchSession`、`LinkMatchProfile`、`LinkMatchPage`、`LinkMatchBoardView` | `link-match-v2.json` | 轻松／挑战 × 五关共十槽、真实牌阵与计时、道具、随机状态、终局及同局最佳成绩；严格迁移 v1 六槽 |
 | 飞机大战 | `Core/AircraftFire` / `AircraftFirePage`、`AircraftScene` | `aircraft-fire-v1.json` | 经典普通／疯狂／闯关最高分、最高到达关卡；不跨进程保存战场 |
-| 赵云与阿斗（Android） | 原 Laya 游戏 / 独立 Android WebView | 独立 origin 的 localStorage：`xanadu.zhaoyun-adou.player.v1` | 金币、段位、武器/武将与设置；不跨进程保存战场 |
+| 赵云与阿斗 | 原 Laya 游戏 / 平台 WebView | 独立 origin 的 localStorage：`xanadu.zhaoyun-adou.player.v1` | 金币、段位、武器/武将与设置；不跨进程保存战场 |
 
 [跳一跳模块](jump-game.md)、[旸了个旸模块](sheep-game.md)、[成语接龙模块](idiom-game.md)、[数独模块](sudoku-game.md)、[Dino 模块](dino-game.md)与[数字华容道模块](sliding-puzzle-game.md)分别说明各自规则和存档；合成大西瓜的独立边界见下文；扫雷的规则、整帧输入、只读总览和存档边界见[完整设计](superpowers/specs/2026-10-27-minesweeper-design.md)。新增游戏不修改以下 2048 和公共设置的旧协议。
 
@@ -170,7 +170,7 @@ AppController 只接入第 17 张大厅卡、导航、共享设置与宿主生�
 
 ## 黄金矿工的独立边界
 
-`GoldMinerGame` 用 60 Hz 固定步模拟，按相对扫掠首次接触分配矿物，所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
+`GoldMinerGame` 用 60 Hz 固定步模拟：旧 profile 按相对扫掠首次接触分配矿物，Source profile 使用原游戏逐帧接触规则，详见[源战役迁移](gold-miner/source-campaign-migration.md)。所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
 
 `GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
 
@@ -261,21 +261,9 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 资源仅包含恢复的游戏图像、原应用图标、标题及五个 MP3，逐文件散列和来源见[资源清单](aircraft-fire-assets.json)。`scripts/test-aircraft-fire.sh` 检查生产规则，`scripts/test-aircraft-fire-persistence.sh` 检查真实 JSON 与临时目录主备恢复。源码、资源检查与独立测试不代表 Unity、APK 或真机验证已通过。
 
-## 战争进化史的独立边界
-
-`Core/AgeOfWar/One` 与 `Core/AgeOfWar/Two` 分别移植两代原规则，只共享命令、显示快照和音频事件 DTO。一代固定 40 Hz 并保留 AVM1 帧事件顺序；二代每个实际 stage 事件读取整数毫秒差，再按原 Moon 顺序推进相机、弹体、单位和 UI。二代的帧率设置改变实际刷新目标，速度倍数作用于原 elapsed-time 路径。两者不能交换成同一套简化战斗循环。
-
-`AgeOfWarPage` 拥有横屏进入/退出、导航 token、输入、时间和音频；`AgeOfWarView` 只渲染快照及原界面。`AgeOfWarAssets` 按代持有图集、字体与音频，离页释放；原始 SWF 只参加离线提取与运行对照，该模块没有 SWF/Ruffle/WebView 依赖。点击通过原 stage 坐标映射；触屏空白战场拖动镜头。方向稳定之前不交出宿主输入，返回大厅在竖屏稳定后完成。后台取消正在进行的触摸，冻结模拟与声音；恢复时重新取时，不能补跑后台经过的时间。
-
-`AgeOfWarOneBattle` 和 `AgeOfWarTwoBattle` 各自拥有显式版本化二进制快照，保存完整规则状态、随机序列、AI、单位/炮塔/弹体/特效、训练队列、技能时序及动画引用。恢复走无副作用读取路径，不重放命令、伤害或声音。`AgeOfWarSaveStore` 独占 `age-of-war-one-v1.json` 与 `age-of-war-two-v1.json` 及各自备份/临时文件；JSON 外层保存版本、视口、菜单与音画设置，核心负载上限 16 MiB。临时文件刷盘后替换，损坏主档不会覆盖合法备份；不支持的版本和 I/O 错误禁止覆盖，双档损坏保留原文件。
-
-`AgeOfWarPage` 在完整模拟步/命令边界同步取快照，每秒及有效命令、暂停、离页、后台/失焦、销毁前保存。恢复先暂停，不补算离线时间；版本选择页固定进入游戏主菜单，主菜单仅在存在可恢复战场时启用 Continue。点击 Continue 重新读取存档并恢复，不复用菜单打开时的旧快照。胜负结算向主备写入空战场标记；保存失败保留内存和重试提示，离页先补写成功。系统强杀可能回退至最后成功检查点。
-
-游戏主菜单的玩法与设置采用局部横屏 UGUI 弹窗，打开时屏蔽页面手动指针路径，关闭、后台及方向变化时取消未提交触点；玩法内容按代区分并附原英文词汇的中文对照。共享声音、触感开关仍由现有宿主持久化，不改写其他游戏的存档协议。推箱子在自身页面隐藏时不响应其它横屏游戏触发的布局刷新；显式初始化仍使用强制布局，保存模型不受影响。真实验证范围见[接入记录](verification-age-of-war.md)。
-
 ## 赵云与阿斗的独立边界
 
-`AppController.ZhaoyunAdou` 延迟创建 `ZhaoyunAdouLauncher`，由 JNI 调用专用 `ZhaoyunAdouBridge`。Unity 只拥有大厅路由、声音总开关与外部游戏互斥；`AppController.ExternalGames` 在稳定大厅根节点加输入锁，王国保卫战与本游戏共用门禁，任一旧回调不能解锁仍运行的另一个外部游戏。
+`AppController.ZhaoyunAdou` 延迟创建 `ZhaoyunAdouLauncher`，Android 由 JNI 调用专用 `ZhaoyunAdouBridge`，iOS 交给共用 WKWebView 宿主。Unity 只拥有大厅路由、声音总开关与外部游戏互斥；`AppController.ExternalGames` 在稳定大厅根节点加输入锁，三款网页游戏共用门禁，任一旧回调不能解锁仍运行的另一个外部游戏。
 
 `ZhaoyunAdouActivity` 使用系统 WebView 执行原 Laya 客户端，直接全屏、不为边缘手势增加留白。原生层管理资源白名单、焦点与前后台、两秒内两次系统返回。APK assets 映射至固定 HTTPS origin，拒绝任何网络回退、外部导航和权限请求，不向 JS 注册原生能力。页面先完成保存/暂停/静音握手，宿主再冻结 WebView；代次校验丢弃旧页面或旧焦点的回调。
 
@@ -291,4 +279,12 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 连连看继续使用 `link-match-v2.json`：根对象新增类别位掩码 `selectedCategories`，每个对局新增稳定资源名 `patternIds`。旧档缺字段时分别使用全部类别和旧图案顺序；显式错误值拒绝。新开局从所选类别取足关卡要求的图案，独立随机流不影响牌阵/洗牌 RNG。续局只读已保存映射；选定图案不足时不替换已有对局，回到选关页提示增加类别。
 
-黄金矿工 rulesVersion 4 的每个 run 明确保存 balanceProfile；新挑战使用经典数值，v1-v3 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束。详细参数与证据见[本轮说明](gameplay-polish.md)。
+黄金矿工每个 run 明确保存 balanceProfile；Source 5 新挑战使用源布局与独立规则。v1-v4 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束，旧 Classic 4 不能被重新解释为 Source 5。详细参数与证据见[本轮说明](gameplay-polish.md)。
+
+## iOS 网页游戏宿主
+
+`Assets/Plugins/iOS` 的 WKWebView 宿主拥有打开、方向、安全区、前后台、退出确认和资源服务。资源位于 `Data/Raw/web-games/{game}/`，每款游戏绑定固定 loopback 端口；只服务清单中通过大小／SHA-256 校验的离线资源，禁止外部导航与网络回退。使用持久化 `WKWebsiteDataStore`，不在退出时清空网页数据。
+
+游戏协议保留在对应内容适配器：赵云使用 configure／setActive／exit／status；割绳子同步读写存档，native 写入完成才返回成功；只有一道门使用 host state 与 exit-ready／exit-error 握手。页面销毁、旧回调和后台恢复由会话代次隔离。游戏保存失败时保留页面和错误提示，不能把关闭 WebView 当作成功保存。Android 各自 Activity 继续拥有原有平台生命周期。
+
+构建与真机证据见[本轮记录](verification-ios-web-games.md)。删除游戏的旧文档属于历史记录，不再描述当前可运行模块。

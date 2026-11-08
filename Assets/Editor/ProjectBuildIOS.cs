@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -20,6 +21,67 @@ namespace XanaduYonder.EditorTools
         {
             public string staging_root;
             public string[] excluded_paths;
+            public WebGame[] web_games;
+        }
+
+        [Serializable] private sealed class WebGame
+        {
+            public string id;
+            public string root;
+            public int file_count;
+            public string manifest_sha256;
+        }
+        [Serializable] private sealed class WebManifest { public WebFile[] files; }
+        [Serializable] private sealed class WebFile
+        {
+            public string path;
+            public long bytes;
+            public string sha256;
+        }
+
+        private static string Digest(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var hash = SHA256.Create())
+                return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+        }
+
+        private static void VerifyWebGames(string root, WebGame[] games, bool exported)
+        {
+            var expected = new HashSet<string> { "zhaoyun-adou", "cut-the-rope", "level-devil" };
+            if (games == null || games.Length != expected.Count)
+                throw new BuildFailedException("Three offline iOS web games are required.");
+            foreach (var game in games)
+            {
+                if (game == null || !expected.Remove(game.id) ||
+                    game.root != "Assets/StreamingAssets/web-games/" + game.id)
+                    throw new BuildFailedException("Invalid iOS web game staging entry.");
+                var directory = Path.Combine(root, exported ? "Data/Raw/web-games/" + game.id : game.root);
+                var manifestPath = Path.Combine(directory, "manifest.json");
+                if (!File.Exists(manifestPath) || Digest(manifestPath) != game.manifest_sha256)
+                    throw new BuildFailedException("Missing/changed web manifest: " + game.id);
+                var manifest = JsonUtility.FromJson<WebManifest>(File.ReadAllText(manifestPath));
+                if (manifest == null || manifest.files == null || manifest.files.Length != game.file_count)
+                    throw new BuildFailedException("Invalid web file inventory: " + game.id);
+                var names = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var file in manifest.files)
+                {
+                    if (file == null || string.IsNullOrEmpty(file.path) || file.path.Contains("\\") ||
+                        Path.IsPathRooted(file.path) || file.path.Split('/').Any(p => p == ".." || p == "." || p.Length == 0) ||
+                        file.path == "manifest.json" || !names.Add(file.path))
+                        throw new BuildFailedException("Unsafe/duplicate web asset path: " + game.id);
+                    var path = Path.Combine(directory, file.path);
+                    if (!File.Exists(path) || new FileInfo(path).Length != file.bytes || Digest(path) != file.sha256)
+                        throw new BuildFailedException("Missing/changed web asset: " + game.id + "/" + file.path);
+                }
+                // Unity .meta files are project metadata, not served resources.
+                var actual = new HashSet<string>(Directory.GetFiles(directory, "*", SearchOption.AllDirectories)
+                    .Where(p => !p.EndsWith(".meta", StringComparison.Ordinal))
+                    .Select(p => p.Substring(directory.Length + 1).Replace('\\', '/')), StringComparer.Ordinal);
+                names.Add("manifest.json");
+                if (!names.Contains("index.html") || !names.SetEquals(actual))
+                    throw new BuildFailedException("Unexpected web asset inventory: " + game.id);
+            }
         }
 
         public static void Export()
@@ -56,6 +118,7 @@ namespace XanaduYonder.EditorTools
             foreach (var path in manifest.excluded_paths)
                 if (File.Exists(Path.Combine(project, path)) || Directory.Exists(Path.Combine(project, path)))
                     throw new BuildFailedException("Excluded content remains in iOS staging: " + path);
+            VerifyWebGames(project, manifest.web_games, false);
 
             var output = Environment.GetEnvironmentVariable("XANADU_IOS_XCODE_PATH");
             if (string.IsNullOrEmpty(output) || Path.GetFullPath(output) != Path.Combine(artifactDirectory, "xcode"))
@@ -91,6 +154,7 @@ namespace XanaduYonder.EditorTools
                     throw new BuildFailedException("Android-only payload was exported: " + path);
             if (!packed.Any(path => path.StartsWith("Assets/Resources/GoldMiner/", StringComparison.Ordinal)))
                 throw new BuildFailedException("The native Unity GoldMiner resources are missing.");
+            VerifyWebGames(output, manifest.web_games, true);
             File.WriteAllText(Path.Combine(artifactDirectory, "export-summary.txt"),
                 "Unity=" + Application.unityVersion + "\nBundleIdentifier=" + BundleIdentifier +
                 "\nVersion=" + ProjectBuild.Version + "\nXcodeProject=" + output +
@@ -125,7 +189,7 @@ namespace XanaduYonder.EditorTools
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
-            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
             EditorUserBuildSettings.development = false;
             EditorUserBuildSettings.allowDebugging = false;
             EditorUserBuildSettings.connectProfiler = false;

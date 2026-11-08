@@ -663,8 +663,8 @@ public final class LevelDevilActivity extends Activity {
         if (isTaskRoot()) {
             try {
                 Bundle metadata = getPackageManager().getActivityInfo(new ComponentName(this,
-                        "com.xanaduyonder.kingdomrush.KingdomRushLauncherActivity"), PackageManager.GET_META_DATA).metaData;
-                String unity = metadata == null ? null : metadata.getString("kingdomrush.unity_activity");
+                        "com.duanyao.xanaduyonder.XanaduLauncherActivity"), PackageManager.GET_META_DATA).metaData;
+                String unity = metadata == null ? null : metadata.getString("xanadu.unity_activity");
                 if (unity == null) unity = "com.unity3d.player.UnityPlayerActivity";
                 startActivity(new Intent().setClassName(this, unity)
                         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));

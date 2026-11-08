@@ -93,6 +93,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 "Player badge P1", "Player badge P2", "左半屏点击出钩", "右半屏点击出钩");
             float w = panel.rect.width, h = panel.rect.height;
             string tip = state.LevelIndex >= 5 ? "留意移动的钻石" : state.LevelIndex >= 3 ? "小鼹鼠会来回跑动" : state.LevelIndex >= 2 ? "钻石价值高，看准再出钩" : "大金块更值钱，回收也更慢";
+            if (state.Source != null) tip = coop ? "两人共享炸药，留意本关目标" : "矿场按组变化，留意炸药桶与移动目标";
             if (coop)
             {
                 GoldMinerSceneView.Picture(panel, "Ready miners", art.Get("backgrounds/mode-coop-illustration"), 32, 80, w * .39f, 245);
@@ -100,7 +101,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 AmountRow(panel, "Ready target", w * .44f, 120, w * .51f, 74, "目标", state.Target, true, UiFactory.Hex("BA3B1F"));
                 AmountRow(panel, "Ready funds", w * .44f, 208, w * .51f, 66, "资金", state.Cash);
                 TextLabel(panel, tip, w * .42f, 285, w * .55f, 47, 23, UiFactory.Hex("6B421F"), TextAnchor.MiddleCenter, true);
-                TextLabel(panel, "P1 点击左半屏 · P2 点击右半屏 · 60 秒合力达标", 30, h - 169, w - 60, 40, 22, Forest, TextAnchor.MiddleCenter);
+                TextLabel(panel, "P1 点击左半屏 · P2 点击右半屏 · " + (state.Source != null ? "40" : "60") + " 秒合力达标", 30, h - 169, w - 60, 40, 22, Forest, TextAnchor.MiddleCenter);
                 ActionButton(panel, "返回模式", 30, h - 99, 175, 64, ShowSelection, false);
                 ActionButton(panel, "开始采矿", 225, h - 99, w - 255, 64, () => ContinueRun(true), true);
             }
@@ -111,9 +112,9 @@ namespace XanaduYonder.Runtime.GoldMiner
                 TextLabel(panel, "第 " + state.LevelIndex + " 关", 25, 160, w - 50, 105, 66, Forest, TextAnchor.MiddleCenter, true);
                 AmountRow(panel, "Ready target", 36, 280, w - 72, 98, "目标金额", state.Target, true, UiFactory.Hex("BA3B1F"));
                 AmountRow(panel, "Ready funds", 52, 393, w - 104, 78, "当前资金", state.Cash);
-                string tipKey = state.LevelIndex >= 3 ? "characters/mole-idle" : state.LevelIndex >= 2 ? "objects/ore_diamond" : "objects/ore_gold_large";
+                string tipKey = state.Source != null ? "objects/ore_gold_large" : state.LevelIndex >= 3 ? "characters/mole-idle" : state.LevelIndex >= 2 ? "objects/ore_diamond" : "objects/ore_gold_large";
                 ArtIcon(panel, "Level feature", tipKey, w * .5f - 100, 492, 200, h - 730);
-                if (state.LevelIndex >= 5) ArtIcon(panel, "Moving diamond", "objects/ore_diamond", w * .5f + 15, 532, 80, 70);
+                if (state.Source == null && state.LevelIndex >= 5) ArtIcon(panel, "Moving diamond", "objects/ore_diamond", w * .5f + 15, 532, 80, 70);
                 TextLabel(panel, tip, 25, h - 231, w - 50, 44, 26, UiFactory.Hex("6B421F"), TextAnchor.MiddleCenter, true);
                 ActionButton(panel, "开始采矿", 48, h - 171, w - 96, 84, () => ContinueRun(true), true);
                 ActionButton(panel, "返回模式", w * .5f - 110, h - 70, 220, 48, ShowSelection, false);
@@ -195,9 +196,13 @@ namespace XanaduYonder.Runtime.GoldMiner
             else HelpControl(modal, safe.x + 75, cardY, safe.width - 150, "看准摆动方向", "点击矿区出钩", Amber);
             var tips = ArtPanel(modal, "Help tips", safe.center.x - Mathf.Min(380, (safe.width - 72) * .5f),
                 safe.yMax - (coop ? 280 : 500), Mathf.Min(760, safe.width - 72), coop ? 120 : 245);
-            TextLabel(tips, "矿物回到地面才入账 · 重物回收更慢\n炸药可丢弃钩上物品，加快回收\n时间到后，已出发的钩子会完成最后一趟", 22, 16, tips.rect.width - 44, tips.rect.height - 32,
+            bool source = session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Source;
+            string instructions = source
+                ? "矿物回到地面才入账 · 重物回收更慢\n炸药可丢弃钩上物品，加快回收\n时间到立即结算，未送回的矿物不计入资金"
+                : "矿物回到地面才入账 · 重物回收更慢\n炸药可丢弃钩上物品，加快回收\n时间到后，已出发的钩子会完成最后一趟";
+            TextLabel(tips, instructions, 22, 16, tips.rect.width - 44, tips.rect.height - 32,
                 coop ? 20 : 23, Forest, TextAnchor.MiddleCenter);
-            TextLabel(modal, coop ? "共同达成目标，炸药各自使用" : "达成目标后，还能继续赚取资金", safe.x + 30, safe.yMax - 146,
+            TextLabel(modal, coop ? source ? "共同达成目标，炸药两人共享" : "共同达成目标，炸药各自使用" : "达成目标后，还能继续赚取资金", safe.x + 30, safe.yMax - 146,
                 safe.width - 60, 38, 24, UiFactory.Hex("FFE6A0"), TextAnchor.MiddleCenter, true);
             ActionButton(modal, "知道了", safe.center.x - 170, safe.yMax - 95, 340, 72, ShowPause, true);
             modalBack = ShowPause;
@@ -219,6 +224,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             var state = run.Current;
             bool failed = state.Phase == GoldMinerPhase.Failed;
             bool complete = state.Phase == GoldMinerPhase.Completed;
+            bool saveLimit = !failed && AtSourceSaveLimit(run);
             bool coop = run.Mode == GoldMinerMode.Coop;
             var panel = ModalPanel(coop ? 740 : 636, coop ? 520 : 920);
             float w = panel.rect.width, h = panel.rect.height;
@@ -245,7 +251,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 titleHeight = (coop ? 46 : 78) * artScale;
                 titleSize = Mathf.FloorToInt((coop ? 31 : 48) * artScale);
             }
-            var heading = TextLabel(panel, failed ? "再试一次吧" : complete ? "满载而归！" : coop ? "合作过关！" : "顺利过关！", titleX, titleY,
+            var heading = TextLabel(panel, failed ? "再试一次吧" : saveLimit ? "已达本轮关卡上限" : complete ? "满载而归！" : coop ? "合作过关！" : "顺利过关！", titleX, titleY,
                 titleWidth, titleHeight, titleSize, failed ? UiFactory.Hex("FFF0BC") : Forest, TextAnchor.MiddleCenter, true);
             heading.name = "Result heading";
             if (failed)
@@ -254,7 +260,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 outline.effectColor = UiFactory.Hex("5E3416"); outline.effectDistance = new Vector2(2, -2);
             }
             float subtitleY = failed ? (coop ? 180 : 310) : titleY + (coop ? 65 : 90);
-            TextLabel(panel, failed ? "这次还差一点" : "—  第 " + state.LevelIndex + " 关完成  —", 28, subtitleY, w - 56, failed && coop ? 32 : 40, 25,
+            TextLabel(panel, failed ? "这次还差一点" : saveLimit ? "本轮进度已保留，可返回模式开始新挑战" : "—  第 " + state.LevelIndex + " 关完成  —", 28, subtitleY, w - 56, failed && coop ? 32 : 40, 25,
                 UiFactory.Hex("7E643D"), TextAnchor.MiddleCenter, true);
             float statsY = coop ? (failed ? 225 : 198) : 360;
             var stats = BorderedPanel(panel, "Result amounts", 38, statsY, w - 76, coop ? 86 : 138,
@@ -280,11 +286,12 @@ namespace XanaduYonder.Runtime.GoldMiner
             Action next = () =>
             {
                 if (failed) RetryLevel();
+                else if (saveLimit) ShowSelection();
                 else if (complete) ChooseMode(run.Mode, true);
                 else if (Apply(() => session.PrepareEnterShop())) RebuildRun();
                 else ShowOperationError(() => ShowResult(session.GetRunSnapshot()));
             };
-            string label = failed ? "重新挑战" : complete ? "再开一轮" : "进入商店";
+            string label = failed ? "重新挑战" : saveLimit ? "返回模式" : complete ? "再开一轮" : "进入商店";
             if (coop)
             {
                 ActionButton(panel, "返回大厅", 38, h - 90, (w - 90) * .5f, 64, lobby, false);

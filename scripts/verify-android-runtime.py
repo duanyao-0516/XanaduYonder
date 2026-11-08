@@ -2,6 +2,7 @@
 """Verify an offline Android APK uses Unity's non-Development ARM64 runtime."""
 
 import argparse
+import importlib.util
 import os
 from pathlib import Path
 import re
@@ -26,7 +27,7 @@ def output(*args):
     return subprocess.run(args, check=True, text=True, capture_output=True).stdout
 
 
-def verify(apk, aapt, expected_package=None):
+def verify(apk, aapt, expected_package=None, packed_assets=None):
     if not apk.is_file() or apk.stat().st_size == 0:
         raise ValueError("A nonempty Android APK is required.")
     badging = output(aapt, "dump", "badging", str(apk))
@@ -50,6 +51,11 @@ def verify(apk, aapt, expected_package=None):
             raise ValueError("The ARM64 Unity runtime is empty.")
         if b"Development Console" in unity:
             raise ValueError("Unity's Development Console is still present in the native runtime.")
+    gate_path = Path(__file__).with_name("verify-removed-games.py")
+    spec = importlib.util.spec_from_file_location("removed_games", gate_path)
+    gate = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gate)
+    gate.verify_artifact(apk, packed_assets or Path(str(apk) + ".packed-assets.txt"))
     print(f"Android runtime verified: {package.group(1)}, ARM64, non-debuggable, "
           "no INTERNET permission, no Development Console runtime.")
     print(f"APK: {apk} ({apk.stat().st_size} bytes)")
@@ -61,9 +67,10 @@ if __name__ == "__main__":
     parser.add_argument("--aapt", default=default_aapt(),
                         help="aapt executable (default: AAPT or the UNITY_EDITOR Android toolchain)")
     parser.add_argument("--expected-package", help="required APK application ID")
+    parser.add_argument("--packed-assets", type=Path, help="current build's packed-asset inventory")
     args = parser.parse_args()
     try:
-        verify(args.apk, args.aapt, args.expected_package)
+        verify(args.apk, args.aapt, args.expected_package, args.packed_assets)
     except (ValueError, OSError, KeyError, zipfile.BadZipFile, subprocess.CalledProcessError) as error:
         print(f"Android runtime verification failed: {error}", file=sys.stderr)
         sys.exit(1)

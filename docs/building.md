@@ -24,13 +24,17 @@ iOS 入口完成的是 Unity 导出，后续仍需 Xcode 编译、签名和安�
 
 | 内容 | Android | iOS |
 | --- | --- | --- |
-| 大厅、2048、数独、华容道及其他 Unity 原生玩法 | 共有 20 个共用入口 | 20 个入口 |
-| 切水果、只有一道门、经典黄金矿工、赵云与阿斗、割绳子、王国保卫战 | 保留，共计 26 个入口 | 暂不打包 |
-| Unity 原生黄金矿工 | 保留 | 保留 |
+| Unity 原生玩法（含黄金矿工、Zuma、飞机大战） | 19 个入口 | 19 个入口 |
+| 赵云与阿斗、割绳子、只有一道门 | Android WebView，3 个入口 | WKWebView，3 个入口 |
+| 总计 | 22 个入口 | 22 个入口 |
 
-入口由目标平台的条件编译控制。iOS 后端先调用 `prepare-ios-project.py`，仅在 `artifacts/ios/project` 副本中排除 Android 插件、相关 Resources／StreamingAssets 和专属图标；原仓资源不删除。Unity 导出再检查实际打包清单、Android 二进制残留和原生黄金矿工资源。
+经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已移除。原生黄金矿工的 Source 5 战役保留迁移后的原关卡和必要美术，不包含经典网页引擎。
 
-排除项是明确维护的清单，不会自动推断新游戏是否兼容 iOS。新增平台专属游戏时，应同时检查大厅入口、资源过滤、原生插件导入设置和目标平台构建结果。
+iOS 后端先调用 `prepare-ios-project.py`，仅在 `artifacts/ios/project` 副本中排除 Android 插件。`ios_web_content.py` 检查内容来源指纹，必要时从固定本地输入重建网页资源，再将三款游戏放入副本的 `Assets/StreamingAssets/web-games/`；不会把第二份网页资源放入 Android 包。内容构建需要已下载的固定上游输入，与 Android 内容构建使用相同来源。
+
+每款网页游戏使用完整文件清单、大小和 SHA-256；staging、Unity 导出以及 iOS 加载前分别检查。`verify-removed-games.py` 对源输入、实际打包资源清单、APK／IPA 或 Xcode 导出检查已移除游戏路径、专属符号、Java 类和原生库。不能只检查 ZIP 文件名，因为 Unity 图片可能封装在 `resources.assets` 中。
+
+新增平台专属游戏时，应同时检查大厅入口、资源 staging、原生插件导入设置、生命周期／存档契约和最终产物。
 
 ## 环境与代码组织
 

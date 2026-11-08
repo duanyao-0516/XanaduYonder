@@ -229,10 +229,14 @@
   function snapshot() {
     let scene = "Loading";
     let battle = false;
+    let canReturnToHall = false;
     let paused = !effectiveActive() || state.hostPaused;
     try {
       scene = activeScene();
       battle = inBattle();
+      const menu = state.ready ? internals.SceneMgr.instance().co("MainScene") : null;
+      canReturnToHall = state.ready && scene === "MainScene" && !battle && !state.exitRequested &&
+        Boolean(menu && menu.parent && !menu.destroyed && menu.visible !== false);
       if (state.ready) paused = paused || Boolean(internals.TimeMgr.instance().ur);
     } catch (error) {
       state.error = message(error);
@@ -241,6 +245,7 @@
       ready: state.ready,
       scene: scene,
       battle: battle,
+      canReturnToHall: canReturnToHall,
       paused: paused,
       error: initializationError || state.exitError || state.error || state.saveError,
       active: state.active,
@@ -285,11 +290,13 @@
         syncSound();
       });
     },
-    setActive: function (active) {
+    setActive: function (active, persistOnSuspend) {
       return run(function () {
         if (typeof active !== "boolean") throw new Error("active 必须是布尔值");
+        if (persistOnSuspend !== undefined && typeof persistOnSuspend !== "boolean") throw new Error("persistOnSuspend 必须是布尔值");
         state.active = active;
-        reconcile(!active);
+        // A native failure alert pauses without recursively retrying persistence.
+        reconcile(!active && persistOnSuspend !== false);
       }, active === false);
     },
     exit: function () {

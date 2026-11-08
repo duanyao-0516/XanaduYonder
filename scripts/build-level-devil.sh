@@ -9,7 +9,6 @@ unset ANDROID_LINT_JARS
 LOG_FILE="$PROJECT_ROOT/artifacts/logs/build-level-devil.log"
 source "$PROJECT_ROOT/scripts/project-version.sh"
 APK_FILE="$PROJECT_ROOT/artifacts/builds/XanaduYonder-${PROJECT_VERSION}-level-devil-preview.apk"
-python3 "$PROJECT_ROOT/scripts/kingdom-rush/verify-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/level-devil/build-content.py"
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
 build_marker="$(mktemp "$PROJECT_ROOT/artifacts/builds/.level-devil-build-start.XXXXXX")"

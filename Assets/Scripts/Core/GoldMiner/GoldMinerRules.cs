@@ -3,11 +3,11 @@ using System;
 namespace XanaduYonder.Core.GoldMiner
 {
     // Legacy and Native retain the v3 mechanics/economy, with their respective accepted target curves.
-    public enum GoldMinerBalanceProfile { Legacy = 1, Native = 3, Classic = 4 }
+    public enum GoldMinerBalanceProfile { Legacy = 1, Native = 3, Classic = 4, Source = 5 }
 
     public static class GoldMinerRules
     {
-        public const int Version = 4, LevelCount = 10, TicksPerSecond = 60, LevelTicks = 3600, MaxEntities = 128, MaxBombs = 9;
+        public const int Version = 5, LevelCount = 10, TicksPerSecond = 60, LevelTicks = 3600, MaxEntities = 128, MaxBombs = 9;
         // Speeds are world units per second. Heavy loads should consume a meaningful part of
         // the one-minute round; strength and dynamite trade shop cash for that lost time.
         public const double TickSeconds = 1.0 / 60, IdleLength = .2, HookRadius = .09, ExtendSpeed = 7.2, EmptyRetractSpeed = 5, LoadedRetractSpeed = 2.4;
@@ -247,6 +247,7 @@ namespace XanaduYonder.Core.GoldMiner
 
         public static long Target(GoldMinerMode mode, int level, GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
         {
+            if (profile == GoldMinerBalanceProfile.Source) return GoldMinerSourceRules.Target(mode, level);
             ValidateLevel(level);
             PlayerCount(mode);
             ValidateProfile(profile);
@@ -270,7 +271,7 @@ namespace XanaduYonder.Core.GoldMiner
 
         public static bool ValidProfile(GoldMinerBalanceProfile profile)
         {
-            return profile == GoldMinerBalanceProfile.Legacy || profile == GoldMinerBalanceProfile.Native || profile == GoldMinerBalanceProfile.Classic;
+            return profile == GoldMinerBalanceProfile.Legacy || profile == GoldMinerBalanceProfile.Native || profile == GoldMinerBalanceProfile.Classic || profile == GoldMinerBalanceProfile.Source;
         }
 
         static void ValidateProfile(GoldMinerBalanceProfile profile)

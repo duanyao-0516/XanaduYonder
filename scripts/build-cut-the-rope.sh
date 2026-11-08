@@ -11,13 +11,12 @@ if [[ ! -x "$UNITY_EDITOR" || -z "$VERSION" ]]; then
     printf 'Unity Editor or project version is unavailable: %s\n' "$UNITY_EDITOR" >&2
     exit 1
 fi
-for archive in CutTheRopeRuntime.aar CutTheRopeContent.aar KingdomRushRuntime.aar KingdomRushContent.aar; do
+for archive in CutTheRopeRuntime.aar CutTheRopeContent.aar; do
     if [[ ! -s "$PROJECT_ROOT/Assets/Plugins/Android/$archive" ]]; then
         printf 'Missing generated %s. Prepare offline game content and Android runtimes first.\n' "$archive" >&2
         exit 1
     fi
 done
-python3 "$PROJECT_ROOT/scripts/kingdom-rush/verify-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/verify-cut-the-rope-input.py" --root "$PROJECT_ROOT"
 
 # This build must not stop a device service or share mutable Gradle state with another worktree.

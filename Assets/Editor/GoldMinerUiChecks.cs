@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -113,7 +114,8 @@ namespace XanaduYonder.EditorTools
                 bool coop = mode == GoldMinerMode.Coop;
                 string prefix = coop ? "coop" : "solo";
                 fixture.Size(coop ? 1320 : 720, coop ? 720 : 1320);
-                Invoke(page, "ChooseMode", mode, true);
+                fixture.InstallHistoricalRun(mode);
+                Invoke(page, "ChooseMode", mode, false);
                 for (int i = 0; i < 10; i++) yield return null;
                 Require(!Get<GoldMinerOrientationScope>(page, "orientation").IsPending, prefix + " orientation stable gate completes");
                 var session = Get<GoldMinerSession>(page, "session");
@@ -234,6 +236,7 @@ namespace XanaduYonder.EditorTools
                 Require(Get<GoldMinerSession>(page, "session").GetSnapshot().GetRun(mode).Current.LevelIndex == 2, prefix + " selection retains mode progress");
                 Report.AppendLine("PASS " + prefix + ": real fixed ticks, ready/pause/help/lifecycle, down routing, disk restore, retry, witness win, shop, next-level, failure and portrait return.");
             }
+            yield return fixture.CheckSourceCampaigns();
             var root = Get<GoldMinerSession>(page, "session").GetSnapshot();
             Require(root.Solo != null && root.Coop != null && root.Solo.RunId != root.Coop.RunId, "Both modes preserve independent challenges");
             yield return fixture.Click(fixture.Button("‹ 大厅"));
@@ -338,6 +341,90 @@ namespace XanaduYonder.EditorTools
                 pageObject.SetActive(false);
             }
 
+            public void InstallHistoricalRun(GoldMinerMode mode)
+            {
+                // The existing detailed witness/UI suite remains a v4 continuation fixture.
+                var catalog = new GoldMinerLevelCatalog(key => Resources.Load<TextAsset>(key).text);
+                var session = Get<GoldMinerSession>(Page, "session");
+                Require(session.Commit(session.PrepareNewRun(mode, Guid.NewGuid().ToString("N"), 12345,
+                    catalog.CreateStart(mode, 1, 12345))), "Historical UI fixture installs the unchanged v4 catalog");
+            }
+
+            public IEnumerator CheckSourceCampaigns()
+            {
+                foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
+                {
+                    bool coop = mode == GoldMinerMode.Coop;
+                    Size(coop ? 1320 : 720, coop ? 720 : 1320);
+                    Invoke(Page, "ChooseMode", mode, true);
+                    for (int i = 0; i < 10; i++) yield return null;
+                    var session = Get<GoldMinerSession>(Page, "session");
+                    Require(session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Source,
+                        mode + " new challenge uses the source campaign");
+                    yield return Click(Button("开始采矿"));
+                    Page.enabled = false;
+                    CheckMineGeometry(mode);
+                    CheckButtonsInsideSafeArea();
+                    var run = session.GetRunSnapshot();
+                    if (!coop)
+                    {
+                        int[] remaining = { 3720, 3660, 3600, 60, 0 };
+                        string[] displays = { "01:00", "01:00", "00:59", "00:00", "00:00" };
+                        for (int i = 0; i < remaining.Length; i++)
+                        {
+                            var sample = run.Current.Copy(); sample.RemainingTicks = remaining[i];
+                            Invoke(Page, "RefreshHud", sample);
+                            Require(Get<Text>(Page, "timeText").text == displays[i],
+                                "Source solo original timer at remaining ticks " + remaining[i]);
+                        }
+                        Invoke(Page, "RefreshHud", run.Current);
+                    }
+                    var metrics = Get<XanaduYonder.Runtime.GoldMiner.GoldMinerLayout>(Page, "layout");
+                    var scene = Get<GoldMinerSceneView>(Page, "scene");
+                    var definitions = JObject.Parse(Resources.Load<TextAsset>("GoldMiner/Source/" + GoldMinerRules.ModeId(mode)).text);
+                    var sizes = (JObject)definitions[coop ? "sizes" : "frames"];
+                    foreach (var item in sizes.Properties())
+                    {
+                        var sourceArt = Invoke(scene, "SourceSprite", item.Name);
+                        var sprite = Get<Sprite>(sourceArt, "Sprite");
+                        var size = Get<Vector2>(sourceArt, "Size");
+                        Require(sprite != null && sprite.texture != null && sprite.name == "Source mine " + item.Name,
+                            mode + " uses the actual extracted source sprite " + item.Name);
+                        Require(Vector2.Distance(sprite.pivot, sprite.rect.size * .5f) < .01f &&
+                            Vector2.Distance(sprite.rect.size, size) < .01f,
+                            mode + " preserves the full source canvas and center pivot " + item.Name);
+                    }
+                    var sourceMine = Get<RectTransform>(scene, "sourceMine");
+                    Require(sourceMine != null && sourceMine.GetComponent<RectMask2D>() != null &&
+                        Vector2.Distance(sourceMine.sizeDelta, metrics.SourceCanvas.size) < .01f &&
+                        metrics.SourceCanvas.yMin >= metrics.Hud.yMax &&
+                        Math.Abs(metrics.SourceCanvas.height / metrics.Scale - (coop ? 4 : 4.8)) < .001,
+                        mode + " source canvas clips out-of-bounds objects without changing their data");
+                    Require(Get<Image[]>(scene, "hooks")[0].transform.parent != sourceMine,
+                        mode + " rope and winch remain outside the object clipping layer");
+                    var images = Get<Dictionary<int, Image>>(scene, "entities");
+                    foreach (var entity in run.Current.Entities)
+                    {
+                        var image = images[entity.Id];
+                        var sourceArt = Invoke(scene, "SourceSprite", entity.Source.Key);
+                        var pixels = Get<Vector2>(sourceArt, "Size");
+                        var expected = Vector2.Scale(pixels, new Vector2((float)Math.Abs(entity.Source.ScaleX),
+                            (float)Math.Abs(entity.Source.ScaleY))) * metrics.Scale * .01f;
+                        Require(Vector2.Distance(image.rectTransform.sizeDelta, expected) < .01f,
+                            mode + " renders source pixels and original object scale " + entity.Id);
+                        var point = metrics.World(entity.X, entity.Y);
+                        Require(Vector3.Distance(image.rectTransform.position, sourceMine.parent.TransformPoint(new Vector3(point.x, -point.y, 0))) < .01f,
+                            mode + " preserves source object center " + entity.Id);
+                    }
+                    Capture("source-" + GoldMinerRules.ModeId(mode) + "-game");
+                    Invoke(Page, "ShowSelection");
+                    Size(720, 1320);
+                    Page.enabled = true;
+                    for (int i = 0; i < 10; i++) yield return null;
+                    Report.AppendLine("PASS Source " + mode + ": actual new-run UI, all extracted sprites, source pixels/centers, uniform world scale, HUD and controls safe areas.");
+                }
+            }
+
             public void BuildShell()
             {
                 var inert = Child("Inert shell"); inert.SetActive(false);
@@ -368,8 +455,8 @@ namespace XanaduYonder.EditorTools
             public void CheckLobby()
             {
                 var content = Lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "AgeOfWar", "KingdomRush", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "ClassicGoldMiner", "LevelDevil", "AircraftFire", "FruitSlice", "Idiom" };
-                int[] numbers = { 6, 7, 14, 12, 10, 18, 19, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 24, 22, 20, 25, 5 };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "AircraftFire", "Idiom" };
+                int[] numbers = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 20, 5 };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -392,7 +479,7 @@ namespace XanaduYonder.EditorTools
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Clamp(LobbyDesignChecks.CardTop(content, goldRect) - (viewport.rect.height - goldRect.rect.height) / 2,
                     0, Mathf.Max(0, content.rect.height - viewport.rect.height)));
-                Require(content.rect.height > viewport.rect.height, "All nineteen cards remain scrollable");
+                Require(content.rect.height > viewport.rect.height, "All twenty-two cards remain scrollable");
                 Capture("00-lobby-gold-card");
             }
 
@@ -656,7 +743,7 @@ namespace XanaduYonder.EditorTools
                 var metrics = Get<XanaduYonder.Runtime.GoldMiner.GoldMinerLayout>(Page, "layout");
                 Require(metrics.Mine.xMin >= metrics.Safe.xMin && metrics.Mine.xMax <= metrics.Safe.xMax, "Mine width remains in safe area");
                 Require(metrics.Mine.yMin >= metrics.Hud.yMax && metrics.Mine.yMax <= metrics.Safe.yMax - 90, "Mine does not overlap HUD or lower controls");
-                Require(Math.Abs(metrics.Mine.width / metrics.Mine.height - GoldMinerRules.Width(mode) / GoldMinerRules.Height(mode)) < .001, "World scale stays uniform");
+                Require(Math.Abs(metrics.Mine.width / metrics.Mine.height - (metrics.SourceCampaign ? GoldMinerSourceRules.Width(mode) / GoldMinerSourceRules.Height(mode) : GoldMinerRules.Width(mode) / GoldMinerRules.Height(mode))) < .001, "World scale stays uniform");
                 CheckButtonsInsideSafeArea();
             }
 

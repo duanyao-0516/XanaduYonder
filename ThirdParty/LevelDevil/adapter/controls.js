@@ -28,6 +28,11 @@
       }
       const g=geometry(false);
       if(g && alive(hallButton)) {
+        const visible = runtime.hallEnabled();
+        if (hallButton.drawActor !== visible) {
+          if (visible) hallButton.enableActorDrawing(); else hallButton.disableActorDrawing();
+        }
+        if (!visible) return;
         const scale=Math.max(1.5,48/(16*runtime.viewport().cssUnit));
         if(hallButton.xanaduHallScale!==scale) { hallButton.xanaduHallScale=scale; hallButton.growTo(scale,scale,0); }
         // Actor scaling is centered on its original eight-pixel origin. Offset
@@ -93,7 +98,7 @@
     };
     backProto._event_Updating=function() {
       if(!this.actor.xanaduHallBack) return backUpdate.apply(this,arguments);
-      if(this.wrapper.enabled && !runtime.blocked() && !this.actor.xanaduHallPending && this.actor.isMousePressed()) {
+      if(this.wrapper.enabled && runtime.hallEnabled() && !runtime.blocked() && !this.actor.xanaduHallPending && this.actor.isMousePressed()) {
         this.actor.xanaduHallPending=true; this.actor.setAnimation('B');
         C.playSoundOnChannel(C.getSound(727),4);
         if(!runtime.hallExit()) { this.actor.xanaduHallPending=false; this.actor.setAnimation(this.actor.xanaduHallAnimation); }

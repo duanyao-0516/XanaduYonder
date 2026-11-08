@@ -7,7 +7,7 @@
   const activePointers = new Map();
   const saveFailures = new Map();
   let hostPaused = false, hidden = !!window.document.hidden, hostMuted = false, gameMuted = false;
-  let paused = hidden, muted = false, saveFailure = null, flushGame = null, cancelGameInput = null, ready = false;
+  let paused = hidden, muted = false, saveFailure = null, flushGame = null, cancelGameInput = null, readScene = null, ready = false;
   function report(error) {
     const message = String(error && error.message || error);
     if (native && native.reportError) native.reportError(message);
@@ -109,11 +109,17 @@
   window.CutTheRopeOffline = Object.freeze({
     setHostPaused(value) { hostPaused = !!value; updatePause(); },
     setSoundEnabled(value) { hostMuted = !value; updateMute(); },
-    attachGame(flush, cancelInput) {
+    attachGame(flush, cancelInput, sceneStatus) {
       if (flushGame || typeof flush !== 'function') throw new Error('Invalid game persistence registration');
       if (cancelInput != null && typeof cancelInput !== 'function') throw new Error('Invalid input cancellation registration');
+      if (sceneStatus != null && typeof sceneStatus !== 'function') throw new Error('Invalid scene status registration');
       flushGame = flush;
       cancelGameInput = cancelInput || null;
+      readScene = sceneStatus || null;
+    },
+    status() {
+      const scene = ready && readScene ? readScene() : null;
+      return { ready, scene, canReturnToHall: ready && scene === 'FamobiMenuScene' };
     },
     flush() {
       try { if (flushGame) flushGame(); }

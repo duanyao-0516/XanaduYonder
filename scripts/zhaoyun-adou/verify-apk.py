@@ -83,7 +83,7 @@ def main():
     manifest = subprocess.check_output([str(args.aapt), 'dump', 'xmltree', str(args.apk), 'AndroidManifest.xml'], text=True)
     if "package: name='" + args.package + "'" not in badging: raise ValueError('Unexpected APK package')
     if 'application-debuggable' in badging: raise ValueError('Delivery preview must not be a Development/debug APK')
-    if "launchable-activity: name='com.xanaduyonder.kingdomrush.KingdomRushLauncherActivity'" not in badging:
+    if "launchable-activity: name='com.duanyao.xanaduyonder.XanaduLauncherActivity'" not in badging:
         raise ValueError('Existing hall launcher/task-stack contract changed')
     permissions = set(re.findall(r"uses-permission[^:]*: name='([^']+)'", permissions_text))
     unexpected = permissions - {'android.permission.VIBRATE'}

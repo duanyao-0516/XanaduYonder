@@ -71,14 +71,12 @@ def main():
     require(len(game_activities) == 1, "Expected one Level Devil Activity")
     require(re.search(r"android:exported\([^)]*\)=\(type 0x12\)0x0\b", game_activities[0]),
             "Game Activity must not be exported")
-    require("launchable-activity: name='com.xanaduyonder.kingdomrush.KingdomRushLauncherActivity'" in badging,
+    require("launchable-activity: name='com.duanyao.xanaduyonder.XanaduLauncherActivity'" in badging,
             "Collection launcher/task behavior changed")
     content_path = ROOT / "Assets/Plugins/Android/LevelDevilContent.aar"
     with zipfile.ZipFile(args.apk) as apk, zipfile.ZipFile(content_path) as content:
         require(apk.testzip() is None, "APK CRC failure")
         files = verify_payload(apk, content)
-        # This feature must not remove an existing external game to make a build pass.
-        require("assets/game.love" in apk.namelist(), "Existing Kingdom Rush content is missing")
     result = {
         "apk": str(args.apk.resolve()), "apk_bytes": args.apk.stat().st_size,
         "apk_sha256": sha(args.apk.read_bytes()), "permissions": sorted(used),

@@ -18,14 +18,17 @@ namespace XanaduYonder.Runtime.GoldMiner
         // An explicit allowlist, deliberately independent of the set of fields a future model may add.
         // Reflection only reads/writes these public DTO fields; it never instantiates a type from JSON.
         private static readonly Dictionary<Type, FieldInfo[]> Schemas = new Dictionary<Type, FieldInfo[]> {
+            { typeof(GoldMinerSourceState), Fields<GoldMinerSourceState>("MapIndex SharedBombs Strength") },
+            { typeof(GoldMinerSourceHook), Fields<GoldMinerSourceHook>("X Y SwingTick RewardTicks BombTicks ResetTicks TravelDirection PendingEntityId") },
+            { typeof(GoldMinerSourceEntity), Fields<GoldMinerSourceEntity>("Key Reward Type MotionTick Value Award AwardPlayer Weight Radius ScaleX ScaleY InitialX InitialY MotionEndX Flip") },
             { typeof(GoldMinerRecord), Fields<GoldMinerRecord>("BestClearedLevel BestRunGrossIncome CompletionCount") },
             { typeof(GoldMinerRunSnapshot), Fields<GoldMinerRunSnapshot>("RunId BalanceProfile Mode RunSeed AttemptIndex LastCommandSeq Current Checkpoint") },
-            { typeof(GoldMinerState), Fields<GoldMinerState>("Phase LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash Cash Target ShopSpent RemainingTicks SimulationTick LayoutRng BagRng PatternId PreviousPatternId LevelLayoutSeed Players Hooks Entities ActiveBuffs PendingBuffs Shop Settlement") },
-            { typeof(GoldMinerLevelStart), Fields<GoldMinerLevelStart>("LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash PatternId PreviousPatternId LevelLayoutSeed OpeningCash OpeningShopSpent OpeningPlayers ActiveBuffs InitialHooks InitialEntities LayoutRng BagRng") },
+            { typeof(GoldMinerState), Fields<GoldMinerState>("Phase LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash Cash Target ShopSpent RemainingTicks SimulationTick LayoutRng BagRng PatternId PreviousPatternId LevelLayoutSeed Players Hooks Entities ActiveBuffs PendingBuffs Shop Settlement Source") },
+            { typeof(GoldMinerLevelStart), Fields<GoldMinerLevelStart>("LevelIndex LayoutProfileId LayoutId CatalogVersion LayoutContentHash PatternId PreviousPatternId LevelLayoutSeed OpeningCash OpeningShopSpent OpeningPlayers ActiveBuffs InitialHooks InitialEntities LayoutRng BagRng Source") },
             { typeof(GoldMinerPlayer), Fields<GoldMinerPlayer>("PlayerId Bombs TotalCollected LevelCollected") },
             { typeof(GoldMinerOpeningPlayer), Fields<GoldMinerOpeningPlayer>("PlayerId Bombs TotalCollected") },
-            { typeof(GoldMinerHook), Fields<GoldMinerHook>("PlayerId State AngleRadians SwingDirection Length HeldEntityId") },
-            { typeof(GoldMinerEntity), Fields<GoldMinerEntity>("Id Kind Status X Y MoveDirection BagValue OwnerPlayerId") },
+            { typeof(GoldMinerHook), Fields<GoldMinerHook>("PlayerId State AngleRadians SwingDirection Length HeldEntityId Source") },
+            { typeof(GoldMinerEntity), Fields<GoldMinerEntity>("Id Kind Status X Y MoveDirection BagValue OwnerPlayerId Source") },
             { typeof(GoldMinerBuffs), Fields<GoldMinerBuffs>("Strength Clover RockBook DiamondOil") },
             { typeof(GoldMinerShop), Fields<GoldMinerShop>("Id EntryCash EntryShopSpent EntryBombs Spent Offers") },
             { typeof(GoldMinerOffer), Fields<GoldMinerOffer>("ItemId Price Remaining Purchased Allocations") },
@@ -41,12 +44,17 @@ namespace XanaduYonder.Runtime.GoldMiner
             var value = snapshot.Copy();
             string reason;
             if (!value.TryValidate(out reason)) throw new ArgumentException(reason, nameof(snapshot));
-            var root = new JObject {
-                ["schemaVersion"] = value.SchemaVersion, ["rulesVersion"] = value.RulesVersion,
-                ["gameId"] = value.GameId, ["txnSeq"] = Write(value.TxnSeq), ["lastMode"] = Write(value.LastMode),
+            var root = new JObject
+            {
+                ["schemaVersion"] = value.SchemaVersion,
+                ["rulesVersion"] = value.RulesVersion,
+                ["gameId"] = value.GameId,
+                ["txnSeq"] = Write(value.TxnSeq),
+                ["lastMode"] = Write(value.LastMode),
                 ["records"] = new JObject { ["solo"] = Write(value.SoloRecord), ["coop"] = Write(value.CoopRecord) },
                 ["slots"] = new JObject { ["solo"] = Write(value.Solo), ["coop"] = Write(value.Coop) }
             };
+            if (value.RulesVersion >= 5) root.Add("sourceRecords", new JObject { ["solo"] = Write(value.SourceSoloRecord), ["coop"] = Write(value.SourceCoopRecord) });
             if (value.RulesVersion < 4)
                 foreach (var mode in new[] { "solo", "coop" })
                     if (root["slots"][mode] is JObject run) run.Remove("balanceProfile");
@@ -73,10 +81,10 @@ namespace XanaduYonder.Runtime.GoldMiner
                     root = JObject.Load(reader, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
                     if (reader.Read()) throw new FormatException("Trailing gold miner data.");
                 }
-                Require(root, "schemaVersion rulesVersion gameId txnSeq lastMode records slots");
+                int rules = (int)Read(root["rulesVersion"], typeof(int));
+                Require(root, "schemaVersion rulesVersion gameId txnSeq lastMode records slots" + (rules >= 5 ? " sourceRecords" : ""));
                 var records = Object(root["records"]); Require(records, "solo coop");
                 var slots = Object(root["slots"]); Require(slots, "solo coop");
-                int rules = (int)Read(root["rulesVersion"], typeof(int));
                 if (rules < 1 || rules > GoldMinerRules.Version) throw new FormatException("Unsupported rules version.");
                 if (rules < 4)
                     foreach (var mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
@@ -92,7 +100,8 @@ namespace XanaduYonder.Runtime.GoldMiner
                         if (profile == GoldMinerBalanceProfile.Classic) throw new FormatException("Legacy save cannot contain a new campaign target.");
                         run.Add("balanceProfile", Camel(profile.ToString()));
                     }
-                var candidate = new GoldMinerRootSnapshot {
+                var candidate = new GoldMinerRootSnapshot
+                {
                     SchemaVersion = (int)Read(root["schemaVersion"], typeof(int)),
                     RulesVersion = (int)Read(root["rulesVersion"], typeof(int)),
                     GameId = (string)Read(root["gameId"], typeof(string)),
@@ -103,6 +112,12 @@ namespace XanaduYonder.Runtime.GoldMiner
                     Solo = (GoldMinerRunSnapshot)Read(slots["solo"], typeof(GoldMinerRunSnapshot), true),
                     Coop = (GoldMinerRunSnapshot)Read(slots["coop"], typeof(GoldMinerRunSnapshot), true)
                 };
+                if (rules >= 5)
+                {
+                    var sourceRecords = Object(root["sourceRecords"]); Require(sourceRecords, "solo coop");
+                    candidate.SourceSoloRecord = (GoldMinerRecord)Read(sourceRecords["solo"], typeof(GoldMinerRecord));
+                    candidate.SourceCoopRecord = (GoldMinerRecord)Read(sourceRecords["coop"], typeof(GoldMinerRecord));
+                }
                 if (!candidate.TryValidate(out error)) return false;
                 snapshot = candidate;
                 return true;
@@ -126,7 +141,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         private static string Camel(string name) { return char.ToLowerInvariant(name[0]) + name.Substring(1); }
         private static bool CanBeNull(FieldInfo field)
         {
-            return Nullable.GetUnderlyingType(field.FieldType) != null || field.Name == "PreviousPatternId" ||
+            return Nullable.GetUnderlyingType(field.FieldType) != null || field.Name == "PreviousPatternId" || field.Name == "Source" ||
                 field.FieldType == typeof(GoldMinerShop) || field.FieldType == typeof(GoldMinerSettlement) ||
                 (field.DeclaringType == typeof(GoldMinerOffer) && field.Name == "Allocations");
         }
@@ -143,7 +158,8 @@ namespace XanaduYonder.Runtime.GoldMiner
             }
             FieldInfo[] fields;
             if (!Schemas.TryGetValue(type, out fields)) throw new ArgumentException("Unsupported gold miner model type.");
-            var obj = new JObject(); foreach (var field in fields) obj.Add(Camel(field.Name), Write(field.GetValue(value))); return obj;
+            var obj = new JObject(); foreach (var field in fields) { var fieldValue = field.GetValue(value); if (field.Name == "Source" && fieldValue == null) continue; obj.Add(Camel(field.Name), Write(fieldValue)); }
+            return obj;
         }
         private static object Read(JToken token, Type type, bool nullable = false)
         {
@@ -158,9 +174,11 @@ namespace XanaduYonder.Runtime.GoldMiner
             {
                 if (token.Type != JTokenType.String) throw new FormatException("Amounts and sequences must be decimal strings.");
                 var text = (string)token;
-                if (text.Length == 0 || text.Length > 19 || (text.Length > 1 && text[0] == '0')) throw new FormatException("Noncanonical decimal string.");
-                foreach (var c in text) if (c < '0' || c > '9') throw new FormatException("Noncanonical decimal string.");
-                return long.Parse(text, NumberStyles.None, CultureInfo.InvariantCulture);
+                if (text.Length == 0 || text.Length > 20) throw new FormatException("Noncanonical decimal string.");
+                int first = text[0] == '-' ? 1 : 0;
+                if (first == text.Length || (text.Length - first > 1 && text[first] == '0') || (first == 1 && text[first] == '0')) throw new FormatException("Noncanonical decimal string.");
+                for (int i = first; i < text.Length; i++) if (text[i] < '0' || text[i] > '9') throw new FormatException("Noncanonical decimal string.");
+                return long.Parse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
             }
             if (type == typeof(int) || type == typeof(uint))
             {
@@ -200,11 +218,14 @@ namespace XanaduYonder.Runtime.GoldMiner
             FieldInfo[] fields;
             if (!Schemas.TryGetValue(type, out fields)) throw new FormatException("Unsupported gold miner model type.");
             var obj = Object(token);
-            if (obj.Count != fields.Length) throw new FormatException("Unexpected gold miner fields.");
+            int expected = fields.Length;
+            foreach (var field in fields) if (field.Name == "Source" && obj.Property("source") == null) expected--;
+            if (obj.Count != expected) throw new FormatException("Unexpected gold miner fields.");
             var instance = Activator.CreateInstance(type);
             foreach (var field in fields)
             {
                 var name = Camel(field.Name);
+                if (field.Name == "Source" && obj.Property(name) == null) continue;
                 if (obj.Property(name) == null) throw new FormatException("Missing gold miner field: " + name);
                 field.SetValue(instance, Read(obj[name], field.FieldType, CanBeNull(field)));
             }

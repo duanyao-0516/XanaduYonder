@@ -275,27 +275,6 @@ namespace XanaduYonder.EditorTools
             });
         }
 
-        public static void BuildAndroidAgeOfWarValidation()
-        {
-            RunOrFail(() =>
-            {
-                var identifier = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
-                var product = PlayerSettings.productName;
-                try
-                {
-                    Prepare();
-                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".ageofwartest");
-                    PlayerSettings.productName = "Xanadu 战争进化史测试";
-                    BuildApk("-age-of-war-validation.apk", BuildOptions.StrictMode | BuildOptions.DetailedBuildReport, AgeOfWarBuildReport.Write);
-                }
-                finally
-                {
-                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, identifier);
-                    PlayerSettings.productName = product;
-                    AssetDatabase.SaveAssets();
-                }
-            });
-        }
 
         // User preview stays side-by-side with the installed app, without the Development runtime.
         // All Android build entries omit the Development runtime; debug signing remains independent.
@@ -392,25 +371,6 @@ namespace XanaduYonder.EditorTools
             });
         }
 
-        public static void BuildFruitSlicePreview()
-        {
-            RunOrFail(() =>
-            {
-                using (new GoldMinerBuildSettingsScope())
-                {
-                    Prepare();
-                    EditorUserBuildSettings.development = false;
-                    EditorUserBuildSettings.allowDebugging = false;
-                    EditorUserBuildSettings.connectProfiler = false;
-                    EditorUserBuildSettings.buildAppBundle = false;
-                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
-                    PlayerSettings.Android.useCustomKeystore = false;
-                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".fruitslicetest");
-                    PlayerSettings.productName = "Xanadu 切水果大师";
-                    BuildApk("-fruit-slice-preview.apk", BuildOptions.StrictMode, version: Version);
-                }
-            });
-        }
 
         public static void BuildAircraftFirePreview()
         {
@@ -431,43 +391,7 @@ namespace XanaduYonder.EditorTools
             });
         }
 
-        public static void BuildKingdomRushPreview()
-        {
-            RunOrFail(() =>
-            {
-                using (new GoldMinerBuildSettingsScope())
-                {
-                    Prepare();
-                    EditorUserBuildSettings.development = false;
-                    EditorUserBuildSettings.allowDebugging = false;
-                    EditorUserBuildSettings.connectProfiler = false;
-                    EditorUserBuildSettings.buildAppBundle = false;
-                    EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
-                    PlayerSettings.Android.useCustomKeystore = false;
-                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".kingdomrushtest");
-                    PlayerSettings.productName = "Xanadu 塔防";
-                    BuildApk("-kingdom-rush-preview.apk", BuildOptions.StrictMode);
-                }
-            });
-        }
 
-        public static void BuildClassicGoldMinerPreview()
-        {
-            RunOrFail(() =>
-            {
-                using (new GoldMinerBuildSettingsScope())
-                {
-                    Prepare();
-                    EditorUserBuildSettings.development = false;
-                    EditorUserBuildSettings.allowDebugging = false;
-                    EditorUserBuildSettings.connectProfiler = false;
-                    PlayerSettings.Android.useCustomKeystore = false;
-                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".classicgoldminertest");
-                    PlayerSettings.productName = "Xanadu 经典矿工";
-                    BuildApk("-classic-gold-miner-preview.apk", BuildOptions.StrictMode);
-                }
-            });
-        }
 
         public static void BuildLevelDevilPreview()
         {
@@ -604,6 +528,7 @@ namespace XanaduYonder.EditorTools
 
         private static void BuildApk(string suffix, BuildOptions options, Action<BuildReport> completed = null, string version = null)
         {
+            RemovedGamesBuildGuard.VerifySource();
             const BuildOptions developmentOptions = BuildOptions.Development | BuildOptions.AllowDebugging |
                 BuildOptions.ConnectWithProfiler | BuildOptions.EnableDeepProfilingSupport;
             var requestedDevelopmentOptions = options & developmentOptions;
@@ -625,12 +550,13 @@ namespace XanaduYonder.EditorTools
                 locationPathName = output,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
-                options = options
+                options = options | BuildOptions.DetailedBuildReport
             });
             if (report.summary.result != BuildResult.Succeeded)
                 throw new InvalidOperationException($"Android build {report.summary.result}: {report.summary.totalErrors} errors.");
             if (!File.Exists(output))
                 throw new IOException("Unity reported success but the APK does not exist: " + output);
+            RemovedGamesBuildGuard.WritePackedAssets(report, output + ".packed-assets.txt");
             VerifyAndroidRuntime(output);
             Debug.Log($"Android APK: {output} ({new FileInfo(output).Length} bytes)");
             completed?.Invoke(report);

@@ -180,14 +180,14 @@ namespace XanaduYonder.Core.GoldMiner
             if (start.LevelIndex != 1 || start.OpeningCash != 0 || start.OpeningShopSpent != 0 || !start.ActiveBuffs.IsEmpty)
                 return Fail("New challenge must start at level 1 with no income or buffs.");
             foreach (var p in start.OpeningPlayers)
-                if (p.Bombs != 1 || p.TotalCollected != 0)
+                if (p.Bombs != (start.Source == null ? 1 : 0) || p.TotalCollected != 0)
                     return Fail("Invalid initial player inventory.");
             var existing = root.GetRun(mode);
             if (existing != null && existing.RunId == runId)
                 return Fail("A new challenge needs a new run ID.");
             var candidate = root.Copy();
             candidate.LastMode = mode;
-            SetRun(candidate, mode, new GoldMinerRunSnapshot { RunId = runId, Mode = mode, RunSeed = seed, Current = start.CreateState(mode), Checkpoint = start.Copy() });
+            SetRun(candidate, mode, new GoldMinerRunSnapshot { RunId = runId, BalanceProfile = start.Source == null ? GoldMinerBalanceProfile.Classic : GoldMinerBalanceProfile.Source, Mode = mode, RunSeed = seed, Current = start.CreateState(mode), Checkpoint = start.Copy() });
             return Candidate(candidate, true);
         }
 
@@ -212,7 +212,7 @@ namespace XanaduYonder.Core.GoldMiner
         {
             LastError = null;
             var run = root.GetRun(ActiveMode);
-            if (run == null || run.Current.Phase != GoldMinerPhase.Won || run.Current.LevelIndex >= GoldMinerRules.LevelCount)
+            if (run == null || run.Current.Phase != GoldMinerPhase.Won || (run.BalanceProfile == GoldMinerBalanceProfile.Source ? GoldMinerSourceRules.Completed(run.Mode,run.Current.LevelIndex) : run.Current.LevelIndex >= GoldMinerRules.LevelCount))
                 return Fail("No shop available.");
             var candidate = root.Copy();
             var next = candidate.GetRun(ActiveMode);
@@ -270,11 +270,11 @@ namespace XanaduYonder.Core.GoldMiner
             var next = candidate.GetRun(ActiveMode);
             var state = next.Current;
             bool success = state.Cash >= state.Target;
-            state.Phase = success ? (state.LevelIndex == 10 ? GoldMinerPhase.Completed : GoldMinerPhase.Won) : GoldMinerPhase.Failed;
+            state.Phase = success ? ((next.BalanceProfile == GoldMinerBalanceProfile.Source ? GoldMinerSourceRules.Completed(next.Mode,state.LevelIndex) : state.LevelIndex == 10) ? GoldMinerPhase.Completed : GoldMinerPhase.Won) : GoldMinerPhase.Failed;
             state.Settlement = new GoldMinerSettlement
             {
                 Id = next.RunId + "/" + state.LevelIndex + "/" + next.AttemptIndex,
-                Outcome = success ? (state.LevelIndex == 10 ? GoldMinerOutcome.Completed : GoldMinerOutcome.Won) : GoldMinerOutcome.Failed,
+                Outcome = success ? ((next.BalanceProfile == GoldMinerBalanceProfile.Source ? GoldMinerSourceRules.Completed(next.Mode,state.LevelIndex) : state.LevelIndex == 10) ? GoldMinerOutcome.Completed : GoldMinerOutcome.Won) : GoldMinerOutcome.Failed,
                 Cash = state.Cash,
                 Target = state.Target,
                 RunGrossIncome = GoldMinerValidation.Gross(state.Players),
@@ -290,7 +290,7 @@ namespace XanaduYonder.Core.GoldMiner
             if (success)
             {
                 state.ActiveBuffs = new GoldMinerBuffs();
-                var record = candidate.GetRecord(ActiveMode);
+                var record = candidate.GetRecord(ActiveMode, next.BalanceProfile);
                 record.BestClearedLevel = Math.Max(record.BestClearedLevel, state.LevelIndex);
                 record.BestRunGrossIncome = Math.Max(record.BestRunGrossIncome, state.Settlement.RunGrossIncome);
                 if (state.Phase == GoldMinerPhase.Completed && record.CompletionCount < long.MaxValue)

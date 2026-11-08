@@ -46,15 +46,9 @@ local.properties
 *.apk.idsig
 *.ipa
 /artifacts/
-# Built locally from the supplied Kingdom Rush source package and runtime sources.
-/Assets/Plugins/Android/KingdomRushRuntime.aar
-/Assets/Plugins/Android/KingdomRushRuntime.aar.meta
-/Assets/Plugins/Android/KingdomRushContent.aar
-/Assets/Plugins/Android/KingdomRushContent.aar.meta
 /Assets/Plugins/Android/LevelDevilContent.aar
 /Assets/Plugins/Android/LevelDevilContent.aar.meta
 /ThirdParty/LevelDevil/generated/
-/ThirdParty/KingdomRushRuntime/prebuilt/
 # Built from the hash-pinned local web content and Android host sources.
 /Assets/Plugins/Android/ZhaoyunAdouRuntime.aar
 /Assets/Plugins/Android/ZhaoyunAdouRuntime.aar.meta
@@ -103,5 +97,3 @@ Desktop.ini
 *.blend1.meta
 
 # Generated from tracked classic H5 resources and system-WebView Java sources.
-/Assets/Plugins/Android/ClassicGoldMiner.aar
-/Assets/Plugins/Android/ClassicGoldMiner.aar.meta

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace XanaduYonder.Runtime.CutTheRope
 {
-    // The launcher owns only Activity handoff and hall input. WebView owns gameplay/saves.
+    // The launcher owns only native handoff and hall input. WebView owns gameplay/saves.
     public sealed class CutTheRopeLauncher : MonoBehaviour
     {
         public const string OpenFailureMessage = "割绳子暂时无法打开，请稍后重试。";
@@ -18,7 +18,7 @@ namespace XanaduYonder.Runtime.CutTheRope
         {
             if (session == null)
             {
-                session = new CutTheRopeSession(new AndroidBridge());
+                session = new CutTheRopeSession(new NativeBridge());
                 session.Returned += OnReturned;
             }
             var opened = session.TryOpen(soundEnabled);
@@ -50,11 +50,13 @@ namespace XanaduYonder.Runtime.CutTheRope
             Returned = null;
         }
 
-        private sealed class AndroidBridge : ICutTheRopeBridge
+        private sealed class NativeBridge : ICutTheRopeBridge
         {
             public bool Open(bool soundEnabled)
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+                return IOSWebGameBridge.Open("cut-the-rope", soundEnabled);
+#elif UNITY_ANDROID && !UNITY_EDITOR
                 using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                 using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 using (var bridge = new AndroidJavaClass(BridgeClass))
@@ -66,7 +68,9 @@ namespace XanaduYonder.Runtime.CutTheRope
 
             public bool IsRunning()
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+                return IOSWebGameBridge.IsRunning();
+#elif UNITY_ANDROID && !UNITY_EDITOR
                 using (var bridge = new AndroidJavaClass(BridgeClass))
                     return bridge.CallStatic<bool>("isRunning");
 #else
@@ -76,11 +80,13 @@ namespace XanaduYonder.Runtime.CutTheRope
 
             public string GetLastError()
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+                return IOSWebGameBridge.GetLastError();
+#elif UNITY_ANDROID && !UNITY_EDITOR
                 using (var bridge = new AndroidJavaClass(BridgeClass))
                     return bridge.CallStatic<string>("getLastError");
 #else
-                return "The bundled Android runtime is required.";
+                return "A bundled mobile WebView host is required.";
 #endif
             }
         }

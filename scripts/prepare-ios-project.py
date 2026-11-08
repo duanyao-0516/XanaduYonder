@@ -11,24 +11,11 @@ import shutil
 import sys
 import tempfile
 
+from ios_web_content import stage_web_games
+
 
 PROJECT_PARTS = ("Assets", "Packages", "ProjectSettings")
-EXCLUDED_CONTENT = (
-    "Assets/Plugins/Android",
-    "Assets/StreamingAssets/fruit-slice",
-    "Assets/Resources/KingdomRush",
-    "Assets/Resources/LevelDevil",
-    "Assets/Resources/ZhaoyunAdou",
-    "Assets/Resources/Lobby/ClassicGoldMinerLogo.png",
-    "Assets/Resources/Lobby/CutTheRopeLogo.png",
-    "Assets/Resources/Lobby/Icons/classic-gold-miner.png",
-    "Assets/Resources/Lobby/Icons/cut-the-rope.png",
-    "Assets/Resources/Lobby/Icons/fruit-slice.png",
-    "Assets/Resources/Lobby/Icons/fruit-slice-logo.jpg",
-    "Assets/Resources/Lobby/Icons/kingdom-rush.png",
-    "Assets/Resources/Lobby/Icons/level-devil.png",
-    "Assets/Resources/Lobby/Icons/zhaoyun-adou.png",
-)
+EXCLUDED_CONTENT = ("Assets/Plugins/Android",)
 EXCLUDED_PATHS = tuple(path for item in EXCLUDED_CONTENT for path in (item, item + ".meta"))
 GOLD_MINER = "Assets/Resources/GoldMiner"
 
@@ -110,8 +97,11 @@ def prepare(root):
             if digest(source) != digest(target):
                 raise RuntimeError(f"Source changed or copy verification failed: {relative}")
 
+        web_games = stage_web_games(root, candidate)
+
         data = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "web_games": web_games,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "source_root": str(root),
             "staging_root": str(stage),
@@ -147,7 +137,7 @@ def main():
     parser.parse_args()
     try:
         prepare(Path(__file__).resolve().parent.parent)
-    except (OSError, RuntimeError, shutil.Error) as error:
+    except (OSError, RuntimeError, ValueError, shutil.Error) as error:
         print(f"iOS staging failed: {error}", file=sys.stderr)
         return 1
     return 0

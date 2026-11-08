@@ -18,7 +18,7 @@ internal static partial class Program
         {
             long[] curve = { 750, 2050, 3550, 5450, 7750, 10450, 13500, 16950, 20800, 25050 };
             long[] coop = { 1600, 4300, 7400, 11300, 15900, 21250, 27400, 34300, 41950, 50400 };
-            Assert(GoldMinerRules.Version == 4);
+            Assert(GoldMinerRules.Version == 5);
             for (int level = 1; level <= 10; level++)
             {
                 Assert(GoldMinerRules.Target(GoldMinerMode.Solo, level) == curve[level - 1]);

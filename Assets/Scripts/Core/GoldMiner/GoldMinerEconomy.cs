@@ -6,6 +6,7 @@ namespace XanaduYonder.Core.GoldMiner
     {
         public static GoldMinerShop CreateShop(GoldMinerRunSnapshot run)
         {
+            if (run != null && run.BalanceProfile == GoldMinerBalanceProfile.Source) return GoldMinerSourceEconomy.Create(run);
             if (run == null || run.Current == null || run.Current.LevelIndex >= GoldMinerRules.LevelCount)
                 throw new ArgumentException("A shop requires a completed level from 1 to 9.");
             var state = run.Current;
@@ -49,6 +50,7 @@ namespace XanaduYonder.Core.GoldMiner
 
         public static bool CanPurchase(GoldMinerState state, GoldMinerItem item, int playerId, out string reason)
         {
+            if (state != null && state.Source != null) return GoldMinerSourceEconomy.CanPurchase(state,item,playerId,out reason);
             reason = null;
             if (state == null || state.Phase != GoldMinerPhase.Shop || state.Shop == null || (int)item < 0 || (int)item >= 5 || playerId < 0 || playerId >= state.Players.Length)
             {
@@ -81,6 +83,7 @@ namespace XanaduYonder.Core.GoldMiner
         // Only candidate-owned state is mutated; callers publish after durable storage succeeds.
         internal static bool Purchase(GoldMinerState state, GoldMinerItem item, int playerId)
         {
+            if (state != null && state.Source != null) return GoldMinerSourceEconomy.Purchase(state,item,playerId);
             string reason;
             if (!CanPurchase(state, item, playerId, out reason))
                 return false;

@@ -76,21 +76,157 @@ namespace XanaduYonder.Runtime.GoldMiner
             }
             var players = new GoldMinerOpeningPlayer[GoldMinerRules.PlayerCount(mode)];
             for (int i = 0; i < players.Length; i++)
-                players[i] = new GoldMinerOpeningPlayer {
-                    PlayerId = i, Bombs = prior == null ? 1 : prior.Players[i].Bombs,
+                players[i] = new GoldMinerOpeningPlayer
+                {
+                    PlayerId = i,
+                    Bombs = prior == null ? 1 : prior.Players[i].Bombs,
                     TotalCollected = prior == null ? 0 : prior.Players[i].TotalCollected
                 };
-            var start = new GoldMinerLevelStart {
-                LevelIndex = levelIndex, CatalogVersion = 1, LayoutProfileId = GoldMinerRules.LayoutProfileId(mode),
-                LayoutId = selected.Id, LayoutContentHash = hash, PatternId = selected.Pattern,
-                PreviousPatternId = previousPattern, LevelLayoutSeed = layoutSeed, LayoutRng = layoutRng, BagRng = bagRng,
-                OpeningCash = prior == null ? 0 : prior.Cash, OpeningShopSpent = prior == null ? 0 : prior.ShopSpent,
-                OpeningPlayers = players, ActiveBuffs = buffs, InitialHooks = GoldMinerRules.InitialHooks(mode),
+            var start = new GoldMinerLevelStart
+            {
+                LevelIndex = levelIndex,
+                CatalogVersion = 1,
+                LayoutProfileId = GoldMinerRules.LayoutProfileId(mode),
+                LayoutId = selected.Id,
+                LayoutContentHash = hash,
+                PatternId = selected.Pattern,
+                PreviousPatternId = previousPattern,
+                LevelLayoutSeed = layoutSeed,
+                LayoutRng = layoutRng,
+                BagRng = bagRng,
+                OpeningCash = prior == null ? 0 : prior.Cash,
+                OpeningShopSpent = prior == null ? 0 : prior.ShopSpent,
+                OpeningPlayers = players,
+                ActiveBuffs = buffs,
+                InitialHooks = GoldMinerRules.InitialHooks(mode),
                 InitialEntities = entities
             };
             if (!start.TryValidate(mode, out reason))
                 throw new InvalidDataException("Invalid selected gold miner checkpoint: " + reason);
             return start;
+        }
+
+        // The old catalog stays available exclusively for existing v1-v4 campaigns.
+        public GoldMinerLevelStart CreateSourceStart(GoldMinerMode mode, int levelIndex, uint runSeed,
+            GoldMinerRunSnapshot previous = null)
+        {
+            string reason = null;
+            if (!GoldMinerRules.ValidMode(mode) || runSeed == 0 || levelIndex < 1 || levelIndex > GoldMinerSourceRules.MaximumLevel(mode) ||
+                (previous == null ? levelIndex != 1 : previous.BalanceProfile != GoldMinerBalanceProfile.Source || previous.Mode != mode ||
+                 previous.RunSeed != runSeed || !previous.TryValidate(out reason) || previous.Current.Phase != GoldMinerPhase.Shop || previous.Current.LevelIndex + 1 != levelIndex))
+                throw new ArgumentException("Invalid source campaign request: " + reason);
+            string hash = GoldMinerSourceValidation.ContentHash(mode);
+            var root = ReadObject("GoldMiner/Source/" + GoldMinerRules.ModeId(mode), MaximumShardBytes, hash);
+            uint initial = runSeed;
+            var prior = previous == null ? null : previous.Current;
+            uint layoutRng = prior == null ? GoldMinerRules.NextUInt(ref initial) : prior.LayoutRng;
+            uint bagRng = prior == null ? GoldMinerRules.NextUInt(ref initial) : prior.BagRng;
+            uint layoutSeed = layoutRng;
+            int map = mode == GoldMinerMode.Solo ? GoldMinerSourceRules.MapGroup(levelIndex) * 3 + GoldMinerSourceRules.Random(ref layoutRng, 3) : levelIndex - 1;
+            var definition = mode == GoldMinerMode.Solo ? root["maps"][map] : root["maps"][(map + 1).ToString(CultureInfo.InvariantCulture)];
+            var objects = (JArray)(mode == GoldMinerMode.Solo ? definition["data"] : definition);
+            var buffs = prior == null ? new GoldMinerBuffs() : prior.PendingBuffs.Copy();
+            int bombs = prior == null ? 0 : mode == GoldMinerMode.Solo ? prior.Players[0].Bombs : prior.Source.SharedBombs;
+            var entities = new GoldMinerEntity[objects.Count];
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var item = objects[i]; bool solo = mode == GoldMinerMode.Solo;
+                string key = (string)item[solo ? "name" : "key"];
+                var type = root["types"][key];
+                int number = solo ? key == "sprite215.png" ? 12 : (int)type["type"] : DuoType(key);
+                double scaleX = solo ? (double)item["scale"]["x"] : 1, scaleY = solo ? (double)item["scale"]["y"] : 1;
+                double x = ((double)item["x"] + (solo ? 35 : 0)) * .01, y = ((double)item["y"] + (solo ? 4 : -55)) * .01;
+                bool flip = solo && (bool)item["flip"];
+                double width = solo ? (double)root["frames"][key]["sourceSize"]["w"] : (double)root["sizes"][key]["width"];
+                double height = solo ? (double)root["frames"][key]["sourceSize"]["h"] : (double)root["sizes"][key]["height"];
+                var data = new GoldMinerSourceEntity
+                {
+                    Key = key,
+                    Type = number,
+                    Reward = "money",
+                    Value = type == null ? 0 : (long)type[solo ? "price" : "prices"],
+                    Weight = type == null ? 0 : (double)type["weight"],
+                    Radius = solo ? Math.Abs(width * scaleX) * .01 : (Math.Max(15, Math.Max(width, height) / 2) + 5) * .01,
+                    InitialX = x,
+                    InitialY = y,
+                    ScaleX = scaleX,
+                    ScaleY = scaleY,
+                    Flip = flip,
+                    MotionEndX = x + (solo && (number == 6 || number == 10) ? (flip ? 3.7 : -3.7) : 0)
+                };
+                if (solo && number == 12) GoldMinerSourceRules.DrawBag(data, ref bagRng, buffs.Clover, bombs);
+                entities[i] = new GoldMinerEntity
+                {
+                    Id = i + 1,
+                    Kind = SourceKind(number),
+                    Status = GoldMinerEntityStatus.Available,
+                    X = x,
+                    Y = y,
+                    MoveDirection = solo && (number == 6 || number == 10) ? (flip ? 1 : -1) : 0,
+                    Source = data
+                };
+            }
+            var players = new GoldMinerOpeningPlayer[GoldMinerRules.PlayerCount(mode)];
+            for (int i = 0; i < players.Length; i++) players[i] = new GoldMinerOpeningPlayer { PlayerId = i, Bombs = mode == GoldMinerMode.Solo ? bombs : 0, TotalCollected = prior == null ? 0 : prior.Players[i].TotalCollected };
+            var result = new GoldMinerLevelStart
+            {
+                LevelIndex = levelIndex,
+                CatalogVersion = 2,
+                LayoutProfileId = GoldMinerRules.ModeId(mode) + "-source-v1",
+                LayoutId = GoldMinerRules.ModeId(mode) + "-source-" + map.ToString("00", CultureInfo.InvariantCulture),
+                LayoutContentHash = hash,
+                PatternId = "source-" + map,
+                PreviousPatternId = prior == null ? null : prior.PatternId,
+                LevelLayoutSeed = layoutSeed,
+                LayoutRng = layoutRng,
+                BagRng = bagRng,
+                OpeningCash = prior == null ? 0 : prior.Cash,
+                OpeningShopSpent = prior == null ? 0 : prior.ShopSpent,
+                OpeningPlayers = players,
+                ActiveBuffs = buffs,
+                InitialHooks = GoldMinerSourceRules.Hooks(mode),
+                InitialEntities = entities,
+                Source = new GoldMinerSourceState { MapIndex = map, SharedBombs = mode == GoldMinerMode.Coop ? bombs : 0, Strength = buffs.Strength ? (mode == GoldMinerMode.Solo ? 2 : 20) : 0 }
+            };
+            if (!result.TryValidate(mode, out reason)) throw new InvalidDataException("Invalid source checkpoint: " + reason);
+            return result;
+        }
+        private static int DuoType(string key)
+        {
+            switch (key)
+            {
+                case "gold1": return 2;
+                case "gold2": return 3;
+                case "gold3": return 5;
+                case "pig": return 6;
+                case "bone": return 7;
+                case "stone2": return 8;
+                case "bomb": return 9;
+                case "diamond": return 11;
+                case "lunckybag": return 12;
+                case "stone1": return 14;
+            }
+            throw new InvalidDataException("Unknown source ore.");
+        }
+        private static GoldMinerKind SourceKind(int type)
+        {
+            switch (type)
+            {
+                case 2: return GoldMinerKind.GoldSmall;
+                case 3: return GoldMinerKind.GoldMedium;
+                case 4: return GoldMinerKind.Gold250;
+                case 5: return GoldMinerKind.GoldLarge;
+                case 6: return GoldMinerKind.Mole;
+                case 7: return GoldMinerKind.Bone;
+                case 8: return GoldMinerKind.RockLarge;
+                case 9: return GoldMinerKind.Tnt;
+                case 10: return GoldMinerKind.DiamondMole;
+                case 11: return GoldMinerKind.Diamond;
+                case 12: return GoldMinerKind.MysteryBag;
+                case 13: return GoldMinerKind.Skull;
+                case 14: return GoldMinerKind.RockSmall;
+            }
+            throw new InvalidDataException("Unknown source ore type.");
         }
 
         private Dictionary<string, string> LoadCatalog()
@@ -170,9 +306,14 @@ namespace XanaduYonder.Runtime.GoldMiner
                 bool bag = kind == (int)GoldMinerKind.MysteryBag;
                 if (bag ? Long(item["bagValue"], 100, 100) != 100 : item["bagValue"].Type != JTokenType.Null)
                     Fail("Invalid initial mystery bag value.");
-                var entity = new GoldMinerEntity {
-                    Id = i + 1, Kind = (GoldMinerKind)kind, Status = GoldMinerEntityStatus.Available,
-                    X = Number(item["x"]), Y = Number(item["y"]), BagValue = bag ? (long?)100 : null,
+                var entity = new GoldMinerEntity
+                {
+                    Id = i + 1,
+                    Kind = (GoldMinerKind)kind,
+                    Status = GoldMinerEntityStatus.Available,
+                    X = Number(item["x"]),
+                    Y = Number(item["y"]),
+                    BagValue = bag ? (long?)100 : null,
                     MoveDirection = Integer(item["moveDirection"], -1, 1)
                 };
                 bool animal = GoldMinerRules.IsAnimal(entity.Kind);
@@ -268,7 +409,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         private static void Versions(JObject item)
         {
             Integer(item["schemaVersion"], 1, 1);
-            Integer(item["rulesVersion"], GoldMinerRules.Version, GoldMinerRules.Version);
+            Integer(item["rulesVersion"], 4, 4);
             Integer(item["catalogVersion"], 1, 1);
         }
         private static JObject Object(JToken token)
