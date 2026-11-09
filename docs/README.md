@@ -22,6 +22,7 @@
 `releases/` 记录实际发布版本；`verification-*.md` 记录特定设备、包和阶段的验证结果。标题或正文中的旧版本范围应按当时条件理解，不能据此认定当前分支已经通过同样验证。
 
 - [首版 Android 固定存档回归工具](device-testing.md)：要求可调试主包及 `run-as`，不适用于当前 Debug／Release 构建。
+- [Android v0.9.8 发布准备](releases/v0.9.8.md)
 - [Android 发布 v0.9.7](releases/v0.9.7.md)
 - [Android／iOS 发布 v0.9.6](releases/v0.9.6.md)
 - [历史 Android 发布 v0.9.4](releases/v0.9.4.md)
