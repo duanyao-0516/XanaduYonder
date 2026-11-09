@@ -73,6 +73,8 @@ namespace XanaduYonder.Runtime.GoldMiner
             {"GoldMiner/objects/item_lucky_clover", new Rect(0.159489633f, 0.0948963317f, 0.715311005f, 0.776714514f)},
             {"GoldMiner/objects/item_rock_book", new Rect(0.0574162679f, 0.0255183413f, 0.903508772f, 0.885964912f)},
             {"GoldMiner/objects/item_strength", new Rect(0.140350877f, 0.0582137161f, 0.770334928f, 0.880382775f)},
+            {"GoldMiner/objects/ore_bone", new Rect(.074162679f, .102870813f, .858054226f, .760765550f)},
+            {"GoldMiner/objects/ore_skull", new Rect(.148325359f, .163476874f, .688995215f, .681818182f)},
             {"GoldMiner/objects/ore_diamond", new Rect(0.128389155f, 0.161881978f, 0.744019139f, 0.649920255f)},
             {"GoldMiner/objects/ore_gold_large", new Rect(0.0470494418f, 0.0893141946f, 0.909888357f, 0.804625199f)},
             {"GoldMiner/objects/ore_gold_medium", new Rect(0.128389155f, 0.0653907496f, 0.747208931f, 0.860446571f)},

@@ -108,10 +108,10 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         // The old catalog stays available exclusively for existing v1-v4 campaigns.
         public GoldMinerLevelStart CreateSourceStart(GoldMinerMode mode, int levelIndex, uint runSeed,
-            GoldMinerRunSnapshot previous = null)
+            GoldMinerRunSnapshot previous = null, int catalogVersion = GoldMinerSourceLayout.CurrentCatalogVersion)
         {
             string reason = null;
-            if (!GoldMinerRules.ValidMode(mode) || runSeed == 0 || levelIndex < 1 || levelIndex > GoldMinerSourceRules.MaximumLevel(mode) ||
+            if ((catalogVersion != 2 && catalogVersion != GoldMinerSourceLayout.CurrentCatalogVersion) || !GoldMinerRules.ValidMode(mode) || runSeed == 0 || levelIndex < 1 || levelIndex > GoldMinerSourceRules.MaximumLevel(mode) ||
                 (previous == null ? levelIndex != 1 : previous.BalanceProfile != GoldMinerBalanceProfile.Source || previous.Mode != mode ||
                  previous.RunSeed != runSeed || !previous.TryValidate(out reason) || previous.Current.Phase != GoldMinerPhase.Shop || previous.Current.LevelIndex + 1 != levelIndex))
                 throw new ArgumentException("Invalid source campaign request: " + reason);
@@ -166,14 +166,15 @@ namespace XanaduYonder.Runtime.GoldMiner
                     Source = data
                 };
             }
+            if (GoldMinerSourceLayout.IsNative(catalogVersion)) GoldMinerSourceLayout.Arrange(mode, map, entities);
             var players = new GoldMinerOpeningPlayer[GoldMinerRules.PlayerCount(mode)];
             for (int i = 0; i < players.Length; i++) players[i] = new GoldMinerOpeningPlayer { PlayerId = i, Bombs = mode == GoldMinerMode.Solo ? bombs : 0, TotalCollected = prior == null ? 0 : prior.Players[i].TotalCollected };
             var result = new GoldMinerLevelStart
             {
                 LevelIndex = levelIndex,
-                CatalogVersion = 2,
-                LayoutProfileId = GoldMinerRules.ModeId(mode) + "-source-v1",
-                LayoutId = GoldMinerRules.ModeId(mode) + "-source-" + map.ToString("00", CultureInfo.InvariantCulture),
+                CatalogVersion = catalogVersion,
+                LayoutProfileId = GoldMinerRules.ModeId(mode) + (GoldMinerSourceLayout.IsNative(catalogVersion) ? "-source-v2" : "-source-v1"),
+                LayoutId = GoldMinerRules.ModeId(mode) + (GoldMinerSourceLayout.IsNative(catalogVersion) ? "-source-native-" : "-source-") + map.ToString("00", CultureInfo.InvariantCulture),
                 LayoutContentHash = hash,
                 PatternId = "source-" + map,
                 PreviousPatternId = prior == null ? null : prior.PatternId,
@@ -184,7 +185,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 OpeningShopSpent = prior == null ? 0 : prior.ShopSpent,
                 OpeningPlayers = players,
                 ActiveBuffs = buffs,
-                InitialHooks = GoldMinerSourceRules.Hooks(mode),
+                InitialHooks = GoldMinerSourceRules.Hooks(mode, catalogVersion),
                 InitialEntities = entities,
                 Source = new GoldMinerSourceState { MapIndex = map, SharedBombs = mode == GoldMinerMode.Coop ? bombs : 0, Strength = buffs.Strength ? (mode == GoldMinerMode.Solo ? 2 : 20) : 0 }
             };

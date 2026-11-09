@@ -26,9 +26,10 @@ namespace XanaduYonder.Core.GoldMiner
         {
             reason = null;
             if (s == null || !GoldMinerRules.ValidMode(mode) || s.Source == null || s.LevelIndex < 1 || s.LevelIndex > GoldMinerSourceRules.MaximumLevel(mode) ||
-               (int)s.Phase < 0 || (int)s.Phase > 6 || s.CatalogVersion != 2 || s.LayoutProfileId != GoldMinerRules.ModeId(mode) + "-source-v1" ||
+               (int)s.Phase < 0 || (int)s.Phase > 6 || (s.CatalogVersion != 2 && s.CatalogVersion != GoldMinerSourceLayout.CurrentCatalogVersion) ||
+               s.LayoutProfileId != GoldMinerRules.ModeId(mode) + (GoldMinerSourceLayout.IsNative(s.CatalogVersion) ? "-source-v2" : "-source-v1") ||
                s.LayoutContentHash != ContentHash(mode) || s.Source.MapIndex < 0 || s.Source.MapIndex > 29 ||
-               s.LayoutId != GoldMinerRules.ModeId(mode) + "-source-" + s.Source.MapIndex.ToString("00", System.Globalization.CultureInfo.InvariantCulture) ||
+               s.LayoutId != GoldMinerRules.ModeId(mode) + (GoldMinerSourceLayout.IsNative(s.CatalogVersion) ? "-source-native-" : "-source-") + s.Source.MapIndex.ToString("00", System.Globalization.CultureInfo.InvariantCulture) ||
                s.PatternId != "source-" + s.Source.MapIndex || s.LevelLayoutSeed == 0 || s.LayoutRng == 0 || s.BagRng == 0)
                 return Bad("Invalid source campaign identity.", out reason);
             if (mode == GoldMinerMode.Solo ? s.Source.MapIndex / 3 != GoldMinerSourceRules.MapGroup(s.LevelIndex) : s.Source.MapIndex != s.LevelIndex - 1)
@@ -51,14 +52,20 @@ namespace XanaduYonder.Core.GoldMiner
             }
             if (gross > 10000000000000L || gross - s.ShopSpent != s.Cash)
                 return Bad("Source wallet does not balance.", out reason);
+            bool nativeLayout = GoldMinerSourceLayout.IsNative(s.CatalogVersion);
+            double initialYLimit = nativeLayout ? GoldMinerSourceRules.Height(mode, s.CatalogVersion) : 10;
+            // A flight can cross the mine floor by one extension tick before retraction begins.
+            // Keep the original save bounds unchanged; native geometry also includes the .4-unit tip.
+            double positionYLimit = nativeLayout ? initialYLimit + .4 +
+                (mode == GoldMinerMode.Solo ? .1 : .04) * GoldMinerSourceLayout.SpeedScale(mode, s.CatalogVersion) : 10;
             var held = new HashSet<int>();
             for (int i = 0; i < s.Entities.Length; i++)
             {
                 var e = s.Entities[i];
                 var d = e == null ? null : e.Source;
                 if (e == null || e.Id != i + 1 || d == null || string.IsNullOrEmpty(d.Key) || d.Key.Length > 32 || d.Type < 2 || d.Type > 14 ||
-                   (int)e.Kind < 0 || (int)e.Kind > 12 || (int)e.Status < 0 || (int)e.Status > 3 || !Finite(e.X, -30, 30) || !Finite(e.Y, -10, 10) ||
-                   !Finite(d.InitialX, -10, 20) || !Finite(d.InitialY, 0, 10) || !Finite(d.MotionEndX, -10, 20) || !Finite(d.Weight, -5, 95) ||
+                   (int)e.Kind < 0 || (int)e.Kind > 12 || (int)e.Status < 0 || (int)e.Status > 3 || !Finite(e.X, -30, 30) || !Finite(e.Y, -10, positionYLimit) ||
+                   !Finite(d.InitialX, -10, 20) || !Finite(d.InitialY, 0, initialYLimit) || !Finite(d.MotionEndX, -10, 20) || !Finite(d.Weight, -5, 95) ||
                    !Finite(d.Radius, .01, 2) || !Finite(d.ScaleX, .01, 10) || !Finite(d.ScaleY, .01, 10) || d.MotionTick < 0 || d.MotionTick >= 504 || d.Value < 0 || d.Value > 1000000 || d.Award < 0 || d.Award > 1000000 ||
                    (d.Reward != "money" && d.Reward != "power" && d.Reward != "dynamite") || e.BagValue != null || e.MoveDirection < -1 || e.MoveDirection > 1)
                     return Bad("Invalid source entity.", out reason);
@@ -74,7 +81,7 @@ namespace XanaduYonder.Core.GoldMiner
                 var h = s.Hooks[i];
                 var d = h == null ? null : h.Source;
                 if (h == null || d == null || h.PlayerId != i || (int)h.State < 0 || (int)h.State > 3 || !Finite(h.AngleRadians, -1.2, 1.2) ||
-                   !Finite(h.Length, 0, 20) || !Finite(d.X, -10, 20) || !Finite(d.Y, -1, 10) || d.SwingTick < 0 || d.SwingTick >= 240 ||
+                   !Finite(h.Length, 0, 20) || !Finite(d.X, -10, 20) || !Finite(d.Y, -1, positionYLimit) || d.SwingTick < 0 || d.SwingTick >= 240 ||
                    (d.TravelDirection != -1 && d.TravelDirection != 1) || d.RewardTicks < 0 || d.RewardTicks > 54 || d.ResetTicks < 0 || d.ResetTicks > 6 || d.BombTicks < 0 || d.BombTicks > 30 ||
                    (h.SwingDirection != 1 && h.SwingDirection != -1))
                     return Bad("Invalid source hook.", out reason);
@@ -89,11 +96,11 @@ namespace XanaduYonder.Core.GoldMiner
                 if (mode == GoldMinerMode.Solo ? d.BombTicks != 0 || d.ResetTicks != 0 || d.TravelDirection != 1 : d.RewardTicks != 0 || d.PendingEntityId != null)
                     return Bad("Delayed source effect belongs to another mode.", out reason);
                 if (d.RewardTicks > 0 && (!h.HeldEntityId.HasValue || !d.PendingEntityId.HasValue || d.PendingEntityId != h.HeldEntityId ||
-                    h.State != GoldMinerHookState.RetractingLoaded || d.X != GoldMinerSourceRules.OriginX(mode, i) || d.Y != 0 || d.BombTicks != 0 || d.ResetTicks != 0))
+                    h.State != GoldMinerHookState.RetractingLoaded || d.X != GoldMinerSourceRules.OriginX(mode, i, s.CatalogVersion) || d.Y != 0 || d.BombTicks != 0 || d.ResetTicks != 0))
                     return Bad("Delayed source reward requires the returned held object.", out reason);
                 if (d.RewardTicks > 0 && s.Entities[h.HeldEntityId.Value - 1].Source.Reward == "dynamite" && d.RewardTicks > 30)
                     return Bad("Source dynamite reward exceeds its original delay.", out reason);
-                double rayX = d.X - GoldMinerSourceRules.OriginX(mode, i);
+                double rayX = d.X - GoldMinerSourceRules.OriginX(mode, i, s.CatalogVersion);
                 if (Math.Abs(rayX * Math.Cos(h.AngleRadians) - d.Y * Math.Sin(h.AngleRadians)) > 1e-7)
                     return Bad("Source hook left its accepted launch ray.", out reason);
                 if (d.ResetTicks > 0 && (h.HeldEntityId.HasValue || h.State != GoldMinerHookState.RetractingEmpty))
@@ -121,7 +128,7 @@ namespace XanaduYonder.Core.GoldMiner
             var s = p.CreateState(mode);
             if (!State(s, mode, out reason))
                 return false;
-            if (!GoldMinerSourceSignatures.Matches(mode, p.Source.MapIndex, p.InitialEntities))
+            if (!GoldMinerSourceSignatures.Matches(mode, p.Source.MapIndex, p.InitialEntities, p.CatalogVersion))
                 return Bad("Source checkpoint differs from the shipped map.", out reason);
             double initialStrength = p.ActiveBuffs.Strength ? (mode == GoldMinerMode.Solo ? 2 : 20) : 0;
             if (p.Source.Strength != initialStrength || (mode == GoldMinerMode.Solo ? p.Source.SharedBombs != 0 : p.Source.SharedBombs > 1))
@@ -153,7 +160,7 @@ namespace XanaduYonder.Core.GoldMiner
                     : !(data.Value >= 1 && data.Value <= 600 || data.Value == 800))
                     return Bad("Source solo bag money is outside original outcomes.", out reason);
             }
-            var hooks = GoldMinerSourceRules.Hooks(mode);
+            var hooks = GoldMinerSourceRules.Hooks(mode, p.CatalogVersion);
             for (int i = 0; i < hooks.Length; i++)
                 if (s.Hooks[i].State != GoldMinerHookState.Swinging || s.Hooks[i].HeldEntityId != null || s.Hooks[i].Source.X != hooks[i].Source.X || s.Hooks[i].Source.Y != 0 || s.Hooks[i].Source.SwingTick != 0 || s.Hooks[i].Source.TravelDirection != 1 || s.Hooks[i].SwingDirection != hooks[i].SwingDirection || s.Hooks[i].Length != hooks[i].Length || s.Hooks[i].Source.RewardTicks != 0 || s.Hooks[i].Source.BombTicks != 0 || s.Hooks[i].Source.ResetTicks != 0 || s.Hooks[i].AngleRadians != hooks[i].AngleRadians)
                     return Bad("Noninitial source hook.", out reason);

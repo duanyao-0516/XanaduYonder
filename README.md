@@ -51,7 +51,7 @@ iOS 导出后由 Xcode 编译、签名和安装；Mac 自动续签使用固定�
 
 **推箱子**：8 关原创教学和 100 关 Boxoban，四向推箱、连续撤回、重来、自由选关和独立续局。入口展示真实进度，教学使用命名卡片、普通关使用数字网格；游戏页单行计数、圆角棋盘背景及集中操作区，地图只做完整自动适配。验证进度与边界见[推箱子验证记录](docs/verification-sokoban.md)。
 
-**黄金矿工**：新局采用源单人 30 张布局（10 组循环）和双人 30 关，保留关卡坐标、分数、重量和商店规则；旧版本挑战沿原规则续玩。单人竖屏与双人横屏合作，独立续局与检查点重试。原关卡与经济公式的来源、兼容边界见[迁移说明](docs/gold-miner/source-campaign-migration.md)，开发经验见[简要复盘](docs/gold-miner-development-notes.md)。
+**黄金矿工**：沿用原生美术，参考经典单人 30 张矿图（10 组循环）和双人 30 关的矿物构成与分布，按实际矿区重新布置；保留目标、矿值、重量和商店数值。旧存档当前关的位置不变，后续新关采用新布局。单人竖屏与双人横屏合作，独立续局与检查点重试。原关卡与经济公式的来源、兼容边界见[迁移说明](docs/gold-miner/source-campaign-migration.md)，开发经验见[简要复盘](docs/gold-miner-development-notes.md)。
 
 **数字华容道**：3×3／4×4／5×5 自由拼图与三章共 18 题解锁闯关，点击相邻数字或将单块滑向空格。首次有效移动开始计时，弹窗、离页及后台暂停；撤回增加一步并标记练习，练习通关仍能解锁但不计个人纪录。三种自由尺寸各保留一局，闯关另保留一局，使用独立 `sliding-puzzle-v1.json` 保存进度、完整当前移动历史及最少步数／最快用时两个成绩元组。玩法与契约见[数字华容道玩法与接入](docs/sliding-puzzle-game.md)；问题根因、UI 规范、存档与计时经验见[开发复盘与维护规范](docs/sliding-puzzle-development-guide.md)，实际执行范围见[验证记录](docs/verification-sliding-puzzle.md)。
 
@@ -243,15 +243,15 @@ XanaduYonder 是独立项目，与 [DawnYew](https://github.com/duanyao-0516/Daw
 
 ## 13 · 黄金矿工
 
-黄金矿工进入后选择单人竖屏或双人横屏合作。新局使用 Source 战役：单人 30 张原图按原规则循环，双人 30 关，共迁移 1,205 个对象及原目标、商店和结算规则；单人实际 62 秒、双人 40 秒截止。具体契约见[源战役迁移](docs/gold-miner/source-campaign-migration.md)。
+黄金矿工进入后选择单人竖屏或双人横屏合作。Source 战役保留经典单人 30 张参考矿图、双人 30 关共 1,205 个对象的类型及经济数据，单人按原选图规则循环，实际 62 秒、双人 40 秒截止。新关使用适配原生矿区的不规则布局与原生美术，经典矿石 PNG 不再入包；单人矿区为 6×10.2、双人为 12×4.4 个世界单位。收线到顶立即入账并恢复摆动，飘字不阻塞下次出钩。具体数值来源与原版行为差异见[源战役迁移](docs/gold-miner/source-campaign-migration.md)。
 
-旧 v1–v4 挑战继续按旧规则续玩，其 240 张矿图仍保留生产 Core 的成功输入见证；不将旧局改写为 Source 战役。`gold-miner-v1.json` 独立保存完整钩子、动物、随机状态、商店和本关开局检查点；失败重试恢复同一矿场与补给。编辑器支持单人 Space，P1 S/W、P2 ↓/↑ 分别出钩/炸药，Escape 暂停。
+旧 v1–v4 挑战继续按旧规则续玩，其 240 张矿图仍保留生产 Core 的成功输入见证；不将旧局改写为 Source 战役。Source 5 的 `CatalogVersion=2 / source-v1` 当前关继续保留原位置，后续新关采用 `CatalogVersion=3 / source-v2`；布局版本与经济 profile 分开保存。`gold-miner-v1.json` 独立保存完整钩子、动物、随机状态、商店和本关开局检查点；失败重试恢复同一矿场与补给。编辑器支持单人 Space，P1 S/W、P2 ↓/↑ 分别出钩/炸药，Escape 暂停。
 
 运行 `scripts/build-gold-miner-validation.sh` 生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-gold-miner-validation.apk`；包名为 `com.duanyao.xanaduyonder.goldminertest`，与正式应用及其他工作树测试包隔离。该包为开发验收用途，不创建新版本或 Release；实际执行记录见[黄金矿工验证](docs/verification-gold-miner.md)。
 
 - [玩法与首版数值](docs/superpowers/specs/2026-10-27-gold-miner-design.md)：10 关挑战、矿物/动物、商店、关卡变体与失败重试。
 - [技术契约与验收矩阵](docs/gold-miner-technical.md)：横竖屏、双指、生命周期、两模式存档与事务。
-- [资源与音效接入](docs/gold-miner-assets.md)：44 张生产 PNG、切片/导入参数、动画、音效和资源预算。
+- [资源与音效接入](docs/gold-miner-assets.md)：原生生产素材、切片/导入参数、动画、音效和资源预算；本次新增骨头、骷髅的来源与 prompt 见[补充素材](docs/gold-miner/native-ore-art.md)。
 - [分步实施计划](docs/superpowers/plans/2026-10-27-gold-miner.md)：文件归属、任务依赖、测试入口、隔离验证包及交付条件。
 
 
