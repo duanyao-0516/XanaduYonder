@@ -4,7 +4,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using XanaduYonder.Core.GoldMiner;
 using XanaduYonder.Runtime.GoldMiner;
-class Program
+partial class Program
 {
     static string root;static int checks;
     static void Assert(bool ok,string message){checks++;if(!ok)throw new Exception(message);}
@@ -16,6 +16,8 @@ class Program
     static void Main(string[] args)
     {
         root=args[0];string reason;
+        CheckImmediateDelivery();
+        NativeLayoutChecks.Run(root);
         var contract=JObject.Parse(File.ReadAllText(Path.Combine(root,"docs/gold-miner/source-contract.json")));
         for(int level=1;level<=40;level++){
             Assert(GoldMinerSourceRules.Target(GoldMinerMode.Solo,level)==(long)contract["goals"][level-1],"original JS goal");
@@ -31,7 +33,7 @@ class Program
             for(uint seed=1;seed<=30;seed++) {
                 GoldMinerRunSnapshot previous=null;
                 for(int level=1;level<=(mode==GoldMinerMode.Solo?40:30);level++) {
-                    var start=Catalog().CreateSourceStart(mode,level,seed,previous);var run=Run(mode,start,seed);
+                    var start=Catalog().CreateSourceStart(mode,level,seed,previous,catalogVersion:2);var run=Run(mode,start,seed);
                     Assert(start.TryValidate(mode,out reason),reason);Assert(run.TryValidate(out reason),reason);
                     Assert(start.CreateState(mode).RemainingTicks==(mode==GoldMinerMode.Solo?3720:2400),"duration");
                     Assert(start.CreateState(mode).Target==(mode==GoldMinerMode.Solo?5L*(27L*level*level+28L*level+75):500+150L*level),"target");
@@ -55,7 +57,7 @@ class Program
         Assert(seen.Count==60&&objectCount==1205,"all 60 maps and 1205 objects");
         Console.WriteLine("PASS all 60 maps / 1205 exact coordinates, types, transforms, 40 solo levels, 30 duo levels and save checkpoints");
         foreach(var mode in new[]{GoldMinerMode.Solo,GoldMinerMode.Coop}) {
-            var run=Run(mode,Catalog().CreateSourceStart(mode,1,7),7);var game=new GoldMinerGame(run);Assert(game.StartLevel(),"start");long seq=0;
+            var run=Run(mode,Catalog().CreateSourceStart(mode,1,7,catalogVersion:2),7);var game=new GoldMinerGame(run);Assert(game.StartLevel(),"start");long seq=0;
             for(int tick=0;tick<GoldMinerSourceRules.DurationTicks(mode);tick++) {
                 if(tick%70==0)for(int p=0;p<GoldMinerRules.PlayerCount(mode);p++)game.TryLaunch(p,++seq);
                 var step=game.Step();var state=game.GetSnapshot();Assert(state.TryValidate(out reason),reason+" tick "+tick);
@@ -66,7 +68,7 @@ class Program
         }
         Console.WriteLine("PASS source simulation validates every tick and exact restored in-flight continuation in both modes");
         foreach(var mode in new[]{GoldMinerMode.Solo,GoldMinerMode.Coop}) {
-            var original=Run(mode,Catalog().CreateSourceStart(mode,1,7),7);
+            var original=Run(mode,Catalog().CreateSourceStart(mode,1,7,catalogVersion:2),7);
             var orphan=original.Copy();orphan.Current.Phase=GoldMinerPhase.Running;orphan.Current.Hooks[0].Source.RewardTicks=1;
             Assert(!orphan.TryValidate(out reason),"orphan delayed reward rejected before game construction");
             var wrongMode=original.Copy();wrongMode.Current.Hooks[0].Source.BombTicks=mode==GoldMinerMode.Solo?1:0;wrongMode.Current.Hooks[0].Source.ResetTicks=mode==GoldMinerMode.Coop?1:0;
@@ -78,13 +80,12 @@ class Program
             var state=original.Current;state.Phase=GoldMinerPhase.Running;state.RemainingTicks=1;state.SimulationTick=GoldMinerSourceRules.DurationTicks(mode)-1;
             var ore=state.Entities[0];var hook=state.Hooks[0];ore.Status=GoldMinerEntityStatus.Held;ore.OwnerPlayerId=0;hook.State=GoldMinerHookState.RetractingLoaded;hook.HeldEntityId=ore.Id;
             hook.Source.Y=0;hook.Source.X=GoldMinerSourceRules.OriginX(mode,0);
-            if(mode==GoldMinerMode.Solo){hook.Source.RewardTicks=1;hook.Source.PendingEntityId=ore.Id;}
-            else{hook.Source.BombTicks=1;state.Source.SharedBombs=0;}
+            if(mode==GoldMinerMode.Coop){hook.Source.BombTicks=1;state.Source.SharedBombs=0;}
             var game=new GoldMinerGame(RoundTrip(Root(original)).GetRun(mode));game.Step();Assert(game.SettlementReady&&game.GetStateSnapshot().Cash==0,"original timeout does not grant unfinished reward");
         }
         Console.WriteLine("PASS immutable source identity, pending money/bomb save and immediate timeout");
         GoldMinerRunSnapshot edgePrior=null, edgeRun=null;
-        for(int level=1;level<=14;level++){edgeRun=Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,level,31,edgePrior),31);if(level<14)edgePrior=Shop(edgeRun);}
+        for(int level=1;level<=14;level++){edgeRun=Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,level,31,edgePrior,catalogVersion:2),31);if(level<14)edgePrior=Shop(edgeRun);}
         edgeRun.Current.Phase=GoldMinerPhase.Running;
         foreach(var e in edgeRun.Current.Entities)if(e.Source.Key!="gold3"||Math.Abs(e.X-5.66)>.001)e.Status=GoldMinerEntityStatus.Destroyed;
         edgeRun.Current.Hooks[0].AngleRadians=56*Math.PI/180;
@@ -98,7 +99,7 @@ class Program
         var heldEdgeGame=new GoldMinerGame(edgeHeld);heldEdgeGame.Step();Assert(heldEdgeGame.GetSnapshot().TryValidate(out reason),"accepted boundary held state must stay valid: "+reason);
         Console.WriteLine("PASS duo source boundary preserves held-object state");
         GoldMinerRunSnapshot tntPrior=null, tntRun=null;
-        for(int level=1;level<=7;level++){tntRun=Run(GoldMinerMode.Solo,Catalog().CreateSourceStart(GoldMinerMode.Solo,level,11,tntPrior),11);if(level<7)tntPrior=Shop(tntRun);}
+        for(int level=1;level<=7;level++){tntRun=Run(GoldMinerMode.Solo,Catalog().CreateSourceStart(GoldMinerMode.Solo,level,11,tntPrior,catalogVersion:2),11);if(level<7)tntPrior=Shop(tntRun);}
         var tntState=tntRun.Current;tntState.Phase=GoldMinerPhase.Running;GoldMinerEntity tnt=null;
         foreach(var e in tntState.Entities)if(e.Source.Type==9){tnt=e;break;}
         var tntHook=tntState.Hooks[0];double tdx=tnt.X-3.2,tdy=tnt.Y,tdistance=Math.Sqrt(tdx*tdx+tdy*tdy);
@@ -108,10 +109,10 @@ class Program
         for(int tick=0;tick<180;tick++)tntGame.Step();var tntDone=tntGame.GetStateSnapshot();Assert(tntDone.Entities[tnt.Id-1].Status==GoldMinerEntityStatus.Collected&&tntDone.Cash==tntState.Cash+1,"original TNT returns one dollar after its explosion");
         Console.WriteLine("PASS solo original TNT radius and one-dollar returned reward");
         for(uint seed=1;seed<100;seed++) {
-            var prior=Shop(Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,1,seed),seed));
+            var prior=Shop(Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,1,seed,catalogVersion:2),seed));
             if(prior.Current.Shop.Offers[0].Remaining==0)continue;
             GoldMinerEconomy.Purchase(prior.Current,GoldMinerItem.Dynamite,0);
-            var bombRun=Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,2,seed,prior),seed);var bs=bombRun.Current;bs.Phase=GoldMinerPhase.Running;
+            var bombRun=Run(GoldMinerMode.Coop,Catalog().CreateSourceStart(GoldMinerMode.Coop,2,seed,prior,catalogVersion:2),seed);var bs=bombRun.Current;bs.Phase=GoldMinerPhase.Running;
             GoldMinerEntity big=null;foreach(var e in bs.Entities)if(e.Source.Type==5){big=e;break;}
             var bh=bs.Hooks[0];double dx=big.X-1.85,dy=big.Y-.05,distance=Math.Sqrt(dx*dx+dy*dy);bh.AngleRadians=Math.Atan2(dx,dy);bh.Source.X=1.85+Math.Sin(bh.AngleRadians)*(distance-.25);bh.Source.Y=Math.Cos(bh.AngleRadians)*(distance-.25);bh.State=GoldMinerHookState.RetractingLoaded;bh.HeldEntityId=big.Id;bh.Source.TravelDirection=-1;big.Status=GoldMinerEntityStatus.Held;big.OwnerPlayerId=0;
             var bombGame=new GoldMinerGame(bombRun);Assert(bombGame.TryUseDynamite(0,1),"source shared bomb reservation");Assert(bombGame.GetStateSnapshot().Source.SharedBombs==0,"shared stock reserved synchronously");
@@ -122,7 +123,7 @@ class Program
         Console.WriteLine("PASS duo synchronous shared reservation and saved 500ms bomb delay");
         GoldMinerRunSnapshot soloRun=null;
         for(uint seed=1;seed<2000;seed++) {
-            var candidate=Run(GoldMinerMode.Solo,Catalog().CreateSourceStart(GoldMinerMode.Solo,1,seed),seed);
+            var candidate=Run(GoldMinerMode.Solo,Catalog().CreateSourceStart(GoldMinerMode.Solo,1,seed,catalogVersion:2),seed);
             foreach(int kind in new[]{5,3,2}) foreach(var ore in candidate.Current.Entities) if(ore.Source.Type==kind&&ore.Status==GoldMinerEntityStatus.Available) {
                 ore.Status=GoldMinerEntityStatus.Collected;ore.Source.Award=ore.Source.Value;ore.Source.AwardPlayer=0;
                 candidate.Current.Cash+=ore.Source.Award;candidate.Current.Players[0].TotalCollected+=ore.Source.Award;candidate.Current.Players[0].LevelCollected+=ore.Source.Award;break;
@@ -133,7 +134,7 @@ class Program
         }
         Assert(soloRun!=null,"source shop can incur debt from an actually cleared 650 target");RoundTrip(Root(soloRun));
         foreach(var mode in new[]{GoldMinerMode.Solo,GoldMinerMode.Coop})for(uint seed=1;seed<50;seed++) {
-            var candidate=Shop(Run(mode,Catalog().CreateSourceStart(mode,1,seed),seed));
+            var candidate=Shop(Run(mode,Catalog().CreateSourceStart(mode,1,seed,catalogVersion:2),seed));
             if(candidate.Current.Shop.Offers[1].Remaining==0||candidate.Current.Shop.Offers[0].Remaining==0)continue;
             GoldMinerEconomy.Purchase(candidate.Current,GoldMinerItem.Strength,0);GoldMinerEconomy.Purchase(candidate.Current,GoldMinerItem.Dynamite,0);
             Assert(candidate.TryValidate(out reason),reason);

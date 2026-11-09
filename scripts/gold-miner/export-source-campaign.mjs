@@ -5,7 +5,6 @@ import path from 'node:path';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { execFileSync } from 'node:child_process';
 const root = path.resolve(process.argv[2] || '.');
 const source = path.resolve(process.argv[3] || path.join(root, 'artifacts/gold-miner-source-reference'));
 if (!fs.existsSync(path.join(source,'solo/game.js'))) throw new Error('Pass the reviewed source web directory as the second argument; it is not a build dependency.');
@@ -30,7 +29,6 @@ const sizes = {};
 for (const key of Object.keys(duo.ORE_TYPES)) {
   const png = fs.readFileSync(path.join(source, 'duo/resource/assets/ui', key + '.png'));
   sizes[key] = { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
-  fs.copyFileSync(path.join(source, 'duo/resource/assets/ui', key + '.png'), path.join(output, 'duo-' + key + '.png'));
 }
 
 const duoData = { schemaVersion: 1, mode: 'coop', width: 550, height: 400, originY: 55, maps: duo.MAPS, types: duo.ORE_TYPES, sizes };
@@ -41,10 +39,9 @@ for (const [name, data, count] of [['solo', soloData, 611], ['coop', duoData, 59
   if (actual !== count) throw new Error(name + ' entity count mismatch');
   entries.push({ mode: name, file: name + '.json', sha256: hash(json), mapCount: 30, entityCount: count });
 }
-const sourceSprites = JSON.parse(execFileSync('python3', [path.join(root, 'scripts/gold-miner/extract-source-sprites.py'), path.join(source, 'solo/assets/atlas.png'), path.join(output, 'solo.json'), output], {encoding:'utf8'}));
 const sourceFiles = ['solo/game.js','solo/adapter.js','solo/layout.js','solo/state.js','solo/assets/atlas.json','solo/assets/atlas.png','duo/js/game-data.mjs','duo/js/game.mjs','duo/js/layout.mjs','duo/js/state-core.mjs'];
 const manifest = { schemaVersion: 1, rulesVersion: 5, campaign: 'source-v1', unitsPerPixel: 0.01,
-  sourceSprites, sourceFiles: sourceFiles.map(file=>({file,sha256:hash(fs.readFileSync(path.join(source,file)))})), files: entries,
+  artwork: 'Native artwork only; source dimensions are retained as legacy data, never as runtime textures.', sourceFiles: sourceFiles.map(file=>({file,sha256:hash(fs.readFileSync(path.join(source,file)))})), files: entries,
   solo: {source:'https://www.4399.com/flash/230816.htm',selection:'n<=10 ? 3*(n-1)+random(3) : 3*((n-6)%10)+random(3)',target:'5*(27*n*n+28*n+75)',durationTicks:3720,coordinate:'x=(source.x+35)/100; y=(source.y+50-46)/100; preserve scale and flip',shopDebt:true},
   coop: {source:'https://www.4399.com/flash/232532.htm',selection:'map=n; n=1..30',target:'500+150*n',durationTicks:2400,coordinate:'x=source.x/100; y=(source.y-55)/100',shopDebt:false},
   extractionVerification: {soloMaps:30,soloObjects:611,coopMaps:30,coopObjects:594,exactRawFieldComparison:true} };

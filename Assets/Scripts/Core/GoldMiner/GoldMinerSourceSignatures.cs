@@ -71,13 +71,84 @@ namespace XanaduYonder.Core.GoldMiner
             "812ce3c9633b38182c37226ed5c1f0bdbc0b68ec13dcfa7744e566ebdbdac876",
             "9491616399ff40b973bd7212e14c566ffb712869e2668de714d9588c1e9b398c"
         };
-        internal static bool Matches(GoldMinerMode mode, int map, GoldMinerEntity[] entities)
+        // Native geometry signatures; economic object definitions remain from the original source maps.
+        static readonly string[] nativeSolo = {
+            "57d19542688de0fcf911e7bbc8d0a1d77bfe99878c367da69a9abbd3f1d5f901",
+            "e126562b7d67f0f429c34e7258863c5436c08504a1f5d55825b1928d1562665f",
+            "1a58307c4a037f80a499b8a88b151295d76143fa1c8bb0cad867ddcbfb4ddc6a",
+            "73fbc62572dbd3f571bc7bc12c19a846fdfb2206dca37e891c79d3ceba061384",
+            "a2dec0dfd885d3a2b978c69f94377e317aea3257c4d6cc112bb264fa8147147f",
+            "5b0281f9ecc4f4dabcab4d9fbf4dcf1c563192fe3b295c4ccb41d49b9308ddb7",
+            "3f4573da6fc135cd1114503f88a204a6f31330adea857b800f1cef65c6d17264",
+            "a2f9d59e215f6af28ff333eac6248e594751070097bb16a1c586bf57285b74d2",
+            "a69995cabde86904b22ebfb3b0a4762b2e9e09c9af526e47e013957ff442c6af",
+            "86d885b43924b4da13df2880e7ddcf8f2666c61f112237aba9b7cc6b3a9941df",
+            "671f0f397bbefed89c01e9f119d685fda89074d84b19401ddf915e44bee7d398",
+            "7fb5358d0b5dfad25c576f7724eb4cedbdab82dcb50d92764ba3f6f5d40707ba",
+            "2e35548b56538c6a12377146cdca50e5356bd20793550d1b8e10cc48915f755c",
+            "bbabaa8e6c0ae04dd4281c302616c48ba6e55d4f1ee8131d862c9c343caa0760",
+            "d9fdbc466d30ad21715de894c2b5a09f4a1cebaf4a8c341ae9961d85224f84f5",
+            "43aecb238ac1a0a7648081175f1d79ded7f3371e3b17f3b07c386a0a938871e8",
+            "53bea2832f155bf97e991de1fc9d0be011820bbc757ef5f1ec92fd1426d706f7",
+            "bbebe1af74ecf99e579fa5e77d7356cdc56e0b57935b6829db6bc413b4cdc8c8",
+            "75f7bcbe7c5fdce1d0ccb0488cbc7d67c365ad9225632daa291ec24abe476405",
+            "5927de029c754bb3494f195e01f4394ca68d591c89a960f008b33cfa059fc9d0",
+            "28e81a08320e1385f7f40375f0c99680b0e493885a871e04399a93433f6bf30c",
+            "9255519b3061a8c30711a0a5f9c874e7fb218a9bc0521a24951f4a6efa037695",
+            "1950a63ed34d2e7d77faf96184961e3fba3bd8a34624aa937519ad75e4cecb3e",
+            "9abff655cf2022f2afdd76a8cdae6e392af67fd5bdc2ef37be67979d6eb57e07",
+            "03a2efd6042f3abaa3aec7fc9a1cd59a44d48fdaf9f421af0600edc998810efc",
+            "2d3582ef6cd1deba6c730c6047b2f4aecf851366d808091f5beb2dd333c4e0b2",
+            "e62a544accb7c92b6d34b2dc2ec3ef7c4d1631a3e313579819df35dae6f0d468",
+            "6f6e755272934e72a4822d0bde577e502d1910242710b35eb5bae070a32d07bb",
+            "154954b373d25d3190a6a65baf41df9edec2c4a20a8608cbeac8d2d78ad57e34",
+            "9b177011065cdcd842739b2bfff4930e598e2aa031ebe35a3f9379ae41f26ef1"
+        };
+        // Native geometry signatures; economic object definitions remain from the original source maps.
+        static readonly string[] nativeCoop = {
+            "2b95add955273a8aea56bea0090c124bf698446bf8b79f65d4312af0d648e752",
+            "850418e44ff278129f74c65ed9c33c94b7c8eaa858bb117bcc8f5172c5e2337e",
+            "a6ead850c1db398ef76679e50c67cbcd39bdb8870aa0eeb938d049e12438c479",
+            "ac93a22d5644c7a7304f218ba84533be701730b7ae7c53a6c68bb1a48434468d",
+            "cfe9697a42d4ecdb679d4a712398c51995bcec428ff1e28af65e8135306629eb",
+            "bd28eca76aafa08c4d1e1dd051ade0d0cd2930faf4fff81e63471e3135a424bd",
+            "39051d3a9acb42d860ff8c108cac8ea0ddc8e5b6db70d91370f70f11efc42d56",
+            "27341af9e054743803041e81edf042307f8eabe05c9035c69da1e543aeebd6ff",
+            "693688c998ab16f97beb80d042af9cd3534b8dfe55689ee9ef4f63490f082c06",
+            "7b6a7d372e6cde346c88c32a55806c37941083436a6c5bfc8964e63dc9cf659c",
+            "c24d96e16af8d86ec328cb87b4cd8e197ff0f7c61c883ce6b4ab6c60b5857e8a",
+            "d137c5ba4e20c8c8bdaf857ce95559fd709364cffe82244b7f9cc09e05a0eea2",
+            "4d5af736309ee8eb00dd2a66e1c830383e16defce2381179113884085c0ba0cc",
+            "4fa7dd60418388df8f7d74f4c76c44c2a8e84a518513fba508823cd1eb8ebe9d",
+            "35efa64cfb8062fc7fb4609bc161328ad2fa0a01a7fe5981d919b86fbfd49691",
+            "7792d95f763bd9b47d0111d12a5b4541b5beb02008b926a00cf385ea770b2503",
+            "7b3996c4e8e929e8015a8cd4093e4c842bb01fb6c3205c34e5b36cb1b3a5aa30",
+            "62deb63c7d8bb85c228b3e877aaa9fee16f4613dc5b42781be87a6f410a28b1f",
+            "285e5aec06fd3daef89833bab9056cee80a362db982291e1e92156e352955713",
+            "46b8398b1547c9ce91d1a888589619094f5ebe99d7237f5d5c9cc75bd578c73c",
+            "2e04cf6603db2e1c74b606346c0d1f57baf5d41d62570adb3c807636dc7cb6c3",
+            "10a51e83da16db6f500386cbd2a9194aec3eb74f25cf02441dadf8071674e8d7",
+            "13b8370e72eab44b0b5d70062e39f8a3a18b8140ff4ebb63214e4b6932e69ef7",
+            "a460e8156588a3658ce99a41913434410859efdfc3e9482397881def7f2ab43c",
+            "ff22771074fe7649b05e5840920cedbd6694f4e3a1881949b313db04bceab25c",
+            "08f199116eeedeb00dba8dad9e8193b1eb3786d3237ce7ea442a584f223d1f84",
+            "0e69e465356f2760df73945d98a3be51ac85bb58a9171fa4a94c97b7e2171380",
+            "aeb751fbacc002c9e43fd329f9e8c2aa9979355c892417ad15ff001cbaf92238",
+            "f4174dadab459dd250646bf11411404143bbd41a170b29beb6fc2e15e760fece",
+            "70642e1c0151c9ec2895605c034893d24023ace5028efba8a1a5a3137d9015de"
+        };
+        internal static bool Matches(GoldMinerMode mode, int map, GoldMinerEntity[] entities, int catalogVersion = 2)
+        {
+            if (GoldMinerSourceLayout.IsNative(catalogVersion)) return Calculate(entities) == (mode == GoldMinerMode.Solo ? nativeSolo : nativeCoop)[map];
+            return Calculate(entities) == (mode == GoldMinerMode.Solo ? solo : coop)[map];
+        }
+        internal static string Calculate(GoldMinerEntity[] entities)
         {
             using(var stream=new MemoryStream())using(var writer=new BinaryWriter(stream,Encoding.UTF8)) {
                 foreach(var e in entities) {var d=e.Source;writer.Write(Encoding.UTF8.GetBytes(d.Key+"\0"));
                     foreach(double n in new double[] {d.Type,(int)e.Kind,d.InitialX,d.InitialY,d.ScaleX,d.ScaleY,d.Flip?1:0,d.MotionEndX,d.Radius,d.Type==12?0:d.Value,d.Type==12?0:d.Weight})writer.Write(n);
                 }
-                using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(stream.ToArray())).Replace("-", "").ToLowerInvariant()==(mode==GoldMinerMode.Solo?solo:coop)[map];
+                using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(stream.ToArray())).Replace("-", "").ToLowerInvariant();
             }
         }
     }

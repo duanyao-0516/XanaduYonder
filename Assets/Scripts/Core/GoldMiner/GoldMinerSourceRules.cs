@@ -65,25 +65,25 @@ namespace XanaduYonder.Core.GoldMiner
         {
             return mode == GoldMinerMode.Solo ? 3720 : 2400;
         }
-        public static double Width(GoldMinerMode mode)
+        public static double Width(GoldMinerMode mode, int catalogVersion = 2)
         {
-            return mode == GoldMinerMode.Solo ? 6.4 : 5.5;
+            return GoldMinerSourceLayout.Width(mode, catalogVersion);
         }
-        public static double Height(GoldMinerMode mode)
+        public static double Height(GoldMinerMode mode, int catalogVersion = 2)
         {
-            return mode == GoldMinerMode.Solo ? 4.34 : 3.45;
+            return GoldMinerSourceLayout.Height(mode, catalogVersion);
         }
-        public static double OriginX(GoldMinerMode mode, int player)
+        public static double OriginX(GoldMinerMode mode, int player, int catalogVersion = 2)
         {
-            return mode == GoldMinerMode.Solo ? 3.2 : player == 0 ? 1.85 : 2.85;
+            return GoldMinerSourceLayout.OriginX(mode, player, catalogVersion);
         }
-        public static void HookPoint(GoldMinerMode mode, GoldMinerHook hook, out double x, out double y)
+        public static void HookPoint(GoldMinerMode mode, GoldMinerHook hook, out double x, out double y, int catalogVersion = 2)
         {
-            double tip = mode == GoldMinerMode.Solo ? .4 : .25;
+            double tip = GoldMinerSourceLayout.IsNative(catalogVersion) || mode == GoldMinerMode.Solo ? .4 : .25;
             x = hook.Source.X + Math.Sin(hook.AngleRadians) * tip;
-            y = hook.Source.Y + Math.Cos(hook.AngleRadians) * tip + (mode == GoldMinerMode.Coop ? .05 : 0);
+            y = hook.Source.Y + Math.Cos(hook.AngleRadians) * tip + (mode == GoldMinerMode.Coop && !GoldMinerSourceLayout.IsNative(catalogVersion) ? .05 : 0);
         }
-        public static GoldMinerHook[] Hooks(GoldMinerMode mode)
+        public static GoldMinerHook[] Hooks(GoldMinerMode mode, int catalogVersion = 2)
         {
             var result = new GoldMinerHook[GoldMinerRules.PlayerCount(mode)];
             for (int i = 0; i < result.Length; i++)
@@ -93,8 +93,8 @@ namespace XanaduYonder.Core.GoldMiner
                     State = GoldMinerHookState.Swinging,
                     SwingDirection = i == 0 ? 1 : -1,
                     AngleRadians = mode == GoldMinerMode.Solo ? Math.PI / 3 : 0,
-                    Length = mode == GoldMinerMode.Solo ? .4 : .3,
-                    Source = new GoldMinerSourceHook { X = OriginX(mode, i) }
+                    Length = GoldMinerSourceLayout.IsNative(catalogVersion) || mode == GoldMinerMode.Solo ? .4 : .3,
+                    Source = new GoldMinerSourceHook { X = OriginX(mode, i, catalogVersion) }
                 };
             return result;
         }
@@ -158,8 +158,8 @@ namespace XanaduYonder.Core.GoldMiner
         public static double RetractPerTick(GoldMinerMode mode, GoldMinerState state, GoldMinerEntity entity)
         {
             if (mode == GoldMinerMode.Solo)
-                return (10 + state.Source.Strength - (entity == null ? 0 : entity.Source.Weight)) * .01;
-            return .04 * (entity == null ? 1 : Math.Min(1 - Math.Max(entity.Source.Weight - state.Source.Strength, 20) / 100, 1));
+                return (10 + state.Source.Strength - (entity == null ? 0 : entity.Source.Weight)) * .01 * GoldMinerSourceLayout.SpeedScale(mode, state.CatalogVersion);
+            return .04 * (entity == null ? 1 : Math.Min(1 - Math.Max(entity.Source.Weight - state.Source.Strength, 20) / 100, 1)) * GoldMinerSourceLayout.SpeedScale(mode, state.CatalogVersion);
         }
     }
 }

@@ -15,12 +15,14 @@ namespace XanaduYonder.Runtime.GoldMiner
         public float Height { get; private set; }
         public bool SourceCampaign { get; private set; }
         private readonly GoldMinerMode mode;
+        private readonly int catalogVersion;
 
         // All page coordinates are top-left anchored design units, not physical pixels.
         public GoldMinerLayout(float width, float height, Rect safe, GoldMinerMode mode,
-            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic, int catalogVersion = 2)
         {
             this.mode = mode;
+            this.catalogVersion = catalogVersion;
             SourceCampaign = profile == GoldMinerBalanceProfile.Source;
             Width = width;
             Height = height;
@@ -30,8 +32,8 @@ namespace XanaduYonder.Runtime.GoldMiner
             var mineTop = safe.y + (Cooperative ? 174 : Mathf.Clamp(safe.height * .17f, 208, 270));
             var available = new Rect(safe.x + 22, mineTop, safe.width - 44,
                 Mathf.Max(120, safe.yMax - 96 - mineTop));
-            float worldWidth = (float)(SourceCampaign ? GoldMinerSourceRules.Width(mode) : GoldMinerRules.Width(mode));
-            float worldHeight = (float)(SourceCampaign ? GoldMinerSourceRules.Height(mode) : GoldMinerRules.Height(mode));
+            float worldWidth = (float)(SourceCampaign ? GoldMinerSourceRules.Width(mode, catalogVersion) : GoldMinerRules.Width(mode));
+            float worldHeight = (float)(SourceCampaign ? GoldMinerSourceRules.Height(mode, catalogVersion) : GoldMinerRules.Height(mode));
             Scale = Mathf.Min(available.width / worldWidth, available.height / worldHeight);
             var mineWidth = Scale * worldWidth;
             Mine = new Rect(available.center.x - mineWidth * .5f, available.y,
@@ -43,7 +45,7 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         public double OriginX(int player)
         {
-            return SourceCampaign ? GoldMinerSourceRules.OriginX(mode, player) : GoldMinerRules.OriginX(mode, player);
+            return SourceCampaign ? GoldMinerSourceRules.OriginX(mode, player, catalogVersion) : GoldMinerRules.OriginX(mode, player);
         }
 
         public Vector2 World(double x, double y)

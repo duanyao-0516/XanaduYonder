@@ -52,6 +52,19 @@ namespace XanaduYonder.Core.GoldMiner
             var s = run.Current;
             if (s.Phase != GoldMinerPhase.Running)
                 return new GoldMinerStepResult(false, s.Phase == GoldMinerPhase.Draining, events);
+            // Older source saves kept an already-returned object pending while
+            // its reward animation played. Commit those deliveries on continue,
+            // before the deadline; completed historical rounds keep their ledger.
+            foreach (var hook in s.Hooks)
+            {
+                if (hook.Source.RewardTicks > 0)
+                {
+                    Award(run, hook, Held(s, hook), events);
+                    ReleaseHook(hook);
+                }
+                else if (hook.Source.ResetTicks > 0)
+                    ReleaseHook(hook); // The old duo reset had already paid its reward.
+            }
             // Both shipped engines settle immediately on timeout, without a drain bonus.
             if (--s.RemainingTicks == 0)
             {
@@ -84,23 +97,6 @@ namespace XanaduYonder.Core.GoldMiner
                     if (h.State == GoldMinerHookState.RetractingLoaded)
                         h.State = d.TravelDirection > 0 ? GoldMinerHookState.Extending : GoldMinerHookState.RetractingEmpty;
                 }
-                if (d.ResetTicks > 0)
-                {
-                    if (--d.ResetTicks == 0)
-                        h.State = GoldMinerHookState.Swinging;
-                    continue;
-                }
-                if (d.RewardTicks > 0)
-                {
-                    if (--d.RewardTicks == 0)
-                    {
-                        Award(run, h, Held(s, h), events);
-                        h.Source.PendingEntityId = null;
-                        h.HeldEntityId = null;
-                        h.State = GoldMinerHookState.Swinging;
-                    }
-                    continue;
-                }
                 if (h.State == GoldMinerHookState.Swinging)
                 {
                     if (solo)
@@ -123,12 +119,19 @@ namespace XanaduYonder.Core.GoldMiner
                     Catch(run, h, events);
                 held = Held(s, h);
                 double step = solo
-                    ? (h.State == GoldMinerHookState.Extending ? .1 : -GoldMinerSourceRules.RetractPerTick(run.Mode, s, held))
+                    ? (h.State == GoldMinerHookState.Extending ? .1 * GoldMinerSourceLayout.SpeedScale(run.Mode, s.CatalogVersion) : -GoldMinerSourceRules.RetractPerTick(run.Mode, s, held))
                     : GoldMinerSourceRules.RetractPerTick(run.Mode, s, held) * d.TravelDirection;
                 if (!solo)
                 {
                     bool far = d.Y >= 2.89 || d.X >= 5.1;
                     bool near = d.X < .4 || d.Y < 0;
+                    if (GoldMinerSourceLayout.IsNative(s.CatalogVersion))
+                    {
+                        double tipX, tipY;
+                        GoldMinerSourceRules.HookPoint(run.Mode, h, out tipX, out tipY, s.CatalogVersion);
+                        far = tipX > GoldMinerSourceRules.Width(run.Mode, s.CatalogVersion) || tipY > GoldMinerSourceRules.Height(run.Mode, s.CatalogVersion);
+                        near = tipX < 0 || d.Y < 0;
+                    }
                     if (d.Y < 0)
                     {
                         Return(run, h, events);
@@ -145,8 +148,9 @@ namespace XanaduYonder.Core.GoldMiner
                 d.X += Math.Sin(h.AngleRadians) * step;
                 d.Y += Math.Cos(h.AngleRadians) * step;
                 double px, py;
-                GoldMinerSourceRules.HookPoint(run.Mode, h, out px, out py);
-                h.Length = Math.Sqrt((px - GoldMinerSourceRules.OriginX(run.Mode, i)) * (px - GoldMinerSourceRules.OriginX(run.Mode, i)) + py * py);
+                GoldMinerSourceRules.HookPoint(run.Mode, h, out px, out py, s.CatalogVersion);
+                double originX = GoldMinerSourceRules.OriginX(run.Mode, i, s.CatalogVersion);
+                h.Length = Math.Sqrt((px - originX) * (px - originX) + py * py);
                 if (held != null)
                 {
                     held.X = px;
@@ -154,7 +158,8 @@ namespace XanaduYonder.Core.GoldMiner
                 }
                 if (solo)
                 {
-                    if (h.State == GoldMinerHookState.Extending && (py > 4.34 || px < 0 || px > 6.4))
+                    if (h.State == GoldMinerHookState.Extending &&
+                        (py > GoldMinerSourceRules.Height(run.Mode, s.CatalogVersion) || px < 0 || px > GoldMinerSourceRules.Width(run.Mode, s.CatalogVersion)))
                         h.State = GoldMinerHookState.RetractingEmpty;
                     else if (h.State != GoldMinerHookState.Extending && d.Y < 0)
                         Return(run, h, events);
@@ -171,7 +176,7 @@ namespace XanaduYonder.Core.GoldMiner
         {
             var s = run.Current;
             double x, y;
-            GoldMinerSourceRules.HookPoint(run.Mode, h, out x, out y);
+            GoldMinerSourceRules.HookPoint(run.Mode, h, out x, out y, s.CatalogVersion);
             foreach (var e in s.Entities)
             {
                 if (e.Status != GoldMinerEntityStatus.Available)
@@ -202,9 +207,9 @@ namespace XanaduYonder.Core.GoldMiner
         static void Return(GoldMinerRunSnapshot run, GoldMinerHook h, List<GoldMinerEvent> events)
         {
             h.Source.TravelDirection = 1;
-            h.Source.X = GoldMinerSourceRules.OriginX(run.Mode, h.PlayerId);
+            h.Source.X = GoldMinerSourceRules.OriginX(run.Mode, h.PlayerId, run.Current.CatalogVersion);
             h.Source.Y = 0;
-            h.Length = run.Mode == GoldMinerMode.Solo ? .4 : .3;
+            h.Length = GoldMinerSourceLayout.IsNative(run.Current.CatalogVersion) || run.Mode == GoldMinerMode.Solo ? .4 : .3;
             var e = Held(run.Current, h);
             if (e == null)
             {
@@ -212,18 +217,18 @@ namespace XanaduYonder.Core.GoldMiner
                 events.Add(new GoldMinerEvent(GoldMinerEventKind.ReturnedEmpty, h.PlayerId));
                 return;
             }
-            if (run.Mode == GoldMinerMode.Solo)
-            {
-                h.Source.PendingEntityId = e.Id;
-                h.Source.RewardTicks = e.Source.Reward == "dynamite" ? 30 : 54;
-            }
-            else
-            {
-                Award(run, h, e, events);
-                h.HeldEntityId = null;
-                h.State = GoldMinerHookState.RetractingEmpty;
-                h.Source.ResetTicks = 6;
-            }
+            // Delivery is a game-state transaction. The Collected event drives
+            // presentation without delaying income or the player's next launch.
+            Award(run, h, e, events);
+            ReleaseHook(h);
+        }
+        static void ReleaseHook(GoldMinerHook hook)
+        {
+            hook.HeldEntityId = null;
+            hook.Source.PendingEntityId = null;
+            hook.Source.RewardTicks = 0;
+            hook.Source.ResetTicks = 0;
+            hook.State = GoldMinerHookState.Swinging;
         }
         static void Award(GoldMinerRunSnapshot run, GoldMinerHook h, GoldMinerEntity e, List<GoldMinerEvent> events)
         {

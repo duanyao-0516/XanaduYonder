@@ -170,9 +170,9 @@ AppController 只接入第 17 张大厅卡、导航、共享设置与宿主生�
 
 ## 黄金矿工的独立边界
 
-`GoldMinerGame` 用 60 Hz 固定步模拟：旧 profile 按相对扫掠首次接触分配矿物，Source profile 使用原游戏逐帧接触规则，详见[源战役迁移](gold-miner/source-campaign-migration.md)。所有动画只读快照。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
+`GoldMinerGame` 用 60 Hz 固定步模拟：旧 profile 按相对扫掠首次接触分配矿物；Source 5 保留经典经济数据和逐帧接触流程，布局独立版本化。旧 `CatalogVersion=2 / source-v1` 当前关继续使用原坐标和半径，新关采用 `CatalogVersion=3 / source-v2` 的原生矿区分布、碰撞尺寸与匹配美术，见[源战役迁移](gold-miner/source-campaign-migration.md)。收线到顶同一模拟步交付奖励并恢复摆动，飘字只读事件，不再锁住钩子。`GoldMinerSession` 拥有模式切换、检查点和原子事务；新挑战、商店、购买、换关、重试与结算均先保存完整候选，再发布新模型。黄金矿工使用单独的根画布、局部弹窗和 `GoldMinerOrientationScope`，合作横屏不会缩放旧游戏的竖屏框。
 
-`GoldMinerLevelCatalog` 严格校验随包分片后选图，手机不执行离线搜索；完整初态和随机状态写入检查点，续局/重试不重抽。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
+`GoldMinerLevelCatalog` 严格校验随包分片后选图；原经典坐标作为数据来源保留，新布局在实际模拟空间重新排布，单人 6×10.2、双人 12×4.4，界面等比绘制同一坐标，避免只拉伸图片而错开碰撞。完整初态、布局版本和随机状态写入检查点，续局/重试不重抽，旧关不会被重新排列。`GoldMinerSaveCodec` 与 `GoldMinerSaveStore` 拒绝不支持的版本和断裂实体关系，主备均不可读时需要用户明确归档，保存失败保留内存局。文件为 `gold-miner-v1.json`，不改写公共设置和其他游戏的协议。
 
 输入在有效 Down 时按完整窗口中线决定玩家，UI 会阻挡矿区输入；真正的命令入口先结清事件前的模拟时间，积压未处理完时拒绝插入新动作。后台、失焦、旋转和弹窗是组合暂停原因；恢复需明确继续。帧表现/性能采样时钟与模拟时钟分离。完整契约见[黄金矿工技术方案](gold-miner-technical.md)，实际结果见[验证记录](verification-gold-miner.md)。
 
@@ -279,7 +279,7 @@ Dino的 `scripts/test-dino.sh` 编译生产规则与碰撞代码，`scripts/test
 
 连连看继续使用 `link-match-v2.json`：根对象新增类别位掩码 `selectedCategories`，每个对局新增稳定资源名 `patternIds`。旧档缺字段时分别使用全部类别和旧图案顺序；显式错误值拒绝。新开局从所选类别取足关卡要求的图案，独立随机流不影响牌阵/洗牌 RNG。续局只读已保存映射；选定图案不足时不替换已有对局，回到选关页提示增加类别。
 
-黄金矿工每个 run 明确保存 balanceProfile；Source 5 新挑战使用源布局与独立规则。v1-v4 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束，旧 Classic 4 不能被重新解释为 Source 5。详细参数与证据见[本轮说明](gameplay-polish.md)。
+黄金矿工每个 run 明确保存 balanceProfile；Source 5 保留经典目标、矿值、重量、袋子和商店数据，以独立 catalog 版本区分旧源坐标与新原生布局，不携带经典 UI。v1-v4 历史挑战保留已接受曲线、矿值、库存与价格到挑战结束，旧 Classic 4 不能被重新解释为 Source 5。旧 Source 运行中已到顶的 pending 奖励在恢复后首个模拟步只交付一次，已经结算的历史结果不追溯改账。详细参数与证据见[源战役迁移](gold-miner/source-campaign-migration.md)与[本轮说明](gameplay-polish.md)。
 
 ## Q版泡泡堂的独立边界
 

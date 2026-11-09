@@ -381,48 +381,95 @@ namespace XanaduYonder.EditorTools
                     }
                     var metrics = Get<XanaduYonder.Runtime.GoldMiner.GoldMinerLayout>(Page, "layout");
                     var scene = Get<GoldMinerSceneView>(Page, "scene");
-                    var definitions = JObject.Parse(Resources.Load<TextAsset>("GoldMiner/Source/" + GoldMinerRules.ModeId(mode)).text);
-                    var sizes = (JObject)definitions[coop ? "sizes" : "frames"];
-                    foreach (var item in sizes.Properties())
-                    {
-                        var sourceArt = Invoke(scene, "SourceSprite", item.Name);
-                        var sprite = Get<Sprite>(sourceArt, "Sprite");
-                        var size = Get<Vector2>(sourceArt, "Size");
-                        Require(sprite != null && sprite.texture != null && sprite.name == "Source mine " + item.Name,
-                            mode + " uses the actual extracted source sprite " + item.Name);
-                        Require(Vector2.Distance(sprite.pivot, sprite.rect.size * .5f) < .01f &&
-                            Vector2.Distance(sprite.rect.size, size) < .01f,
-                            mode + " preserves the full source canvas and center pivot " + item.Name);
-                    }
+                    Require(run.Current.CatalogVersion == 3, mode + " new games use native mine geometry");
                     var sourceMine = Get<RectTransform>(scene, "sourceMine");
-                    Require(sourceMine != null && sourceMine.GetComponent<RectMask2D>() != null &&
-                        Vector2.Distance(sourceMine.sizeDelta, metrics.SourceCanvas.size) < .01f &&
-                        metrics.SourceCanvas.yMin >= metrics.Hud.yMax &&
-                        Math.Abs(metrics.SourceCanvas.height / metrics.Scale - (coop ? 4 : 4.8)) < .001,
-                        mode + " source canvas clips out-of-bounds objects without changing their data");
-                    Require(Get<Image[]>(scene, "hooks")[0].transform.parent != sourceMine,
-                        mode + " rope and winch remain outside the object clipping layer");
+                    Require(sourceMine != null && sourceMine.GetComponent<RectMask2D>() != null,
+                        mode + " mine remains clipped without changing world coordinates");
                     var images = Get<Dictionary<int, Image>>(scene, "entities");
+                    float deepest = 0;
+                    Capture("native-preview-" + GoldMinerRules.ModeId(mode));
                     foreach (var entity in run.Current.Entities)
                     {
                         var image = images[entity.Id];
-                        var sourceArt = Invoke(scene, "SourceSprite", entity.Source.Key);
-                        var pixels = Get<Vector2>(sourceArt, "Size");
-                        var expected = Vector2.Scale(pixels, new Vector2((float)Math.Abs(entity.Source.ScaleX),
-                            (float)Math.Abs(entity.Source.ScaleY))) * metrics.Scale * .01f;
-                        Require(Vector2.Distance(image.rectTransform.sizeDelta, expected) < .01f,
-                            mode + " renders source pixels and original object scale " + entity.Id);
-                        var point = metrics.World(entity.X, entity.Y);
-                        Require(Vector3.Distance(image.rectTransform.position, sourceMine.parent.TransformPoint(new Vector3(point.x, -point.y, 0))) < .01f,
-                            mode + " preserves source object center " + entity.Id);
+                        var assetPath = AssetDatabase.GetAssetPath(image.sprite);
+                        Require(assetPath.StartsWith("Assets/Resources/GoldMiner/") && !assetPath.Contains("/Source/"),
+                            mode + " uses native ore artwork " + entity.Id);
+                        var expectedCenter = metrics.World(entity.X, entity.Y);
+                        var visible = VisibleArtworkRect(image);
+                        var expectedScreen = RectTransformUtility.WorldToScreenPoint(null,
+                            sourceMine.parent.TransformPoint(new Vector3(expectedCenter.x, -expectedCenter.y, 0)));
+                        // Source PNG alpha bounds, rather than transparent canvas, align with collision centers.
+                        Require(Vector2.Distance(visible.center, expectedScreen) < 4,
+                            mode + " visible ore stays centered on its collision " + entity.Id + ": " + visible.center + " vs " + expectedScreen);
+                        Require(Math.Abs(Math.Max(visible.width, visible.height) - entity.Source.Radius * 2 * metrics.Scale) < 5,
+                            mode + " native sprite visible size matches collision diameter " + entity.Id);
+                        deepest = Mathf.Max(deepest, expectedCenter.y);
+                    }
+                    Require(deepest > metrics.Mine.y + metrics.Mine.height * .78f,
+                        mode + " ore distribution reaches the deep mine");
+                    Require(Directory.GetFiles("Assets/Resources/GoldMiner/Source", "*.png").Length == 0,
+                        "No retired game's ore textures remain packaged");
+                    // Exercise every sprite path, including later-level bone/skull/TNT and moving animals.
+                    foreach (GoldMinerKind kind in Enum.GetValues(typeof(GoldMinerKind)))
+                    {
+                        var sprite = (Sprite)Invoke(scene, "SpriteFor", new GoldMinerEntity { Kind = kind }, 0f);
+                        Require(sprite != null && !AssetDatabase.GetAssetPath(sprite).Contains("/Source/"),
+                            "Native artwork exists for " + kind);
                     }
                     Capture("source-" + GoldMinerRules.ModeId(mode) + "-game");
+                    CheckNativeCollection(scene, run, mode);
+                    Size(coop ? 1582 : 720, coop ? 720 : 1582);
+                    for (int frame = 0; frame < 8; frame++) yield return null;
+                    Invoke(Page, "RebuildRun");
+                    for (int frame = 0; frame < 2; frame++) yield return null;
+                    CheckMineGeometry(mode);
+                    Capture("native-" + GoldMinerRules.ModeId(mode) + "-long-screen");
                     Invoke(Page, "ShowSelection");
                     Size(720, 1320);
                     Page.enabled = true;
                     for (int i = 0; i < 10; i++) yield return null;
-                    Report.AppendLine("PASS Source " + mode + ": actual new-run UI, all extracted sprites, source pixels/centers, uniform world scale, HUD and controls safe areas.");
+                    Report.AppendLine("PASS Source " + mode + ": native ore artwork, visible collision centers/sizes, deep mine distribution, uniform world scale and safe-area controls.");
                 }
+            }
+
+            private void CheckNativeCollection(GoldMinerSceneView scene, GoldMinerRunSnapshot initial, GoldMinerMode mode)
+            {
+                var game = new GoldMinerGame(initial);
+                long sequence = initial.LastCommandSeq;
+                bool caught = false, delivered = false;
+                for (int tick = 0; tick < GoldMinerSourceRules.DurationTicks(mode) - 1 && !delivered; tick++)
+                {
+                    var state = game.GetStateSnapshot();
+                    if (state.Hooks[0].State == GoldMinerHookState.Swinging && tick % 19 == 0)
+                        game.TryLaunch(0, ++sequence);
+                    var step = game.Step();
+                    foreach (var item in step.Events)
+                    {
+                        if (item.Kind == GoldMinerEventKind.Caught)
+                        {
+                            var snapshot = game.GetSnapshot();
+                            scene.Render(snapshot, 0);
+                            var held = snapshot.Current.Entities[item.EntityId.Value - 1];
+                            var oreImage = Get<Dictionary<int, Image>>(scene, "entities")[held.Id];
+                            bool combined = (int)held.Kind <= (int)GoldMinerKind.DiamondMole || held.Kind == GoldMinerKind.Gold250;
+                            Require(oreImage.gameObject.activeSelf != combined, "Caught load is drawn exactly once");
+                            if (combined)
+                                Require(Get<Image[]>(scene, "hooks")[item.PlayerId].sprite.name.StartsWith("caught-"),
+                                    "Native complete claw/load illustration is restored");
+                            Capture("native-" + GoldMinerRules.ModeId(mode) + "-caught");
+                            caught = true;
+                        }
+                        if (item.Kind == GoldMinerEventKind.Collected)
+                        {
+                            var hook = game.GetStateSnapshot().Hooks[item.PlayerId];
+                            Require(hook.State == GoldMinerHookState.Swinging && hook.Source.RewardTicks == 0 && hook.Source.ResetTicks == 0,
+                                "Actual delivered load does not block the next hook launch");
+                            delivered = true;
+                        }
+                    }
+                }
+                Require(caught && delivered, mode + " actual simulation catches and delivers ore");
+                scene.Render(initial, 0);
             }
 
             public void BuildShell()
@@ -455,8 +502,8 @@ namespace XanaduYonder.EditorTools
             public void CheckLobby()
             {
                 var content = Lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "AircraftFire", "Idiom" };
-                int[] numbers = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 20, 5 };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
+                int[] numbers = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5 };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -743,7 +790,10 @@ namespace XanaduYonder.EditorTools
                 var metrics = Get<XanaduYonder.Runtime.GoldMiner.GoldMinerLayout>(Page, "layout");
                 Require(metrics.Mine.xMin >= metrics.Safe.xMin && metrics.Mine.xMax <= metrics.Safe.xMax, "Mine width remains in safe area");
                 Require(metrics.Mine.yMin >= metrics.Hud.yMax && metrics.Mine.yMax <= metrics.Safe.yMax - 90, "Mine does not overlap HUD or lower controls");
-                Require(Math.Abs(metrics.Mine.width / metrics.Mine.height - (metrics.SourceCampaign ? GoldMinerSourceRules.Width(mode) / GoldMinerSourceRules.Height(mode) : GoldMinerRules.Width(mode) / GoldMinerRules.Height(mode))) < .001, "World scale stays uniform");
+                if (metrics.SourceCampaign && Get<GoldMinerSession>(Page, "session").GetStateSnapshot().CatalogVersion == GoldMinerSourceLayout.CurrentCatalogVersion)
+                    Require(metrics.Mine.height >= (metrics.Safe.yMax - 96 - metrics.Mine.y) * .9f,
+                        "Native mine fills at least 90 percent of available depth on " + Screen.width + "x" + Screen.height);
+                Require(Math.Abs(metrics.Mine.width / metrics.Mine.height - (metrics.SourceCampaign ? GoldMinerSourceRules.Width(mode, Get<GoldMinerSession>(Page, "session").GetStateSnapshot().CatalogVersion) / GoldMinerSourceRules.Height(mode, Get<GoldMinerSession>(Page, "session").GetStateSnapshot().CatalogVersion) : GoldMinerRules.Width(mode) / GoldMinerRules.Height(mode))) < .001, "World scale stays uniform");
                 CheckButtonsInsideSafeArea();
             }
 
@@ -957,6 +1007,50 @@ namespace XanaduYonder.EditorTools
                 for (int frame = 0; frame < 2; frame++) yield return null;
                 Page.enabled = wasEnabled;
                 Report.AppendLine("PASS " + mode + " " + phase + " source-alpha bounds: all visible pixels remain in safe area at each live responsive GameView size.");
+            }
+
+            private Rect VisibleArtworkRect(Image image)
+            {
+                var sprite = image.sprite;
+                string path = AssetDatabase.GetAssetPath(sprite.texture);
+                string key = path + ":" + sprite.rect;
+                Rect normalized;
+                if (!sourceAlphaBounds.TryGetValue(key, out normalized))
+                {
+                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    try
+                    {
+                        Require(ImageConversion.LoadImage(texture, File.ReadAllBytes(path)), "Ore PNG decodes");
+                        var pixels = texture.GetPixels32();
+                        var r = sprite.rect;
+                        float scaleX = texture.width / (float)sprite.texture.width;
+                        float scaleY = texture.height / (float)sprite.texture.height;
+                        r = new Rect(r.x * scaleX, r.y * scaleY, r.width * scaleX, r.height * scaleY);
+                        int left = (int)r.xMax, bottom = (int)r.yMax, right = 0, top = 0;
+                        for (int y = (int)r.y; y < r.yMax; y++)
+                        for (int x = (int)r.x; x < r.xMax; x++)
+                        {
+                            // Ignore near-transparent export dust; measure the visible silhouette.
+                            if (pixels[y * texture.width + x].a <= 8) continue;
+                            left = Math.Min(left, x); bottom = Math.Min(bottom, y);
+                            right = Math.Max(right, x + 1); top = Math.Max(top, y + 1);
+                        }
+                        normalized = Rect.MinMaxRect((left-r.x)/r.width, (bottom-r.y)/r.height,
+                            (right-r.x)/r.width, (top-r.y)/r.height);
+                        sourceAlphaBounds.Add(key, normalized);
+                    }
+                    finally { Object.DestroyImmediate(texture); }
+                }
+                var rect = image.rectTransform.rect;
+                Vector2 min = new Vector2(float.MaxValue, float.MaxValue), max = -min;
+                foreach (var p in new[] { normalized.min, normalized.max,
+                    new Vector2(normalized.xMin, normalized.yMax), new Vector2(normalized.xMax, normalized.yMin) })
+                {
+                    var screen = RectTransformUtility.WorldToScreenPoint(null,
+                        image.rectTransform.TransformPoint(new Vector3(rect.x + p.x * rect.width, rect.y + p.y * rect.height, 0)));
+                    min = Vector2.Min(min, screen); max = Vector2.Max(max, screen);
+                }
+                return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
             }
 
             private Rect CheckArtworkInsideSafeArea(Image image)

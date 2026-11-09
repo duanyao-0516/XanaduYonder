@@ -47,14 +47,14 @@ namespace XanaduYonder.Runtime.GoldMiner
         }
 
         private void NewView(string backgroundKey, GoldMinerMode mode,
-            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic)
+            GoldMinerBalanceProfile profile = GoldMinerBalanceProfile.Classic, int catalogVersion = 2)
         {
             ClearView();
             PrepareCanvas(mode == GoldMinerMode.Coop);
             view = UiFactory.Rect(canvasRoot, "Gold Miner content", 0, 0, 1, 1);
             UiFactory.Stretch(view);
             layout = new GoldMinerLayout(canvasRoot.rect.width, canvasRoot.rect.height,
-                GoldMinerLayout.WindowSafeArea(canvasRoot), mode, profile);
+                GoldMinerLayout.WindowSafeArea(canvasRoot), mode, profile, catalogVersion);
             var sprite = art.Get("backgrounds/" + backgroundKey);
             if (backgroundKey == "bg-solo" || backgroundKey == "bg-coop")
             {
@@ -168,7 +168,7 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         private void BuildGameplay(GoldMinerRunSnapshot run)
         {
-            NewView(run.Mode == GoldMinerMode.Coop ? "bg-coop" : "bg-solo", run.Mode, run.BalanceProfile);
+            NewView(run.Mode == GoldMinerMode.Coop ? "bg-coop" : "bg-solo", run.Mode, run.BalanceProfile, run.Current.CatalogVersion);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             diagnostics = new GoldMinerDiagnostics(run.Mode + "/" + run.BalanceProfile);
 #endif
@@ -303,7 +303,7 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         private void BuildShop(GoldMinerRunSnapshot run)
         {
-            NewView(run.Mode == GoldMinerMode.Coop ? "bg-shop-landscape" : "bg-shop-portrait", run.Mode, run.BalanceProfile);
+            NewView(run.Mode == GoldMinerMode.Coop ? "bg-shop-landscape" : "bg-shop-portrait", run.Mode, run.BalanceProfile, run.Current.CatalogVersion);
             var safe = layout.Safe;
             long nextTarget = GoldMinerRules.Target(run.Mode, run.Current.LevelIndex + 1, run.BalanceProfile);
             if (layout.Cooperative)
