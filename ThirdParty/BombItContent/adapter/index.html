@@ -6,26 +6,34 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
   <title>Q版泡泡堂</title>
   <link rel="stylesheet" href="style.css">
+  <script src="feedback.js" defer></script>
+  <script src="guide.js" defer></script>
   <script src="host.js" defer></script>
   <script src="ruffle/ruffle.js" defer></script>
   <script src="controls.js" defer></script>
 </head>
 <body data-controls="single" data-input="joystick">
+  <svg class="touch-clip-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <clipPath id="stick-clip-1" clipPathUnits="userSpaceOnUse"><path clip-rule="evenodd"/></clipPath>
+      <clipPath id="stick-clip-2" clipPathUnits="userSpaceOnUse"><path clip-rule="evenodd"/></clipPath>
+    </defs>
+  </svg>
   <main id="shell">
     <div id="play-area">
       <aside class="rail left" aria-label="左侧工具与操作">
         <div class="tools">
           <div class="brand-row">
-            <button id="hall" class="icon-button quiet" type="button" aria-label="返回大厅" title="返回大厅">
+            <button id="hall" class="icon-button" type="button" aria-label="返回大厅" title="返回大厅">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5.5 9v12H10v-6h4v6h4.5V9" /></svg>
             </button>
             <span id="title">泡泡堂</span>
           </div>
-          <div id="mode-switch" role="group" aria-label="单人或双人操作布局">
-            <button class="icon-button" type="button" data-mode="single" aria-label="单人操作" title="单人操作" aria-pressed="true">
+          <div id="mode-switch" role="group" aria-label="游戏人数">
+            <button class="icon-button" type="button" data-mode="single" aria-label="单人模式" title="单人模式" aria-pressed="true">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg>
             </button>
-            <button class="icon-button" type="button" data-mode="duo" aria-label="双人操作" title="双人操作" aria-pressed="false">
+            <button class="icon-button" type="button" data-mode="duo" aria-label="双人模式" title="双人模式" aria-pressed="false">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3.2"/><path d="M1.5 21v-2a6.5 6.5 0 0 1 13 0v2M16 4a3.2 3.2 0 0 1 0 6.4M18 13a6 6 0 0 1 4.5 5.8V21"/></svg>
             </button>
           </div>
@@ -36,29 +44,32 @@
           <span class="stick-axis horizontal" aria-hidden="true"></span><span class="stick-axis vertical" aria-hidden="true"></span>
           <span class="stick-thumb" aria-hidden="true"></span>
         </div>
-        <div class="dpad" role="group" aria-label="玩家一方向键">
-          <button class="direction up" data-player="1" data-action="up" type="button" aria-label="玩家一向上">▲</button>
-          <button class="direction left-key" data-player="1" data-action="left" type="button" aria-label="玩家一向左">◀</button>
-          <span class="pad-center" aria-hidden="true"></span>
-          <button class="direction right-key" data-player="1" data-action="right" type="button" aria-label="玩家一向右">▶</button>
-          <button class="direction down" data-player="1" data-action="down" type="button" aria-label="玩家一向下">▼</button>
-        </div>
+        <svg class="dpad" data-player="1" viewBox="0 0 144 144" role="group" aria-label="玩家1圆环方向键">
+          <path class="direction up" data-player="1" data-action="up" aria-label="玩家1向上" transform="rotate(270 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction left" data-player="1" data-action="left" aria-label="玩家1向左" transform="rotate(180 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction right" data-player="1" data-action="right" aria-label="玩家1向右" transform="rotate(0 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction down" data-player="1" data-action="down" aria-label="玩家1向下" transform="rotate(90 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <g class="direction-arrows" aria-hidden="true"><path d="m72 17-7 11h14Z M127 72l-11-7v14Z M72 127l7-11H65Z M17 72l11 7V65Z"/></g>
+          <circle class="pad-center" cx="72" cy="72" r="6" aria-hidden="true"/>
+        </svg>
         <button class="bomb p1-bomb" data-player="1" data-action="bomb" type="button" aria-label="玩家一放弹或确认">放弹</button>
       </section>
       </aside>
       <section id="game-region" aria-label="原版游戏画面">
         <div id="player-frame"></div>
+        <button id="continue-run" type="button" data-ui-control hidden>继续闯关</button>
+        <button id="save-warning" type="button" data-ui-control hidden>进度未保存 · 点此重试</button>
         <div id="loading" role="status">正在打开离线游戏…</div>
       </section>
       <aside class="rail right" aria-label="右侧工具与操作">
         <div class="tools tool-grid">
-          <button id="pause" class="icon-button quiet" type="button" aria-label="暂停" title="暂停" aria-pressed="false">
+          <button id="pause" class="icon-button" type="button" aria-label="暂停" title="暂停" aria-pressed="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><g class="pause-icon"><path d="M8 5v14M16 5v14" stroke-width="3.5"/></g><path class="play-icon" d="m8 4 12 8-12 8Z"/></svg>
           </button>
-          <button id="settings" class="icon-button quiet" type="button" aria-label="设置" title="设置" aria-haspopup="dialog">
+          <button id="settings" class="icon-button" type="button" aria-label="设置" title="设置" aria-haspopup="dialog">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 2-.6 2.7-2.1 1.2-2.6-.8-2 3.4 2 1.9v2.4l-2 1.9 2 3.4 2.6-.8 2.1 1.2.6 2.7h4l.6-2.7 2.1-1.2 2.6.8 2-3.4-2-1.9v-2.4l2-1.9-2-3.4-2.6.8-2.1-1.2L14 2Z"/><circle cx="12" cy="11.6" r="3.2"/></svg>
           </button>
-          <button id="help" class="icon-button quiet" type="button" aria-label="玩法说明" title="玩法说明" aria-haspopup="dialog">
+          <button id="help" class="icon-button" type="button" aria-label="玩法说明" title="玩法说明" aria-haspopup="dialog">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.68 7.68 17.76H1.92V3.84h5.76L12 5.76l4.32-1.92h5.76v13.92h-5.76L12 19.68V5.76M4.8 8.16l4.08.96M4.8 12l4.08.96M15.12 9.12l4.08-.96M15.12 12.96 19.2 12"/></svg>
           </button>
         </div>
@@ -68,24 +79,34 @@
           <span class="stick-axis horizontal" aria-hidden="true"></span><span class="stick-axis vertical" aria-hidden="true"></span>
           <span class="stick-thumb" aria-hidden="true"></span>
         </div>
-        <div class="dpad" role="group" aria-label="玩家二方向键">
-          <button class="direction up" data-player="2" data-action="up" type="button" aria-label="玩家二向上">▲</button>
-          <button class="direction left-key" data-player="2" data-action="left" type="button" aria-label="玩家二向左">◀</button>
-          <span class="pad-center" aria-hidden="true"></span>
-          <button class="direction right-key" data-player="2" data-action="right" type="button" aria-label="玩家二向右">▶</button>
-          <button class="direction down" data-player="2" data-action="down" type="button" aria-label="玩家二向下">▼</button>
-        </div>
+        <svg class="dpad" data-player="2" viewBox="0 0 144 144" role="group" aria-label="玩家2圆环方向键">
+          <path class="direction up" data-player="2" data-action="up" aria-label="玩家2向上" transform="rotate(270 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction left" data-player="2" data-action="left" aria-label="玩家2向左" transform="rotate(180 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction right" data-player="2" data-action="right" aria-label="玩家2向右" transform="rotate(0 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <path class="direction down" data-player="2" data-action="down" aria-label="玩家2向下" transform="rotate(90 72 72)" d="M122.912 21.088A72 72 0 0 1 122.912 122.912L86.142 86.142A20 20 0 0 0 86.142 57.858Z"/>
+          <g class="direction-arrows" aria-hidden="true"><path d="m72 17-7 11h14Z M127 72l-11-7v14Z M72 127l7-11H65Z M17 72l11 7V65Z"/></g>
+          <circle class="pad-center" cx="72" cy="72" r="6" aria-hidden="true"/>
+        </svg>
         <button class="bomb p2-bomb" data-player="2" data-action="bomb" type="button" aria-label="放弹或确认">放弹</button>
       </section>
       </aside>
     </div>
     <div id="modal" hidden>
       <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <h2 id="modal-title">玩法说明</h2>
-        <div id="modal-copy"></div>
-        <div id="input-settings" role="group" aria-label="操作方式" hidden>
-          <button data-input-style="joystick" type="button" aria-pressed="true"><span aria-hidden="true">◎</span>虚拟摇杆</button>
-          <button data-input-style="dpad" type="button" aria-pressed="false"><span aria-hidden="true">✚</span>方向按键</button>
+        <header class="sheet-header"><h2 id="modal-title">玩法说明</h2><button id="modal-close" type="button" aria-label="关闭弹窗">×</button></header>
+        <div class="sheet-scroll">
+          <div id="modal-copy"></div>
+          <div id="settings-content" hidden>
+            <div class="setting-row"><span>操作方式</span><div id="input-settings" role="group" aria-label="操作方式">
+              <button data-input-style="joystick" type="button" aria-pressed="true">摇杆</button>
+              <button data-input-style="dpad" type="button" aria-pressed="false">方向键</button>
+            </div></div>
+            <div class="setting-row"><label id="sound-label">声音</label><button id="sound-setting" class="setting-switch" type="button" role="switch" aria-labelledby="sound-label" aria-checked="true"><span class="switch-value">开启</span><span class="switch-track" aria-hidden="true"></span></button></div>
+            <div class="setting-row"><label id="haptics-label">触感</label><button id="haptics-setting" class="setting-switch" type="button" role="switch" aria-labelledby="haptics-label" aria-checked="true"><span class="switch-value">开启</span><span class="switch-track" aria-hidden="true"></span></button></div>
+            <p class="setting-hint">触感用于放弹按键，也受系统触感设置影响。</p>
+            <p id="feedback-status" role="status" hidden></p>
+            <button id="feedback-retry" type="button" hidden>重试保存</button>
+          </div>
         </div>
         <div class="sheet-actions"><button id="modal-cancel" class="quiet" type="button">继续游戏</button><button id="modal-confirm" type="button">知道了</button></div>
       </section>

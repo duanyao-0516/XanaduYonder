@@ -150,6 +150,7 @@ namespace XanaduYonder.Runtime
             ShowLobby();
             SetStatus(saveWarning ?? "所有玩法离线可用 · 对局或最高纪录自动保存");
             startupComplete = true;
+            RestoreWebGamePendingPreferences();
             Debug.Log("XanaduYonder ready; save=" + store.SavePath);
         }
 
@@ -1465,6 +1466,7 @@ namespace XanaduYonder.Runtime
                 saveWarning = null;
                 SetStatus(activePage == Page.Snake || activePage == Page.Minesweeper || activePage == Page.Sokoban || activePage == Page.LinkMatch ? "" : "进度已保存。");
             }
+            if (!saveFailed) AcknowledgeWebGameImportedPreferences();
             zumaPage?.CommonSettingsSaved(!saveFailed);
         }
 

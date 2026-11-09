@@ -21,6 +21,8 @@ namespace XanaduYonder.Runtime
                 throw new ArgumentException("A saved game must contain at least two tiles.", nameof(data));
             if (data.BestTile != 0 && !IsSupportedTile(data.BestTile))
                 throw new ArgumentException("Best tile is unsupported.", nameof(data));
+            if(data.WebGameFeedbackRevision!=null&&!Guid.TryParseExact(data.WebGameFeedbackRevision,"D",out _))
+                throw new ArgumentException("Web feedback revision must be a GUID.",nameof(data));
             var game = new JObject
             {
                 ["schemaVersion"] = data.Game.schemaVersion,
@@ -29,7 +31,7 @@ namespace XanaduYonder.Runtime
                 ["score"] = data.Game.score.ToString(CultureInfo.InvariantCulture),
                 ["winState"] = data.Game.winAcknowledged ? 2 : 1
             };
-            return new JObject
+            var root = new JObject
             {
                 ["schemaVersion"] = 1,
                 ["saveKind"] = "xanaduyonder",
@@ -38,7 +40,9 @@ namespace XanaduYonder.Runtime
                 ["bestTile"] = Math.Max(data.BestTile, LargestTile(data.Game.cells)),
                 ["soundState"] = data.SoundEnabled ? 1 : 2,
                 ["hapticsState"] = data.HapticsEnabled ? 1 : 2
-            }.ToString(Formatting.None);
+            };
+            if(data.WebGameFeedbackRevision!=null)root["webGameFeedbackRevision"]=data.WebGameFeedbackRevision;
+            return root.ToString(Formatting.None);
         }
 
         public static bool TryDecode(string json, out SaveData data, out string reason)
@@ -87,7 +91,11 @@ namespace XanaduYonder.Runtime
                     throw new FormatException("Best tile is unsupported or below the current board maximum.");
                 var sound = Flag(root["soundState"]) == 1;
                 var haptics = Flag(root["hapticsState"]) == 1;
-                data = new SaveData { Game = snapshot, BestScore = best, BestTile = bestTile, SoundEnabled = sound, HapticsEnabled = haptics };
+                var revisionToken=root["webGameFeedbackRevision"];
+                string revision=revisionToken==null?null:Text(revisionToken);
+                if(revision!=null&&!Guid.TryParseExact(revision,"D",out _))throw new FormatException("Web feedback revision must be a GUID.");
+                data = new SaveData { Game = snapshot, BestScore = best, BestTile = bestTile, SoundEnabled = sound, HapticsEnabled = haptics,
+                    WebGameFeedbackRevision=revision };
                 return true;
             }
             catch (Exception exception) when (exception is JsonException || exception is FormatException ||

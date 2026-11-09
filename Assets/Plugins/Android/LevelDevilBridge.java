@@ -2,6 +2,8 @@ package com.xanaduyonder.leveldevil;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.Context;
+import org.json.JSONObject;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -19,7 +21,7 @@ public final class LevelDevilBridge {
 
     private LevelDevilBridge() { }
 
-    public static synchronized boolean open(Activity host, boolean soundEnabled) {
+    public static synchronized boolean open(Activity host, boolean soundEnabled, boolean hapticsEnabled) {
         if (running || host == null || host.isFinishing() || host.isDestroyed()) return false;
         final long token = ++session;
         final long requestedAt = SystemClock.elapsedRealtime();
@@ -37,6 +39,7 @@ public final class LevelDevilBridge {
                 Intent intent = new Intent(host, LevelDevilActivity.class);
                 intent.putExtra(SESSION_EXTRA, token);
                 intent.putExtra("soundEnabled", soundEnabled);
+                intent.putExtra("hapticsEnabled", hapticsEnabled);
                 host.startActivity(intent);
             } catch (RuntimeException | LinkageError error) {
                 launchFailed(token, error);
@@ -48,6 +51,13 @@ public final class LevelDevilBridge {
 
     public static boolean isRunning() { return running; }
     public static String getLastError() { return lastError; }
+
+    static JSONObject pendingFeedback(Context context) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.readPending(context);
+    }
+    static boolean savePendingFeedback(Context context, boolean sound, boolean haptics) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.write(context, "level-devil", sound, haptics);
+    }
 
     static synchronized long attach(LevelDevilActivity instance, long requestedSession) {
         LevelDevilActivity previous = activity.get();

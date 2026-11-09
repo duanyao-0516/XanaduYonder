@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "compiler": "JPEXS FFDec 26.4.0",
+  "compilerJarSha256": "80f8ced0bfde98b434c28e9807e91fe5558255b2f712051a0e65221519bd392a",
+  "compilerSourceSha256": "353e53753498a783d65775198da33dfc7b1bf588a1cbea941982419dc11c9d36",
+  "files": [
+    {
+      "name": "root-init",
+      "sourceSha256": "b9eb7bf87aeb67ee32c46982539f0bf49a867e047e971ea79e1e78db6fb5339e",
+      "bytes": 6827,
+      "sha256": "20dd94ad38edd9ee43cc6981237e895875e2c16441067b2e4cd13fa0fffdc9da"
+    },
+    {
+      "name": "menu-ready",
+      "sourceSha256": "82780f94e155574dbe1b8c536aa3c6bcd40e32307f6efc947bbc36c54840e9fc",
+      "bytes": 225,
+      "sha256": "f838213cc9e482d3f331dcecddb6b928e7e5e5213ab3645f830ac7a8278f0865"
+    },
+    {
+      "name": "timer",
+      "sourceSha256": "adc6acb7f16cf55d64c5a2c89b31eaaf76795103921ddf26e31af5cb6ace98a4",
+      "bytes": 1046,
+      "sha256": "da4ab8bb52eff1df57b010ba73af8919573107c035a2b44c173ca613e35cf410"
+    },
+    {
+      "name": "pause-button",
+      "sourceSha256": "5c61f2dff0b81c98efdde0064bb4d3ccb0581cf35ae775d04ae115116fc7e1cd",
+      "bytes": 58,
+      "sha256": "13d92f96e8ef4fa2fb638d78ef2fedb36d9943b9a32f91c1df3e6feaf181f3a6"
+    },
+    {
+      "name": "restore-select",
+      "sourceSha256": "b893bdc1e95c3d8e116aa1fed1d75289f26626770077743d626cfe336f5416ac",
+      "bytes": 290,
+      "sha256": "502748248d709eb085e6cf779137dfb456f0ba3c1e3e50c5fbdc21c3dff3dbf1"
+    },
+    {
+      "name": "restore-game",
+      "sourceSha256": "bde4e73e9991cf220ba84fa54a6a56f3a614caa91331c26381c5135040f5c14c",
+      "bytes": 381,
+      "sha256": "522c2ef5911baad8b35632ad3db7c4752efd340292ec21033bb2f31399aa350f"
+    },
+    {
+      "name": "game-checkpoint",
+      "sourceSha256": "474a257440909a8e98b0f158b0e054d813dc8ca7402b77516e896e226e3a3aaf",
+      "bytes": 139,
+      "sha256": "dde69d6362e1e364f5b804f5d2d2e2307c294991e529c8095b066e5afdbea460"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.DisplayCutout;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -55,6 +56,7 @@ import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -86,6 +88,12 @@ public final class BombItActivity extends Activity {
     private String pendingExit;
     private boolean exitFailurePending;
     private boolean soundEnabled = true;
+    private boolean hapticsEnabled = true;
+    private String feedbackToken = UUID.randomUUID().toString();
+    private String lastFeedbackRequest;
+    private JSONObject lastFeedbackResult;
+    private long lastHapticPress;
+    private long lastHapticUptime;
     private boolean audioGranted;
     private boolean resumed;
     private boolean windowFocused;
@@ -98,6 +106,7 @@ public final class BombItActivity extends Activity {
     private boolean finishingToLobby;
     private long createdElapsed;
     private int safeLeft, safeTop, safeRight, safeBottom;
+    private int gestureLeft, gestureTop, gestureRight, gestureBottom;
 
     private void trace(String event, String detail) {
         long now = SystemClock.elapsedRealtime();
@@ -121,6 +130,11 @@ public final class BombItActivity extends Activity {
         createdElapsed = SystemClock.elapsedRealtime();
         super.onCreate(savedState);
         soundEnabled = getIntent().getBooleanExtra("soundEnabled", true);
+        hapticsEnabled = getIntent().getBooleanExtra("hapticsEnabled", true);
+        if (savedState != null) {
+            soundEnabled = savedState.getBoolean("feedbackSound", soundEnabled);
+            hapticsEnabled = savedState.getBoolean("feedbackHaptics", hapticsEnabled);
+        }
         session = BombItBridge.attach(this, getIntent().getLongExtra(BombItBridge.SESSION_EXTRA, -1));
         if (session < 0) { finish(); return; }
         getIntent().putExtra(BombItBridge.SESSION_EXTRA, session);
@@ -219,8 +233,10 @@ public final class BombItActivity extends Activity {
             }
             if (Build.VERSION.SDK_INT >= 29) {
                 Insets gestures = insets.getSystemGestureInsets();
-                left = Math.max(left, gestures.left); top = Math.max(top, gestures.top);
-                right = Math.max(right, gestures.right); bottom = Math.max(bottom, gestures.bottom);
+                // System gestures constrain new touch origins, not the visible
+                // game viewport. Cutouts and system bars still own visual safety.
+                gestureLeft = gestures.left; gestureTop = gestures.top;
+                gestureRight = gestures.right; gestureBottom = gestures.bottom;
             }
             safeLeft = left; safeTop = top; safeRight = right; safeBottom = bottom;
             syncViewportInsets();
@@ -297,7 +313,11 @@ public final class BombItActivity extends Activity {
 
     private final class LocalClient extends WebViewClient {
         @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-            if (BombItAssetPolicy.ENTRY.equals(url)) trace("page_started", "");
+            if (BombItAssetPolicy.ENTRY.equals(url)) {
+                feedbackToken = UUID.randomUUID().toString();
+                lastFeedbackRequest = null; lastFeedbackResult = null; lastHapticPress = 0;
+                trace("page_started", "");
+            }
         }
 
         @Override public void onPageCommitVisible(WebView view, String url) {
@@ -334,6 +354,7 @@ public final class BombItActivity extends Activity {
                 pageLoaded = true;
                 trace("page_finished", "");
                 syncViewportInsets();
+                syncFeedbackSettings();
                 syncHostState();
             }
         }
@@ -410,9 +431,16 @@ public final class BombItActivity extends Activity {
                         handler.removeCallbacks(startupTimeout);
                         syncViewportInsets();
                         loading.setVisibility(View.GONE);
+                        syncFeedbackSettings();
                         syncHostState();
                         updateTimeouts();
                     }
+                    break;
+                case "feedback-settings":
+                    receiveFeedbackSettings(message);
+                    break;
+                case "haptic":
+                    receiveHaptic(message);
                     break;
                 case "exit-intent":
                     trace("exit_intent", "source=game_button");
@@ -483,8 +511,9 @@ public final class BombItActivity extends Activity {
         trace("exit_requested", "request=" + request);
         releaseInput();
         updateTimeouts();
-        // The adapter stops inputs and the emulator, then acknowledges teardown.
-        // Returning to the hall ends this round; only original Flash settings persist.
+        // The adapter flushes the stage checkpoint, then stops input/emulation
+        // and acknowledges teardown. Continue starts that saved stage afresh;
+        // the live map, bombs and remaining seconds are not a scene snapshot.
         evaluate("(function(){var h=window.BombItHost;if(!h||typeof h.requestExit!=='function')return false;"
                 + "h.requestExit(" + JSONObject.quote(request) + ");return true;})()", value -> {
                     if (request.equals(pendingExit) && !"true".equals(value)) showExitFailure();
@@ -499,7 +528,7 @@ public final class BombItActivity extends Activity {
         resetBackGate("exit_failed");
         if (!resumed || !windowFocused || destroyed || isFinishing() || exitDialog != null) return;
         exitDialog = new AlertDialog.Builder(this).setTitle("退出尚未完成")
-                .setMessage("暂时无法确认游戏已停止。可以重试退出，或留在游戏中继续。退出后本局将重新开始。")
+                .setMessage("暂时无法确认游戏已停止。可以重试退出，或留在游戏中继续。重新进入后可从已保存关卡的开局继续，地图会重新生成。")
                 .setCancelable(false)
                 .setPositiveButton("重试退出并返回", (dialog, which) -> {
                     exitDialog = null;
@@ -528,7 +557,88 @@ public final class BombItActivity extends Activity {
         if ((!pageLoaded && !ready) || destroyed || web == null) return;
         evaluate("(function(){var h=window.BombItHost,d=window.devicePixelRatio||1;"
                 + "if(h&&typeof h.setViewportInsets==='function')h.setViewportInsets("
-                + safeLeft + "/d," + safeTop + "/d," + safeRight + "/d," + safeBottom + "/d);})()", null);
+                + safeLeft + "/d," + safeTop + "/d," + safeRight + "/d," + safeBottom + "/d);"
+                + "if(h&&typeof h.setGestureInsets==='function')h.setGestureInsets("
+                + gestureLeft + "/d," + gestureTop + "/d," + gestureRight + "/d," + gestureBottom + "/d);})()", null);
+    }
+
+    private boolean feedbackForeground() {
+        return ready && resumed && windowFocused && !destroyed && !fatal && !finishingToLobby
+                && pendingExit == null && !exitFailurePending && exitDialog == null;
+    }
+
+    private void syncFeedbackSettings() {
+        if ((!pageLoaded && !ready) || destroyed || web == null) return;
+        evaluate("if(window.BombItHost)window.BombItHost.configureFeedback({token:"
+                + JSONObject.quote(feedbackToken) + ",soundEnabled:" + soundEnabled
+                + ",hapticsEnabled:" + hapticsEnabled + "});", null);
+    }
+
+    private void receiveFeedbackSettings(JSONObject message) throws JSONException {
+        Object token = message.opt("token"), request = message.opt("requestId");
+        if (!(token instanceof String) || !feedbackToken.equals(token)
+                || !(request instanceof String) || ((String) request).isEmpty() || ((String) request).length() > 96
+                || !(message.opt("soundEnabled") instanceof Boolean)
+                || !(message.opt("hapticsEnabled") instanceof Boolean)) return;
+        String requestId = (String) request;
+        if (requestId.equals(lastFeedbackRequest) && lastFeedbackResult != null) {
+            sendFeedbackResult(lastFeedbackResult);
+            return;
+        }
+        boolean requestedSound = message.getBoolean("soundEnabled");
+        boolean requestedHaptics = message.getBoolean("hapticsEnabled");
+        boolean canWrite = feedbackForeground();
+        JSONObject beforeWrite = canWrite ? BombItBridge.pendingFeedback(this) : null;
+        boolean okay = canWrite && BombItBridge.savePendingFeedback(this, requestedSound, requestedHaptics);
+        boolean preview = okay && !hapticsEnabled && requestedHaptics;
+        // Rename can succeed before the final directory fsync fails. Report the
+        // uncertainty, but reflect the journal that recovery would really read.
+        JSONObject observed = canWrite && !okay ? BombItBridge.pendingFeedback(this) : null;
+        if (observed != null && beforeWrite != null && observed.getString("revision").equals(beforeWrite.getString("revision"))) observed = null;
+        if (okay || observed != null) {
+            soundEnabled = okay ? requestedSound : observed.getBoolean("soundEnabled");
+            hapticsEnabled = okay ? requestedHaptics : observed.getBoolean("hapticsEnabled");
+            if (soundEnabled) requestAudio(); else abandonAudio();
+            syncHostState();
+        }
+        JSONObject response = new JSONObject();
+        response.put("token", feedbackToken); response.put("requestId", requestId); response.put("ok", okay);
+        response.put("soundEnabled", soundEnabled); response.put("hapticsEnabled", hapticsEnabled);
+        if (!okay) response.put("error", "设置保存尚未确认，请保持游戏在前台并重试。");
+        lastFeedbackRequest = requestId; lastFeedbackResult = response;
+        sendFeedbackResult(response);
+        if (preview) pulseHaptic();
+    }
+
+    private void sendFeedbackResult(JSONObject result) {
+        evaluate("if(window.BombItHost)window.BombItHost.feedbackSettingsResult(" + result + ");", null);
+    }
+
+    private void receiveHaptic(JSONObject message) {
+        Object token = message.opt("token"), press = message.opt("pressId");
+        if (!(token instanceof String) || !feedbackToken.equals(token) || !"bomb-press".equals(message.opt("kind"))
+                || !(press instanceof Integer || press instanceof Long)) return;
+        long identifier = ((Number) press).longValue();
+        if (identifier <= lastHapticPress || identifier > Integer.MAX_VALUE) return;
+        lastHapticPress = identifier;
+        // A DOWN can have been queued just before a pause/settings transition.
+        // Recheck the current adapter gate as well as native lifecycle before
+        // delivering it; settings-enable preview is deliberately separate.
+        if (!feedbackForeground() || !hapticsEnabled) return;
+        final String requestToken = feedbackToken;
+        evaluate("(function(){var h=window.BombItHost,s=h&&h.status();return !!(s&&s.active&&s.phase==='battle');})()", value -> {
+            if (requestToken.equals(feedbackToken) && "true".equals(value)) pulseHaptic();
+        });
+    }
+
+    private void pulseHaptic() {
+        if (!feedbackForeground() || !hapticsEnabled || viewport == null || !viewport.isAttachedToWindow()) return;
+        long now = SystemClock.uptimeMillis();
+        if (lastHapticUptime != 0 && now - lastHapticUptime < 40) return;
+        lastHapticUptime = now;
+        // No IGNORE_GLOBAL_SETTING flag and no vibrator permission: respect the
+        // device's touch-feedback preference. WebView long-press haptics stay off.
+        viewport.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
     private void syncHostState() {
@@ -695,6 +805,12 @@ public final class BombItActivity extends Activity {
         if (web == null || webPaused == paused) return;
         webPaused = paused;
         if (paused) web.onPause(); else web.onResume();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putBoolean("feedbackSound", soundEnabled);
+        state.putBoolean("feedbackHaptics", hapticsEnabled);
+        super.onSaveInstanceState(state);
     }
 
     @Override protected void onDestroy() {

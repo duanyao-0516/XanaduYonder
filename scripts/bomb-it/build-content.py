@@ -18,7 +18,7 @@ RUFFLE = ROOT / 'ThirdParty/Ruffle'
 OUTPUT = ROOT / 'artifacts/bomb-it/content'
 AAR = ROOT / 'Assets/Plugins/Android/bomb-it-content.aar'
 REPORT = ROOT / 'artifacts/bomb-it/patch-report.json'
-ADAPTER_FILES = ('index.html', 'style.css', 'host.js', 'controls.js')
+ADAPTER_FILES = ('index.html', 'style.css', 'feedback.js', 'guide.js', 'host.js', 'controls.js')
 
 
 def sha(data):
@@ -109,7 +109,8 @@ def main():
         REPORT.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({'verified': args.verify, 'files': len(files), 'aarBytes': len(archive),
                       'aarSha256': sha(archive), 'swfSha256': report['outputSha256'],
-                      'advertisingClassRemoved': True, 'gameplayTagsByteIdentical': True}))
+                      'advertisingClassRemoved': True, 'gameplayTagsByteIdentical': report['gameplayTagsByteIdentical'],
+                      'bridgeVersion': report['bridgeVersion']}))
 
 
 if __name__ == '__main__':

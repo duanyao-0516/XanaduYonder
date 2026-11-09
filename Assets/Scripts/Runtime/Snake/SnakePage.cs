@@ -17,8 +17,10 @@ namespace XanaduYonder.Runtime.Snake
         private CanvasGroup gameInput;
         private SnakeDropdown levelDropdown;
         private Button modeButton, pauseButton, boundaryButton;
-        private Text scoreText, progressText, modeText, countdownText, warningText;
+        private Text scoreText, progressText, modeText, warningText;
         private GameObject dialog, countdown, warningBanner;
+        private BoardCountdownView countdownView;
+        private GameObject crossControls, discControls;
         private RectTransform boardBand, controls;
         private Image boundaryTrack;
         private RectTransform boundaryThumb;
@@ -172,8 +174,8 @@ namespace XanaduYonder.Runtime.Snake
                 }
             }
             int count=Mathf.CeilToInt((float)session.CountdownSeconds);
-            countdown.SetActive(count>0);
-            if(count>0) { countdownText.text=count.ToString();if(count!=lastCountdown)feedback?.Play(false,soundEnabled(),false); }
+            if(count>0) { countdownView.SetNumber(count);if(count!=lastCountdown)feedback?.Play(false,soundEnabled(),false); }
+            else countdownView.Hide();
             lastCountdown=count;
             if(session.CanPlay)
             { saveElapsed+=deltaSeconds;if(saveElapsed>=2){saveElapsed=0;Save();} }
@@ -212,7 +214,7 @@ namespace XanaduYonder.Runtime.Snake
             else
             {
                 var options=new System.Collections.Generic.List<string>();
-                for(int i=0;i<catalog.Count;i++)options.Add((i+1).ToString("00")+" "+catalog.Name(i)+(i>profile.UnlockedLevel?" · 锁定":""));
+                for(int i=0;i<catalog.Count;i++)options.Add((i+1).ToString("00")+" "+catalog.Name(i));
                 levelDropdown.AddOptions(options);
             }
             levelDropdown.SetValueWithoutNotify(rules.Mode==SnakeMode.Classic?rules.Difficulty:profile.SelectedLevel);levelDropdown.RefreshShownValue();
@@ -222,7 +224,14 @@ namespace XanaduYonder.Runtime.Snake
             boundaryThumb.anchoredPosition=new Vector2(wrap?26:4,-4);
             boundaryLock.gameObject.SetActive(rules.Mode==SnakeMode.Campaign);
             foreach(var exit in exits)exit.SetActive(wrap);
+            RefreshControlStyle();
             Layout();
+        }
+        private void RefreshControlStyle()
+        {
+            input.Cancel();
+            crossControls.SetActive(profile.ControlStyle==SnakeControlStyle.Cross);
+            discControls.SetActive(profile.ControlStyle==SnakeControlStyle.Disc);
         }
         private void RefreshHud()
         {

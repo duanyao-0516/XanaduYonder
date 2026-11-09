@@ -51,7 +51,7 @@ namespace XanaduYonder.Runtime.Snake
         {
             if(!Available)return;
             input.Cancel();sessionStarted=true;session.Resume();lastCountdown=0;Save();
-            countdownText.text="3";countdown.SetActive(session.CountdownSeconds>0);RefreshHud();
+            if(session.CountdownSeconds>0)countdownView.SetNumber(3);else countdownView.Hide();RefreshHud();
         }
         private void ConfirmRestart()
         {
@@ -139,7 +139,7 @@ namespace XanaduYonder.Runtime.Snake
         private void OpenSnakeSettings(Action after)
         {
             if(!Available)return;
-            ShowDialog("贪吃蛇设置","吃到食物后，可让画面短暂停一帧。\n停顿期间仍可转向。",
+            var panel=ShowDialog("贪吃蛇设置","方向控制可在圆盘与十字键之间切换。\n吃食物停顿期间仍可转向。",
                 "吃食物停一帧 · "+(profile.PauseOnFood?"开启":"关闭"),()=>
                 {
                     profile.PauseOnFood=!profile.PauseOnFood;
@@ -151,7 +151,14 @@ namespace XanaduYonder.Runtime.Snake
                     {
                         if(Available&&epoch==interactionEpoch&&session.SessionId==sessionId)OpenSnakeSettings(after);
                     });
-                },"完成",after,650);
+                },"完成",after,600);
+            var body=panel.Find("Dialog message").GetComponent<Text>();
+            body.rectTransform.sizeDelta=new Vector2(532,90);
+            UiFactory.Button(panel,"控制方式 · "+(profile.ControlStyle==SnakeControlStyle.Disc?"圆盘四方向":"十字方向键"),32,232,532,78,()=>
+            {
+                profile.ControlStyle=profile.ControlStyle==SnakeControlStyle.Disc?SnakeControlStyle.Cross:SnakeControlStyle.Disc;
+                RefreshControlStyle();Save();OpenSnakeSettings(after);
+            });
             dismissDialog=()=>{CloseDialog();after();};
         }
         private void ShowRules()

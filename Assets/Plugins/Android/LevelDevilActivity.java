@@ -21,6 +21,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.DisplayCutout;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -55,6 +56,7 @@ import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -86,6 +88,12 @@ public final class LevelDevilActivity extends Activity {
     private String pendingExit;
     private boolean exitFailurePending;
     private boolean soundEnabled = true;
+    private boolean hapticsEnabled = true;
+    private String feedbackToken = UUID.randomUUID().toString();
+    private String lastFeedbackRequest;
+    private JSONObject lastFeedbackResult;
+    private long lastHapticPress;
+    private long lastHapticUptime;
     private boolean audioGranted;
     private boolean resumed;
     private boolean windowFocused;
@@ -121,6 +129,11 @@ public final class LevelDevilActivity extends Activity {
         createdElapsed = SystemClock.elapsedRealtime();
         super.onCreate(savedState);
         soundEnabled = getIntent().getBooleanExtra("soundEnabled", true);
+        hapticsEnabled = getIntent().getBooleanExtra("hapticsEnabled", true);
+        if (savedState != null) {
+            soundEnabled = savedState.getBoolean("feedbackSound", soundEnabled);
+            hapticsEnabled = savedState.getBoolean("feedbackHaptics", hapticsEnabled);
+        }
         session = LevelDevilBridge.attach(this, getIntent().getLongExtra(LevelDevilBridge.SESSION_EXTRA, -1));
         if (session < 0) { finish(); return; }
         getIntent().putExtra(LevelDevilBridge.SESSION_EXTRA, session);
@@ -297,7 +310,11 @@ public final class LevelDevilActivity extends Activity {
 
     private final class LocalClient extends WebViewClient {
         @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-            if (LevelDevilAssetPolicy.ENTRY.equals(url)) trace("page_started", "");
+            if (LevelDevilAssetPolicy.ENTRY.equals(url)) {
+                feedbackToken = UUID.randomUUID().toString();
+                lastFeedbackRequest = null; lastFeedbackResult = null; lastHapticPress = 0;
+                trace("page_started", "");
+            }
         }
 
         @Override public void onPageCommitVisible(WebView view, String url) {
@@ -334,6 +351,7 @@ public final class LevelDevilActivity extends Activity {
                 pageLoaded = true;
                 trace("page_finished", "");
                 syncViewportInsets();
+                syncFeedbackSettings();
                 syncHostState();
             }
         }
@@ -410,9 +428,16 @@ public final class LevelDevilActivity extends Activity {
                         handler.removeCallbacks(startupTimeout);
                         syncViewportInsets();
                         loading.setVisibility(View.GONE);
+                        syncFeedbackSettings();
                         syncHostState();
                         updateTimeouts();
                     }
+                    break;
+                case "feedback-settings":
+                    receiveFeedbackSettings(message);
+                    break;
+                case "haptic":
+                    receiveHaptic(message);
                     break;
                 case "exit-intent":
                     trace("exit_intent", "source=game_button");
@@ -529,6 +554,85 @@ public final class LevelDevilActivity extends Activity {
         evaluate("(function(){var h=window.LevelDevilHost,d=window.devicePixelRatio||1;"
                 + "if(h&&typeof h.setViewportInsets==='function')h.setViewportInsets("
                 + safeLeft + "/d," + safeTop + "/d," + safeRight + "/d," + safeBottom + "/d);})()", null);
+    }
+
+    private boolean feedbackForeground() {
+        return ready && resumed && windowFocused && !destroyed && !fatal && !finishingToLobby
+                && pendingExit == null && !exitFailurePending && exitDialog == null;
+    }
+
+    private void syncFeedbackSettings() {
+        if ((!pageLoaded && !ready) || destroyed || web == null) return;
+        evaluate("if(window.LevelDevilHost)window.LevelDevilHost.configureFeedback({token:"
+                + JSONObject.quote(feedbackToken) + ",soundEnabled:" + soundEnabled
+                + ",hapticsEnabled:" + hapticsEnabled + "});", null);
+    }
+
+    private void receiveFeedbackSettings(JSONObject message) throws JSONException {
+        Object token = message.opt("token"), request = message.opt("requestId");
+        if (!(token instanceof String) || !feedbackToken.equals(token)
+                || !(request instanceof String) || ((String) request).isEmpty() || ((String) request).length() > 96
+                || !(message.opt("soundEnabled") instanceof Boolean)
+                || !(message.opt("hapticsEnabled") instanceof Boolean)) return;
+        String requestId = (String) request;
+        if (requestId.equals(lastFeedbackRequest) && lastFeedbackResult != null) {
+            sendFeedbackResult(lastFeedbackResult);
+            return;
+        }
+        boolean requestedSound = message.getBoolean("soundEnabled");
+        boolean requestedHaptics = message.getBoolean("hapticsEnabled");
+        boolean canWrite = feedbackForeground();
+        JSONObject beforeWrite = canWrite ? LevelDevilBridge.pendingFeedback(this) : null;
+        boolean okay = canWrite && LevelDevilBridge.savePendingFeedback(this, requestedSound, requestedHaptics);
+        boolean preview = okay && !hapticsEnabled && requestedHaptics;
+        // Rename can succeed before the final directory fsync fails. Report the
+        // uncertainty, but reflect the journal that recovery would really read.
+        JSONObject observed = canWrite && !okay ? LevelDevilBridge.pendingFeedback(this) : null;
+        if (observed != null && beforeWrite != null && observed.getString("revision").equals(beforeWrite.getString("revision"))) observed = null;
+        if (okay || observed != null) {
+            soundEnabled = okay ? requestedSound : observed.getBoolean("soundEnabled");
+            hapticsEnabled = okay ? requestedHaptics : observed.getBoolean("hapticsEnabled");
+            if (soundEnabled) requestAudio(); else abandonAudio();
+            syncHostState();
+        }
+        JSONObject response = new JSONObject();
+        response.put("token", feedbackToken); response.put("requestId", requestId); response.put("ok", okay);
+        response.put("soundEnabled", soundEnabled); response.put("hapticsEnabled", hapticsEnabled);
+        if (!okay) response.put("error", "设置保存尚未确认，请保持游戏在前台并重试。");
+        lastFeedbackRequest = requestId; lastFeedbackResult = response;
+        sendFeedbackResult(response);
+        if (preview) pulseHaptic();
+    }
+
+    private void sendFeedbackResult(JSONObject result) {
+        evaluate("if(window.LevelDevilHost)window.LevelDevilHost.feedbackSettingsResult(" + result + ");", null);
+    }
+
+    private void receiveHaptic(JSONObject message) {
+        Object token = message.opt("token"), press = message.opt("pressId");
+        if (!(token instanceof String) || !feedbackToken.equals(token) || !"jump-press".equals(message.opt("kind"))
+                || !(press instanceof Integer || press instanceof Long)) return;
+        long identifier = ((Number) press).longValue();
+        if (identifier <= lastHapticPress || identifier > Integer.MAX_VALUE) return;
+        lastHapticPress = identifier;
+        // A DOWN can have been queued just before a pause/settings transition.
+        // Recheck the current adapter gate as well as native lifecycle before
+        // delivering it; settings-enable preview is deliberately separate.
+        if (!feedbackForeground() || !hapticsEnabled) return;
+        final String requestToken = feedbackToken;
+        evaluate("(function(){var h=window.LevelDevilHost,s=h&&h.status();return !!(s&&s.active&&s.gameplayActive);})()", value -> {
+            if (requestToken.equals(feedbackToken) && "true".equals(value)) pulseHaptic();
+        });
+    }
+
+    private void pulseHaptic() {
+        if (!feedbackForeground() || !hapticsEnabled || viewport == null || !viewport.isAttachedToWindow()) return;
+        long now = SystemClock.uptimeMillis();
+        if (lastHapticUptime != 0 && now - lastHapticUptime < 40) return;
+        lastHapticUptime = now;
+        // No IGNORE_GLOBAL_SETTING flag and no vibrator permission: respect the
+        // device's touch-feedback preference. WebView long-press haptics stay off.
+        viewport.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
     private void syncHostState() {
@@ -695,6 +799,12 @@ public final class LevelDevilActivity extends Activity {
         if (web == null || webPaused == paused) return;
         webPaused = paused;
         if (paused) web.onPause(); else web.onResume();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putBoolean("feedbackSound", soundEnabled);
+        state.putBoolean("feedbackHaptics", hapticsEnabled);
+        super.onSaveInstanceState(state);
     }
 
     @Override protected void onDestroy() {

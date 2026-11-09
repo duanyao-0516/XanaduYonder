@@ -28,7 +28,7 @@ namespace XanaduYonder.Runtime.Tetris
         public event Action Changed;
         public TetrisSession Session => session;
         public bool SwapControls => data != null && data.SwapControls;
-        internal const string ControlsHelp = "左右箭头移动，旋转键顺时针转动。\n长按下键加速；同一块快速三连击下键直落。\n设置可交换两组按键；暂存每块一次。\n描边为落点，侧边预览接下来的3块。";
+        internal const string ControlsHelp = "左右移动，旋转键顺时针转动。\n下键轻按软降；长按0.5秒或同一块三连击直落。\n多指操作不直落；设置可交换两组按键。\n暂存每块一次；描边为落点，侧边预览3块。";
         internal TetrisView View => view;
         internal void Initialize(RectTransform root, Action onLobby, Action<Action> onSettings,
             Func<bool> acceptsInput, Func<bool> soundEnabled, Func<bool> hapticsEnabled,
@@ -192,6 +192,10 @@ namespace XanaduYonder.Runtime.Tetris
             view.SetControlsEnabled(loaded.CanWrite && session.Phase == TetrisSessionPhase.Running && visible && foreground && accepts());
             view.SetPauseLabel(session.Phase == TetrisSessionPhase.Running || session.Phase == TetrisSessionPhase.Countdown,
                 session.Phase == TetrisSessionPhase.Ended);
+            view.SetPaused(loaded.CanWrite && session.Phase == TetrisSessionPhase.Paused, Begin, NewRound);
+            if (loaded.CanWrite && session.Phase == TetrisSessionPhase.Countdown) view.SetCountdown(session.CountdownNumber);
+            else view.HideCountdown();
+            if (!loaded.CanWrite || session.Phase != TetrisSessionPhase.Ended) view.HideResult();
             if (!loaded.CanWrite)
             {
                 bool corrupt = loaded.Status == TetrisLoadStatus.Corrupt;
@@ -203,12 +207,11 @@ namespace XanaduYonder.Runtime.Tetris
                 switch (session.Phase)
                 {
                     case TetrisSessionPhase.Ready: view.SetOverlay("慢慢来，先放一块", "填满一行，就向前一点。", "开始游戏", Begin, null, null, true); break;
-                    case TetrisSessionPhase.Paused: view.SetOverlay("歇一会儿", "这一局为你留着。", "继续游戏", Begin, "重新开始", NewRound, true); break;
-                    case TetrisSessionPhase.Countdown: view.SetOverlay("倒计时：" + session.CountdownNumber, "准备继续", null, null, "保持暂停", Suspend, true); break;
+                    case TetrisSessionPhase.Paused:
+                    case TetrisSessionPhase.Countdown: view.SetOverlay(null, null, null, null, null, null, false); break;
                     case TetrisSessionPhase.Ended:
-                        if (ResultPresentation.For(this, (RectTransform)transform).Gate(session, CanShowResult, Refresh))
-                            view.SetOverlay("这一局，很不错", "得分 " + session.Snapshot.Score + " · 消除 " + session.Snapshot.Lines + " 行", "再来一局", NewRound, "返回大厅", Back, true, InspectResult);
-                        else view.SetOverlay(null, null, null, null, null, null, false);
+                        view.SetOverlay(null, null, null, null, null, null, false);
+                        view.SetResult(ResultPresentation.For(this, (RectTransform)transform).Gate(session, CanShowResult, Refresh), NewRound, InspectResult);
                         break;
                     default: view.SetOverlay(null,null,null,null,null,null,false); break;
                 }
@@ -220,7 +223,7 @@ namespace XanaduYonder.Runtime.Tetris
         private void InspectResult()
         {
             ResultPresentation.For(this, (RectTransform)transform).Inspect(
-                () => view.SetOverlay(null, null, null, null, null, null, false));
+                view.HideResult);
         }
         private void ConfirmReset()
         {
@@ -229,7 +232,7 @@ namespace XanaduYonder.Runtime.Tetris
                 Load(); Changed?.Invoke();
             }, "取消", Refresh);
         }
-        private void OnDisable() { ResultPresentation.Clear(this); if (session != null) { session.Pause(); touch?.Cancel(); Save(); } }
+        private void OnDisable() { ResultPresentation.Clear(this); view?.HideCountdown(); view?.HidePause(); view?.HideResult(); if (session != null) { session.Pause(); touch?.Cancel(); Save(); } }
         private void OnDestroy() { if (session != null) session.Stepped -= OnStep; }
     }
 }

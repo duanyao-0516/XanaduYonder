@@ -17,6 +17,7 @@ namespace XanaduYonder.Runtime.Snake
         public Func<bool> CanInput;
         public Action<SnakeDirection> Turn;
         public Action Canceled;
+        public event Action PointerReleased;
         private int? owner;
         private Vector2 anchor;
         private bool quarantined;
@@ -43,7 +44,12 @@ namespace XanaduYonder.Runtime.Snake
         public void OnPointerUp(PointerEventData e) { Release(e.pointerId); }
         public bool PressButton(PointerEventData e, SnakeDirection direction)
         { if (!Acquire(e)) return false; Turn?.Invoke(direction); return true; }
-        public void Release(int pointerId) { if (owner == pointerId) owner = null; }
+        public bool BeginDirectionPointer(PointerEventData e) { return Acquire(e); }
+        public bool MoveDirectionPointer(PointerEventData e, SnakeDirection direction)
+        { if(owner!=e.pointerId||!Allowed())return false;Turn?.Invoke(direction);return true; }
+        public bool OwnsPointer(int pointerId) { return owner==pointerId&&!quarantined&&CanInput!=null&&CanInput(); }
+        public void Release(int pointerId)
+        { if(owner!=pointerId)return;owner=null;PointerReleased?.Invoke(); }
         private bool Acquire(PointerEventData e)
         {
             if (!Allowed() || (e.pointerId < 0 && e.button != PointerEventData.InputButton.Left)) return false;
@@ -67,7 +73,8 @@ namespace XanaduYonder.Runtime.Snake
             if(quarantined&&frame.TouchCount==0&&!frame.PrimaryPressed)quarantined=false;
         }
         private void Update() { PollFrame(CaptureFrame()); }
-        public void Cancel(bool waitForRelease = false) { owner = null; quarantined |= waitForRelease; Canceled?.Invoke(); }
+        public void Cancel(bool waitForRelease = false)
+        { owner=null;quarantined|=waitForRelease;PointerReleased?.Invoke();Canceled?.Invoke(); }
         private void OnDisable() { Cancel(); }
     }
     internal sealed class SnakeDirectionButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler

@@ -22,10 +22,11 @@ namespace XanaduYonder.Runtime.Tetris
         private sealed class Contact
         {
             public TetrisAction Action; public long Order, PieceSerial;
-            public bool SoftBlocked, TapEligible = true;
-            public double StartedAt;
+            public bool SoftBlocked, TapEligible = true, HoldEligible = true;
+            public double StartedAt, HoldSeconds;
         }
         private const double MaximumTapSeconds = .18, MaximumTapGapSeconds = .30, MaximumTripleSeconds = .65;
+        private const double HardDropHoldSeconds = .5;
         private readonly Dictionary<int, Contact> owners = new Dictionary<int, Contact>();
         private readonly List<TetrisPendingAction> pending = new List<TetrisPendingAction>();
         private readonly HashSet<int> live = new HashSet<int>();
@@ -58,13 +59,13 @@ namespace XanaduYonder.Runtime.Tetris
             }
             if (!accepts || invalid || active > 2) { Cancel(); if (active == 0) suppressed = false; return; }
             if (suppressed) { if (active == 0) suppressed = false; return; }
-            // A second contact invalidates the tap gesture before any release can finish it.
+            // A second contact invalidates either hard-drop gesture before it can fire.
             // Ordinary two-finger movement, rotation and held soft drop still run below.
             bool multipleContacts = live.Count > 1;
             if (multipleContacts)
             {
                 ClearDownTaps();
-                foreach (var c in owners.Values) if (c.Action == TetrisAction.SoftDrop) c.TapEligible = false;
+                foreach (var c in owners.Values) if (c.Action == TetrisAction.SoftDrop) { c.TapEligible = false; c.HoldEligible = false; }
             }
             removed.Clear();
             foreach (var pair in owners) if (!live.Contains(pair.Key)) removed.Add(pair.Key);
@@ -90,7 +91,7 @@ namespace XanaduYonder.Runtime.Tetris
                 if (existing != null && existing.Action == TetrisAction.SoftDrop && time - existing.StartedAt > MaximumTapSeconds)
                 { existing.TapEligible = false; ClearDownTaps(); }
                 if (p.Phase != TetrisPointerPhase.Began || p.Action == TetrisAction.None || owners.ContainsKey(p.Id)) continue;
-                owners.Add(p.Id, new Contact { Action = p.Action, Order = frameOrder, StartedAt = time, PieceSerial = serial, TapEligible = !multipleContacts });
+                owners.Add(p.Id, new Contact { Action = p.Action, Order = frameOrder, StartedAt = time, PieceSerial = serial, TapEligible = !multipleContacts, HoldEligible = !multipleContacts });
                 if (p.Action != TetrisAction.SoftDrop && !(newLeft && newRight && (p.Action == TetrisAction.Left || p.Action == TetrisAction.Right)))
                     Queue(p.Id, p.Action, serial);
             }
@@ -111,6 +112,15 @@ namespace XanaduYonder.Runtime.Tetris
         public void Tick(long serial)
         {
             clockSeconds += 1d / 60;
+            foreach (var pair in owners)
+            {
+                var contact = pair.Value;
+                if (contact.Action != TetrisAction.SoftDrop || contact.SoftBlocked || !contact.HoldEligible || contact.PieceSerial != serial) continue;
+                contact.HoldSeconds += 1d / 60;
+                if (contact.HoldSeconds + 1e-9 < HardDropHoldSeconds) continue;
+                contact.HoldEligible = false; contact.TapEligible = false; contact.SoftBlocked = true;
+                ClearDownTaps(); Queue(pair.Key, TetrisAction.HardDrop, serial);
+            }
             if (!directionOwner.HasValue) return;
             heldSeconds += 1d / 60;
             if (heldSeconds + 1e-9 < nextRepeat) return;

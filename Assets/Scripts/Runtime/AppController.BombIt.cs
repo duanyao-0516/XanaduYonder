@@ -23,6 +23,7 @@ namespace XanaduYonder.Runtime
         {
             if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             CloseModal();
+            RestoreWebGamePendingPreferences();
             Save();
             feedback?.Stop();
             if (bombItLauncher == null)
@@ -31,12 +32,13 @@ namespace XanaduYonder.Runtime
                 bombItLauncher.Returned += OnBombItReturned;
             }
             SetExternalGameLobbyInput(false);
-            if (!bombItLauncher.TryOpen(data.SoundEnabled))
+            if (!bombItLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled))
                 OnBombItReturned(BombItLauncher.OpenFailureMessage);
         }
 
         private void OnBombItReturned(string error)
         {
+            RestoreWebGamePendingPreferences();
             SetExternalGameLobbyInput(!IsExternalGameRunning);
             if (activePage == Page.Lobby && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });

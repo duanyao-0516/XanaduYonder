@@ -5,7 +5,7 @@
   let active = true, soundEnabled = false, visible = !document.hidden;
   let runtime = null, ready = false, exit = null, failed = false;
   let viewportInsets = [0, 0, 0, 0];
-  let hallButtonFirstScreenOnly = false;
+  let hallButtonFirstScreenOnly = false, menuPaused = false;
   function send(type, extra) {
     const value = JSON.stringify(Object.assign({type}, extra || {}));
     if (window.LevelDevilNative && typeof window.LevelDevilNative.postMessage === 'function') window.LevelDevilNative.postMessage(value);
@@ -18,6 +18,8 @@
   }
   function error(message, recoverable) { saveNotice(message); send('error', {message, recoverable:recoverable === true}); }
   window.LevelDevilHost = Object.freeze({
+    configureFeedback(value) { window.__levelDevilMenu.configure(value); },
+    feedbackSettingsResult(value) { window.__levelDevilMenu.result(value); },
     setHostState(value, sound) {
       active = value === true; soundEnabled = sound === true;
       if (runtime) runtime.stateChanged();
@@ -26,6 +28,7 @@
       const values = [left, top, right, bottom];
       if (values.some(value => typeof value !== 'number' || !Number.isFinite(value) || value < 0)) return;
       viewportInsets = values;
+      ["left","top","right","bottom"].forEach((side,index)=>document.documentElement.style.setProperty("--ld-safe-"+side,values[index]+"px"));
       if (runtime) runtime.resize();
     },
     status() {
@@ -41,6 +44,7 @@
     requestExit(requestId) {
       if (typeof requestId !== 'string' || !requestId || requestId.length > 128) return;
       if (exit && exit.id === requestId) return;
+      window.__levelDevilMenu.close();
       exit = {id:requestId, committing:false};
       if (!runtime || !ready || failed) { send('exit-error', {requestId, message:'游戏尚未就绪，不能确认保存。'}); return; }
       runtime.releaseInput(); runtime.tryExit();
@@ -54,7 +58,8 @@
   // waits, but they must not receive new player input during that transaction.
   for (const type of ['keydown','keyup','mousedown','mouseup','mousemove','touchstart','touchmove','touchend','touchcancel','pointerdown','pointerup']) {
     window.addEventListener(type, event => {
-      if (!active || !visible || exit || failed) {
+      if (event.target instanceof Element && event.target.closest("#level-menu-ui") && active && visible && !exit && !failed) return;
+      if (!active || !visible || exit || failed || menuPaused) {
         // Retire Lime's existing touch identities even while gameplay input is
         // blocked. releaseInput already canceled their game/mouse state; its
         // end guard prevents these cleanup events from acting as menu clicks.
@@ -68,7 +73,7 @@
     const completions = new Set(); let transitionCallbacks = 0, skipPending = null;
     let pausedChannels = [], controls = null, lastScene = null;
     let layout = null, background = null, backgroundLayer = null, layoutKey = '', backgroundKey = '';
-    const hostRunning = () => active && visible && !failed;
+    const hostRunning = () => active && visible && !failed && !menuPaused;
     function clearMouseLatch() {
       Q.mouseDown = Q.mousePressed = Q.mouseReleased = false;
       if (E.stage) E.stage.__mouseDownLeft = null;
@@ -147,7 +152,7 @@
       Q.numTouches = 0;
     }
     function applyAudio() {
-      if (window.Howler) window.Howler.mute(!hostRunning() || !soundEnabled || !!(exit && exit.committing));
+      if (window.Howler) window.Howler.mute(!hostRunning() || !soundEnabled || !window.__levelDevilMenu.soundEnabled() || !!(exit && exit.committing));
       const engine = E.engine;
       if (!engine || !engine.channels) return;
       if (!hostRunning() || (exit && exit.committing)) {
@@ -160,7 +165,7 @@
       }
     }
     function stateChanged() {
-      releaseInput(); if (E.engine) E.engine.lastTime = Timer.getTimer(); applyAudio(); tryExit();
+      releaseInput(); if (E.engine) E.engine.lastTime = Timer.getTimer(); applyAudio(); tryExit(); window.__levelDevilMenu.refresh();
     }
     function validate(raw) {
       if (typeof raw !== 'string' || !raw || raw.length > 1000000) throw Error('无效的存档内容');
@@ -264,12 +269,12 @@
     const update = E.prototype.onUpdate;
     E.prototype.onUpdate = function (event) {
       if (!hostRunning() || (exit && exit.committing)) { this.lastTime = Timer.getTimer(); return; }
-      if (lastScene !== this.scene) { releaseInput(); lastScene = this.scene; }
+      if (lastScene !== this.scene) { releaseInput(); lastScene = this.scene; window.__levelDevilMenu.refresh(); }
       update.call(this, event);
       if (!ready && this.sceneInitialized && this.scene && this.scene.name === 'Z_Choose_1P_2P' && !this.isTransitioning()) {
-        ready = true; applyAudio(); send('ready');
+        ready = true; window.__levelDevilMenu.engineReady(); applyAudio(); send('ready');
       }
-      tryExit();
+      tryExit(); window.__levelDevilMenu.refresh();
     };
     // Each callback runs asynchronously once. Its existing pause/unpause and
     // scene/reward logic remain in the original game, behind our host tick gate.
@@ -292,13 +297,29 @@
     }
     function status() {
       const engine = E.engine, scene = engine && engine.scene;
-      return {ready, scene:scene ? scene.name : null,
-        canReturnToHall:!!(ready && !failed && !exit && engine && engine.sceneInitialized &&
-          !engine.isTransitioning() && scene && scene.ID === 125 && scene.name === 'Z_Choose_1P_2P')};
+      const interactive = !!(ready && !failed && !exit && engine && engine.sceneInitialized && !engine.isTransitioning());
+      const menuAvailable = interactive && scene && [125,49,174].includes(scene.ID);
+      return {ready, scene:scene ? scene.name : null, active:interactive && hostRunning() && !E.paused,
+        menuAvailable:!!menuAvailable, modalPaused:menuPaused,
+        gameplayActive:!!(interactive && (C.sceneHasBehavior('Scene_Manager') || C.sceneHasBehavior('2P Scene_Manager'))),
+        canReturnToHall:!!(menuAvailable && scene.ID === 125)};
     }
+    function applyPreferenceSound(enabled,persist) {
+      if (!ready || !E.engine) return;
+      E.engine.gameAttributes.h.Volume=enabled?100:0; C.setVolumeForAllSounds(enabled?1:0);
+      for(const actor of C.getActorsOfType(C.getActorType(753)))if(actor&&!actor.dead&&!actor.recycled)actor.setAnimation(enabled?'100':'0');
+      applyAudio();
+      if(persist)C.saveGame('mySave',()=>{});
+    }
+    // This actor is the original Volume toggle. The native ACK is the one
+    // authority; it updates both this saved engine field and actual audio gates.
+    classes['scripts.ActorEvents_753'].prototype._event_Updating=function(){
+      if(this.wrapper.enabled && hostRunning() && !exit && this.actor.isMousePressed())window.__levelDevilMenu.originalSound();
+    };
+    window.__levelDevilMenu.attach({send,status,sound:applyPreferenceSound,modal(value){menuPaused=value===true;stateChanged();}});
     runtime = {releaseInput, stateChanged, tryExit, resize, status, refreshHallButton:() => { if (controls) controls.layout(); }, cancelHallExit:() => { if (controls) controls.cancelHallExit(); }};
     if (window.__installLevelDevilControls) controls = window.__installLevelDevilControls({Engine:E,Script:C,classes,blocked:() => !hostRunning() || !!exit,
-      viewport:() => layout, hallEnabled:() => !hallButtonFirstScreenOnly || !!(E.engine && E.engine.scene && E.engine.scene.ID === 125), hallExit:() => { if (ready && hostRunning() && !exit) { releaseInput(); send('exit-intent'); return true; } return false; }});
+      viewport:() => layout, haptic:()=>window.__levelDevilMenu.haptic(), returnToChoice:()=>{if(!status().menuAvailable || ![49,174].includes(E.engine.scene.ID))return false;releaseInput();C.switchScene(125,null,C.createCrossfadeTransition(.1));return true;}, hallEnabled:() => !hallButtonFirstScreenOnly || !!(E.engine && E.engine.scene && E.engine.scene.ID === 125), hallExit:() => { if (ready && hostRunning() && !exit) { releaseInput(); send('exit-intent'); return true; } return false; }});
     applyAudio();
     return {continueTransition, reward, beginCompletion, finishCompletion};
   };

@@ -25,6 +25,7 @@ namespace XanaduYonder.Runtime.Snake
             SnakeIconGraphic.Add(modeButton.transform,SnakeIconKind.Down,174,15,24,UiFactory.Ink);
             var progress=UiFactory.Band(surface,"Snake progress",178,58,.10f);
             levelDropdown=SnakeDropdown.Create(progress,36,0,164,54);
+            levelDropdown.IsLocked=i=>session.Game.Rules.Mode==SnakeMode.Campaign&&i>profile.UnlockedLevel;
             levelDropdown.CanOpen=()=>Available&&dialog==null;
             levelDropdown.Opening=()=>{returnFromDropdown=CaptureOverlayReturn();input.Cancel();session.Pause();board.FinishAnimation();countdown.SetActive(false);Save();};
             levelDropdown.Closed=ReturnFromDropdown;
@@ -66,14 +67,20 @@ namespace XanaduYonder.Runtime.Snake
             boundaryTrack=UiFactory.Panel(boundaryButton.transform,"Boundary switch",252,32,52,32,UiFactory.Accent);
             boundaryThumb=UiFactory.CirclePanel(boundaryTrack.transform,"Switch thumb",26,4,24,UiFactory.Paper).rectTransform;
             var pad=UiFactory.Rect(controls,"Snake direction pad",380,0,304,256);
-            AddDirection(pad,"Up",SnakeDirection.Up,104,48,SnakeIconKind.Up);
-            AddDirection(pad,"Left",SnakeDirection.Left,0,104,SnakeIconKind.Left);
-            AddDirection(pad,"Right",SnakeDirection.Right,208,104,SnakeIconKind.Right);
-            AddDirection(pad,"Down",SnakeDirection.Down,104,160,SnakeIconKind.Down);
-            var countSurface=UiFactory.Panel(root,"Snake countdown",0,0,720,1320,new Color(.09f,.24f,.2f,.24f),false);
-            UiFactory.Stretch(countSurface.rectTransform);countSurface.raycastTarget=true;countdown=countSurface.gameObject;
-            var circle=UiFactory.CirclePanel(countSurface.transform,"Countdown disc",0,0,200,UiFactory.Paper);UiFactory.Center(circle.rectTransform);
-            countdownText=UiFactory.Label(circle.transform,"3",0,0,200,200,92,UiFactory.Accent,TextAnchor.MiddleCenter,FontStyle.Bold);countdown.SetActive(false);
+            var cross=UiFactory.Rect(pad,"Snake cross controls",0,0,304,256);crossControls=cross.gameObject;
+            AddDirection(cross,"Up",SnakeDirection.Up,104,48,SnakeIconKind.Up);
+            AddDirection(cross,"Left",SnakeDirection.Left,0,104,SnakeIconKind.Left);
+            AddDirection(cross,"Right",SnakeDirection.Right,208,104,SnakeIconKind.Right);
+            AddDirection(cross,"Down",SnakeDirection.Down,104,160,SnakeIconKind.Down);
+            // Keep the original top control row and fit entirely inside the existing right box.
+            var disc=UiFactory.Rect(pad,"Snake circular controls",48,48,208,208);
+            var discInput=disc.gameObject.AddComponent<SnakeDirectionDisc>();discInput.InputTarget=input;
+            discInput.color=UiFactory.Hex("E7EDE4");discInput.raycastTarget=true;discControls=disc.gameObject;
+            SnakeIconGraphic.Add(disc,SnakeIconKind.Up,84,16,40,UiFactory.Accent);
+            SnakeIconGraphic.Add(disc,SnakeIconKind.Down,84,152,40,UiFactory.Accent);
+            SnakeIconGraphic.Add(disc,SnakeIconKind.Left,16,84,40,UiFactory.Accent);
+            SnakeIconGraphic.Add(disc,SnakeIconKind.Right,152,84,40,UiFactory.Accent);
+            countdownView=new BoardCountdownView(boardRect,"Snake countdown");countdown=countdownView.Root.gameObject;
             var banner=UiFactory.Panel(root,"Snake save warning",0,0,720,30,UiFactory.Hex("F1DED3"),false);
             banner.rectTransform.anchorMin=banner.rectTransform.anchorMax=new Vector2(.5f,1);banner.rectTransform.pivot=new Vector2(.5f,1);
             warningText=UiFactory.Label(banner.transform,"",14,0,692,30,18,UiFactory.Hex("8F4235"),TextAnchor.MiddleCenter);

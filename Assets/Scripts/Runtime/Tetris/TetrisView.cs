@@ -24,8 +24,12 @@ namespace XanaduYonder.Runtime.Tetris
         public Graphic ReviewBrand => brand;
         private readonly TetrisGraphic arenaBackground;
         private readonly TetrisBoardView board;
-        private readonly Text brand, title, warningText, nextLabel, overlayTitle, overlayDetail, overlayBest;
+        private readonly BoardCountdownView countdown;
+        private readonly Text brand, title, warningText, nextLabel, overlayTitle, overlayDetail, overlayBest, pauseTitle;
+        private readonly Text resultTitle, resultScoreCaption, resultScore, resultLines, resultBest;
         private readonly Control homeControl, helpControl, settingsControl, pauseControl, primaryControl, secondaryControl, inspectControl;
+        private readonly Control continueControl, restartControl;
+        private readonly Control resultRestartControl, resultInspectControl;
         private readonly RectTransform[] statGroups = new RectTransform[3];
         private readonly Text[] statLabels = new Text[3], statValues = new Text[3];
         private readonly TetrisGraphic holdPreview;
@@ -35,24 +39,33 @@ namespace XanaduYonder.Runtime.Tetris
         private readonly List<float> fontSizes = new List<float>();
         private Vector2 lastSize;
         private string warning = "";
-        private bool layoutDirty = true, controlsEnabled, canHold, overlayVisible, swapControls;
+        private bool layoutDirty = true, controlsEnabled, canHold, overlayVisible, pauseVisible, resultVisible, swapControls;
         private long? bestScore;
         private string BestLabel => bestScore.HasValue ? "最高纪录 " + bestScore.Value.ToString(CultureInfo.InvariantCulture) : "最高纪录暂不可读";
         private long lastScore = -1;
         private int lastLines = -1;
         private string lastOverlayTitle, lastOverlayDetail, lastPrimaryText, lastSecondaryText;
         private Action lastPrimaryAction, lastSecondaryAction, lastInspectAction;
+        private Action lastContinueAction, lastRestartAction;
+        private Action lastResultRestartAction, lastResultInspectAction;
 
         public Dictionary<TetrisAction, RectTransform> ActionTargets { get; private set; }
         public RectTransform BoardRect { get { return board.rectTransform; } }
+        public RectTransform CountdownRoot => countdown.Root;
         public RectTransform ArenaRect { get { return arenaBackground.rectTransform; } }
+        public RectTransform PauseRoot { get; private set; }
+        public RectTransform ResultRoot { get; private set; }
         public RectTransform OverlayRoot { get; private set; }
         public TetrisLayout Layout { get; private set; }
         public bool HasClearFlash { get { return board.HasClearFlash; } }
 
         public void FlashLines(int[] coreRows) { board.FlashLines(coreRows); }
         public void TickVisuals(float seconds) { board.TickVisuals(seconds); }
-        public void ClearVisuals() { board.ClearVisuals(); }
+        public void ClearVisuals() { board.ClearVisuals(); countdown.Hide(); }
+        public void SetCountdown(int number) { countdown.SetNumber(number); }
+        public void HideCountdown() { countdown.Hide(); }
+        public void HidePause() { SetPaused(false, null, null); }
+        public void HideResult() { SetResult(false, null, null); }
 
         public TetrisView(RectTransform root, Action home, Action help, Action settings, Action pause)
         {
@@ -84,6 +97,8 @@ namespace XanaduYonder.Runtime.Tetris
             divider.rectTransform.sizeDelta = new Vector2(0, 1);
 
             arenaBackground = Shape(root, "Tetris arena", TetrisGraphicKind.Round, UiFactory.Hex("EBEEE2"));
+            // Reuse the arena's exact rounded mesh to clip its presentation layers.
+            ArenaRect.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             board = UiFactory.Rect(ArenaRect, "Tetris board 10 x 20", 0, 0, 1, 1).gameObject.AddComponent<TetrisBoardView>();
             board.raycastTarget = false;
             Control hold = MakeControl(ArenaRect, "Tetris Hold", "暂存", null, false, 11);
@@ -92,6 +107,30 @@ namespace XanaduYonder.Runtime.Tetris
             nextLabel = Label(ArenaRect, "Tetris next label", "接下来", 11, UiFactory.Muted, TextAnchor.MiddleCenter);
             for (int i = 0; i < nextPreviews.Length; i++)
                 nextPreviews[i] = Shape(ArenaRect, "Tetris next " + (i + 1), TetrisGraphicKind.Preview, Color.white);
+
+            // These siblings come after Hold and Next so the whole arena is dimmed.
+            countdown = new BoardCountdownView(ArenaRect, "Tetris countdown");
+            var pauseDim = UiFactory.Panel(ArenaRect, "Tetris arena pause", 0, 0, 1, 1,
+                new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, .44f), false);
+            PauseRoot = pauseDim.rectTransform; UiFactory.Stretch(PauseRoot); pauseDim.raycastTarget = true;
+            pauseTitle = Label(PauseRoot, "Tetris pause title", "已暂停", 28, Color.white, TextAnchor.MiddleCenter);
+            pauseTitle.fontStyle = FontStyle.Bold;
+            continueControl = MakeControl(PauseRoot, "Tetris continue", "继续游戏", null, true, 14);
+            restartControl = MakeControl(PauseRoot, "Tetris restart", "重新开始", null, false, 14);
+            PauseRoot.gameObject.SetActive(false);
+
+            var resultDim = UiFactory.Panel(ArenaRect, "Tetris arena result", 0, 0, 1, 1,
+                new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, .44f), false);
+            ResultRoot = resultDim.rectTransform; UiFactory.Stretch(ResultRoot); resultDim.raycastTarget = true;
+            resultTitle = Label(ResultRoot, "Tetris result title", "本局结束", 22, Color.white, TextAnchor.MiddleCenter);
+            resultScoreCaption = Label(ResultRoot, "Tetris result score caption", "本局得分", 11, new Color(1, 1, 1, .8f), TextAnchor.MiddleCenter);
+            resultScore = Label(ResultRoot, "Tetris result score", "0", 42, Color.white, TextAnchor.MiddleCenter);
+            resultScore.fontStyle = FontStyle.Bold;
+            resultLines = Label(ResultRoot, "Tetris result lines", "消除 0 行", 13, new Color(1, 1, 1, .86f), TextAnchor.MiddleCenter);
+            resultBest = Label(ResultRoot, "Tetris result best", "最高纪录暂不可读", 12, new Color(1, 1, 1, .8f), TextAnchor.MiddleCenter);
+            resultRestartControl = MakeControl(ResultRoot, "Tetris result restart", "再来一局", null, true, 14);
+            resultInspectControl = MakeControl(ResultRoot, "Tetris result inspect", "查看棋盘", null, false, 14);
+            ResultRoot.gameObject.SetActive(false);
 
             operations = UiFactory.Rect(root, "Tetris operations", 0, 0, 1, 1);
             AddAction(TetrisAction.Left, "", TetrisGraphicKind.Left);
@@ -119,8 +158,8 @@ namespace XanaduYonder.Runtime.Tetris
             inspectControl = MakeControl(dialog, "Tetris inspect result", "", null, false, 14);
             inspectControl.Target.gameObject.SetActive(false);
             OverlayRoot.gameObject.SetActive(false);
-            // Only the shared navigation stays available above pause/end overlays.
-            // The title, pause control, board and gameplay targets remain behind the blocker.
+            // Preparation/error cards retain their existing full-page blocker.
+            // Pause, countdown and result only cover the arena beneath navigation.
             navigation.SetAsLastSibling();
             RefreshLayout();
             ApplyControlStates();
@@ -136,13 +175,16 @@ namespace XanaduYonder.Runtime.Tetris
                 statValues[0].text = state.Score.ToString(CultureInfo.InvariantCulture);
                 statValues[1].text = state.Level.ToString(CultureInfo.InvariantCulture);
                 statValues[2].text = state.Lines.ToString(CultureInfo.InvariantCulture);
-                if (Layout != null) LayoutStats();
+                resultScore.text = statValues[0].text;
+                resultLines.text = "消除 " + statValues[2].text + " 行";
+                if (Layout != null) { LayoutStats(); if (resultVisible) LayoutResult(); }
             }
             if (this.bestScore != bestScore)
             {
                 this.bestScore = bestScore;
                 overlayBest.text = BestLabel;
-                if (Layout != null) FitText(overlayBest, 12, 8);
+                resultBest.text = BestLabel;
+                if (Layout != null) { FitText(overlayBest, 12, 8); FitText(resultBest, 12, 8); }
             }
             bool nextCanHold = state.CanHold && !state.GameOver;
             if (canHold != nextCanHold) { canHold = nextCanHold; ApplyControlStates(); }
@@ -162,6 +204,27 @@ namespace XanaduYonder.Runtime.Tetris
 
         public void SetSwapControls(bool value)
         { if (swapControls != value) { swapControls = value; layoutDirty = true; } }
+
+        public void SetPaused(bool visible, Action resume, Action restart)
+        {
+            if (pauseVisible == visible && lastContinueAction == resume && lastRestartAction == restart) return;
+            pauseVisible = visible; lastContinueAction = resume; lastRestartAction = restart;
+            ConfigureOverlayControl(continueControl, "继续游戏", resume);
+            ConfigureOverlayControl(restartControl, "重新开始", restart);
+            PauseRoot.gameObject.SetActive(visible);
+            ApplyControlStates();
+        }
+
+        public void SetResult(bool visible, Action restart, Action inspect)
+        {
+            if (resultVisible == visible && lastResultRestartAction == restart && lastResultInspectAction == inspect) return;
+            resultVisible = visible; lastResultRestartAction = restart; lastResultInspectAction = inspect;
+            ConfigureOverlayControl(resultRestartControl, "再来一局", restart);
+            ConfigureOverlayControl(resultInspectControl, "查看棋盘", inspect);
+            ResultRoot.gameObject.SetActive(visible);
+            if (visible && Layout != null) LayoutResult();
+            ApplyControlStates();
+        }
 
         public void SetOverlay(string title, string detail, string primaryText, Action primary,
             string secondaryText, Action secondary, bool visible, Action inspect = null)
@@ -217,6 +280,8 @@ namespace XanaduYonder.Runtime.Tetris
             LayoutStats();
             Place(ArenaRect, (float)Layout.Inset, (float)Layout.ArenaTop, content, (float)Layout.ArenaHeight);
             arenaBackground.Radius = 15 * s;
+            LayoutPause();
+            LayoutResult();
             Place(BoardRect, (float)Layout.BoardLeft, (float)Layout.BoardTop, (float)Layout.BoardWidth, (float)Layout.BoardHeight);
             Control hold = controls[TetrisAction.Hold];
             // Four extra pixels use arena padding; the right edge stops at the board.
@@ -297,12 +362,56 @@ namespace XanaduYonder.Runtime.Tetris
             if (hasInspect) LayoutDialogControl(inspectControl, inner, top, s);
         }
 
+        private void LayoutPause()
+        {
+            float s = (float)Layout.Scale, width = 268 * s;
+            float left = ((float)Layout.ContentWidth - width) / 2;
+            float top = ((float)Layout.ArenaHeight - 104 * s) / 2;
+            Place(pauseTitle.rectTransform, left, top, width, 40 * s);
+            Control[] buttons = { continueControl, restartControl };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Control control = buttons[i];
+                Place(control.Target, left + i * 140 * s, top + 60 * s, 128 * s, 44 * s);
+                Place(control.Background.rectTransform, 0, 0, 128 * s, 44 * s);
+                control.Background.Radius = 10 * s;
+                Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
+            }
+        }
+
         private static void LayoutDialogControl(Control control, float width, float top, float s)
         {
             Place(control.Target, 22 * s, top, width, 48 * s);
             Place(control.Background.rectTransform, 0, 0, width, 48 * s);
             control.Background.Radius = 10 * s;
             Place(control.Label.rectTransform, 8 * s, 0, width - 16 * s, 48 * s);
+        }
+
+        private void LayoutResult()
+        {
+            float s = (float)Layout.Scale, width = 268 * s;
+            float left = ((float)Layout.ContentWidth - width) / 2;
+            // Font sizes round to whole pixels while the design boxes scale by
+            // fractions. Keep the measured line inside its box without shrinking it.
+            float titleHeight = Mathf.Max(32 * s, Mathf.Ceil(resultTitle.preferredHeight));
+            float titleExtra = titleHeight - 32 * s;
+            float top = ((float)Layout.ArenaHeight - 242 * s - titleExtra) / 2;
+            Place(resultTitle.rectTransform, left, top, width, titleHeight);
+            top += titleExtra;
+            Place(resultScoreCaption.rectTransform, left, top + 40 * s, width, 18 * s);
+            Place(resultScore.rectTransform, left, top + 60 * s, width, 66 * s);
+            Place(resultLines.rectTransform, left, top + 130 * s, width, 22 * s);
+            Place(resultBest.rectTransform, left, top + 156 * s, width, 22 * s);
+            FitText(resultScore, 42, 18); FitText(resultLines, 13, 10); FitText(resultBest, 12, 8);
+            Control[] buttons = { resultRestartControl, resultInspectControl };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Control control = buttons[i];
+                Place(control.Target, left + i * 140 * s, top + 198 * s, 128 * s, 44 * s);
+                Place(control.Background.rectTransform, 0, 0, 128 * s, 44 * s);
+                control.Background.Radius = 10 * s;
+                Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
+            }
         }
 
         private void FitText(Text text, float nominal, float minimum)
@@ -317,7 +426,7 @@ namespace XanaduYonder.Runtime.Tetris
         {
             foreach (KeyValuePair<TetrisAction, Control> entry in controls)
             {
-                bool enabled = controlsEnabled && !overlayVisible && (entry.Key != TetrisAction.Hold || canHold);
+                bool enabled = controlsEnabled && !overlayVisible && !pauseVisible && !resultVisible && (entry.Key != TetrisAction.Hold || canHold);
                 entry.Value.Button.interactable = enabled;
                 entry.Value.Group.blocksRaycasts = enabled;
                 entry.Value.Group.alpha = enabled ? 1 : .43f;

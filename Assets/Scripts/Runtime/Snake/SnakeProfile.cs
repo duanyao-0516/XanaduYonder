@@ -4,6 +4,7 @@ using XanaduYonder.Core.Snake;
 
 namespace XanaduYonder.Runtime.Snake
 {
+    public enum SnakeControlStyle { Disc, Cross }
     public sealed class SnakeRecord
     {
         public int BestScore;
@@ -51,6 +52,12 @@ namespace XanaduYonder.Runtime.Snake
         public int SelectedLevel { get { return selectedLevel; } set { CheckLevel(value); selectedLevel = value; } }
         public int UnlockedLevel { get; internal set; }
         public bool PauseOnFood { get; set; }
+        private SnakeControlStyle controlStyle;
+        public SnakeControlStyle ControlStyle
+        {
+            get { return controlStyle; }
+            set { if(value!=SnakeControlStyle.Disc&&value!=SnakeControlStyle.Cross)throw new ArgumentOutOfRangeException(nameof(value));controlStyle=value; }
+        }
         public int CampaignLevel { get { return CampaignIndex; } }
         public int CompletedCount { get { int count = 0; foreach (var record in CampaignRecords) if (record.Wins > 0) count++; return count; } }
         public SnakeSessionData CampaignSlot { get { return CampaignData == null ? null : CampaignData.Copy(); } }

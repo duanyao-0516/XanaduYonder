@@ -28,7 +28,7 @@
       }
       const g=geometry(false);
       if(g && alive(hallButton)) {
-        const visible = runtime.hallEnabled();
+        const visible = hallButton.xanaduChoiceBack || runtime.hallEnabled();
         if (hallButton.drawActor !== visible) {
           if (visible) hallButton.enableActorDrawing(); else hallButton.disableActorDrawing();
         }
@@ -80,7 +80,7 @@
       // slide back in without treating stale OS pointers as fresh touches.
       if(!key) { owners.set(id,{key:null,manager,duo}); return; }
       owners.set(id,{key,manager,duo}); const count=held.get(key)||0; held.set(key,count+1);
-      if(count===0) { C.simulateKeyPress(key); visual(manager,key,true,duo); }
+      if(count===0) { C.simulateKeyPress(key); visual(manager,key,true,duo); if(kind==='down' && (key==='Up'||key==='w'))runtime.haptic(); }
     }
     for (const [name,duo] of [['scripts.Design_236_236_SceneManager',false],['scripts.Design_471_471_2PSceneManager',true]]) {
       const proto=classes[name].prototype;
@@ -88,20 +88,20 @@
       proto._event_DragButtonControls=function(event){pointer(this,event,duo,'move');};
       proto._event_ReleaseButtonControls=function(event){pointer(this,event,duo,'up');};
     }
-    // Only these newly created menu instances return to the Unity hall. All
-    // existing actor-759 buttons keep their original in-game navigation.
+    // Only the new choice-menu instance returns to Unity. Map instances go
+    // back to player choice; original gameplay actors keep their navigation.
     const backProto=classes['scripts.ActorEvents_759'].prototype, backUpdate=backProto._event_Updating;
     const backInit=backProto.init;
     backProto.init=function() {
-      this.actor.xanaduHallBack=false; this.actor.xanaduHallPending=false;
+      this.actor.xanaduHallBack=false; this.actor.xanaduChoiceBack=false; this.actor.xanaduHallPending=false;
       return backInit.apply(this,arguments);
     };
     backProto._event_Updating=function() {
-      if(!this.actor.xanaduHallBack) return backUpdate.apply(this,arguments);
-      if(this.wrapper.enabled && runtime.hallEnabled() && !runtime.blocked() && !this.actor.xanaduHallPending && this.actor.isMousePressed()) {
+      if(!this.actor.xanaduHallBack && !this.actor.xanaduChoiceBack) return backUpdate.apply(this,arguments);
+      if(this.wrapper.enabled && (this.actor.xanaduChoiceBack || runtime.hallEnabled()) && !runtime.blocked() && !this.actor.xanaduHallPending && this.actor.isMousePressed()) {
         this.actor.xanaduHallPending=true; this.actor.setAnimation('B');
         C.playSoundOnChannel(C.getSound(727),4);
-        if(!runtime.hallExit()) { this.actor.xanaduHallPending=false; this.actor.setAnimation(this.actor.xanaduHallAnimation); }
+        if(!(this.actor.xanaduChoiceBack ? runtime.returnToChoice() : runtime.hallExit())) { this.actor.xanaduHallPending=false; this.actor.setAnimation(this.actor.xanaduHallAnimation); }
       }
     };
     for(const id of [49,174,125]) {
@@ -110,7 +110,7 @@
         init.apply(this,arguments);
         C.createRecycledActor(C.getActorType(759),0,0,0);
         hallButton=C.getLastCreatedActor();
-        hallButton.xanaduHallBack=true; hallButton.xanaduHallPending=false;
+        hallButton.xanaduHallBack=id===125; hallButton.xanaduChoiceBack=id!==125; hallButton.xanaduHallPending=false;
         hallButton.xanaduHallAnimation=id===174?'A_Blue':'A_Red';
         hallButton.setAnimation(hallButton.xanaduHallAnimation);
         hallButton.growTo(1.5,1.5,0); hallButton.makeAlwaysSimulate();

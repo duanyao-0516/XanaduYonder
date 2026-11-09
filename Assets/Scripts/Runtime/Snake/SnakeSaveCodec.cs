@@ -28,7 +28,7 @@ namespace XanaduYonder.Runtime.Snake
             }
             for (int i = 0; i < 12; i++) campaignRecords.Add(EncodeRecord(data.CampaignRecords[i], 0, null, "snake-" + (i + 1).ToString("00")));
             var root = new JObject { ["schemaVersion"] = 1, ["gameId"] = "snake", ["rulesVersion"] = SnakeCatalog.SupportedRulesVersion,
-                ["levelPackVersion"] = SnakeCatalog.SupportedPackVersion, ["pauseOnFood"] = data.PauseOnFood, ["selectedMode"] = data.SelectedMode, ["selectedDifficulty"] = data.SelectedDifficulty,
+                ["levelPackVersion"] = SnakeCatalog.SupportedPackVersion, ["pauseOnFood"] = data.PauseOnFood, ["controlStyle"] = data.ControlStyle.ToString(), ["selectedMode"] = data.SelectedMode, ["selectedDifficulty"] = data.SelectedDifficulty,
                 ["selectedBoundary"] = data.SelectedBoundary.ToString(), ["selectedLevel"] = data.SelectedLevel, ["unlockedLevel"] = data.UnlockedLevel,
                 ["classicSlots"] = slots, ["campaignSlot"] = data.CampaignData == null ? (JToken)JValue.CreateNull() : EncodeSlot(data.CampaignData, data.RequireCatalog().Get(data.CampaignIndex)),
                 ["classicRecords"] = classicRecords, ["campaignRecords"] = campaignRecords };
@@ -63,10 +63,17 @@ namespace XanaduYonder.Runtime.Snake
                 // Schema 1 predates this optional preference. Only omission means the legacy default;
                 // a supplied null, number or string remains corrupt input.
                 bool pauseOnFood=root["pauseOnFood"]!=null&&SnakeJson.Bool(root["pauseOnFood"]);
-                root.Remove("pauseOnFood");SnakeJson.Fields(root, RootFields);
+                var controlStyle=SnakeControlStyle.Disc;
+                if(root["controlStyle"]!=null)
+                {
+                    string value=SnakeJson.Text(root["controlStyle"]);
+                    if(value=="Cross")controlStyle=SnakeControlStyle.Cross;
+                    else if(value!="Disc")throw new FormatException("Unknown snake control style.");
+                }
+                root.Remove("pauseOnFood");root.Remove("controlStyle");SnakeJson.Fields(root, RootFields);
                 if (SnakeJson.Int(root["schemaVersion"]) != 1 || SnakeJson.Text(root["gameId"]) != "snake") throw new FormatException("Unsupported snake save schema.");
                 RequireCurrentVersions(root, catalog);
-                var candidate = new SnakeProfile(catalog) { PauseOnFood=pauseOnFood, SelectedMode = SnakeJson.Int(root["selectedMode"]), SelectedDifficulty = SnakeJson.Int(root["selectedDifficulty"]),
+                var candidate = new SnakeProfile(catalog) { PauseOnFood=pauseOnFood, ControlStyle=controlStyle, SelectedMode = SnakeJson.Int(root["selectedMode"]), SelectedDifficulty = SnakeJson.Int(root["selectedDifficulty"]),
                     SelectedBoundary = Boundary(root["selectedBoundary"]), SelectedLevel = SnakeJson.Int(root["selectedLevel"]), UnlockedLevel = SnakeJson.Int(root["unlockedLevel"]) };
                 var slots = SnakeJson.Array(root["classicSlots"], 6); var classicRecords = SnakeJson.Array(root["classicRecords"], 6); var campaignRecords = SnakeJson.Array(root["campaignRecords"], 12);
                 for (int i = 0; i < 6; i++)

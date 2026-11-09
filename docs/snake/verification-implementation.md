@@ -1,5 +1,9 @@
 # 贪吃蛇实现与验证
 
+## 2026-11-09 方向盘与倒数修正
+
+默认使用208×208的四扇区圆盘，完整放入原304×256右侧操作框，设置可切回十字键；棋盘滑动和原单指输入仲裁保留。schema 1增加可选 `controlStyle`，旧档缺字段默认 `Disc`，合法值为 `Disc`/`Cross`，非法值拒绝。关卡下拉使用原矢量锁图标，不再追加“· 锁定”。倒数使用共享 `BoardCountdownView`，仅覆盖实际棋盘并继承圆角裁切。纯规则/会话42项、存档211断言和Unity UGUI8885断言通过；当前截图在 `artifacts/validation/snake-ui/`，包括 `classic-disc-running`、`classic-cross-running`、`settings-controls`、`campaign-lock-icons`、`classic-countdown`，覆盖720×1320/1582。下文是原开发与交付记录，不替代本轮设备验收。
+
 日期：2026-10-28。这是当前工作树中的 Unity 开发实现；正式发行版本仍为 v0.4.0。设计和 UI 已获用户确认，等级选择按用户补充要求参考数独。
 
 ## 实现范围

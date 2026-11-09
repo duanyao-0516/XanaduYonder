@@ -24,6 +24,8 @@ namespace XanaduYonder.EditorTools
             var failed = 0;
             Check("JSON round trip preserves all fields", RoundTrip, ref passed, ref failed);
             Check("Decode accepts explicit valid schema", DecodeKnownPayload, ref passed, ref failed);
+            Check("Web feedback revision survives real codec writes", WebFeedbackRevisionCodec, ref passed, ref failed);
+            Check("Web feedback import survives ACK failure and process restart", WebFeedbackRecovery, ref passed, ref failed);
             Check("Legacy saves seed best tile from their current board", LegacyBestTile, ref passed, ref failed);
             Check("Best tile survives round trip, restart and real file writes", BestTileHistory, ref passed, ref failed);
             Check("Best tile rejects explicit malformed or impossible fields", RejectInvalidBestTilePayloads, ref passed, ref failed);
@@ -94,6 +96,62 @@ namespace XanaduYonder.EditorTools
         {
             Assert(JsonSaveCodec.TryDecode(ValidJson, out var decoded, out var reason), reason);
             EqualState(Example(), decoded);
+        }
+
+        private static void WebFeedbackRevisionCodec()
+        {
+            const string revision="0cecf090-d8a1-4b59-a383-59c52f0c75c2";
+            var json=JObject.Parse(ValidJson);json["webGameFeedbackRevision"]=revision;
+            Assert(JsonSaveCodec.TryDecode(json.ToString(),out var decoded,out var reason),reason);
+            Assert((string)JObject.Parse(JsonSaveCodec.Encode(decoded))["webGameFeedbackRevision"]==revision,
+                "Imported web feedback revision must survive encode/decode, otherwise an unacknowledged journal replays after restart.");
+            Assert(JsonSaveCodec.TryDecode(ValidJson,out var legacy,out reason)&&legacy.WebGameFeedbackRevision==null,
+                "Old schema 1 without a revision remains readable.");
+            Assert(JObject.Parse(JsonSaveCodec.Encode(legacy))["webGameFeedbackRevision"]==null,
+                "A missing revision is omitted, not serialized as an invalid supplied null.");
+            foreach(var invalid in new JToken[]{JValue.CreateNull(),new JValue(true),new JValue(42),new JValue(""),new JValue("unknown"),new JValue("{0cecf090-d8a1-4b59-a383-59c52f0c75c2}")})
+            {
+                json["webGameFeedbackRevision"]=invalid;
+                Assert(!JsonSaveCodec.TryDecode(json.ToString(),out decoded,out reason),"Malformed supplied web revision accepted: "+invalid);
+            }
+            var invalidData=Example();invalidData.WebGameFeedbackRevision="invalid";
+            ExpectArgumentException(()=>JsonSaveCodec.Encode(invalidData));
+        }
+
+        private static void WebFeedbackRecovery()
+        {
+            const string first="0cecf090-d8a1-4b59-a383-59c52f0c75c2";
+            const string next="adc897aa-0d23-4f26-b7cd-05f5a3ac9f27";
+            WithDirectory(directory=>
+            {
+                var store=new LocalSaveStore(directory);var state=Example();
+                Assert(state.ImportWebGameFeedback(first,false,true),"First pending edit was not imported.");
+                Assert(store.TrySave(state,out var error),error);
+                // Native ACK stays failed/pending while the user makes a newer Unity edit.
+                state.SoundEnabled=true;state.HapticsEnabled=false;
+                Assert(!state.ImportWebGameFeedback(first,false,true)&&state.SoundEnabled&&!state.HapticsEnabled,
+                    "Switching web games must not replay the same already imported journal.");
+                Assert(store.TrySave(state,out error),error);
+                var cold=new LocalSaveStore(directory).Load(out var warning);
+                Assert(cold!=null&&warning==null&&cold.WebGameFeedbackRevision==first,"Cold reload lost import identity.");
+                Assert(!cold.ImportWebGameFeedback(first,false,true)&&cold.SoundEnabled&&!cold.HapticsEnabled,
+                    "Failed native ACK must not roll back newer saved global settings after restart.");
+                Assert(cold.ImportWebGameFeedback(next,false,true),"A new native revision must still be imported.");
+                Directory.CreateDirectory(store.SavePath+".tmp");
+                Assert(!store.TrySave(cold,out error),"The blocked temporary path should fail the real save.");
+                var failedRestart=new LocalSaveStore(directory).Load(out warning);
+                Assert(failedRestart.WebGameFeedbackRevision==first&&failedRestart.ImportWebGameFeedback(next,false,true),
+                    "A failed global write must not mark the new native revision as durably imported.");
+                Directory.Delete(store.SavePath+".tmp");
+                Assert(store.TrySave(failedRestart,out error),error);
+                var saved=new LocalSaveStore(directory).Load(out warning);
+                Assert(saved.WebGameFeedbackRevision==next&&!saved.SoundEnabled&&saved.HapticsEnabled,
+                    "Successful retry must persist new revision and settings together.");
+                File.WriteAllText(store.SavePath,"corrupt");
+                var backup=new LocalSaveStore(directory).Load(out warning);
+                Assert(backup!=null&&backup.WebGameFeedbackRevision==first&&backup.SoundEnabled&&!backup.HapticsEnabled&&!string.IsNullOrEmpty(warning),
+                    "Backup restores its corresponding settings and import identity together.");
+            });
         }
 
         private static void LegacyBestTile()
@@ -343,6 +401,7 @@ namespace XanaduYonder.EditorTools
             Assert(expected.BestTile == actual.BestTile, "Best tile changed.");
             Assert(expected.SoundEnabled == actual.SoundEnabled, "Sound setting changed.");
             Assert(expected.HapticsEnabled == actual.HapticsEnabled, "Haptics setting changed.");
+            Assert(expected.WebGameFeedbackRevision == actual.WebGameFeedbackRevision, "Web feedback import revision changed.");
         }
 
         private static void WithDirectory(Action<string> action)

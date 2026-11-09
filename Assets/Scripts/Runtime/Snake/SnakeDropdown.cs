@@ -9,6 +9,8 @@ namespace XanaduYonder.Runtime.Snake
     internal sealed class SnakeDropdown : Dropdown
     {
         private GameObject expandedList;
+        private int nextItemIndex;
+        public Func<int,bool> IsLocked;
         public Func<bool> CanOpen;
         public Action Opening;
         public Action Closed;
@@ -24,7 +26,16 @@ namespace XanaduYonder.Runtime.Snake
             Opening?.Invoke(); base.OnSubmit(eventData);
         }
         protected override GameObject CreateDropdownList(GameObject template)
-        { expandedList = base.CreateDropdownList(template); return expandedList; }
+        { nextItemIndex=0;expandedList = base.CreateDropdownList(template); return expandedList; }
+        protected override DropdownItem CreateItem(DropdownItem itemTemplate)
+        {
+            var item=base.CreateItem(itemTemplate);
+            bool locked=IsLocked!=null&&IsLocked(nextItemIndex++);
+            item.transform.Find("Lock icon").gameObject.SetActive(locked);
+            float width=((RectTransform)transform).rect.width;
+            item.text.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,width-(locked?80:44));
+            return item;
+        }
         protected override void DestroyDropdownList(GameObject list)
         {
             // UGUI can enqueue Hide more than once for the same selection. Each delayed task
@@ -54,6 +65,7 @@ namespace XanaduYonder.Runtime.Snake
             item.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width-16);
             ((RectTransform)item.Find("Selected band")).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width-16);
             itemText.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width-44);
+            ((RectTransform)item.Find("Lock icon")).anchoredPosition=new Vector2(width-54,-19);
         }
         public static SnakeDropdown Create(Transform parent, float x, float y, float width, float height)
         {
@@ -70,6 +82,9 @@ namespace XanaduYonder.Runtime.Snake
             toggle.graphic = UiFactory.Panel(item.transform, "Selected band", 0, 0, width-16, 64, UiFactory.Hex("DBC7A3"), false);
             dropdown.itemText = UiFactory.Label(item.transform, "", 18, 0, width-44, 64, 26, UiFactory.Ink);
             dropdown.itemText.resizeTextForBestFit = true; dropdown.itemText.resizeTextMinSize = 20; dropdown.itemText.resizeTextMaxSize = 26;
+            dropdown.itemText.horizontalOverflow=HorizontalWrapMode.Overflow;
+            var lockIcon=SnakeIconGraphic.Add(item.transform,SnakeIconKind.Lock,width-54,19,26,UiFactory.Muted);
+            lockIcon.gameObject.SetActive(false);
             var scroll = template.gameObject.AddComponent<ScrollRect>(); scroll.viewport = viewport; scroll.content = content;
             scroll.horizontal = false; scroll.vertical = true; scroll.movementType = ScrollRect.MovementType.Clamped;
             dropdown.template = template; template.gameObject.SetActive(false);

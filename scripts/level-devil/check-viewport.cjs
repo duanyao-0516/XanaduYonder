@@ -24,25 +24,30 @@ const origin='https://level-devil.xanaduyonder.invalid/assets/level-devil/';
     await page.evaluate(()=>LevelDevilHost.setViewportInsets(32,8,24,12));await page.waitForTimeout(700);
     async function dimensions(){return page.evaluate(()=>{const E=__test.E,e=E.engine,c=document.querySelector('canvas'),r=c.getBoundingClientRect();return{viewport:[innerWidth,innerHeight],canvasCss:[r.x,r.y,r.width,r.height],logical:[E.screenWidth,E.screenHeight],stage:[E.stage.stageWidth,E.stage.stageHeight],scale:E.SCALE,unit:E.screenScaleX*E.SCALE,scaleY:E.screenScaleY*E.SCALE,offset:[E.screenOffsetX,E.screenOffsetY],masterClip:e.master.get_scrollRect()&&[e.master.get_scrollRect().width,e.master.get_scrollRect().height]};});}
     async function switchScene(id){await page.evaluate(id=>{LevelDevilHost.cancelExit();__test.C.switchScene(id,null,null);},id);await page.waitForFunction(id=>__test.E.engine.scene.ID===id&&!__test.E.engine.isTransitioning(),id);await page.waitForTimeout(700);await page.waitForFunction(()=>{const C=__test.C;return C.getActorsOfType(C.getActorType(710)).every(a=>a.dead||a.recycled||a.getScreenY()<=-135.9)&&C.getActorsOfType(C.getActorType(712)).every(a=>a.dead||a.recycled||a.getScreenY()>=C.getScreenHeight()-.1);});}
-    async function hallPosition(){return page.evaluate(()=>{const {C,E}=__test,a=C.getActorsOfType(C.getActorType(759)).find(a=>a.xanaduHallBack&&!a.recycled&&!a.dead);return {x:(a.getScreenX()+8)*E.SCALE*E.screenScaleX+E.screenOffsetX,y:(a.getScreenY()+8)*E.SCALE*E.screenScaleY+E.screenOffsetY,animation:a.getAnimation(),width:a.getWidth()*a.realScaleX*E.SCALE*E.screenScaleX,left:(a.getScreenX()-a.currOrigin.x*(a.realScaleX-1))*E.SCALE*E.screenScaleX+E.screenOffsetX,top:(a.getScreenY()-a.currOrigin.y*(a.realScaleY-1))*E.SCALE*E.screenScaleY+E.screenOffsetY,scene:E.engine.scene.name};});}
+    async function hallPosition(){return page.evaluate(()=>{const {C,E}=__test,a=C.getActorsOfType(C.getActorType(759)).find(a=>(a.xanaduHallBack||a.xanaduChoiceBack)&&!a.recycled&&!a.dead);return {x:(a.getScreenX()+8)*E.SCALE*E.screenScaleX+E.screenOffsetX,y:(a.getScreenY()+8)*E.SCALE*E.screenScaleY+E.screenOffsetY,animation:a.getAnimation(),width:a.getWidth()*a.realScaleX*E.SCALE*E.screenScaleX,left:(a.getScreenX()-a.currOrigin.x*(a.realScaleX-1))*E.SCALE*E.screenScaleX+E.screenOffsetX,top:(a.getScreenY()-a.currOrigin.y*(a.realScaleY-1))*E.SCALE*E.screenScaleY+E.screenOffsetY,scene:E.engine.scene.name};});}
     for(const id of [125,49,174]){
       if(id!==125)await switchScene(id);
       const p=await hallPosition();await page.screenshot({path:path.join(output,'viewport-menu-'+id+'.png'),scale:'css'});
       const before=await page.evaluate(()=>__native.filter(m=>m.type==='exit-ready').length);await page.mouse.click(p.x,p.y);
-      await page.waitForFunction(before=>__native.filter(m=>m.type==='exit-ready').length===before+1,before);
-      assert.equal(await page.evaluate(()=>__test.E.engine.scene.name),p.scene,'hall action does not invoke original map navigation');
-      assert.equal(await page.evaluate(()=>__native.filter(m=>m.type==='exit-intent').length),id===125?1:id===49?2:3);
+      if(id===125){
+        await page.waitForFunction(before=>__native.filter(m=>m.type==='exit-ready').length===before+1,before);
+        assert.equal(await page.evaluate(()=>__test.E.engine.scene.name),p.scene,'choice returns to hall without changing the scene');
+      }else{
+        await page.waitForFunction(()=>__test.E.engine.scene.ID===125&&!__test.E.engine.isTransitioning());
+        assert.equal(await page.evaluate(()=>__native.filter(m=>m.type==='exit-ready').length),before,'map Back must stay inside the game');
+      }
+      assert.equal(await page.evaluate(()=>__native.filter(m=>m.type==='exit-intent').length),1);
       await page.evaluate(()=>LevelDevilHost.cancelExit());
     }
     // A real menu click must preserve the checkpoint and stay in the game on
     // write failure, then become clickable again after native cancel/retry.
     const before=await page.evaluate(()=>{__test.C.saveGame('mySave');const saved=localStorage.getItem('UnicycleLegend:mySave'),set=Storage.prototype.setItem;window.__restoreStorage=()=>Storage.prototype.setItem=set;Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError');};return saved;});
     let p=await hallPosition();await page.mouse.click(p.x,p.y);
-    await page.waitForFunction(()=>__native.some(m=>m.type==='exit-error'&&m.requestId==='hall-4'));
+    await page.waitForFunction(()=>__native.some(m=>m.type==='exit-error'&&m.requestId==='hall-2'));
     assert.equal(await page.evaluate(()=>localStorage.getItem('UnicycleLegend:mySave')),before);
-    assert.equal(await page.evaluate(()=>__native.some(m=>m.type==='exit-ready'&&m.requestId==='hall-4')),false);
+    assert.equal(await page.evaluate(()=>__native.some(m=>m.type==='exit-ready'&&m.requestId==='hall-2')),false);
     await page.evaluate(()=>{__restoreStorage();LevelDevilHost.cancelExit();});p=await hallPosition();await page.mouse.click(p.x,p.y);
-    await page.waitForFunction(()=>__native.some(m=>m.type==='exit-ready'&&m.requestId==='hall-5'));await page.evaluate(()=>LevelDevilHost.cancelExit());
+    await page.waitForFunction(()=>__native.some(m=>m.type==='exit-ready'&&m.requestId==='hall-3'));await page.evaluate(()=>LevelDevilHost.cancelExit());
     // Resize/insets preserve the exact world; the canvas itself fills the page.
     for(const size of [{width:1280,height:600},{width:854,height:480},{width:640,height:360},{width:600,height:960}]){
       await page.setViewportSize(size);await page.waitForTimeout(100);const d=await dimensions();layouts.push(d);
@@ -65,6 +70,6 @@ const origin='https://level-devil.xanaduyonder.invalid/assets/level-devil/';
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b[2].x,y:b[2].y,id:1},{x:b[5].x,y:b[5].y,id:2}]});assert.deepEqual(await page.evaluate(()=>[__test.C.isKeyDown('w'),__test.C.isKeyDown('Up')]),[true,true]);
     await page.evaluate(()=>LevelDevilHost.setViewportInsets(40,8,24,12));assert.deepEqual(await page.evaluate(()=>[__test.C.isKeyDown('w'),__test.C.isKeyDown('Up')]),[false,false]);await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
     assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);
-    const report={ok:true,aarSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'Assets/Plugins/Android/LevelDevilContent.aar'))).digest('hex'),checks:['original back icon clicks on 125/49/174 use native save handshake','quota failure preserves checkpoint and cancel permits retry','full canvas at DPR 3 with safe insets','427x240 world and uniform scale across four viewports','original single/duo sprites at viewport edges','real touchscreen wing controls and independent pointer release','six duo hit zones and resize cancellation','hall icon at least 48 CSS pixels and original gameplay back unchanged'],layouts,messages,errors,blocked};fs.writeFileSync(path.join(output,'viewport-result.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+    const report={ok:true,aarSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'Assets/Plugins/Android/LevelDevilContent.aar'))).digest('hex'),checks:['choice Back uses native save handshake; map Back returns to choice','quota failure preserves checkpoint and cancel permits retry','full canvas at DPR 3 with safe insets','427x240 world and uniform scale across four viewports','original single/duo sprites at viewport edges','real touchscreen wing controls and independent pointer release','six duo hit zones and resize cancellation','hall icon at least 48 CSS pixels and original gameplay back unchanged'],layouts,messages,errors,blocked};fs.writeFileSync(path.join(output,'viewport-result.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

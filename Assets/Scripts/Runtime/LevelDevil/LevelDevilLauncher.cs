@@ -13,13 +13,13 @@ namespace XanaduYonder.Runtime.LevelDevil
         public bool IsBusy { get; private set; }
         private float nextStatusCheck;
 
-        public bool TryOpen(bool soundEnabled)
+        public bool TryOpen(bool soundEnabled, bool hapticsEnabled)
         {
             if (IsBusy) return true;
 #if UNITY_IOS && !UNITY_EDITOR
             try
             {
-                if (!IOSWebGameBridge.Open("level-devil", soundEnabled)) return false;
+                if (!IOSWebGameBridge.OpenLevelDevil(soundEnabled, hapticsEnabled)) return false;
                 IsBusy = true;
                 nextStatusCheck = Time.unscaledTime + .25f;
                 return true;
@@ -32,7 +32,7 @@ namespace XanaduYonder.Runtime.LevelDevil
                 using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 using (var bridge = new AndroidJavaClass(BridgeClass))
                 {
-                    if (!bridge.CallStatic<bool>("open", activity, soundEnabled))
+                    if (!bridge.CallStatic<bool>("open", activity, soundEnabled, hapticsEnabled))
                     {
                         Debug.LogError("Level Devil launch rejected: " + bridge.CallStatic<string>("getLastError"));
                         return false;

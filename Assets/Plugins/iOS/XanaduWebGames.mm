@@ -3,6 +3,8 @@
 #import <AVFoundation/AVFoundation.h>
 #import <fcntl.h>
 #import <unistd.h>
+#include <math.h>
+#include <stdint.h>
 #import "XanaduWebAssetServer.h"
 
 extern "C" UIViewController *UnityGetGLViewController(void);
@@ -16,11 +18,91 @@ extern "C" int XanaduAudio_PrepareSession(void);
 static XanaduWebGameController *CurrentGame;
 static BOOL Running;
 static NSString *LastError;
+static NSString *BombItPendingJSON;
 
 static NSString *JSONString(id value)
 {
     NSData *data = [NSJSONSerialization dataWithJSONObject:value options:NSJSONWritingFragmentsAllowed error:nil];
     return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : @"null";
+}
+
+// One global feedback journal orders edits from either paused-Unity web game.
+// ACK stays as a tombstone so an old Bomb It file cannot reappear after migration.
+static BOOL WebFeedbackBoolean(id value)
+{
+    return value && CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID();
+}
+static NSString *WebFeedbackPath(BOOL legacy)
+{
+    NSURL *support = [NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
+    return [[support URLByAppendingPathComponent:legacy ? @"XanaduWebGames/bomb-it/feedback-pending-v1.json" : @"XanaduWebGames/feedback/journal-v2.json"] path];
+}
+static NSDictionary *WebFeedbackReadRecord(void)
+{
+    NSString *path = WebFeedbackPath(NO);
+    BOOL legacy = ![NSFileManager.defaultManager fileExistsAtPath:path];
+    if (legacy) path = WebFeedbackPath(YES);
+    NSData *bytes = [NSData dataWithContentsOfFile:path];
+    if (!bytes || bytes.length > 1024) return nil;
+    id value = [NSJSONSerialization JSONObjectWithData:bytes options:0 error:nil];
+    if (![value isKindOfClass:NSDictionary.class]) return nil;
+    id schema = value[@"schemaVersion"], revision = value[@"revision"];
+    if (![schema isKindOfClass:NSNumber.class] || WebFeedbackBoolean(schema) || [schema doubleValue] != (legacy ? 1 : 2)
+        || ![revision isKindOfClass:NSString.class] || ![[NSUUID alloc] initWithUUIDString:revision]
+        || !WebFeedbackBoolean(value[@"soundEnabled"]) || !WebFeedbackBoolean(value[@"hapticsEnabled"])
+        || (!legacy && !WebFeedbackBoolean(value[@"pending"]))) return nil;
+    if (legacy) {
+        NSMutableDictionary *record = [value mutableCopy];
+        record[@"schemaVersion"] = @2; record[@"pending"] = @YES; record[@"source"] = @"bomb-it"; return record;
+    }
+    return value;
+}
+static NSDictionary *WebFeedbackReadPending(void)
+{
+    NSDictionary *record = WebFeedbackReadRecord();
+    if (!record || ![record[@"pending"] boolValue]) return nil;
+    return @{ @"schemaVersion":@1, @"revision":record[@"revision"], @"soundEnabled":record[@"soundEnabled"], @"hapticsEnabled":record[@"hapticsEnabled"] };
+}
+static BOOL WebFeedbackWriteRecord(NSDictionary *record)
+{
+    NSData *bytes = [NSJSONSerialization dataWithJSONObject:record options:0 error:nil];
+    NSString *path = WebFeedbackPath(NO), *directory = path.stringByDeletingLastPathComponent;
+    if (!bytes || ![NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) return NO;
+    NSString *temporary = [directory stringByAppendingPathComponent:[@".feedback-" stringByAppendingString:NSUUID.UUID.UUIDString]];
+    int file = open(temporary.fileSystemRepresentation, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    if (file < 0) return NO;
+    NSUInteger written = 0;
+    while (written < bytes.length) {
+        ssize_t count = write(file, ((const char *)bytes.bytes) + written, bytes.length - written);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) break;
+        written += (NSUInteger)count;
+    }
+    BOOL okay = written == bytes.length && fsync(file) == 0;
+    if (close(file) != 0) okay = NO;
+    if (okay) okay = rename(temporary.fileSystemRepresentation, path.fileSystemRepresentation) == 0;
+    if (!okay) unlink(temporary.fileSystemRepresentation);
+    if (okay) {
+        int directoryFD = open(directory.fileSystemRepresentation, O_RDONLY);
+        okay = directoryFD >= 0 && fsync(directoryFD) == 0;
+        if (directoryFD >= 0) close(directoryFD);
+    }
+    return okay;
+}
+static BOOL WebFeedbackWritePending(NSString *source, BOOL sound, BOOL haptics)
+{
+    if (![source isEqual:@"bomb-it"] && ![source isEqual:@"level-devil"]) return NO;
+    return WebFeedbackWriteRecord(@{ @"schemaVersion":@2, @"revision":NSUUID.UUID.UUIDString, @"source":source,
+        @"pending":@YES, @"soundEnabled":@(sound), @"hapticsEnabled":@(haptics) });
+}
+static BOOL WebFeedbackAcknowledge(NSString *revision)
+{
+    NSDictionary *record = WebFeedbackReadRecord();
+    if (!revision.length) return NO;
+    if (!record) return ![NSFileManager.defaultManager fileExistsAtPath:WebFeedbackPath(NO)] && ![NSFileManager.defaultManager fileExistsAtPath:WebFeedbackPath(YES)];
+    if (![record[@"revision"] isEqual:revision]) return NO;
+    NSMutableDictionary *acknowledged = [record mutableCopy]; acknowledged[@"pending"] = @NO;
+    return WebFeedbackWriteRecord(acknowledged);
 }
 
 // Cut the Rope's existing synchronous API must acknowledge the completed write,
@@ -84,6 +166,12 @@ static NSDictionary *CutSave(NSDictionary *request)
 @property(nonatomic, copy) NSString *pendingFailure;
 @property(nonatomic, copy) NSString *exitRequest;
 @property(nonatomic) BOOL sound;
+@property(nonatomic) BOOL webHaptics;
+@property(nonatomic, copy) NSString *webFeedbackToken;
+@property(nonatomic, copy) NSString *webLastFeedbackRequest;
+@property(nonatomic, copy) NSDictionary *webLastFeedbackResult;
+@property(nonatomic) NSInteger webLastHapticPress;
+@property(nonatomic) double webLastHapticTime;
 @property(nonatomic) BOOL active;
 @property(nonatomic) BOOL interrupted;
 @property(nonatomic) BOOL configured;
@@ -110,6 +198,8 @@ static NSDictionary *CutSave(NSDictionary *request)
 - (BOOL)isZhaoyun { return [self.game isEqual:@"zhaoyun-adou"]; }
 - (BOOL)isCut { return [self.game isEqual:@"cut-the-rope"]; }
 - (BOOL)isBombIt { return [self.game isEqual:@"bomb-it"]; }
+- (BOOL)isLevelDevil { return [self.game isEqual:@"level-devil"]; }
+- (BOOL)hasFeedbackSettings { return self.isBombIt || self.isLevelDevil; }
 - (NSString *)eventHostObject { return self.isBombIt ? @"BombItHost" : @"LevelDevilHost"; }
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
@@ -299,6 +389,10 @@ static NSDictionary *CutSave(NSDictionary *request)
     self.viewportBounds = CGRectZero;
     self.loadingElapsed = 0; self.statusElapsed = 0; self.loading.hidden = NO; self.closeButton.enabled = YES;
     self.closeButton.hidden = YES;
+    if (self.hasFeedbackSettings) {
+        self.webFeedbackToken = NSUUID.UUID.UUIDString;
+        self.webLastFeedbackRequest = nil; self.webLastFeedbackResult = nil; self.webLastHapticPress = 0;
+    }
     [self.web.configuration.userContentController removeAllUserScripts];
     if (self.bridgeSource) {
         NSString *source = [self.bridgeSource stringByReplacingOccurrencesOfString:@"__XANADU_GENERATION__" withString:[@(self.generation) stringValue]];
@@ -318,6 +412,8 @@ static NSDictionary *CutSave(NSDictionary *request)
     NSDictionary *body = message.body;
     if (![body[@"generation"] isKindOfClass:NSNumber.class] || [body[@"generation"] integerValue] != self.generation) return;
     NSString *type = body[@"type"];
+    if (self.hasFeedbackSettings && [type isEqual:@"feedback-settings"]) { [self receiveWebFeedbackSettings:body]; return; }
+    if (self.hasFeedbackSettings && [type isEqual:@"haptic"]) { [self receiveWebHaptic:body]; return; }
     if ([type isEqual:@"ready"]) { [self becameReady]; return; }
     if ([type isEqual:@"exit-intent"]) { [self requestClose]; return; }
     if ([type isEqual:@"exit-ready"] && self.exitRequest && [body[@"requestId"] isEqual:self.exitRequest]) { [self finish:nil]; return; }
@@ -354,11 +450,11 @@ static NSDictionary *CutSave(NSDictionary *request)
             if (error || ![result isKindOfClass:NSDictionary.class] || ![result[@"ok"] boolValue]) [self showFailure:error.localizedDescription ?: @"赵云与阿斗初始化失败。"];
             else [self applyState];
         }];
-    } else [self applyState];
+    } else { if (self.hasFeedbackSettings) [self syncWebFeedbackSettings]; [self applyState]; }
 }
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error { if (navigation == self.navigation && error.code != NSURLErrorCancelled) [self showFailure:error.localizedDescription]; }
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error { if (navigation == self.navigation && error.code != NSURLErrorCancelled) [self showFailure:error.localizedDescription]; }
-- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView { self.ready = NO; [self showFailure:self.isBombIt ? @"游戏页面已被系统停止。重新加载将从游戏菜单开始。" : @"游戏页面已被系统停止。重新加载会恢复最近一次已保存的进度。"]; }
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView { self.ready = NO; [self showFailure:self.isBombIt ? @"游戏页面已被系统停止。重新加载后可继续最近保存的闯关关卡，地图会重新生成。" : @"游戏页面已被系统停止。重新加载会恢复最近一次已保存的进度。"]; }
 - (void)evaluate:(NSString *)script completion:(void (^)(id, NSError *))completion
 {
     if (self.finished || !self.web) return;
@@ -377,7 +473,91 @@ static NSDictionary *CutSave(NSDictionary *request)
     self.ready = YES; self.loading.hidden = YES;
     NSLog(@"[XanaduWebGames] %s ready", self.game.UTF8String);
     [self updateGameViewport];
+    if (self.hasFeedbackSettings) [self syncWebFeedbackSettings];
     [self applyState];
+}
+
+- (BOOL)webFeedbackForeground
+{
+    return self.hasFeedbackSettings && self.ready && self.active && !self.interrupted && !self.fault && !self.finished
+        && !self.exitRequest && !self.failureAlert && self.web.window
+        && UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
+}
+- (void)syncWebFeedbackSettings
+{
+    if (self.finished || (!self.ready && !self.configured) || !self.webFeedbackToken) return;
+    NSDictionary *settings = @{ @"token":self.webFeedbackToken, @"soundEnabled":@(self.sound), @"hapticsEnabled":@(self.webHaptics) };
+    [self evaluate:[NSString stringWithFormat:@"window.%@.configureFeedback(%@);true;", self.eventHostObject, JSONString(settings)] completion:nil];
+}
+- (void)receiveWebFeedbackSettings:(NSDictionary *)body
+{
+    NSString *token = body[@"token"], *request = body[@"requestId"];
+    if (![token isKindOfClass:NSString.class] || ![token isEqual:self.webFeedbackToken]
+        || ![request isKindOfClass:NSString.class] || !request.length || request.length > 96
+        || !WebFeedbackBoolean(body[@"soundEnabled"]) || !WebFeedbackBoolean(body[@"hapticsEnabled"])) return;
+    if ([request isEqual:self.webLastFeedbackRequest] && self.webLastFeedbackResult) {
+        [self sendWebFeedbackResult:self.webLastFeedbackResult]; return;
+    }
+    BOOL sound = [body[@"soundEnabled"] boolValue], haptics = [body[@"hapticsEnabled"] boolValue];
+    BOOL canWrite = [self webFeedbackForeground];
+    NSDictionary *beforeWrite = canWrite ? WebFeedbackReadPending() : nil;
+    BOOL okay = canWrite && WebFeedbackWritePending(self.game, sound, haptics);
+    BOOL preview = okay && !self.webHaptics && haptics;
+    // Rename may have committed the new visible file before directory fsync
+    // fails. Do not ACK old values that recovery would immediately overwrite.
+    NSDictionary *observed = canWrite && !okay ? WebFeedbackReadPending() : nil;
+    if (observed && beforeWrite && [observed[@"revision"] isEqual:beforeWrite[@"revision"]]) observed = nil;
+    if (okay || observed) {
+        self.sound = okay ? sound : [observed[@"soundEnabled"] boolValue];
+        self.webHaptics = okay ? haptics : [observed[@"hapticsEnabled"] boolValue];
+        [self applyState];
+    }
+    NSMutableDictionary *response = [@{ @"token":token, @"requestId":request, @"ok":@(okay),
+        @"soundEnabled":@(self.sound), @"hapticsEnabled":@(self.webHaptics) } mutableCopy];
+    if (!okay) response[@"error"] = @"设置保存尚未确认，请保持游戏在前台并重试。";
+    self.webLastFeedbackRequest = request; self.webLastFeedbackResult = response;
+    [self sendWebFeedbackResult:response];
+    if (preview) [self pulseWebHaptic];
+}
+- (void)sendWebFeedbackResult:(NSDictionary *)response
+{
+    [self evaluate:[NSString stringWithFormat:@"window.%@.feedbackSettingsResult(%@);true;", self.eventHostObject, JSONString(response)] completion:nil];
+}
+- (void)receiveWebHaptic:(NSDictionary *)body
+{
+    id token = body[@"token"], press = body[@"pressId"];
+    if (![token isKindOfClass:NSString.class] || ![token isEqual:self.webFeedbackToken]
+        || ![body[@"kind"] isEqual:(self.isBombIt ? @"bomb-press" : @"jump-press")] || ![press isKindOfClass:NSNumber.class] || WebFeedbackBoolean(press)) return;
+    double value = [press doubleValue];
+    if (!isfinite(value) || value <= self.webLastHapticPress || value > INT32_MAX || floor(value) != value) return;
+    self.webLastHapticPress = (NSInteger)value;
+    // A previously queued DOWN must not pulse after a pause/settings transition.
+    if (![self webFeedbackForeground] || !self.webHaptics) return;
+    NSString *requestToken = self.webFeedbackToken;
+    [self evaluate:[NSString stringWithFormat:@"(function(){var h=window.%@,s=h&&h.status();return !!(s&&s.active&&%@);})()", self.eventHostObject, self.isBombIt ? @"s.phase==='battle'" : @"s.gameplayActive"]
+        completion:^(id result, NSError *error) {
+            if (!error && [result isEqual:@YES] && [requestToken isEqual:self.webFeedbackToken]) [self pulseWebHaptic];
+        }];
+}
+- (void)pulseWebHaptic
+{
+    if (![self webFeedbackForeground] || !self.webHaptics) return;
+    double now = NSProcessInfo.processInfo.systemUptime;
+    if (self.webLastHapticTime > 0 && now - self.webLastHapticTime < .04) return;
+    self.webLastHapticTime = now;
+    UIView *view = self.web;
+    // UIKit honors System Haptics. The presented WK view, not the paused Unity
+    // view underneath it, owns this one-shot feedback interaction.
+    if (@available(iOS 17.5, *)) {
+        UIImpactFeedbackGenerator *generator = [UIImpactFeedbackGenerator feedbackGeneratorWithStyle:UIImpactFeedbackStyleLight forView:view];
+        [generator impactOccurred]; [view removeInteraction:generator];
+    } else {
+        UIImpactFeedbackGenerator *generator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
+        [generator impactOccurred];
+#if !__has_feature(objc_arc)
+        [generator release];
+#endif
+    }
 }
 - (void)tick
 {
@@ -534,10 +714,8 @@ static int OnMain(int (^operation)(void))
     if (NSThread.isMainThread) return operation();
     __block int value; dispatch_sync(dispatch_get_main_queue(), ^{ value = operation(); }); return value;
 }
-extern "C" int XanaduWebGame_Open(const char *identifier, const char *root, int soundEnabled)
+static int OpenWebGame(NSString *game, NSString *path, BOOL sound, BOOL haptics)
 {
-    NSString *game = identifier ? [NSString stringWithUTF8String:identifier] : nil;
-    NSString *path = root ? [NSString stringWithUTF8String:root] : nil;
     return OnMain(^int {
         if (Running) return 0;
         NSDictionary *ports = @{ @"zhaoyun-adou":@24681, @"cut-the-rope":@24682, @"level-devil":@24683, @"bomb-it":@24684 };
@@ -545,7 +723,12 @@ extern "C" int XanaduWebGame_Open(const char *identifier, const char *root, int 
         if (!port || !path.length || UIApplication.sharedApplication.applicationState != UIApplicationStateActive) { LastError = @"游戏参数无效或应用不在前台。"; return 0; }
         Running = YES; LastError = nil;
         XanaduWebGameController *owner = [[XanaduWebGameController alloc] init];
-        owner.game = game; owner.sound = soundEnabled != 0;
+        owner.game = game; owner.sound = sound;
+        if ([game isEqual:@"bomb-it"] || [game isEqual:@"level-devil"]) {
+            // Unity imports the newest pending revision before opening. Its
+            // explicit values also include any later hall preference changes.
+            owner.webHaptics = haptics;
+        }
         owner.server = [[XanaduWebAssetServer alloc] initWithRoot:path port:port.unsignedShortValue];
         CurrentGame = owner;
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
@@ -561,6 +744,38 @@ extern "C" int XanaduWebGame_Open(const char *identifier, const char *root, int 
         return 1;
     });
 }
+extern "C" int XanaduWebGame_Open(const char *identifier, const char *root, int soundEnabled)
+{
+    NSString *game = identifier ? [NSString stringWithUTF8String:identifier] : nil;
+    NSString *path = root ? [NSString stringWithUTF8String:root] : nil;
+    return OpenWebGame(game, path, soundEnabled != 0, NO);
+}
+extern "C" int XanaduBombIt_Open(const char *root, int soundEnabled, int hapticsEnabled)
+{
+    NSString *path = root ? [NSString stringWithUTF8String:root] : nil;
+    return OpenWebGame(@"bomb-it", path, soundEnabled != 0, hapticsEnabled != 0);
+}
+extern "C" int XanaduLevelDevil_Open(const char *root, int soundEnabled, int hapticsEnabled)
+{
+    NSString *path = root ? [NSString stringWithUTF8String:root] : nil;
+    return OpenWebGame(@"level-devil", path, soundEnabled != 0, hapticsEnabled != 0);
+}
+extern "C" const char *XanaduWebFeedback_ReadPending(void)
+{
+    OnMain(^int {
+        NSDictionary *pending = WebFeedbackReadPending();
+        BombItPendingJSON = pending ? JSONString(pending) : @""; return 1;
+    });
+    return BombItPendingJSON.UTF8String;
+}
+extern "C" int XanaduWebFeedback_Acknowledge(const char *identifier)
+{
+    NSString *revision = identifier ? [NSString stringWithUTF8String:identifier] : nil;
+    return OnMain(^int { return WebFeedbackAcknowledge(revision) ? 1 : 0; });
+}
+// Existing Bomb It callers remain binary-compatible during the shared migration.
+extern "C" const char *XanaduBombIt_ReadPendingFeedback(void) { return XanaduWebFeedback_ReadPending(); }
+extern "C" int XanaduBombIt_AcknowledgePendingFeedback(const char *identifier) { return XanaduWebFeedback_Acknowledge(identifier); }
 extern "C" int XanaduWebGame_GetRequestedOrientation(void)
 {
     // 5 is managed ScreenOrientation.AutoRotation; Unity's native fixed enum has no auto value.

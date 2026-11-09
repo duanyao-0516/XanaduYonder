@@ -16,7 +16,7 @@ internal static class Program
     private static void Main()
     {
         root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-        CatalogTests(); ProfileTests(); FoodPausePreferenceTests(); CodecTests(); BoundaryAndFullBoardTests(); StoreTests();
+        CatalogTests(); ProfileTests(); FoodPausePreferenceTests(); ControlPreferenceTests(); CodecTests(); BoundaryAndFullBoardTests(); StoreTests();
         Console.WriteLine("PASS: Snake persistence " + assertions + " assertions; actual JSON and temporary directories.");
     }
     private static void CatalogTests()
@@ -109,6 +109,20 @@ internal static class Program
         };
         Check(visit(406), "Cannot construct a valid terminal persistence fixture."); return path.ToArray();
     }
+    private static void ControlPreferenceTests()
+    {
+        var json=JObject.Parse(SnakeSaveCodec.Encode(Filled()));
+        Check((string)json["controlStyle"]=="Disc", "New saves default to the circular direction pad.");
+        SnakeProfile decoded;string reason;
+        json["controlStyle"]="Cross";
+        Check(SnakeSaveCodec.TryDecode(json.ToString(),catalog,out decoded,out reason), "Cross control save cannot decode: "+reason);
+        Check((string)JObject.Parse(SnakeSaveCodec.Encode(decoded))["controlStyle"]=="Cross", "Cross controls survive the real codec roundtrip.");
+        json.Remove("controlStyle");
+        Check(SnakeSaveCodec.TryDecode(json.ToString(),catalog,out decoded,out reason), "Legacy controls cannot decode: "+reason);
+        Check((string)JObject.Parse(SnakeSaveCodec.Encode(decoded))["controlStyle"]=="Disc", "Missing legacy control preference defaults to Disc.");
+        foreach(var invalid in new JToken[]{JValue.CreateNull(),new JValue("unknown"),new JValue(0),new JValue(true)})
+        { json["controlStyle"]=invalid;Check(!SnakeSaveCodec.TryDecode(json.ToString(),catalog,out decoded,out reason), "Invalid control preference must not be silently accepted."); }
+    }
     private static void FoodPausePreferenceTests()
     {
         var profile=Filled();var json=JObject.Parse(SnakeSaveCodec.Encode(profile));
@@ -149,7 +163,7 @@ internal static class Program
         bad(d => d["classicRecords"][0]["bestScore"] = 10);
         bad(d => d["classicRecords"][3]["bestScore"] = 4760);
         var source = JObject.Parse(json);
-        foreach (var property in source.Properties().ToArray()) { string key = property.Name; if(key!="pauseOnFood")bad(d => d.Remove(key)); }
+        foreach (var property in source.Properties().ToArray()) { string key = property.Name; if(key!="pauseOnFood"&&key!="controlStyle")bad(d => d.Remove(key)); }
         foreach (var property in ((JObject)source["classicSlots"][0]).Properties().ToArray())
         {
             string key = property.Name; bad(d => ((JObject)d["classicSlots"][0]).Remove(key));

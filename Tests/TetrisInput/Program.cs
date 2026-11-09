@@ -32,8 +32,34 @@ class Program
  Test("same-frame opposite directions tie regardless of enumeration",()=>{foreach(bool reverse in new[]{false,true}){var state=new TetrisGame(1).GetSnapshot();state.ActivePiece=TetrisPiece.O;state.X=-1;state.Y=3;var s=new TetrisSession(new TetrisGame(state),false);Start(s);var left=P(1,TetrisAction.Left);var right=P(2,TetrisAction.Right);Frame(s.Input,s.Snapshot.PieceSerial,reverse?right:left,reverse?left:right);s.Advance(0);Equal(-1,s.Snapshot.X);s.Advance(.2);Equal(-1,s.Snapshot.X);Frame(s.Input,s.Snapshot.PieceSerial,P(1,TetrisAction.Left,TetrisPointerPhase.Ended),P(2,TetrisAction.Right,TetrisPointerPhase.Stationary));s.Advance(.2);Equal(0,s.Snapshot.X);}});
  Test("moving onto another button cancels original ownership",()=>{var s=New();Start(s);Frame(s.Input,s.Snapshot.PieceSerial,P(1,TetrisAction.Left));s.Advance(0);Frame(s.Input,s.Snapshot.PieceSerial,P(1,TetrisAction.Right,TetrisPointerPhase.Moved));s.Advance(.2);Equal(2,s.Snapshot.X);});
  Test("three clean down taps hard drop only on third release",()=>{var s=New();Start(s);long serial=s.Snapshot.PieceSerial;Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Frame(s.Input,serial,P(4,TetrisAction.SoftDrop));s.Advance(.05);Equal(serial,s.Snapshot.PieceSerial);Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));s.Advance(0);Equal(serial+1,s.Snapshot.PieceSerial);});
+ Test("one short down press preserves one-cell soft drop",()=>{var s=New();Start(s);long serial=s.Snapshot.PieceSerial;int y=s.Snapshot.Y;Tap(s);Equal(serial,s.Snapshot.PieceSerial);Equal(y+1,s.Snapshot.Y);Equal(false,s.Input.SoftDropHeld);});
  Test("triple tap never hard drops following piece",()=>{var s=New();Start(s);Tap(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);});
- Test("long down hold stays soft and release is not a tap",()=>{var s=New();Start(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;int y=s.Snapshot.Y;Frame(s.Input,serial,P(4,TetrisAction.SoftDrop));Wait(s,.3);Equal(true,s.Snapshot.Y>y);Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));s.Advance(0);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});
+ Test("subthreshold down hold stays soft and release is not a tap",()=>{var s=New();Start(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;int y=s.Snapshot.Y;Frame(s.Input,serial,P(4,TetrisAction.SoftDrop));Wait(s,.3);Equal(true,s.Snapshot.Y>y);Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));s.Advance(0);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});
+ Test("half-second down hold hard drops once and never carries to the next piece",()=>{
+  var s=New();Start(s);long serial=s.Snapshot.PieceSerial;Frame(s.Input,serial,P(4,TetrisAction.SoftDrop));
+  Wait(s,.49);Equal(serial,s.Snapshot.PieceSerial);Equal(true,s.Snapshot.Y>0);Wait(s,.01);
+  Equal(serial+1,s.Snapshot.PieceSerial);Equal(false,s.Input.SoftDropHeld);Wait(s,.7);Equal(serial+1,s.Snapshot.PieceSerial);
+  Frame(s.Input,s.Snapshot.PieceSerial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Ended));Frame(s.Input,s.Snapshot.PieceSerial,P(4,TetrisAction.SoftDrop));Wait(s,.5);Equal(serial+2,s.Snapshot.PieceSerial);
+ });
+ Test("rotation contact cancels the current long-press gesture before its threshold",()=>{
+  foreach(bool reverse in new[]{false,true}){
+   var input=new TetrisInput();Frame(input,1,P(4,TetrisAction.SoftDrop));for(int n=0;n<29;n++)input.Tick(1);
+   var down=P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Stationary);var rotate=P(2,TetrisAction.Clockwise);
+   Frame(input,1,reverse?rotate:down,reverse?down:rotate);input.Tick(1);
+   Equal(true,input.TryTake(out var action));Equal(TetrisAction.Clockwise,action.Action);Equal(false,input.TryTake(out action));
+   Frame(input,1,down,P(2,TetrisAction.Clockwise,TetrisPointerPhase.Ended));for(int n=0;n<60;n++)input.Tick(1);
+   Equal(true,input.SoftDropHeld);Equal(false,input.TryTake(out action));
+  }
+ });
+ Test("cancel exit pause and piece changes disarm a held hard drop",()=>{
+  foreach(int boundary in new[]{0,1,2,3}){
+   var input=new TetrisInput();Frame(input,1,P(4,TetrisAction.SoftDrop));for(int n=0;n<29;n++)input.Tick(1);
+   if(boundary==0)Frame(input,1,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Canceled));
+   else if(boundary==1)Frame(input,1,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Moved,false));
+   else if(boundary==2)input.Cancel();else input.PieceChanged();
+   for(int n=0;n<60;n++)input.Tick(boundary==3?2:1);Equal(false,input.TryTake(out var action));Equal(false,input.SoftDropHeld);
+  }
+ });
  Test("slow tap gap starts a new sequence",()=>{var s=New();Start(s);Tap(s);Tap(s);Wait(s,.35);long serial=s.Snapshot.PieceSerial;Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});
  Test("total triple window is bounded",()=>{var s=New();Start(s);Tap(s,4,.15);Wait(s,.18);Tap(s,4,.15);Wait(s,.18);long serial=s.Snapshot.PieceSerial;Tap(s,4,.15);Equal(serial,s.Snapshot.PieceSerial);});
  Test("canceled down clears earlier taps",()=>{var s=New();Start(s);Tap(s);Tap(s);long serial=s.Snapshot.PieceSerial;Frame(s.Input,serial,P(4,TetrisAction.SoftDrop,TetrisPointerPhase.Canceled));Frame(s.Input,serial);Tap(s);Tap(s);Equal(serial,s.Snapshot.PieceSerial);Tap(s);Equal(serial+1,s.Snapshot.PieceSerial);});

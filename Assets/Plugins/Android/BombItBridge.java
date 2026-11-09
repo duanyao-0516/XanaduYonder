@@ -2,11 +2,13 @@ package com.xanaduyonder.bombit;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import java.lang.ref.WeakReference;
+import org.json.JSONObject;
 
 /** Unity owns only this launch/return contract; each Android game session owns its state. */
 public final class BombItBridge {
@@ -19,7 +21,7 @@ public final class BombItBridge {
 
     private BombItBridge() { }
 
-    public static synchronized boolean open(Activity host, boolean soundEnabled) {
+    public static synchronized boolean open(Activity host, boolean soundEnabled, boolean hapticsEnabled) {
         if (running || host == null || host.isFinishing() || host.isDestroyed()) return false;
         final long token = ++session;
         final long requestedAt = SystemClock.elapsedRealtime();
@@ -37,6 +39,7 @@ public final class BombItBridge {
                 Intent intent = new Intent(host, BombItActivity.class);
                 intent.putExtra(SESSION_EXTRA, token);
                 intent.putExtra("soundEnabled", soundEnabled);
+                intent.putExtra("hapticsEnabled", hapticsEnabled);
                 host.startActivity(intent);
             } catch (RuntimeException | LinkageError error) {
                 launchFailed(token, error);
@@ -48,6 +51,20 @@ public final class BombItBridge {
 
     public static boolean isRunning() { return running; }
     public static String getLastError() { return lastError; }
+
+    // Compatibility wrappers; both web games now write one ordered journal.
+    static JSONObject pendingFeedback(Context context) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.readPending(context);
+    }
+    public static String readPendingFeedback(Activity host) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.readPendingFeedback(host);
+    }
+    static boolean savePendingFeedback(Context context, boolean sound, boolean haptics) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.write(context, "bomb-it", sound, haptics);
+    }
+    public static boolean acknowledgePendingFeedback(Activity host, String revision) {
+        return com.xanaduyonder.webgames.WebGameFeedbackPreferences.acknowledgePendingFeedback(host, revision);
+    }
 
     static synchronized long attach(BombItActivity instance, long requestedSession) {
         BombItActivity previous = activity.get();

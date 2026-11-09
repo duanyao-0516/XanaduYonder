@@ -3,5 +3,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
 <title>只有一道门</title><link rel="stylesheet" href="style.css">
-<script src="host.js"></script><script src="controls.js"></script><script src="Level%20Devil.js"></script></head>
-<body><div id="openfl-content"></div><script src="entry.js"></script></body></html>
+<script src="menu.js"></script><script src="host.js"></script><script src="controls.js"></script><script src="Level%20Devil.js"></script></head>
+<body><div id="openfl-content"></div>
+<div id="level-menu-ui">
+  <nav id="level-menu-tools" aria-label="游戏说明与设置" hidden>
+    <button id="level-help" type="button" aria-label="玩法说明" title="玩法说明"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20 8 18H2V4h6l4 2 4-2h6v14h-6ZM12 6v14M5 8l4 1M5 12l4 1M15 9l4-1M15 13l4-1"/></svg></button>
+    <button id="level-settings" type="button" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M20.400 12.000L20.360 11.177L23.063 9.799L22.794 8.726L22.421 7.683L21.948 6.683L18.984 7.333L18.493 6.671L17.940 6.060L17.329 5.507L18.267 2.621L17.317 2.052L16.317 1.579L15.274 1.206L13.639 3.761L12.823 3.640L12.000 3.600L11.177 3.640L9.799 0.937L8.726 1.206L7.683 1.579L6.683 2.052L7.333 5.016L6.671 5.507L6.060 6.060L5.507 6.671L2.621 5.733L2.052 6.683L1.579 7.683L1.206 8.726L3.761 10.361L3.640 11.177L3.600 12.000L3.640 12.823L0.937 14.201L1.206 15.274L1.579 16.317L2.052 17.317L5.016 16.667L5.507 17.329L6.060 17.940L6.671 18.493L5.733 21.379L6.683 21.948L7.683 22.421L8.726 22.794L10.361 20.239L11.177 20.360L12.000 20.400L12.823 20.360L14.201 23.063L15.274 22.794L16.317 22.421L17.317 21.948L16.667 18.984L17.329 18.493L17.940 17.940L18.493 17.329L21.379 18.267L21.948 17.317L22.421 16.317L22.794 15.274L20.239 13.639L20.360 12.823Z M16.08 12A4.08 4.08 0 1 0 7.92 12A4.08 4.08 0 1 0 16.08 12Z"/></svg></button>
+  </nav>
+  <div id="level-menu-dialog" hidden><section role="dialog" aria-modal="true" aria-labelledby="level-menu-title">
+    <header><h2 id="level-menu-title">设置</h2><button id="level-menu-close" type="button" aria-label="关闭弹窗">×</button></header>
+    <div class="level-menu-scroll">
+      <div id="level-menu-settings">
+        <div class="level-setting-row"><label id="level-sound-label">声音</label><button id="level-sound" type="button" role="switch" aria-labelledby="level-sound-label" aria-checked="true"><span>开启</span><i aria-hidden="true"></i></button></div>
+        <div class="level-setting-row"><label id="level-haptics-label">触感</label><button id="level-haptics" type="button" role="switch" aria-labelledby="level-haptics-label" aria-checked="true"><span>开启</span><i aria-hidden="true"></i></button></div>
+        <p class="level-hint">触感用于跳跃按键，也受系统触感设置影响。</p>
+        <p id="level-feedback-status" role="status" hidden></p><button id="level-feedback-retry" type="button" hidden>重试保存</button>
+      </div>
+      <div id="level-menu-guide" hidden><p>单人模式：选择已解锁的区域和关卡，避开陷阱，抵达出口。失败后可以重试，通关会保存进度。</p><p>触屏：左侧按键控制左右移动，右侧按键跳跃；双人模式两位玩家各使用自己一侧的移动与跳跃按键。</p><p>键盘：单人使用方向键移动、↑跳跃；双人分别使用 A / D / W 和 ← / → / ↑。</p><p>选关页左上返回会回到人数选择；人数选择页左上返回才回到应用大厅。</p></div>
+    </div>
+    <footer><button id="level-menu-done" type="button">完成</button></footer>
+  </section></div>
+</div><script src="entry.js"></script></body></html>

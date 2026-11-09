@@ -101,6 +101,7 @@ namespace XanaduYonder.EditorTools
                     Require(p.Session.Game.TickCount == tick, "Countdown does not move the snake");
                     f.Capture("classic-countdown");
                     p.CompleteCountdown();
+                    CheckControlStyle(f,p);
                     CheckLayout(f, p);
                     CheckNavigation(f, p);
                     CheckRenderedBoard(f, p);
@@ -180,6 +181,23 @@ namespace XanaduYonder.EditorTools
                     Require(p.Session.Game.Rules.TargetFood > 0, "Campaign carries its food target into the production session");
                     CheckRenderedBoard(f, p);
                     f.Capture("campaign-running");
+                    var campaignPicker=Get<SnakeDropdown>(p.Page,"levelDropdown");
+                    f.Click(campaignPicker.GetComponent<RectTransform>());yield return null;f.Flush();
+                    var campaignChoices=Find(p.Root,"Dropdown List").GetComponentsInChildren<Toggle>();
+                    Require(campaignChoices.Length==12,"Campaign picker contains one row for every level");
+                    for(int i=0;i<campaignChoices.Length;i++)
+                    {
+                        var label=campaignChoices[i].GetComponentInChildren<Text>();
+                        var locked=campaignChoices[i].transform.Find("Lock icon");
+                        Require(!label.text.Contains("锁定")&&label.horizontalOverflow==HorizontalWrapMode.Overflow,
+                            "Campaign row uses a single-line name without a lock suffix");
+                        Require(locked!=null&&locked.gameObject.activeSelf==(i>profile.UnlockedLevel),"Lock graphic matches level eligibility");
+                    }
+                    Find(p.Root,"Dropdown List").GetComponent<ScrollRect>().verticalNormalizedPosition=0;
+                    yield return new WaitForSecondsRealtime(.2f);f.Flush();
+                    f.Capture("campaign-lock-icons");campaignPicker.Hide();
+                    foreach(var step in WaitForCondition(()=>!campaignPicker.IsExpanded,"Campaign lock picker closes"))yield return step;
+                    p.ResumeForChecks();
                     var fixedBoundary = p.Session.Game.Rules.Boundary;
                     Find(p.Root, "Boundary").GetComponent<Button>().onClick.Invoke();
                     Require(p.Session.Game.Rules.Boundary == fixedBoundary, "Even a direct boundary callback cannot alter a campaign rule");
@@ -234,11 +252,7 @@ namespace XanaduYonder.EditorTools
                     LobbyDesignChecks.SetModeForCheck(shell,mode);f.Flush();
                     var content=lobby.GetComponentInChildren<ScrollRect>().content;
                     var cards=content.GetComponentsInChildren<Button>().Where(button=>button.name.EndsWith(" game card",StringComparison.Ordinal)).ToArray();
-#if UNITY_IOS
-                    Require(cards.Length==20,"iOS lobby includes twenty native game entries");
-#else
-                    Require(cards.Length==26,"Android lobby includes twenty-six game entries");
-#endif
+                    Require(cards.Length==23,"Current lobby includes twenty-three retained game entries");
                     var snake=LobbyDesignChecks.FindCard(content,"Snake");
                     LobbyInputTestDriver.CheckBinding(snake.GetComponent<Button>(),shell,"EnterSnake",Require);
                     if(mode==2)
@@ -440,6 +454,82 @@ namespace XanaduYonder.EditorTools
             Require(TextFingerprint(p.Root) != before, "Eating updates visible production HUD text");
             Require(TextFingerprint(Find(p.Root, "Snake progress")).Contains("10"), "HUD shows the ten points awarded for the first food");
             f.Capture("classic-after-food");
+        }
+
+        private static void CheckControlStyle(Fixture f,PageFixture p)
+        {
+            var profile=Get<SnakeProfile>(p.Page,"profile");
+            var disc=Find(p.Root,"Snake circular controls");
+            var cross=Find(p.Root,"Snake cross controls");
+            Require(profile.ControlStyle==SnakeControlStyle.Disc&&disc.gameObject.activeSelf&&!cross.gameObject.activeSelf,
+                "New and legacy profiles start with the circular pad");
+            var bounds=f.Bounds(disc);var box=f.Bounds(Find(p.Root,"Snake direction pad"));
+            Require(Math.Abs(bounds.width-208)<.5f&&Math.Abs(bounds.height-208)<.5f&&
+                bounds.xMin>=box.xMin&&bounds.xMax<=box.xMax&&bounds.yMin>=box.yMin&&bounds.yMax<=box.yMax,
+                "208-unit disc fits within the existing 304 by 256 control box");
+            Require(!bounds.Overlaps(f.Bounds(Find(p.Root,"Snake board")))&&!bounds.Overlaps(f.Bounds(Find(p.Root,"Snake left tools"))),
+                "Disc does not cover board or left tools");
+            f.Capture("classic-disc-running");
+            CheckDiscPressFeedback(f,p,disc);
+            f.Click(disc,new Vector2(0,68));p.Advance(.2f);
+            Require(p.Session.Game.Direction==SnakeDirection.Up,"Real disc pointer reaches the existing snake direction queue");
+            f.Click(Icon(Find(p.Root,"Snake navigation"),UiIconKind.Settings).GetComponent<RectTransform>());
+            f.Capture("settings-controls");p.ClickDialog("控制方式");
+            Require(profile.ControlStyle==SnakeControlStyle.Cross&&cross.gameObject.activeSelf&&!disc.gameObject.activeSelf,
+                "Settings swaps only the direction control subtree");
+            var catalog=Get<SnakeCatalog>(p.Page,"catalog");
+            Require(SnakeSaveCodec.TryDecode(File.ReadAllText(Path.Combine(p.SaveDirectory,"snake-v1.json")),catalog,out var saved,out var reason)&&saved.ControlStyle==SnakeControlStyle.Cross,
+                "Control preference is written through the production save path: "+reason);
+            p.CloseSettings();p.CompleteCountdown();f.Capture("classic-cross-running");
+        }
+
+        private static void CheckDiscPressFeedback(Fixture f,PageFixture p,RectTransform rect)
+        {
+            var disc=rect.GetComponent<SnakeDirectionDisc>();var input=Get<SnakeInput>(p.Page,"input");
+            RequireDiscColors(f,disc,null);
+            var contact=f.Press(rect,new Vector2(0,68));RequireDiscColors(f,disc,SnakeDirection.Up);
+            f.Capture("classic-disc-pressed");
+            f.Drag(rect,contact,new Vector2(-68,0));RequireDiscColors(f,disc,SnakeDirection.Left);
+            f.Drag(rect,contact,Vector2.zero);RequireDiscColors(f,disc,null);
+            f.Drag(rect,contact,new Vector2(130,0));RequireDiscColors(f,disc,null);
+            f.Drag(rect,contact,new Vector2(68,0));RequireDiscColors(f,disc,SnakeDirection.Right);
+            f.Release(contact);RequireDiscColors(f,disc,null);input.Cancel();
+            foreach(var frame in new[]{new SnakePointerFrame{TouchCount=1,Canceled=true,PrimaryPressed=true},
+                new SnakePointerFrame{TouchCount=2,PrimaryPressed=true}})
+            {
+                contact=f.Press(rect,new Vector2(0,68));RequireDiscColors(f,disc,SnakeDirection.Up);
+                input.PollFrame(frame);RequireDiscColors(f,disc,null);
+                f.Drag(rect,contact,new Vector2(-68,0));RequireDiscColors(f,disc,null);
+                f.Release(contact);input.PollFrame(new SnakePointerFrame());
+            }
+            contact=f.Press(rect,new Vector2(0,68));input.Release(contact.pointerId);
+            RequireDiscColors(f,disc,null);f.Release(contact);input.Cancel();
+            contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"ShowPause");
+            RequireDiscColors(f,disc,null);p.ClickDialog("继续");p.CompleteCountdown();
+            contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"ShowSettings");
+            RequireDiscColors(f,disc,null);p.ClickDialog("控制方式");
+            Require(!rect.gameObject.activeSelf,"Switching to cross controls retires the pressed disc");
+            p.ClickDialog("控制方式");RequireDiscColors(f,disc,null);p.CloseSettings();p.CompleteCountdown();
+            contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"SetForeground",false);
+            RequireDiscColors(f,disc,null);Invoke(p.Page,"SetForeground",true);p.ResumeForChecks();
+            contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"Leave");
+            Require(!rect.gameObject.activeInHierarchy&&Get<SnakeDirection?>(disc,"pressedDirection")==null,
+                "Leaving the page clears the press before the disc becomes inactive");
+            Invoke(p.Page,"Enter");p.CompleteCountdown();RequireDiscColors(f,disc,null);
+        }
+
+        private static void RequireDiscColors(Fixture f,SnakeDirectionDisc disc,SnakeDirection? pressed)
+        {
+            f.Flush();var mesh=disc.canvasRenderer.GetMesh();
+            Require(mesh!=null&&mesh.vertexCount==320,"Disc feedback checks inspect the real four-sector mesh");
+            var colors=mesh.colors32;
+            var directions=new[]{SnakeDirection.Right,SnakeDirection.Up,SnakeDirection.Left,SnakeDirection.Down};
+            for(int sector=0;sector<4;sector++)
+            {
+                var expected=directions[sector]==pressed?disc.color*new Color(.78f,.85f,.78f,1):disc.color;
+                for(int vertex=sector*80;vertex<(sector+1)*80;vertex++)
+                    Require(ColorDistance(colors[vertex],expected)<.02f,"Only the currently owned sector has the pressed tint");
+            }
         }
 
         private static void CheckFoodPause(Fixture f,PageFixture p)
@@ -752,6 +842,13 @@ namespace XanaduYonder.EditorTools
             Require(!p.Session.Paused && Math.Abs(p.Session.CountdownSeconds - 3) < .0001 && !p.Session.CanPlay &&
                 Get<GameObject>(p.Page, "dialog") == null && Get<GameObject>(p.Page, "countdown").activeSelf,
                 action + " immediately starts its visible three-second countdown without a pause dialog");
+            var cover=Get<GameObject>(p.Page,"countdown").GetComponent<RectTransform>();
+            var board=Find(p.Root,"Snake board");var text=cover.GetComponentInChildren<Text>();
+            Require(cover.parent==board&&cover.anchorMin==Vector2.zero&&cover.anchorMax==Vector2.one&&
+                cover.offsetMin==Vector2.zero&&cover.offsetMax==Vector2.zero,
+                "Countdown covers only the actual board, leaving navigation and controls outside it");
+            Require(text.color==Color.white&&text.fontSize==112&&cover.childCount==1,
+                "Countdown uses a white number without a surrounding card or disc");
             Require(Get<IList>(p.Session, "directions").Count == 0, action + " clears queued input before the countdown");
             if (fresh)
                 Require(p.Session.Game.Body.Length == 4 && p.Session.Game.Score == 0 && p.Session.Game.TickCount == 0 && p.Session.ElapsedSeconds == 0,
@@ -1292,12 +1389,20 @@ namespace XanaduYonder.EditorTools
                 finally { Object.DestroyImmediate(image); RenderTexture.active = previous; }
             }
 
-            public void Click(RectTransform rect)
+            public void Click(RectTransform rect,Vector2? offset=null)
+            {
+                var pointer=Press(rect,offset);
+                var clicked=ExecuteEvents.GetEventHandler<IPointerClickHandler>(pointer.pointerCurrentRaycast.gameObject);
+                Release(pointer);
+                if(clicked!=null&&pointer.pointerPress==clicked)ExecuteEvents.Execute(clicked,pointer,ExecuteEvents.pointerClickHandler);
+            }
+
+            public PointerEventData Press(RectTransform rect,Vector2? offset=null)
             {
                 Flush();
                 var pointer = new PointerEventData(events)
                 {
-                    position = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center)),
+                    position = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center+(offset??Vector2.zero))),
                     pointerId = -1,
                     button = PointerEventData.InputButton.Left
                 };
@@ -1310,9 +1415,14 @@ namespace XanaduYonder.EditorTools
                 var pressed = ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, pointer, ExecuteEvents.pointerDownHandler);
                 var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject);
                 pointer.pointerPress = pressed != null ? pressed : clicked;
-                if (pointer.pointerPress != null) ExecuteEvents.Execute(pointer.pointerPress, pointer, ExecuteEvents.pointerUpHandler);
-                if (clicked != null && pointer.pointerPress == clicked) ExecuteEvents.Execute(clicked, pointer, ExecuteEvents.pointerClickHandler);
+                return pointer;
             }
+
+            public void Drag(RectTransform rect,PointerEventData pointer,Vector2 offset)
+            { pointer.position=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center+offset));ExecuteEvents.Execute(pointer.pointerPress,pointer,ExecuteEvents.dragHandler); }
+
+            public void Release(PointerEventData pointer)
+            { if(pointer.pointerPress!=null)ExecuteEvents.Execute(pointer.pointerPress,pointer,ExecuteEvents.pointerUpHandler); }
 
             public void Dispose()
             {

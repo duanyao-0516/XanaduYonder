@@ -22,6 +22,7 @@ namespace XanaduYonder.Runtime
         {
             if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
             CloseModal();
+            RestoreWebGamePendingPreferences();
             Save();
             feedback?.Stop();
             if (levelDevilLauncher == null)
@@ -30,12 +31,13 @@ namespace XanaduYonder.Runtime
                 levelDevilLauncher.Returned += OnLevelDevilReturned;
             }
             SetExternalGameLobbyInput(false);
-            if (!levelDevilLauncher.TryOpen(data.SoundEnabled))
+            if (!levelDevilLauncher.TryOpen(data.SoundEnabled, data.HapticsEnabled))
                 OnLevelDevilReturned(LevelDevilLauncher.OpenFailureMessage);
         }
 
         private void OnLevelDevilReturned(string error)
         {
+            RestoreWebGamePendingPreferences();
             SetExternalGameLobbyInput(!IsExternalGameRunning);
             if (activePage == Page.Lobby && !string.IsNullOrEmpty(error))
                 ShowDialog("暂时无法打开", error, "返回大厅", () => { });

@@ -110,6 +110,7 @@ def build():
     files['Level Devil.js'], patches = patch(files['Level Devil.js'])
     schema = (SOURCE / 'adapter/save-schema.json').read_text()
     files['host.js'] = ('window.__levelDevilSaveSchema=' + schema.strip() + ';\n').encode() + (SOURCE / 'adapter/host.js').read_bytes()
+    files['menu.js'] = (SOURCE / 'adapter/menu.js').read_bytes()
     files['controls.js'] = (SOURCE / 'adapter/controls.js').read_bytes()
     files['index.html'] = (SOURCE / 'adapter/index.html').read_bytes()
     files['entry.js'] = (SOURCE / 'adapter/entry.js').read_bytes()
