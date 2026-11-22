@@ -10,7 +10,7 @@ if [[ ! -x "$UNITY_EDITOR" ]]; then
     exit 1
 fi
 
-python3 "$PROJECT_ROOT/scripts/verify-cut-the-rope-input.py" --root "$PROJECT_ROOT"
+UNITY_EDITOR="$UNITY_EDITOR" python3 "$PROJECT_ROOT/scripts/cut-the-rope/prepare-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/zhaoyun-adou/verify-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/level-devil/build-content.py"
 python3 "$PROJECT_ROOT/scripts/bomb-it/build-content.py"
