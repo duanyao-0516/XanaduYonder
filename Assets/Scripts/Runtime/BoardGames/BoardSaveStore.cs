@@ -14,8 +14,11 @@ namespace XanaduYonder.Runtime.BoardGames
     internal sealed class BoardProfile
     {
         internal BoardMatchOptions Options;
-        internal bool ConfirmArmyMove = true;
+        internal bool ConfirmBoardMove = true;
         internal bool TutorialSeen;
+        internal bool HintsEnabled;
+        internal bool ShowCoordinates;
+        internal bool ShowChessNames = true;
         internal readonly Dictionary<int, BoardMatch> Matches = new Dictionary<int, BoardMatch>();
         internal BoardProfile(BoardGameId game) { Options = BoardMatchOptions.Default(game); }
     }
@@ -24,6 +27,7 @@ namespace XanaduYonder.Runtime.BoardGames
     {
         private const int Limit = 1024 * 1024;
         private const int MoveLimit = 10000;
+        private const int CurrentVersion = 3;
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
         // This protocol contains only fixed ASCII keys, integers, booleans and arrays.
         private static readonly Regex Lexeme = new Regex(
@@ -72,11 +76,13 @@ namespace XanaduYonder.Runtime.BoardGames
                     slots.Add(new JObject {
                         ["slot"] = slot.Key, ["options"] = EncodeOptions(match.Options),
                         ["first"] = new JArray(match.ArmyFirst), ["second"] = new JArray(match.ArmySecond), ["moves"] = moves,
+                        ["hintsUsed"] = match.HintsUsed,
                     });
                 }
                 var root = new JObject {
-                    ["version"] = 1, ["game"] = BoardCatalog.Id(game), ["options"] = EncodeOptions(profile.Options),
-                    ["confirmMove"] = profile.ConfirmArmyMove, ["tutorialSeen"] = profile.TutorialSeen, ["matches"] = slots,
+                    ["version"] = CurrentVersion, ["game"] = BoardCatalog.Id(game), ["options"] = EncodeOptions(profile.Options),
+                    ["confirmMove"] = profile.ConfirmBoardMove, ["tutorialSeen"] = profile.TutorialSeen, ["matches"] = slots,
+                    ["hints"] = profile.HintsEnabled, ["coordinates"] = profile.ShowCoordinates, ["chessNames"] = profile.ShowChessNames,
                 };
                 byte[] bytes = Utf8.GetBytes(root.ToString(Formatting.None));
                 if (bytes.Length > Limit) return false;
@@ -119,17 +125,23 @@ namespace XanaduYonder.Runtime.BoardGames
                     value = JObject.Load(reader, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
                     if (reader.Read()) throw new FormatException();
                 }
-                CheckFields(value, 6);
-                if (Integer(value["version"], 1, 1) != 1 || value["game"]?.Type != JTokenType.String ||
+                int version = Integer(value?["version"], 1, CurrentVersion);
+                bool hasHints = version >= 2;
+                bool hasAppearance = version >= 3;
+                CheckFields(value, hasAppearance ? 9 : hasHints ? 7 : 6);
+                if (value["game"]?.Type != JTokenType.String ||
                     (string)value["game"] != BoardCatalog.Id(game)) throw new FormatException();
                 var decoded = new BoardProfile(game) {
-                    Options = DecodeOptions(value["options"]), ConfirmArmyMove = Boolean(value["confirmMove"]),
+                    Options = DecodeOptions(value["options"]), ConfirmBoardMove = Boolean(value["confirmMove"]),
                     TutorialSeen = Boolean(value["tutorialSeen"]),
+                    HintsEnabled = hasHints && Boolean(value["hints"]),
+                    ShowCoordinates = hasAppearance && Boolean(value["coordinates"]),
+                    ShowChessNames = !hasAppearance || Boolean(value["chessNames"]),
                 };
                 foreach (var token in Array(value["matches"], game == BoardGameId.Checkers ? 5 : 2))
                 {
                     var slot = token as JObject;
-                    CheckFields(slot, 5);
+                    CheckFields(slot, hasHints ? 6 : 5);
                     int id = Integer(slot["slot"], 0, game == BoardGameId.Checkers ? 4 : 1);
                     var options = DecodeOptions(slot["options"]);
                     if (id != options.Slot || decoded.Matches.ContainsKey(id)) throw new FormatException();
@@ -137,7 +149,8 @@ namespace XanaduYonder.Runtime.BoardGames
                     int[] second = Array(slot["second"], 30).Select(rank => Integer(rank, 0, 12)).ToArray();
                     if ((game == BoardGameId.Army && (!ArmyGame.IsFormationValid(first) || !ArmyGame.IsFormationValid(second))) ||
                         (game != BoardGameId.Army && (first.Length != 0 || second.Length != 0))) throw new FormatException();
-                    var match = new BoardMatch(game, options, first, second);
+                    int hintsUsed = hasHints ? Integer(slot["hintsUsed"], 0, BoardMatch.HintLimit) : 0;
+                    var match = new BoardMatch(game, options, first, second, hintsUsed);
                     foreach (var encoded in Array(slot["moves"], MoveLimit))
                     {
                         var move = Array(encoded, 4);

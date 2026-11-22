@@ -125,17 +125,70 @@ namespace XanaduYonder.Core.BoardGames
             return true;
         }
 
-        public static int[] CreateFormation(int seed)
+        public static int[] CreateFormation(int seed) => FillFormation(new int[FormationSlotCount], new Random(seed));
+
+        // Creates a reduced board for tutorial exercises, with both flags in the left headquarters.
+        public static ArmyGame CreateTutorialPosition(params (int Point, int Side, ArmyPieceKind Kind)[] pieces)
         {
-            var random = new Random(seed);
-            var formation = new int[FormationSlotCount];
+            if (pieces == null) throw new ArgumentNullException(nameof(pieces));
+            const int leftHeadquartersSlot = FormationSlotCount - ArmyBoard.Columns + 1;
+            var formations = new[] { new int[FormationSlotCount], new int[FormationSlotCount] };
+            var supply = new[] { (int[])ArmyBoard.Inventory.Clone(), (int[])ArmyBoard.Inventory.Clone() };
+            var occupied = new bool[ArmyBoard.PointCount];
+            var mineSlots = new int[ArmyBoard.PointCount];
+            for (int side = 0; side < 2; side++)
+            {
+                formations[side][leftHeadquartersSlot] = (int)ArmyPieceKind.Flag;
+                occupied[FormationPoint(side, leftHeadquartersSlot)] = true;
+            }
+            foreach (var piece in pieces)
+            {
+                int kind = (int)piece.Kind;
+                if (!ArmyBoard.IsPoint(piece.Point) || piece.Side < 0 || piece.Side > 1 || occupied[piece.Point] ||
+                    kind <= 0 || kind >= (int)ArmyPieceKind.Flag || --supply[piece.Side][kind] < 0)
+                    throw new ArgumentException("Invalid tutorial piece or placement.", nameof(pieces));
+                occupied[piece.Point] = true;
+                if (piece.Kind != ArmyPieceKind.Mine) continue;
+
+                int row = piece.Point / ArmyBoard.Columns;
+                int depth = piece.Side == 0 ? row - 6 : 5 - row;
+                if (depth < 4 || depth >= 6) throw new ArgumentException("A tutorial mine must stay in its own back two rows.", nameof(pieces));
+                int slot = depth * ArmyBoard.Columns + piece.Point % ArmyBoard.Columns;
+                mineSlots[piece.Point] = slot;
+                formations[piece.Side][slot] = kind;
+            }
+
+            var demo = new ArmyGame(FillFormation(formations[0], new Random(121)), FillFormation(formations[1], new Random(245)));
+            for (int point = 0; point < demo.PointCount; point++)
+                if (point != demo.flagPoints[0] && point != demo.flagPoints[1]) demo.Remove(point);
+
+            foreach (var piece in pieces)
+            {
+                int kind = (int)piece.Kind;
+                int slot = piece.Kind == ArmyPieceKind.Mine ? mineSlots[piece.Point] : Array.IndexOf(formations[piece.Side], kind);
+                demo.kinds[piece.Point] = kind;
+                demo.sides[piece.Point] = piece.Side;
+                demo.slots[piece.Point] = slot;
+                if (piece.Point != FormationPoint(piece.Side, slot))
+                    demo.observedEnemyRanks[1 - piece.Side][slot] &= ArmyBoard.MovableKinds;
+                formations[piece.Side][slot] = 0;
+            }
+            if (!ArmyBoard.HasLegalMove(demo.kinds, demo.sides, 0) || !ArmyBoard.HasLegalMove(demo.kinds, demo.sides, 1))
+                throw new ArgumentException("Both sides need an opening tutorial move.", nameof(pieces));
+            return demo;
+        }
+
+        private static int[] FillFormation(int[] formation, Random random)
+        {
+            var remaining = (int[])ArmyBoard.Inventory.Clone();
+            foreach (int kind in formation) if (kind != 0) remaining[kind]--;
             for (int kind = ArmyBoard.HighestKind; kind >= 1; kind--)
             {
                 var available = new List<int>();
                 for (int slot = 0; slot < formation.Length; slot++)
                     if (formation[slot] == 0 && (ArmyBoard.FormationDomain(slot) & (1 << kind)) != 0) available.Add(slot);
 
-                for (int count = 0; count < ArmyBoard.Inventory[kind]; count++)
+                for (int count = 0; count < remaining[kind]; count++)
                 {
                     int next = random.Next(available.Count);
                     formation[available[next]] = kind;

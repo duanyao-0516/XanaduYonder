@@ -15,12 +15,14 @@ internal static class Program
         try
         {
             RoundTripEachGame(Path.Combine(root, "roundtrip"));
+            LoadLegacyProfile(Path.Combine(root, "legacy"));
             PreserveRoutesAndModeSlots(Path.Combine(root, "slots"));
             RejectMalformedAndIllegalHistory(Path.Combine(root, "malformed"));
             RecoverAndPreservePreviousBackup(Path.Combine(root, "backup"));
             ProtectBlockedSavePath(Path.Combine(root, "paths"));
             UndoRestoresCorrectActor();
-            Console.WriteLine("6 board persistence and undo scenarios passed.");
+            BoardReplayChecks.Run();
+            Console.WriteLine("7 board persistence and undo scenarios passed.");
         }
         finally { Directory.Delete(root, true); }
     }
@@ -31,21 +33,28 @@ internal static class Program
         {
             var store = new BoardSaveStore(directory, game);
             var profile = store.Load(out string warning);
-            Check(warning == null && !store.ProtectDamaged && profile.Matches.Count == 0 && profile.ConfirmArmyMove, "first launch defaults");
-            profile.ConfirmArmyMove = false;
+            Check(warning == null && !store.ProtectDamaged && profile.Matches.Count == 0 && profile.ConfirmBoardMove, "first launch defaults");
+            Check(!profile.ShowCoordinates && profile.ShowChessNames, "first launch appearance defaults");
+            profile.ConfirmBoardMove = false;
             profile.TutorialSeen = true;
+            profile.HintsEnabled = true;
+            profile.ShowCoordinates = true;
+            profile.ShowChessNames = false;
             var options = new BoardMatchOptions(false, BoardDifficulty.Hard, game == BoardGameId.Checkers ? 6 : 2, 1);
             var match = game == BoardGameId.Army
                 ? new BoardMatch(game, options, ArmyGame.CreateFormation(201), ArmyGame.CreateFormation(315))
                 : new BoardMatch(game, options);
             profile.Options = options;
+            if (profile.HintsEnabled) Check(match.TryUseHint(), "consume a hint before saving");
             profile.Matches.Add(options.Slot, match);
             for (int ply = 0; ply < 3; ply++) PlayFirst(match);
             Check(store.Save(profile), "roundtrip actual write for " + game);
             Check(File.Exists(SavePath(directory, game)), "per-game save path for " + game);
             var reloaded = new BoardSaveStore(directory, game).Load(out warning);
             var replay = reloaded.Matches[options.Slot];
-            Check(warning == null && reloaded.Options.Human == 1 && !reloaded.ConfirmArmyMove && reloaded.TutorialSeen, "preferences round trip");
+            Check(warning == null && reloaded.Options.Human == 1 && !reloaded.ConfirmBoardMove && reloaded.TutorialSeen, "preferences round trip");
+            Check(reloaded.HintsEnabled == profile.HintsEnabled && replay.HintsUsed == match.HintsUsed, "hint settings and usage round trip");
+            Check(reloaded.ShowCoordinates && !reloaded.ShowChessNames, "appearance preferences round trip");
             Check(replay.History.SequenceEqual(match.History) && replay.Position.CurrentSide == match.Position.CurrentSide, "history and current seat round trip");
             Check(replay.ArmyFirst.SequenceEqual(match.ArmyFirst) && replay.ArmySecond.SequenceEqual(match.ArmySecond), "formations round trip");
             for (int point = 0; point < match.Position.PointCount; point++)
@@ -56,6 +65,34 @@ internal static class Program
                     Check(expected.Side == actual.Side && expected.Kind == actual.Kind, "every replayed projection matches");
                 }
         }
+    }
+
+    private static void LoadLegacyProfile(string directory)
+    {
+        const BoardGameId game = BoardGameId.Chess;
+        var store = new BoardSaveStore(directory, game);
+        var profile = ProfileWithMatch(game);
+        profile.HintsEnabled = true;
+        Check(profile.Matches[profile.Options.Slot].TryUseHint(), "consume a hint in the legacy fixture");
+        Check(store.Save(profile), "write baseline profile");
+        string path = SavePath(directory, game);
+        var legacy = JObject.Parse(File.ReadAllText(path));
+        legacy.Remove("coordinates");
+        legacy.Remove("chessNames");
+        legacy["version"] = 2;
+        File.WriteAllText(path, legacy.ToString(Formatting.None));
+        var upgraded = store.Load(out string warning);
+        Check(warning == null && upgraded.HintsEnabled && upgraded.Matches[upgraded.Options.Slot].HintsUsed == 1 &&
+            !upgraded.ShowCoordinates && upgraded.ShowChessNames, "v2 profile preserves hints and adds appearance defaults");
+        legacy["version"] = 1;
+        legacy.Remove("hints");
+        foreach (JObject entry in (JArray)legacy["matches"]) entry.Remove("hintsUsed");
+        File.WriteAllText(path, legacy.ToString(Formatting.None));
+        var restored = store.Load(out warning);
+        Check(warning == null && !restored.HintsEnabled && restored.Matches[restored.Options.Slot].HintsUsed == 0 &&
+            !restored.ShowCoordinates && restored.ShowChessNames, "v1 profile restores with unused hints and appearance defaults");
+        Check(restored.Matches[restored.Options.Slot].History.SequenceEqual(profile.Matches[profile.Options.Slot].History),
+            "the v1 move history remains intact");
     }
 
     private static void PreserveRoutesAndModeSlots(string directory)
@@ -92,14 +129,17 @@ internal static class Program
         string valid = File.ReadAllText(path);
         var mutations = new Action<JObject>[]
         {
-            root => root["version"] = 2,
+            root => root["version"] = 4,
             root => root["confirmMove"] = "true",
+            root => root["coordinates"] = 1,
+            root => root["chessNames"] = "true",
             root => root.Remove("tutorialSeen"),
             root => root["matches"][0]["options"]["human"] = JValue.CreateNull(),
             root => root["matches"][0]["moves"][0] = new JArray(63, 63, 0, new JArray()),
             root => root["matches"][0]["moves"][0][3] = new JArray(2),
             root => ((JArray)root["matches"]).Add(root["matches"][0].DeepClone()),
             root => root["matches"][0]["slot"] = 0,
+            root => root["matches"][0]["hintsUsed"] = 4,
         };
         foreach (var change in mutations)
         {
@@ -108,7 +148,7 @@ internal static class Program
             File.WriteAllText(path, corrupted.ToString(Formatting.None));
             AssertDamaged(directory, game, profile);
         }
-        File.WriteAllText(path, valid.Replace("\"version\":1", "\"version\":1,\"version\":1"));
+        File.WriteAllText(path, valid.Replace("\"version\":3", "\"version\":3,\"version\":3"));
         AssertDamaged(directory, game, profile);
         File.WriteAllBytes(path, new byte[] { 0x7b, 0xfe, 0x7d });
         AssertDamaged(directory, game, profile);

@@ -528,7 +528,7 @@ namespace XanaduYonder.Runtime
             host.transform.SetParent(transform, false);
             zumaPage = host.AddComponent<ZumaPage>();
             zumaPage.Initialize(FinishZumaExit, () => data.SoundEnabled, () => data.HapticsEnabled,
-                SetZumaSetting, feedback);
+                SetFeedbackSetting, feedback);
             zumaPage.PresentationReady += () => { if (activePage == Page.Zuma) canvasRoot.gameObject.SetActive(false); };
         }
 
@@ -593,11 +593,11 @@ namespace XanaduYonder.Runtime
             canvasRoot.GetComponent<GraphicRaycaster>().enabled = enabled;
         }
 
-        private bool SetZumaSetting(bool soundSetting, bool enabled)
+        private bool SetFeedbackSetting(bool soundSetting, bool enabled)
         {
             if (soundSetting) data.SoundEnabled = enabled;
             else data.HapticsEnabled = enabled;
-            if (!data.SoundEnabled) feedback.Stop();
+            if (!data.SoundEnabled) feedback?.Stop();
             Save();
             return !saveFailed;
         }

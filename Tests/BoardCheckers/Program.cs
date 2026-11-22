@@ -26,6 +26,12 @@ internal static class Program
         Require(demo.PieceAt(c, 0).Side == 0 && demo.CurrentSide == 1, "A full chain advances exactly one seat.");
         var bad = ChineseCheckersGame.CreateTutorial();
         Require(!bad.TryPlay(new BoardMove(from, b, path: new[] { a, from, b })), "A chain cannot revisit its origin.");
+        Require(bad.LegalMoves().Any(candidate => candidate.PathLength > 1 && bad.CanFinish(candidate.From, candidate.Path.Take(1).ToArray())),
+            "The hint fixture contains long routes that would commit early in single-tap mode.");
+        BoardMove hint = bad.CaptureSingleTapHintSearch()(BoardDifficulty.Hard, 0, CancellationToken.None);
+        Require(bad.LegalMoves().Contains(hint) && hint.From >= 0, "A single-tap hint selects a legal complete move.");
+        for (int prefix = 1; prefix < hint.PathLength; prefix++)
+            Require(!bad.CanFinish(hint.From, hint.Path.Take(prefix).ToArray()), "No suggested prefix commits before the final landing.");
         foreach (int seats in new[] { 2, 3, 4, 6 })
         {
             var position = new ChineseCheckersGame(seats);

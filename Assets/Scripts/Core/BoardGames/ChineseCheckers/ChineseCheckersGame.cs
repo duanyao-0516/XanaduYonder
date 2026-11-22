@@ -62,6 +62,31 @@ namespace XanaduYonder.Core.BoardGames
             return game;
         }
 
+        public static ChineseCheckersGame CreateTutorialCampCrossing()
+        {
+            var game = new ChineseCheckersGame(6);
+            game.Relocate(PointAt(13, -3), PointAt(4, -4));
+            game.Relocate(PointAt(4, -8), PointAt(8, 0));
+            return game;
+        }
+
+        public static ChineseCheckersGame CreateTutorialGoal(bool blockedEntry, bool leaveAnotherHoleEmpty = false)
+        {
+            var game = new ChineseCheckersGame(2);
+            var home = Camps[game.SeatCamp(0)];
+            var goal = Camps[game.GoalCamp(0)];
+            int entrance = PointAt(3, -3);
+            for (int i = 0; i < goal.Length; i++)
+            {
+                bool entry = goal[i] == entrance;
+                game.occupancy[goal[i]] = entry ? (blockedEntry ? 1 : -1) : 0;
+                game.occupancy[home[i]] = entry && blockedEntry ? -1 : 1;
+            }
+            game.occupancy[PointAt(4, -4)] = 0;
+            if (leaveAnotherHoleEmpty) game.Relocate(PointAt(0, 0), PointAt(8, 0));
+            return game;
+        }
+
         private void Relocate(int from, int to) { occupancy[to] = occupancy[from]; occupancy[from] = -1; }
         public int SeatCamp(int seat) => seatCamps[seat];
         public int GoalCamp(int seat) => (seatCamps[seat] + 3) % 6;
@@ -248,18 +273,23 @@ namespace XanaduYonder.Core.BoardGames
             return hasOwn;
         }
 
-        public BoardSearch CaptureSearch()
+        public BoardSearch CaptureSearch() => CaptureSearch(false);
+
+        public BoardSearch CaptureSingleTapHintSearch() => CaptureSearch(true);
+
+        private BoardSearch CaptureSearch(bool singleTapHint)
         {
             var snapshot = new ChineseCheckersGame(this);
-            return (difficulty, seed, cancellation) => snapshot.FindAiMove(difficulty, seed, cancellation);
+            return (difficulty, seed, cancellation) => snapshot.FindAiMove(difficulty, seed, cancellation, singleTapHint);
         }
 
-        private BoardMove FindAiMove(BoardDifficulty difficulty, int seed, CancellationToken cancellation)
+        private BoardMove FindAiMove(BoardDifficulty difficulty, int seed, CancellationToken cancellation, bool singleTapHint)
         {
             cancellation.ThrowIfCancellationRequested();
             if (Winner != BoardResult.Ongoing) return BoardMove.None;
             int seat = CurrentSide;
             var moves = FindMoves(seat);
+            if (singleTapHint) moves.RemoveAll(move => StopsBeforeEnd(move, seat));
             if (moves.Count == 0) return BoardMove.Pass;
             var clock = Stopwatch.StartNew();
             var random = new Random(seed);
@@ -303,6 +333,14 @@ namespace XanaduYonder.Core.BoardGames
                 if (score > bestScore) { best = candidate.Move; bestScore = score; }
             }
             return best;
+        }
+
+        private bool StopsBeforeEnd(BoardMove move, int seat)
+        {
+            // All intermediate landings in a legal route are empty. Single-tap play commits at the first permitted stop.
+            for (int hop = 0; hop + 1 < move.PathLength; hop++)
+                if (CanStop(move.PathAt(hop), seat)) return true;
+            return false;
         }
 
         private double ScoreMove(BoardMove move, int seat, bool team)

@@ -13,28 +13,32 @@ namespace XanaduYonder.Runtime.BoardGames
             var block = UiFactory.Panel(view, "Board modal backdrop", 0, 0, Width, Height, new Color(.08f, .18f, .14f, .59f), false);
             block.raycastTarget = true;
             float width = Mathf.Min(644, ContentWidth);
-            float height = panel == PanelKind.Record ? 608 : panel == PanelKind.Rules ? 544 : panel == PanelKind.Settings ? 460 : 340;
+            float height = panel == PanelKind.Record ? 664 : panel == PanelKind.Rules || panel == PanelKind.Lessons ? Mathf.Min(980, Height - 80) :
+                panel == PanelKind.Settings ? 700 + (InMatch ? 76 : 0) + (feedbackSaveFailed ? 42 : 0) + (HasSettingsActions ? 76 : 0) :
+                panel == PanelKind.Resume ? 202 + 76 * profile.Matches.Count : panel == PanelKind.Result && CanReplay ? 438 : 340;
             var sheet = UiFactory.Panel(block.transform, "Board modal sheet", (Width - width) * .5f, (Height - height) * .5f,
                 width, height, UiFactory.Paper);
             switch (panel)
             {
                 case PanelKind.Rules:
-                    DialogTitle(sheet.transform, width, "玩法说明");
-                    DialogText(sheet.transform, width, 107, 230, RuleText());
-                    GameButton(sheet.transform, "新手教程", 26, height - 202, width - 52, 79, StartTutorial, true);
-                    GameButton(sheet.transform, "返回", 26, height - 105, width - 52, 79, ClosePanel);
+                    DrawRules(sheet.transform, width, height);
+                    break;
+                case PanelKind.Lessons:
+                    DrawLessonDirectory(sheet.transform, width, height);
                     break;
                 case PanelKind.Settings:
-                    DialogTitle(sheet.transform, width, "对局设置");
-                    if (game == BoardGameId.Army)
+                    DrawSettings(sheet.transform, width, height);
+                    break;
+                case PanelKind.Resume:
+                    DialogTitle(sheet.transform, width, "继续对局");
+                    float y = 100;
+                    foreach (var saved in profile.Matches.OrderBy(pair => pair.Key).Select(pair => pair.Value))
                     {
-                        GameButton(sheet.transform, "走棋二次确认 · " + (profile.ConfirmArmyMove ? "开启" : "关闭"),
-                            26, 102, width - 52, 83, ToggleArmyConfirm, profile.ConfirmArmyMove);
-                        DialogText(sheet.transform, width, 187, 60, profile.ConfirmArmyMove ? "先预选落点，再确认走棋。" :
-                            "点合法落点即走棋，同机双人立即遮挡交接。");
+                        GameButton(sheet.transform, Mode(saved.Options) + (saved.Terminal ? " · 已结束" : " · " + saved.MoveCount + " 手"),
+                            26, y, width - 52, 66, () => { ActivateMatch(saved, true); Save(); Render(); });
+                        y += 76;
                     }
-                    GameButton(sheet.transform, "声音与触感", 26, height - 199, width - 52, 76, OpenGlobal);
-                    GameButton(sheet.transform, "完成", 26, height - 100, width - 52, 76, ClosePanel, true);
+                    GameButton(sheet.transform, "返回设置", 26, height - 100, width - 52, 76, () => OpenPanel(PanelKind.Settings));
                     break;
                 case PanelKind.Replace:
                     DialogTitle(sheet.transform, width, "开始新一局？");
@@ -67,6 +71,7 @@ namespace XanaduYonder.Runtime.BoardGames
                     DialogTitle(sheet.transform, width, Outcome());
                     DialogText(sheet.transform, width, 111, 83,
                         match.Position.Status + " · 共 " + match.MoveCount + " 手");
+                    if (CanReplay) GameButton(sheet.transform, "复盘本局", 26, 213, width - 52, 75, StartReplay);
                     DialogPair(sheet.transform, width, height, "回看棋盘", () => result.Inspect(ClosePanel), "再来一局", () =>
                     {
                         panel = PanelKind.None;
@@ -74,14 +79,7 @@ namespace XanaduYonder.Runtime.BoardGames
                     });
                     break;
                 case PanelKind.Record:
-                    DialogTitle(sheet.transform, width, "本局棋谱");
-                    var history = match.History.ToArray();
-                    int first = Math.Max(0, history.Length - 8);
-                    for (int i = first; i < history.Length; i++)
-                        UiFactory.Label(sheet.transform, (i + 1) + ".  " + DescribeMove(history[i]), 28,
-                            105 + (i - first) * 45, width - 56, 42, 21, UiFactory.Ink);
-                    if (history.Length == 0) DialogText(sheet.transform, width, 108, 80, "还没有已提交的走棋");
-                    GameButton(sheet.transform, "返回棋盘", 26, height - 102, width - 52, 76, ClosePanel);
+                    DrawRecord(sheet.transform, width, height);
                     break;
                 case PanelKind.Leave:
                     DialogTitle(sheet.transform, width, "棋局尚未保存");
@@ -95,9 +93,93 @@ namespace XanaduYonder.Runtime.BoardGames
             }
         }
 
-        private void ToggleArmyConfirm()
+        private bool HasSettingsActions => saveFailed || InMatch;
+
+        private void DrawSettings(Transform sheet, float width, float height)
         {
-            profile.ConfirmArmyMove = !profile.ConfirmArmyMove;
+            DialogTitle(sheet, width, "对局设置");
+            bool immediate = !profile.ConfirmBoardMove;
+            PreferenceToggle(sheet, "单击落子", 26, 100, width - 52, immediate, ToggleMoveConfirm);
+            string moveHint = immediate ? "选中棋子后，点一次合法落点即走棋。" : "选中棋子和落点，再点同一落点确认。";
+            if (game == BoardGameId.Checkers && immediate) moveHint = "点可停的落点即结束本手。关闭可分段连跳。";
+            UiFactory.Label(sheet, moveHint, 28, 172, width - 56, 44, 22, UiFactory.Muted);
+
+            float column = (width - 62) / 2;
+            float right = 36 + column;
+            float y = 224;
+            PreferenceToggle(sheet, "声音", 26, y, column, sound(), () => ToggleFeedback(true));
+            PreferenceToggle(sheet, "触感", right, y, column, haptics(), () => ToggleFeedback(false));
+            y += 76;
+            if (feedbackSaveFailed)
+            {
+                UiFactory.Label(sheet, "声音和触感设置暂未保存", 28, y, width - 56, 36, 22, UiFactory.Muted);
+                y += 42;
+            }
+            PreferenceToggle(sheet, "显示提示按钮", 26, y, width - 52, profile.HintsEnabled, ToggleHints);
+            y += 76;
+            bool chess = game == BoardGameId.Chess;
+            PreferenceToggle(sheet, "显示棋盘坐标", 26, y, chess ? column : width - 52, profile.ShowCoordinates, () =>
+            {
+                profile.ShowCoordinates = !profile.ShowCoordinates;
+                Save();
+                Render();
+            });
+            if (chess)
+                PreferenceToggle(sheet, "显示棋子汉字", right, y, column, profile.ShowChessNames, () =>
+                {
+                    profile.ShowChessNames = !profile.ShowChessNames;
+                    Save();
+                    Render();
+                });
+            y += 76;
+            GameButton(sheet, "新手教程", 26, y, column, 66, StartTutorial);
+            GameButton(sheet, "新一局", right, y, column, 66, OpenSetup);
+            GameButton(sheet, "继续其他对局", 26, y + 76, column, 66, () => OpenPanel(PanelKind.Resume), false,
+                profile.Matches.Values.Any(saved => saved != match));
+            if (InMatch)
+            {
+                GameButton(sheet, "棋谱", right, y + 76, column, 66, () => OpenPanel(PanelKind.Record));
+                if (game != BoardGameId.Army) GameButton(sheet, "悔棋", 26, y + 152, column, 66, RequestUndo, false, match.CanUndo);
+                if (match.Terminal) GameButton(sheet, "查看结算", right, y + 152, column, 66, () => OpenPanel(PanelKind.Result));
+                else GameButton(sheet, "暂停", right, y + 152, column, 66, Pause, false, !paused);
+            }
+            float more = y + (InMatch ? 228 : 152);
+            if (HasSettingsActions)
+            {
+                bool replayEntry = InMatch;
+                bool canDraw = CanClaimDraw;
+                int count = (replayEntry ? 1 : 0) + (canDraw ? 1 : 0) + (saveFailed ? 1 : 0);
+                float actionWidth = (width - 52 - (count - 1) * 10) / count;
+                float x = 26;
+                if (replayEntry)
+                {
+                    GameButton(sheet, game == BoardGameId.Army && !match.Terminal ? "终局后复盘" : "复盘本局",
+                        x, more, actionWidth, 66, StartReplay, false, CanReplay);
+                    x += actionWidth + 10;
+                }
+                if (canDraw)
+                {
+                    GameButton(sheet, "申请和棋", x, more, actionWidth, 66, ClaimDraw);
+                    x += actionWidth + 10;
+                }
+                if (saveFailed) GameButton(sheet, "重试保存", x, more, actionWidth, 66, () => { Save(); Render(); });
+            }
+            GameButton(sheet, "完成", 26, height - 88, width - 52, 66, ClosePanel, true);
+        }
+
+        private static void PreferenceToggle(Transform sheet, string title, float x, float y, float width, bool enabled, Action toggle)
+        {
+            var row = UiFactory.Panel(sheet, title + " preference", x, y, width, 66, MutedCard);
+            UiFactory.ConfigureButton(row, toggle);
+            UiFactory.Label(row.transform, title, 18, 0, width - 116, 66, 25, UiFactory.Ink);
+            var track = UiFactory.Panel(row.transform, title + " switch", width - 88, 15, 72, 36,
+                enabled ? UiFactory.Accent : UiFactory.Hex("83948C"));
+            UiFactory.CirclePanel(track.transform, title + " switch thumb", enabled ? 38 : 4, 4, 28, Color.white);
+        }
+
+        private void ToggleMoveConfirm()
+        {
+            profile.ConfirmBoardMove = !profile.ConfirmBoardMove;
             ClearDraft();
             Save();
             Render();
@@ -116,37 +198,5 @@ namespace XanaduYonder.Runtime.BoardGames
             GameButton(sheet, right, 36 + half, height - 107, half, 80, second, true);
         }
 
-        private string DescribeMove(BoardMove move)
-        {
-            if (move == BoardMove.Pass) return "跳过";
-            if (move.From == BoardMove.ClaimDraw.From) return "申请和棋";
-            if (game == BoardGameId.Checkers && move.PathLength != 0)
-                return Coordinate(move.From) + " → " + Coordinate(move.To) + " · " + move.PathLength + " 跳";
-            string description = Coordinate(move.From) + " → " + Coordinate(move.To);
-            if (game == BoardGameId.Chess && move.Choice != 0) description += " · 升变";
-            return description;
-        }
-
-        private string Coordinate(int point)
-        {
-            switch (game)
-            {
-                case BoardGameId.Chess: return ((char)('a' + point % 8)).ToString() + (point / 8 + 1);
-                case BoardGameId.Xiangqi: return (point % 9 + 1) + "路" + (10 - point / 9) + "行";
-                case BoardGameId.Army: return (point / 5 + 1) + "行" + (point % 5 + 1) + "站";
-                default: return (ChineseCheckersGame.RowAt(point) + 1) + "行" + (ChineseCheckersGame.DoubledXAt(point) + 13) + "位";
-            }
-        }
-
-        private string RuleText()
-        {
-            switch (game)
-            {
-                case BoardGameId.Army: return "秘密布阵后轮流走棋。公路线每次一站，铁路无阻挡可直走，工兵可以转弯。行营中的棋子受保护，大本营中的棋子不能再移动。扛旗或对手无棋可走时获胜。司令阵亡亮己方军旗。连续 60 手未交战判和。";
-                case BoardGameId.Xiangqi: return "红方先走。点己子可查看合法落点。马受马腿限制，象受象眼限制，炮隔一个棋子才能吃子。将帅不能照面。将死或困毙的一方判负。重复局面按长将、长捉责任裁决。";
-                case BoardGameId.Chess: return "白方先走，目标是将死对方。兵到达底线可升变，符合条件时可王车易位或吃过路兵。逼和和死局判和。三次重复或五十回合可申请和棋，五次重复或七十五回合自动判和。";
-                default: return "先让十颗棋珠进入对角目标营。每手走到相邻空孔，或连续跳过相邻棋珠。可以跨过第三方营区，须在本方营区、中央或目标营停手。目标营满且仅余对方原营棋子堵点时，允许合法末段换位。";
-            }
-        }
     }
 }

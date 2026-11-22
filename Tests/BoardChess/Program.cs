@@ -64,6 +64,15 @@ internal static class Program
             Assert(game.TryPlay(Move("g6g7")) && game.Winner == ChessGame.White && game.LegalMoves().Count == 0, "mate at halfmove 150");
         });
 
+        Run("hints recommend a piece move even when a draw may be claimed", () =>
+        {
+            var game = ChessGame.FromFen("4k3/8/8/8/4q3/8/8/K7 w - - 100 51");
+            Assert(game.LegalMoves().Contains(BoardMove.ClaimDraw), "sample allows a draw claim");
+            var hint = game.CaptureHintSearch()(BoardDifficulty.Normal, 0, CancellationToken.None);
+            Assert(hint.From >= 0 && game.LegalMoves().Contains(hint), "hint returns a legal source and destination");
+            Assert(game.LegalMoves().Contains(BoardMove.ClaimDraw), "hint leaves the live draw claim available");
+        });
+
         Run("stalemate and dead material stop play", () =>
         {
             foreach (string fen in new[]

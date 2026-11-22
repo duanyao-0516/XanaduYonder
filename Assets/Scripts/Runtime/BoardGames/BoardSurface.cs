@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,19 +9,31 @@ using XanaduYonder.Core.BoardGames;
 namespace XanaduYonder.Runtime.BoardGames
 {
     [RequireComponent(typeof(CanvasRenderer))]
-    internal sealed class BoardSurface : MaskableGraphic, IPointerDownHandler, IPointerUpHandler
+    internal sealed partial class BoardSurface : MaskableGraphic, IPointerDownHandler, IPointerUpHandler
     {
         private static readonly Color Wood = UiFactory.Hex("EADFC6");
-        private static readonly Color LineColor = UiFactory.Hex("967A52");
+        private static readonly Color LineColor = UiFactory.Hex("664320");
         private static readonly Color Light = UiFactory.Hex("F2E6CC");
         private static readonly Color Dark = UiFactory.Hex("718C73");
         private static readonly Color Red = UiFactory.Hex("A13A30");
+        private static readonly Color ChessGold = UiFactory.Hex("E7B354");
+        private static readonly Color ChessIvory = UiFactory.Hex("FFF2CD");
+        private static readonly Color ChessMark = UiFactory.Hex("283E33");
+        private static readonly Color WhitePiece = UiFactory.Hex("FFF2D8");
+        private static readonly Color WhitePieceEdge = UiFactory.Hex("355146");
+        private static readonly Color BlackPiece = UiFactory.Hex("1D4034");
+        private static readonly Color BlackPieceEdge = UiFactory.Hex("DFD3B9");
+        private static readonly Color SuggestionGold = UiFactory.Hex("FFD461");
+        private static readonly Color SuggestionEdge = UiFactory.Hex("6D3E10");
+        private const float ChessLabelOffset = .31f;
+        private static Texture2D xiangqiArtwork;
         private static readonly Color[] Seats = { UiFactory.Hex("286B47"), UiFactory.Hex("9B4B37"), UiFactory.Hex("3F6898"),
             UiFactory.Hex("856222"), UiFactory.Hex("705491"), UiFactory.Hex("256D70") };
         private static readonly string[] Symbols = { "•", "—", "×", "▲", "◇", "Ⅱ" };
         private static readonly string[] Army = { "", "工兵", "排长", "连长", "营长", "团长", "旅长", "师长", "军长", "司令", "炸弹", "地雷", "军旗" };
         private static readonly string[] XiangRed = { "", "帥", "仕", "相", "馬", "車", "炮", "兵" };
         private static readonly string[] XiangBlack = { "", "將", "士", "象", "馬", "車", "砲", "卒" };
+        private static readonly string[] ChessNames = { "", "兵", "马", "象", "车", "后", "王" };
         private static readonly Vector2[][] ChessShapes = {
             null,
             Points(-.44f,-.48f,.44f,-.48f,.36f,-.30f,.19f,-.20f,.12f,.03f,-.12f,.03f,-.19f,-.20f,-.36f,-.30f),
@@ -31,11 +44,12 @@ namespace XanaduYonder.Runtime.BoardGames
             Points(-.44f,-.48f,.44f,-.48f,.37f,-.32f,.22f,-.12f,.35f,.10f,.24f,.29f,0,.21f,-.24f,.29f,-.35f,.10f,-.22f,-.12f,-.37f,-.32f),
         };
         private readonly HashSet<int> targets = new HashSet<int>();
+        private readonly List<Text> labels = new List<Text>();
         private BoardGameId game;
         private IBoardPosition position;
         private Action<int> chosen;
         private int ownSide, viewSide, selected, preview;
-        private bool formation;
+        private bool formation, revealArmy, showCoordinates, showChessNames;
         private int[] route;
         private BoardMove last;
         private Vector2 press;
@@ -43,6 +57,10 @@ namespace XanaduYonder.Runtime.BoardGames
         private int pointer = int.MinValue;
         private bool draining;
         private bool enabledInput;
+
+        private bool HasXiangqiArtwork => game == BoardGameId.Xiangqi && xiangqiArtwork != null;
+        public override Texture mainTexture => HasXiangqiArtwork ? xiangqiArtwork : base.mainTexture;
+        internal BoardMove? Suggestion { get; private set; }
 
         internal static float Ratio(BoardGameId game)
         {
@@ -60,15 +78,23 @@ namespace XanaduYonder.Runtime.BoardGames
         internal static string ArmyName(int rank) => rank >= 0 && rank < Army.Length ? Army[rank] : "暗子";
 
         internal void Bind(BoardGameId game, IBoardPosition position, int ownSide, int viewSide, int selected, int preview,
-            IReadOnlyList<int> route, IEnumerable<int> targets, BoardMove last, bool enabledInput, Action<int> chosen, bool formation = false)
+            IReadOnlyList<int> route, IEnumerable<int> targets, BoardMove last, bool enabledInput, Action<int> chosen,
+            bool formation = false, bool revealArmy = false, BoardMove? suggestion = null,
+            bool showCoordinates = false, bool showChessNames = true)
         {
             this.game = game;
+            if (game == BoardGameId.Xiangqi && xiangqiArtwork == null)
+                xiangqiArtwork = Resources.Load<Texture2D>("BoardGames/XiangqiArtwork");
             this.position = position;
             this.ownSide = ownSide;
             this.viewSide = viewSide;
             this.selected = selected;
             this.preview = preview;
             this.formation = formation;
+            this.revealArmy = revealArmy;
+            this.showCoordinates = showCoordinates;
+            this.showChessNames = showChessNames;
+            Suggestion = suggestion;
             this.route = route == null ? Array.Empty<int>() : new List<int>(route).ToArray();
             this.targets.Clear();
             this.targets.UnionWith(targets);
@@ -77,20 +103,34 @@ namespace XanaduYonder.Runtime.BoardGames
             this.chosen = chosen;
             raycastTarget = enabledInput;
             AddLabels();
+            SetMaterialDirty();
             SetVerticesDirty();
         }
 
-        private float Pitch => rectTransform.rect.width / (game == BoardGameId.Checkers ? 13 :
-            game == BoardGameId.Xiangqi ? 9 : game == BoardGameId.Army ? 5 : 8);
+        private int Columns => game == BoardGameId.Checkers ? 13 : game == BoardGameId.Xiangqi ? 9 : game == BoardGameId.Army ? 5 : 8;
+        private int Rows => game == BoardGameId.Checkers ? 17 : game == BoardGameId.Xiangqi ? 10 : game == BoardGameId.Army ? 12 : 8;
+        private float AxisGutter => showCoordinates
+            ? Mathf.Min(game == BoardGameId.Checkers ? 28 : 32, rectTransform.rect.width * .15f) : 0;
+        private float Pitch => (rectTransform.rect.width - AxisGutter) / Columns;
+
+        private Rect BoardArea
+        {
+            get
+            {
+                Rect area = rectTransform.rect;
+                float gutter = AxisGutter;
+                return Rect.MinMaxRect(area.xMin + gutter, area.yMin + gutter, area.xMax, area.yMax);
+            }
+        }
 
         private Vector2 Center(int index)
         {
-            var area = rectTransform.rect;
+            Rect area = BoardArea;
             if (game == BoardGameId.Checkers)
                 return new Vector2(area.center.x + ChineseCheckersGame.DoubledXAt(index) * Pitch * .5f,
-                    area.center.y + (8 - ChineseCheckersGame.RowAt(index)) * Pitch * .8660254f);
-            int columns = game == BoardGameId.Army ? 5 : game == BoardGameId.Xiangqi ? 9 : 8;
-            int rows = game == BoardGameId.Army ? 12 : game == BoardGameId.Xiangqi ? 10 : 8;
+                    CheckersRowY(area, ChineseCheckersGame.RowAt(index)));
+            int columns = Columns;
+            int rows = Rows;
             if (game == BoardGameId.Chess) index = (7 - index / 8) * 8 + index % 8;
             if (viewSide == 1) index = columns * rows - 1 - index;
             int row = index / columns;
@@ -98,50 +138,105 @@ namespace XanaduYonder.Runtime.BoardGames
             return new Vector2(area.xMin + (index % columns + .5f) * Pitch, area.yMax - y * area.height);
         }
 
+        private float CheckersRowY(Rect area, int row) => area.center.y + (8 - row) * Pitch * .8660254f;
+
         private void AddLabels()
         {
-            var area = rectTransform.rect;
+            foreach (Text label in labels)
+            {
+                label.gameObject.SetActive(false);
+                Destroy(label.gameObject);
+            }
+            labels.Clear();
+
+            if (xiangqiPieces != null && game != BoardGameId.Xiangqi) xiangqiPieces.gameObject.SetActive(false);
+            if (showCoordinates) AddCoordinates();
+            if (game == BoardGameId.Chess && !showChessNames) return;
             if (game == BoardGameId.Xiangqi)
             {
-                UiFactory.Label(transform, "楚 河", Pitch, area.height / 2 - Pitch * .4f, Pitch * 3, Pitch * .8f,
-                    Mathf.RoundToInt(Pitch * .39f), LineColor, TextAnchor.MiddleCenter);
-                UiFactory.Label(transform, "漢 界", Pitch * 5, area.height / 2 - Pitch * .4f, Pitch * 3, Pitch * .8f,
-                    Mathf.RoundToInt(Pitch * .39f), LineColor, TextAnchor.MiddleCenter);
+                Rect board = BoardArea;
+                int fontSize = Mathf.RoundToInt(Pitch * .39f);
+                AddCenteredLabel("楚 河", new Vector2(board.xMin + Pitch * 2.5f, board.center.y), Pitch * 3, Pitch * .8f, fontSize, LineColor);
+                AddCenteredLabel("漢 界", new Vector2(board.xMin + Pitch * 6.5f, board.center.y), Pitch * 3, Pitch * .8f, fontSize, LineColor);
+                BindXiangqiPieceLayer();
+                if (HasXiangqiArtwork) return;
             }
-            if (game == BoardGameId.Chess)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    string file = ((char)('a' + (viewSide == 0 ? i : 7 - i))).ToString();
-                    string rank = (viewSide == 0 ? 8 - i : i + 1).ToString();
-                    UiFactory.Label(transform, file, (i + 1) * Pitch - 18, area.height - 20, 16, 17, 14,
-                        i % 2 == 0 ? Light : UiFactory.Ink, TextAnchor.MiddleCenter);
-                    UiFactory.Label(transform, rank, 3, i * Pitch, 16, 18, 14,
-                        i % 2 == 0 ? UiFactory.Ink : Light, TextAnchor.MiddleCenter);
-                }
-            }
-            for (int index = 0; index < position.PointCount && game != BoardGameId.Chess; index++)
+            for (int index = 0; index < position.PointCount; index++)
             {
                 var piece = VisiblePiece(index);
-                if (piece.Kind == 0 || (piece.Kind < 0 && game != BoardGameId.Army)) continue;
+                if (piece.Kind <= 0) continue;
                 Vector2 at = Center(index);
-                float w = Pitch * (game == BoardGameId.Army ? .82f : .75f), h = Pitch * (game == BoardGameId.Army ? .38f : .76f);
-                string name = game == BoardGameId.Army ? (piece.Kind < 0 ? "" : ArmyName(piece.Kind)) :
+                if (game == BoardGameId.Chess)
+                {
+                    var label = AddCenteredLabel(ChessNames[piece.Kind], at - Vector2.up * (Pitch * ChessLabelOffset),
+                        Pitch * .45f, Pitch * .32f, Mathf.RoundToInt(Pitch * .29f),
+                        piece.Side == ChessGame.White ? WhitePieceEdge : WhitePiece, FontStyle.Bold);
+                    label.alignByGeometry = true;
+                    label.name = "Chess piece label " + index;
+                    continue;
+                }
+                float w = Pitch * (game == BoardGameId.Army ? .82f : .75f);
+                float h = Pitch * (game == BoardGameId.Army ? .38f : .76f);
+                string name = game == BoardGameId.Army ? ArmyName(piece.Kind) :
                     game == BoardGameId.Xiangqi ? (piece.Side == 0 ? XiangRed : XiangBlack)[piece.Kind] : Symbols[piece.Side];
-                if (name.Length == 0) continue;
-                int fontSize = Mathf.RoundToInt(Pitch * (game == BoardGameId.Army ? .185f : game == BoardGameId.Xiangqi ? .44f : .45f));
-                var tint = game == BoardGameId.Checkers ? Color.white : piece.Side == 0 ? Red : UiFactory.Ink;
-                UiFactory.Label(transform, name, at.x - area.xMin - w * .5f, area.yMax - at.y - h * .5f, w, h, fontSize,
-                    tint, TextAnchor.MiddleCenter, FontStyle.Bold);
+                int font = Mathf.RoundToInt(Pitch * (game == BoardGameId.Army ? .185f : game == BoardGameId.Xiangqi ? .44f : .45f));
+                Color tint = game == BoardGameId.Checkers ? Color.white : piece.Side == 0 ? Red : UiFactory.Ink;
+                var pieceLabel = AddCenteredLabel(name, at, w, h, font, tint, FontStyle.Bold);
+                if (game == BoardGameId.Xiangqi) pieceLabel.name = XiangqiPieceLabelName(index);
             }
+        }
+
+        private void AddCoordinates()
+        {
+            Rect area = rectTransform.rect;
+            Rect board = BoardArea;
+            float gutter = AxisGutter;
+            float pitch = Pitch;
+            int fontSize = Mathf.RoundToInt(Mathf.Min(gutter * .72f, pitch * .60f));
+            bool checkers = game == BoardGameId.Checkers;
+            for (int col = 0; col < Columns; col++)
+            {
+                // Odd numbers are the file ticks shared by the board's 13 evenly spaced major columns.
+                string file = game == BoardGameId.Chess ? ((char)('a' + col)).ToString() :
+                    (checkers ? col * 2 + 1 : col + 1).ToString(CultureInfo.InvariantCulture);
+                float x = checkers ? board.xMin + (col + .5f) * pitch : Center(col).x;
+                Vector2 at = new Vector2(x, area.yMin + gutter * .5f);
+                var label = AddCenteredLabel(file, at, pitch, gutter, fontSize, UiFactory.Ink, FontStyle.Bold);
+                label.alignByGeometry = true;
+                label.name = "Board file " + file;
+            }
+            for (int row = 0; row < Rows; row++)
+            {
+                int rank = game == BoardGameId.Chess || checkers ? row + 1 : Rows - row;
+                string digits = rank.ToString(CultureInfo.InvariantCulture);
+                string text = game == BoardGameId.Xiangqi ? BoardCatalog.XiangqiRankName(rank) : digits;
+                float y = checkers ? CheckersRowY(board, row) : Center(row * Columns).y;
+                Vector2 at = new Vector2(area.xMin + gutter * .5f, y);
+                var label = AddCenteredLabel(text, at, gutter, gutter, fontSize, UiFactory.Ink, FontStyle.Bold);
+                label.alignByGeometry = true;
+                label.name = "Board rank " + digits;
+            }
+        }
+
+        private Text AddCenteredLabel(string text, Vector2 at, float width, float height, int fontSize, Color tint,
+            FontStyle style = FontStyle.Normal)
+        {
+            Rect area = rectTransform.rect;
+            Text label = UiFactory.Label(transform, text, at.x - area.xMin - width * .5f, area.yMax - at.y - height * .5f,
+                width, height, fontSize, tint, TextAnchor.MiddleCenter, style);
+            labels.Add(label);
+            return label;
         }
 
         private BoardPiece VisiblePiece(int point)
         {
-            if (formation)
+            if (game == BoardGameId.Army)
             {
                 var piece = position.PieceAt(point, ownSide);
-                return piece.Side == ownSide ? piece : default;
+                if (formation) return piece.Side == ownSide ? piece : default;
+                if (revealArmy && piece.Kind < 0) return position.PieceAt(point, piece.Side);
+                if (!revealArmy && ownSide < 0 && piece.Kind > 0) return new BoardPiece(piece.Side, -1);
+                return piece;
             }
             if (game != BoardGameId.Checkers || route.Length == 0) return position.PieceAt(point, ownSide);
             if (point == route[route.Length - 1]) return position.PieceAt(selected, ownSide);
@@ -152,39 +247,114 @@ namespace XanaduYonder.Runtime.BoardGames
         {
             mesh.Clear();
             if (position == null || Pitch <= 0) return;
-            var bounds = rectTransform.rect;
-            Box(mesh, bounds.center, bounds.width, bounds.height, game == BoardGameId.Army ? UiFactory.Hex("DEE7D9") : Wood);
+            Rect outer = rectTransform.rect;
+            Rect board = BoardArea;
+            if (showCoordinates) Box(mesh, outer.center, outer.width, outer.height, UiFactory.Paper);
+            if (HasXiangqiArtwork) ArtworkQuad(mesh, board, new RectInt(8, 8, 600, 668));
+            else Box(mesh, board.center, board.width, board.height, game == BoardGameId.Army ? UiFactory.Hex("DEE7D9") : Wood);
             switch (game)
             {
                 case BoardGameId.Army: DrawArmy(mesh); break;
-                case BoardGameId.Xiangqi: DrawXiangqi(mesh); break;
+                case BoardGameId.Xiangqi: DrawXiangqi(mesh); return;
                 case BoardGameId.Checkers: DrawStar(mesh); break;
                 default: DrawChess(mesh); break;
             }
+            DrawPieces(mesh);
+        }
+
+        internal void DrawPieces(VertexHelper mesh)
+        {
+            if (position == null || Pitch <= 0) return;
             if (game == BoardGameId.Checkers)
             {
                 if (last.From >= 0) DrawTrail(mesh, last.From, last.PathLength == 0 ? new[] { last.To } : last.Path, UiFactory.Hex("82956C"), 3);
                 if (route.Length > 0) DrawTrail(mesh, selected, route, UiFactory.Accent, 5);
+                if (Suggestion is BoardMove jumpHint && jumpHint.PathLength > 1)
+                {
+                    var landings = jumpHint.Path;
+                    DrawTrail(mesh, jumpHint.From, landings, SuggestionEdge, 7);
+                    DrawTrail(mesh, jumpHint.From, landings, SuggestionGold, 3);
+                }
             }
+            int animatedDestination = XiangqiMotionDestination;
             for (int index = 0; index < position.PointCount; index++)
             {
                 Vector2 at = Center(index);
                 var piece = VisiblePiece(index);
                 bool marked = index == selected || index == preview || (route.Length != 0 && index == route[route.Length - 1]);
-                if (piece.Kind != 0) DrawPiece(mesh, at, piece);
-                if (targets.Contains(index))
+                if (piece.Kind != 0 && index != animatedDestination) DrawPiece(mesh, at, piece);
+                bool target = targets.Contains(index);
+                if (game == BoardGameId.Chess && (marked || target))
                 {
-                    if (piece.Kind == 0) Disc(mesh, at, marked ? Pitch * .21f : Pitch * .115f, UiFactory.Accent);
+                    DrawChessMark(mesh, at, index, piece.Kind != 0, marked);
+                    continue;
+                }
+                if (target)
+                {
+                    if (piece.Kind == 0 && game == BoardGameId.Checkers)
+                    {
+                        Disc(mesh, at, Pitch * .235f, UiFactory.Hex("B9D1A7"));
+                        Ring(mesh, at, Pitch * .235f, 2.4f, UiFactory.Accent);
+                    }
+                    else if (piece.Kind == 0) Disc(mesh, at, marked ? Pitch * .21f : Pitch * .115f, UiFactory.Accent);
                     else Ring(mesh, at, Pitch * .43f, 3, UiFactory.Accent);
                 }
                 if (marked)
                 {
                     if (game == BoardGameId.Army) Outline(mesh, at, Pitch * .86f, Pitch * .39f, 3, UiFactory.Accent);
-                    else if (game == BoardGameId.Chess) Outline(mesh, at, Pitch * .91f, Pitch * .91f, 3, UiFactory.Accent);
                     else Ring(mesh, at, Pitch * .46f, 2.5f, UiFactory.Accent);
                 }
-                else if (last.To == index) Disc(mesh, at + new Vector2(Pitch * .29f, Pitch * .28f), Pitch * .063f, UiFactory.Hex("B9783F"));
+                else if (last.To == index && index != animatedDestination)
+                    Disc(mesh, at + new Vector2(Pitch * .29f, Pitch * .28f), Pitch * .063f, UiFactory.Hex("B9783F"));
             }
+            if (Suggestion is BoardMove hint && hint.From != hint.To &&
+                (uint)hint.From < position.PointCount && (uint)hint.To < position.PointCount)
+            {
+                DrawSuggestionMark(mesh, Center(hint.From), false);
+                DrawSuggestionMark(mesh, Center(hint.To), true);
+                if (game == BoardGameId.Checkers)
+                    for (int i = 0; i < hint.PathLength - 1; i++)
+                    {
+                        Vector2 landing = Center(hint.PathAt(i));
+                        Disc(mesh, landing, Pitch * .16f, SuggestionEdge);
+                        Disc(mesh, landing, Pitch * .10f, SuggestionGold);
+                    }
+            }
+            DrawXiangqiMotion(mesh, animatedDestination);
+        }
+
+        private void DrawSuggestionMark(VertexHelper mesh, Vector2 at, bool destination)
+        {
+            float width = Pitch * .91f;
+            float height = game == BoardGameId.Army ? Pitch * .42f : width;
+            float stroke = Mathf.Clamp(Pitch * .07f, 3.5f, 7);
+            float inner = stroke * .57f;
+            if (destination)
+            {
+                if (game == BoardGameId.Xiangqi || game == BoardGameId.Checkers)
+                {
+                    float radius = Pitch * .49f;
+                    Ring(mesh, at, radius, stroke, SuggestionEdge);
+                    Ring(mesh, at, radius - (stroke - inner) * .5f, inner, SuggestionGold);
+                }
+                else
+                {
+                    Outline(mesh, at, width, height, stroke, SuggestionEdge);
+                    Outline(mesh, at, width, height, inner, SuggestionGold);
+                }
+                return;
+            }
+            for (int x = -1; x <= 1; x += 2)
+                for (int y = -1; y <= 1; y += 2)
+                {
+                    var corner = at + new Vector2(x * width, y * height) * .5f;
+                    var horizontal = corner - Vector2.right * (x * width * .24f);
+                    var vertical = corner - Vector2.up * (y * height * .24f);
+                    Stroke(mesh, horizontal, corner, stroke, SuggestionEdge);
+                    Stroke(mesh, corner, vertical, stroke, SuggestionEdge);
+                    Stroke(mesh, horizontal, corner, inner, SuggestionGold);
+                    Stroke(mesh, corner, vertical, inner, SuggestionGold);
+                }
         }
 
         private void DrawArmy(VertexHelper mesh)
@@ -226,27 +396,83 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DrawXiangqi(VertexHelper mesh)
         {
-            for (int row = 0; row < 10; row++) Stroke(mesh, Center(9 * row), Center(9 * row + 8), 2, LineColor);
+            const float line = 2.4f;
+            for (int row = 0; row < 10; row++) Stroke(mesh, Center(9 * row), Center(9 * row + 8), line, LineColor);
             for (int col = 0; col < 9; col++)
             {
-                if (col == 0 || col == 8) Stroke(mesh, Center(col), Center(81 + col), 2, LineColor);
+                if (col == 0 || col == 8) Stroke(mesh, Center(col), Center(81 + col), line, LineColor);
                 else
                 {
-                    Stroke(mesh, Center(col), Center(36 + col), 2, LineColor);
-                    Stroke(mesh, Center(45 + col), Center(81 + col), 2, LineColor);
+                    Stroke(mesh, Center(col), Center(36 + col), line, LineColor);
+                    Stroke(mesh, Center(45 + col), Center(81 + col), line, LineColor);
                 }
             }
             foreach (int row in new[] { 0, 7 })
             {
-                Stroke(mesh, Center(row * 9 + 3), Center((row + 2) * 9 + 5), 2, LineColor);
-                Stroke(mesh, Center(row * 9 + 5), Center((row + 2) * 9 + 3), 2, LineColor);
+                Stroke(mesh, Center(row * 9 + 3), Center((row + 2) * 9 + 5), line, LineColor);
+                Stroke(mesh, Center(row * 9 + 5), Center((row + 2) * 9 + 3), line, LineColor);
+            }
+            for (int col = 0; col < 9; col += 2)
+            {
+                DrawXiangqiPositionMark(mesh, Center(27 + col));
+                DrawXiangqiPositionMark(mesh, Center(54 + col));
+            }
+            foreach (int point in new[] { 19, 25, 64, 70 }) DrawXiangqiPositionMark(mesh, Center(point));
+        }
+
+        private void DrawXiangqiPositionMark(VertexHelper mesh, Vector2 point)
+        {
+            Rect board = BoardArea;
+            for (int x = -1; x <= 1; x += 2)
+            {
+                float neighbor = point.x + x * Pitch;
+                if (neighbor < board.xMin || neighbor > board.xMax) continue;
+                for (int y = -1; y <= 1; y += 2)
+                {
+                    var corner = point + new Vector2(x, y) * (Pitch * .10f);
+                    Stroke(mesh, corner, corner + Vector2.right * (x * Pitch * .13f), 1.8f, LineColor);
+                    Stroke(mesh, corner, corner + Vector2.up * (y * Pitch * .13f), 1.8f, LineColor);
+                }
             }
         }
 
         private void DrawChess(VertexHelper mesh)
         {
             for (int point = 0; point < 64; point++)
-                Box(mesh, Center(point), Pitch, Pitch, (point / 8 + point % 8) % 2 == 0 ? Light : Dark);
+            {
+                var square = (point / 8 + point % 8) % 2 == 0 ? Light : Dark;
+                if (point == selected) square = ChessGold;
+                else if (point == preview) square = UiFactory.Hex("F5D67F");
+                Box(mesh, Center(point), Pitch, Pitch, square);
+            }
+        }
+
+        private void DrawChessMark(VertexHelper mesh, Vector2 at, int index, bool occupied, bool marked)
+        {
+            if (marked)
+            {
+                Outline(mesh, at, Pitch * .90f, Pitch * .90f, 5, ChessMark);
+                Outline(mesh, at, Pitch * .81f, Pitch * .81f, 2.5f, ChessIvory);
+                if (index == selected || occupied) return;
+            }
+            if (!occupied)
+            {
+                Disc(mesh, at, Pitch * .217f, ChessMark);
+                Disc(mesh, at, Pitch * .172f, ChessIvory);
+                Disc(mesh, at, Pitch * .108f, ChessMark);
+                return;
+            }
+            for (int x = -1; x <= 1; x += 2)
+                for (int y = -1; y <= 1; y += 2)
+                {
+                    var corner = at + new Vector2(x, y) * (Pitch * .40f);
+                    var horizontal = corner - Vector2.right * (x * Pitch * .18f);
+                    var vertical = corner - Vector2.up * (y * Pitch * .18f);
+                    Stroke(mesh, horizontal, corner, 7, ChessMark);
+                    Stroke(mesh, corner, vertical, 7, ChessMark);
+                    Stroke(mesh, horizontal, corner, 3.5f, ChessIvory);
+                    Stroke(mesh, corner, vertical, 3.5f, ChessIvory);
+                }
         }
 
         private void DrawStar(VertexHelper mesh)
@@ -276,10 +502,7 @@ namespace XanaduYonder.Runtime.BoardGames
                     }
                     break;
                 case BoardGameId.Xiangqi:
-                    Disc(mesh, at, Pitch * .393f, UiFactory.Hex("FCF1D5"));
-                    var ring = piece.Side == 0 ? Red : UiFactory.Ink;
-                    Ring(mesh, at, Pitch * .392f, 2.4f, ring);
-                    Ring(mesh, at, Pitch * .336f, 1.2f, Color.Lerp(Light, ring, .43f));
+                    DrawXiangqiPiece(mesh, at, piece, Pitch);
                     break;
                 case BoardGameId.Checkers:
                     Disc(mesh, at, Pitch * .365f, UiFactory.Hex("F4ECD6"));
@@ -293,9 +516,17 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DrawSilhouette(VertexHelper mesh, Vector2 at, BoardPiece piece)
         {
-            float scale = Pitch * .68f;
-            Color tint = piece.Side == 0 ? UiFactory.Hex("FFF2D8") : UiFactory.Hex("1D4034");
-            Color edge = piece.Side == 0 ? UiFactory.Hex("355146") : UiFactory.Hex("DFD3B9");
+            float pitch = Pitch;
+            float scale = pitch * (showChessNames ? .54f : .68f);
+            Color tint = piece.Side == ChessGame.White ? WhitePiece : BlackPiece;
+            Color edge = piece.Side == ChessGame.White ? WhitePieceEdge : BlackPieceEdge;
+            if (showChessNames)
+            {
+                Vector2 caption = at - Vector2.up * (pitch * ChessLabelOffset);
+                Box(mesh, caption, pitch * .40f, pitch * .31f, tint);
+                Outline(mesh, caption, pitch * .40f, pitch * .31f, 1.2f, edge);
+                at += Vector2.up * (pitch * .15f);
+            }
             var design = ChessShapes[piece.Kind];
             var shape = new Vector2[design.Length];
             for (int i = 0; i < design.Length; i++) shape[i] = at + design[i] * scale;
@@ -324,10 +555,10 @@ namespace XanaduYonder.Runtime.BoardGames
         private int Hit(Vector2 screen, Camera camera)
         {
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screen, camera, out Vector2 local) ||
-                !rectTransform.rect.Contains(local)) return -1;
+                !BoardArea.Contains(local)) return -1;
             if (game == BoardGameId.Chess)
             {
-                Rect rect = rectTransform.rect;
+                Rect rect = BoardArea;
                 int square = Mathf.Clamp(Mathf.FloorToInt((rect.yMax - local.y) / Pitch), 0, 7) * 8 +
                     Mathf.Clamp(Mathf.FloorToInt((local.x - rect.xMin) / Pitch), 0, 7);
                 if (viewSide == 1) square = 63 - square;
@@ -363,6 +594,7 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void LateUpdate()
         {
+            UpdateXiangqiMotion();
             if (Input.touchCount > 1) { pointer = int.MinValue; draining = true; }
             if (draining) { if (Input.touchCount == 0) draining = false; return; }
             if (pointer < 0) return;
@@ -419,6 +651,21 @@ namespace XanaduYonder.Runtime.BoardGames
             int index = mesh.currentVertCount;
             mesh.AddVert(a, tint, Vector2.zero); mesh.AddVert(b, tint, Vector2.zero);
             mesh.AddVert(c, tint, Vector2.zero); mesh.AddVert(d, tint, Vector2.zero);
+            mesh.AddTriangle(index, index + 1, index + 2); mesh.AddTriangle(index, index + 2, index + 3);
+        }
+
+        private static void ArtworkQuad(VertexHelper mesh, Rect bounds, RectInt region)
+        {
+            // Artwork uses top-left pixel coordinates. The atlas also has an opaque white swatch at UV (0, 0) for the board line mesh.
+            float u0 = (region.xMin + .5f) / xiangqiArtwork.width;
+            float u1 = (region.xMax - .5f) / xiangqiArtwork.width;
+            float v0 = 1 - (region.yMax - .5f) / xiangqiArtwork.height;
+            float v1 = 1 - (region.yMin + .5f) / xiangqiArtwork.height;
+            int index = mesh.currentVertCount;
+            mesh.AddVert(new Vector2(bounds.xMin, bounds.yMin), Color.white, new Vector2(u0, v0));
+            mesh.AddVert(new Vector2(bounds.xMin, bounds.yMax), Color.white, new Vector2(u0, v1));
+            mesh.AddVert(new Vector2(bounds.xMax, bounds.yMax), Color.white, new Vector2(u1, v1));
+            mesh.AddVert(new Vector2(bounds.xMax, bounds.yMin), Color.white, new Vector2(u1, v0));
             mesh.AddTriangle(index, index + 1, index + 2); mesh.AddTriangle(index, index + 2, index + 3);
         }
 

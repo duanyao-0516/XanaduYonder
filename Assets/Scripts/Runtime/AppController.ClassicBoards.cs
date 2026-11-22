@@ -24,9 +24,9 @@ namespace XanaduYonder.Runtime
                 var root = UiFactory.Rect(frame, "Classic board game page", 0, 0, 720, 1320);
                 UiFactory.Stretch(root);
                 boardPage = root.gameObject.AddComponent<BoardGamePage>();
-                boardPage.Initialize(root, Application.persistentDataPath, ShowLobby, after => OpenSettings(after),
+                boardPage.Initialize(root, Application.persistentDataPath, ShowLobby,
                     () => activePage == Page.ClassicBoards && modal == null && !paused && focused,
-                    () => data.SoundEnabled, () => data.HapticsEnabled, feedback);
+                    () => data.SoundEnabled, () => data.HapticsEnabled, SetFeedbackSetting, feedback);
             }
             else boardPage.Leave();
             activePage = Page.ClassicBoards;
@@ -40,18 +40,18 @@ namespace XanaduYonder.Runtime
             string description, System.Action enter)
         {
             string id = BoardCatalog.Id(game);
-            var entry = LobbyGame(id, objectName, BoardCatalog.Name(game), number, "逻辑策略", tagline, description,
+            return LobbyGame(id, objectName, BoardCatalog.Name(game), number, "逻辑策略", tagline, description,
                 game == BoardGameId.Checkers ? "本地双人 · 最多 5 台电脑" : "人机 / 本地双人 · 三档难度",
-                game == BoardGameId.Checkers ? "双人 / 多人机" : "人机 / 双人", enter, null);
-            entry.BuildLogo = slot =>
-            {
-                var graphic = UiFactory.Rect(slot, "Large logo artwork", 0, 0, 63, 63).gameObject.AddComponent<Image>();
-                UiFactory.Stretch(graphic.rectTransform);
-                graphic.sprite = Resources.Load<Sprite>("Lobby/Icons/" + id + "-logo");
-                graphic.preserveAspect = true;
-                graphic.raycastTarget = false;
-            };
-            return entry;
+                game == BoardGameId.Checkers ? "双人 / 多人机" : "人机 / 双人", enter, parent => AddClassicBoardPreview(parent, id));
+        }
+
+        private static void AddClassicBoardPreview(Transform parent, string id)
+        {
+            var mask = LobbyPreviews.RoundedLogoFrame(parent, id);
+            var graphic = UiFactory.Rect(mask, "Board game artwork", 0, 0, 96, 96).gameObject.AddComponent<Image>();
+            graphic.sprite = Resources.Load<Sprite>("Lobby/Icons/" + id + "-logo");
+            graphic.preserveAspect = true;
+            graphic.raycastTarget = false;
         }
     }
 }

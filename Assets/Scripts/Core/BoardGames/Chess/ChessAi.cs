@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace XanaduYonder.Core.BoardGames
 {
@@ -10,9 +11,15 @@ namespace XanaduYonder.Core.BoardGames
         private static readonly int[] PawnAdvance = { 0, 0, 8, 18, 35, 65, 115, 0 };
         private const int FullPhase = 24;
 
-        public BoardSearch CaptureSearch()
+        public BoardSearch CaptureSearch() => CaptureSearch(true);
+
+        public BoardSearch CaptureHintSearch() => CaptureSearch(false);
+
+        private BoardSearch CaptureSearch(bool includeDrawClaim)
         {
             var snapshot = new ChessGame(this);
+            if (!includeDrawClaim && snapshot.legalMoves.Count > 0 && snapshot.legalMoves[snapshot.legalMoves.Count - 1] == BoardMove.ClaimDraw)
+                snapshot.legalMoves = snapshot.legalMoves.Take(snapshot.legalMoves.Count - 1).ToArray();
             return (difficulty, seed, cancellation) =>
                 BoardNegamax.Find(new SearchPosition(new ChessGame(snapshot)), difficulty, seed, cancellation);
         }
