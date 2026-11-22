@@ -18,6 +18,7 @@ using XanaduYonder.Runtime.Minesweeper;
 using XanaduYonder.Runtime.HappyBall;
 using XanaduYonder.Runtime.Zuma;
 using XanaduYonder.Runtime.Gomoku;
+using XanaduYonder.Runtime.BoardGames;
 using XanaduYonder.Runtime.Sokoban;
 using XanaduYonder.Runtime.LinkMatch;
 using XanaduYonder.Runtime.GoldMiner;
@@ -79,7 +80,7 @@ namespace XanaduYonder.Runtime
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake, ClassicBoards }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -190,6 +191,10 @@ namespace XanaduYonder.Runtime
                 LobbyGame("sliding-puzzle", "SlidingPuzzle", "数字华容道", "14", "逻辑策略", "数字归位", "留一格空白，理顺每一步。", "", "", EnterSlidingPuzzle, LobbyPreviews.SlidingPuzzle),
                 LobbyGame("sokoban", "Sokoban", "推箱子", "12", "逻辑策略", "经典推箱", "把每一只箱子，推回它的位置。", "", "", EnterSokoban, AddSokobanPreview),
                 LobbyGame("gomoku", "Gomoku", "五子棋", "10", "逻辑策略", "黑白对弈", "一子一步，先连成五。", "人机 / 本地双人 · 三档难度", "人机 / 双人", EnterGomoku, AddGomokuPreview),
+                ClassicBoardEntry(BoardGameId.Army, "ArmyChess", "28", "暗棋对弈", "秘密布阵，沿铁路线夺取军旗。", EnterArmyChess),
+                ClassicBoardEntry(BoardGameId.Xiangqi, "Xiangqi", "29", "楚河汉界", "车马炮交锋，守住九宫。", EnterXiangqi),
+                ClassicBoardEntry(BoardGameId.Chess, "Chess", "30", "黑白方格", "发展子力，寻找将死。", EnterChess),
+                ClassicBoardEntry(BoardGameId.Checkers, "ChineseCheckers", "31", "六角跳棋", "跨过棋珠，先到对角的营地。", EnterChineseCheckers),
                 CutTheRopeEntry(),
                 LobbyGame("zhaoyun-adou", "ZhaoyunAdou", "赵云与阿斗", "23", "逻辑策略", "合成布阵", "合兵布阵，与阿斗守住战场。", "离线人机 · 兵种合成 · 武器成长", "离线人机 · 合成布阵", EnterZhaoyunAdou, AddZhaoyunAdouPreview),
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
@@ -1180,6 +1185,7 @@ namespace XanaduYonder.Runtime
         {
             ResultPresentation.Clear(this);
             ResetBackExitConfirmation();
+            boardPage?.Leave();
             LeaveAircraftFire();
             linkMatchPage?.Leave();
             tetrisPage?.Leave();
@@ -1540,6 +1546,7 @@ namespace XanaduYonder.Runtime
             else if (activePage == Page.HappyBall) happyBallPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Tetris) tetrisPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Gomoku) gomokuPage.HandleSystemBack(ConfirmSystemBackExit);
+            else if (activePage == Page.ClassicBoards) boardPage.Back(ConfirmSystemBackExit);
             else if (activePage != Page.Lobby) { if (ConfirmSystemBackExit()) ShowLobby(); }
             else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
         }
@@ -1561,6 +1568,8 @@ namespace XanaduYonder.Runtime
             slidingPuzzlePage?.SetForeground(!paused && focused);
             linkMatchPage?.SetForeground(!paused && focused);
             gomokuPage?.SetForeground(!paused && focused);
+            if (activePage == Page.ClassicBoards && value) CloseModal();
+            boardPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
             else CheckEndState();
@@ -1583,6 +1592,8 @@ namespace XanaduYonder.Runtime
             slidingPuzzlePage?.SetForeground(!paused && focused);
             linkMatchPage?.SetForeground(!paused && focused);
             gomokuPage?.SetForeground(!paused && focused);
+            if (activePage == Page.ClassicBoards && !value) CloseModal();
+            boardPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
             if (!value)
             {

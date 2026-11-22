@@ -339,6 +339,20 @@ namespace XanaduYonder.EditorTools
             });
         }
 
+        public static void BuildAndroidClassicBoardGamesValidation()
+        {
+            RunOrFail(() =>
+            {
+                using (new GoldMinerBuildSettingsScope())
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".classicboardgamestest");
+                    PlayerSettings.productName = "Xanadu 棋类测试";
+                    BuildApk("-classic-board-games-validation.apk", BuildOptions.StrictMode);
+                }
+            });
+        }
+
         public static void BuildAndroidTetrisValidation()
         {
             RunOrFail(() =>
