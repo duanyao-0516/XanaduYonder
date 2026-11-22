@@ -79,7 +79,7 @@ namespace XanaduYonder.Runtime
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake, BakeryBasket }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -194,6 +194,7 @@ namespace XanaduYonder.Runtime
                 LobbyGame("zhaoyun-adou", "ZhaoyunAdou", "赵云与阿斗", "23", "逻辑策略", "合成布阵", "合兵布阵，与阿斗守住战场。", "离线人机 · 兵种合成 · 武器成长", "离线人机 · 合成布阵", EnterZhaoyunAdou, AddZhaoyunAdouPreview),
                 LobbyGame("2048", "2048", "2048", "01", "合成消除", "数字益智", "让相同的数字相遇。", "", "", EnterGame, LobbyPreviews.Numbers2048),
                 LobbyGame("watermelon", "Watermelon", "合成大西瓜", "04", "合成消除", "碰碰合成", "小小一颗，合成满满的快乐。", "水果 / 表情 / 校徽 · 三种主题", "三种主题", EnterWatermelon, AddWatermelonPreview),
+                LobbyGame("bakery-basket", "BakeryBasket", BakeryBasket.BakeryPage.DisplayName, "28", "合成消除", "烘焙篮", "颠一颠，找齐三件。", "直壁 / 收底 · 3D 翻找", "直壁 / 收底", EnterBakeryBasket, AddBakeryBasketPreview),
                 LobbyGame("sheep", "Sheep", "旸了个旸", "03", "合成消除", "层层三消", "翻开一层，凑齐三个。", "", "", EnterSheep, AddSheepPreview),
                 LobbyGame("link-match", "LinkMatch", "连连看", "17", "合成消除", "轻松连线", "找到相同，连起快乐。", "轻松 / 挑战 · 五档棋盘", "轻松 / 挑战", EnterLinkMatch, AddLinkMatchPreview),
                 LobbyGame("zuma", "Zuma", "Zuma", "08", "合成消除", "神庙弹珠", "转动青蛙，让同色弹珠相遇。", "横屏游玩 · 18 张地图 · 4 档难度", "18 张地图", EnterZuma, LobbyPreviews.Zuma),
@@ -1178,6 +1179,7 @@ namespace XanaduYonder.Runtime
 
         private void ShowLobby()
         {
+            bakeryPage?.Leave();
             ResultPresentation.Clear(this);
             ResetBackExitConfirmation();
             LeaveAircraftFire();
@@ -1472,6 +1474,7 @@ namespace XanaduYonder.Runtime
 
         private void StopAnimation()
         {
+            bakeryPage?.Suspend();
             aircraftFirePage?.Suspend();
             tetrisPage?.Suspend();
             flappyBirdPage?.Suspend();

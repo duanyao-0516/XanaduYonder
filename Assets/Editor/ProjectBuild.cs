@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using XanaduYonder.Runtime;
+using XanaduYonder.Runtime.BakeryBasket;
 
 namespace XanaduYonder.EditorTools
 {
@@ -521,6 +522,37 @@ namespace XanaduYonder.EditorTools
                 {
                     PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
                     PlayerSettings.productName = productName;
+                    AssetDatabase.SaveAssets();
+                }
+            });
+        }
+
+        public static void BuildAndroidBakeryBasketPrototype()
+        {
+            RunOrFail(() =>
+            {
+                var applicationId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+                var productName = PlayerSettings.productName;
+                var bundleVersion = PlayerSettings.bundleVersion;
+                var versionCode = PlayerSettings.Android.bundleVersionCode;
+                var customKeystore = PlayerSettings.Android.useCustomKeystore;
+                try
+                {
+                    Prepare();
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName + ".bakerytest");
+                    PlayerSettings.productName = "Xanadu " + BakeryPage.DisplayName + "原型";
+                    PlayerSettings.bundleVersion = Version + "-bakery.11";
+                    PlayerSettings.Android.bundleVersionCode = VersionCode + 10;
+                    PlayerSettings.Android.useCustomKeystore = false;
+                    BuildApk("-bakery-basket-prototype-v11.apk", BuildOptions.StrictMode);
+                }
+                finally
+                {
+                    PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, applicationId);
+                    PlayerSettings.productName = productName;
+                    PlayerSettings.bundleVersion = bundleVersion;
+                    PlayerSettings.Android.bundleVersionCode = versionCode;
+                    PlayerSettings.Android.useCustomKeystore = customKeystore;
                     AssetDatabase.SaveAssets();
                 }
             });

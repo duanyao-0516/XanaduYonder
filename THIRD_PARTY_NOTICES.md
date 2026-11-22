@@ -2,6 +2,11 @@
 
 The project's original code is licensed under MIT. Third-party software and assets retain their own licenses.
 
+## 抓大鹅 · 烘焙模型
+
+- Quaternius 的 [Ultimate Food Pack](https://quaternius.com/packs/ultimatefood.html)，CC0 1.0。吐司片和巧克力两份 FBX 源文件放在 `Assets/Resources/BakeryBasket/Models/`，随包保留[作者许可](Assets/Resources/BakeryBasket/Models/License.txt)。其余模型、场内比例、配色、篮子和拾取效果由本项目实现。
+- 文件名、上游来源和校验值见[原型记录](docs/bakery-basket-prototype.md#烘焙素材)。
+
 ## Lobby icons
 
 - The compact lobby and display controls use `lucide-static@1.17.0`, with original SVG geometry and the project's green stroke color.

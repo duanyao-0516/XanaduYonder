@@ -252,7 +252,7 @@ namespace XanaduYonder.EditorTools
                     LobbyDesignChecks.SetModeForCheck(shell,mode);f.Flush();
                     var content=lobby.GetComponentInChildren<ScrollRect>().content;
                     var cards=content.GetComponentsInChildren<Button>().Where(button=>button.name.EndsWith(" game card",StringComparison.Ordinal)).ToArray();
-                    Require(cards.Length==23,"Current lobby includes twenty-three retained game entries");
+                    Require(cards.Length==24,"Current lobby includes twenty-four game entries");
                     var snake=LobbyDesignChecks.FindCard(content,"Snake");
                     LobbyInputTestDriver.CheckBinding(snake.GetComponent<Button>(),shell,"EnterSnake",Require);
                     if(mode==2)
