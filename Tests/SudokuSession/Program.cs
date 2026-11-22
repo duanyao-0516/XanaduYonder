@@ -28,7 +28,7 @@ internal static class Program
             Check(s.ElapsedSeconds == 5 && s.Paused, "background counted or auto-resumed"); s.Resume(); s.Tick(2); Check(s.ElapsedSeconds == 7, "resume");
         });
         Run("restored game starts paused and retains modes", () => {
-            var s = Fresh(); s.Controls.SetQuick(true); s.Controls.TogglePencil(); s.Tick(7);
+            var s = Fresh(); s.Controls.SetQuick(s.Game, true); s.Controls.TogglePencil(); s.Tick(7);
             var restored = new SudokuSession(s.Export(), true); restored.Tick(10);
             Check(restored.Paused && restored.ElapsedSeconds == 7 && restored.Controls.Quick && restored.Controls.Pencil, "restore state");
         });

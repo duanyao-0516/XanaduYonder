@@ -10,6 +10,7 @@ namespace XanaduYonder.Runtime.Sudoku
 {
     internal sealed partial class SudokuPage : MonoBehaviour
     {
+        private const string QuickHelpSeenKey = "sudoku.quick-input-help-seen";
         private SudokuCatalog catalog;
         private SudokuSession session;
         private SudokuProfileStore store;
@@ -184,7 +185,12 @@ namespace XanaduYonder.Runtime.Sudoku
             if (occupiedQuick) Tip("快速模式只填写空格；修改已有数字请先擦除或关闭快速模式。");
             else if (session.Controls.Quick && session.Controls.QuickDigit == 0) Tip("请先选择下方数字，再连续点空格填写。");
         }
-        private void Number(int digit) { if (Interactive) { inspectionDigit = digit; Move(session.SelectDigit(digit)); } }
+        private void Number(int digit)
+        {
+            if (!Interactive) return;
+            inspectionDigit = session.Controls.Quick ? 0 : digit;
+            Move(session.SelectDigit(digit));
+        }
         private void Move(SudokuMove move)
         {
             ClearFlash();
@@ -204,11 +210,22 @@ namespace XanaduYonder.Runtime.Sudoku
         private void ToggleQuick()
         {
             if (!Interactive) return;
+            bool enable = !session.Controls.Quick;
+            if (!enable || PlayerPrefs.GetInt(QuickHelpSeenKey, 0) == 1)
+            {
+                SetQuickMode(enable);
+                return;
+            }
+            ShowDialog("开启快速输入", "先选择下方数字，或点盘面中的正确数字，再连续点击空格填写。\n\n某个数字全部填对后，会自动选择下一个待填数字，9 之后从 1 开始。\n\n快速模式只填写空格，也可以配合铅笔使用。", "开启", () => SetQuickMode(true), "取消", () => { });
+            PlayerPrefs.SetInt(QuickHelpSeenKey, 1);
+            PlayerPrefs.Save();
+        }
+        private void SetQuickMode(bool enable)
+        {
             inspectionDigit = 0;
-            if (session.Controls.Quick) { session.Controls.SetQuick(false); Save(); Refresh(); return; }
-            ShowDialog("开启快速输入", "先选择下方数字，或点盘面中的正确数字，再连续点击空格填写。\n\n快速模式只填写空格；修改已有数字，请先擦除或关闭快速模式。\n\n也可以与铅笔模式一起使用。", "开启", () => {
-                session.Controls.SetQuick(true); Save(); Refresh(); Tip("快速 ON：先选数字，再点空格。");
-            }, "取消", () => { });
+            session.Controls.SetQuick(session.Game, enable);
+            Save();
+            Refresh();
         }
         private void Tip(string message) { tipText.text = message; }
         private void Refresh()
@@ -241,7 +258,10 @@ namespace XanaduYonder.Runtime.Sudoku
                 digits[i].GetComponent<Image>().color = controls.Quick && controls.QuickDigit == i + 1 ? UiFactory.Hex("B5D2B6") : UiFactory.Hex("E7EDE4");
                 digits[i].GetComponentInChildren<Text>().color = game.RemainingDigit(i + 1) == 0 ? UiFactory.Muted : UiFactory.Accent;
             }
-            Tip(controls.Quick ? controls.QuickDigit == 0 ? "先选数字，再连续点空格。" : "已选择 " + controls.QuickDigit + " · 连续点空格填写" : "先点选格子，再填写数字。");
+            if (!controls.Quick) Tip("先点选格子，再填写数字。");
+            else if (controls.QuickDigit == 0) Tip("先选数字，再连续点空格。");
+            else if (game.RemainingDigit(controls.QuickDigit) == 0) Tip("数字 " + controls.QuickDigit + " 已填完 · 查看盘面位置");
+            else Tip("已选择 " + controls.QuickDigit + " · 连续点空格填写");
             RenderBoard();
         }
         private void RenderBoard(int[] evidence = null) { board.Render(session.Game, session.Controls, flashCells, flashOn, evidence, inspectionDigit); }

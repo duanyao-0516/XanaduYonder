@@ -22,7 +22,11 @@ namespace XanaduYonder.Core.Sudoku
             }
             if (!SudokuGame.ValidDigit(QuickDigit)) return SudokuMove.NoOp(game.Phase, cell);
             var move = Write(game, cell, QuickDigit);
-            if (move.Changed && game.RemainingDigit(QuickDigit) == 0) QuickDigit = 0;
+            if (!Pencil && move.Changed && !move.Mistake && game.RemainingDigit(QuickDigit) == 0)
+            {
+                QuickDigit = NextUnfinishedDigit(game, QuickDigit);
+                if (QuickDigit != 0) SelectedCell = -1;
+            }
             return move;
         }
 
@@ -30,12 +34,33 @@ namespace XanaduYonder.Core.Sudoku
         {
             if (game == null) throw new ArgumentNullException("game");
             if (!SudokuGame.ValidDigit(digit) || game.Phase != SudokuPhase.Playing) return SudokuMove.NoOp(game.Phase, SelectedCell, digit);
-            if (Quick) { QuickDigit = digit; return SudokuMove.NoOp(game.Phase, SelectedCell, digit); }
+            if (Quick)
+            {
+                QuickDigit = digit;
+                SelectedCell = -1;
+                return SudokuMove.NoOp(game.Phase, digit: digit);
+            }
             return Write(game, SelectedCell, digit);
         }
 
         public void TogglePencil() { Pencil = !Pencil; }
-        public void SetQuick(bool quick) { Quick = quick; if (!quick) QuickDigit = 0; }
+        public void SetQuick(SudokuGame game, bool quick)
+        {
+            if (game == null) throw new ArgumentNullException("game");
+            if (Quick == quick) return;
+            Quick = quick;
+            QuickDigit = quick && game.IsCorrect(SelectedCell) ? game.ValueAt(SelectedCell) : 0;
+        }
+
+        private static int NextUnfinishedDigit(SudokuGame game, int previous)
+        {
+            for (int offset = 1; offset < 9; offset++)
+            {
+                int digit = (previous - 1 + offset) % 9 + 1;
+                if (game.RemainingDigit(digit) > 0) return digit;
+            }
+            return 0;
+        }
 
         public void Normalize(SudokuGame game)
         {

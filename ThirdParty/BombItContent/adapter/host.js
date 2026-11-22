@@ -149,6 +149,12 @@
     for(const button of document.querySelectorAll('[data-input-style]')){
       button.setAttribute('aria-pressed',String(button.dataset.inputStyle===style));button.disabled=!controls;
     }
+    const slider=document.getElementById('direction-diameter');
+    const diameter=controls?controls.getDiameter():100;
+    slider.disabled=!controls;
+    slider.value=String(diameter);
+    slider.setAttribute('aria-valuetext',diameter+'%');
+    document.getElementById('direction-diameter-value').textContent=diameter+'%';
   }
   function closeModal(){modalKind=null;document.getElementById('modal').hidden=true;apply();if(!blocked())focus();}
   function showModal(kind,target){
@@ -307,6 +313,10 @@
     document.getElementById('continue-run').onclick=()=>showModal('continue');
     document.getElementById('save-warning').onclick=()=>{try{invoke('xanaduFlushSave');apply();}catch(cause){showModal('save-error');}};
     for(const button of document.querySelectorAll('[data-input-style]'))button.onclick=()=>{if(controls)controls.setStyle(button.dataset.inputStyle);updateInputSettings();};
+    document.getElementById('direction-diameter').oninput=event=>{
+      if(controls)controls.setDiameter(event.currentTarget.valueAsNumber);
+      updateInputSettings();
+    };
     document.getElementById('pause').onclick=togglePause;feedback.bind();startPlayer(null);
   });
 })();

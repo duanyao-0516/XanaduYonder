@@ -307,7 +307,8 @@ namespace XanaduYonder.Runtime.Tetris
                 Place(control.Target, x, y, actionWidth, actionWidth);
                 Place(control.Background.rectTransform, 0, 0, actionWidth, actionWidth);
                 control.Background.Radius = 12 * s;
-                Place(control.Symbol.rectTransform, 13 * s, 13 * s, 22 * s, 22 * s);
+                float symbolSize = 32 * s, symbolInset = (actionWidth - symbolSize) / 2;
+                Place(control.Symbol.rectTransform, symbolInset, symbolInset, symbolSize, symbolSize);
             }
             Control rotate = controls[TetrisAction.Clockwise];
             float rotateSize = (float)Layout.RotationSize;
@@ -445,6 +446,7 @@ namespace XanaduYonder.Runtime.Tetris
         private void AddAction(TetrisAction action, string label, TetrisGraphicKind kind, bool primary = false)
         {
             Control control = MakeControl(operations, "Tetris " + action, label, null, primary, primary ? 14 : 12);
+            if (!primary) control.Background.color = UiFactory.Hex("CCDCD1");
             control.Symbol = Shape(control.Target, "Tetris action icon", kind, primary ? UiFactory.Paper : UiFactory.Ink);
             control.Label.gameObject.SetActive(false);
             controls.Add(action, control); ActionTargets.Add(action, control.Target);

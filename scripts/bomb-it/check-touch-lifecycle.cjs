@@ -2,15 +2,15 @@
 // Run --baseline against the unmodified content to record the two known defects.
 // PLAYWRIGHT_MODULE points at an existing playwright-core installation.
 // Current production checks: --short, --clock-only (181 real seconds),
-// --near-expiry, --lifecycle-errors, --gesture-edges. No flag runs the combined normal suite.
+// --near-expiry, --lifecycle-errors, --gesture-edges, --pad-size. No flag runs the combined normal suite.
 // --near-expiry generates its own artifacts-only 4-second fixture; generation
 // alone is available as --prepare-near-expiry. Production/AAR are never written.
 // Optional --rapid-exit-retry reproduces the deliberately immediate retry race.
 const fs=require('fs'),path=require('path'),assert=require('assert/strict'),crypto=require('crypto');
 const prepareOnly=process.argv.includes('--prepare-near-expiry');
-const root=path.resolve(__dirname,'../..'),baseline=process.argv.includes('--baseline'),nearExpiry=prepareOnly||process.argv.includes('--near-expiry'),clockOnly=process.argv.includes('--clock-only'),shortOnly=process.argv.includes('--short'),lifecycleErrors=process.argv.includes('--lifecycle-errors'),rapidRetry=process.argv.includes('--rapid-exit-retry'),gestureEdges=process.argv.includes('--gesture-edges');
+const root=path.resolve(__dirname,'../..'),baseline=process.argv.includes('--baseline'),nearExpiry=prepareOnly||process.argv.includes('--near-expiry'),clockOnly=process.argv.includes('--clock-only'),shortOnly=process.argv.includes('--short'),lifecycleErrors=process.argv.includes('--lifecycle-errors'),rapidRetry=process.argv.includes('--rapid-exit-retry'),gestureEdges=process.argv.includes('--gesture-edges'),padSize=process.argv.includes('--pad-size');
 const content=process.env.BOMB_IT_CONTENT||path.join(root,'artifacts/bomb-it',baseline?'touch-baseline/content':'content');
-const output=process.env.BOMB_IT_CHECK_OUTPUT||path.join(root,'artifacts/bomb-it',baseline?'touch-baseline':gestureEdges?'touch-gesture-edges':nearExpiry?'touch-near-expiry':clockOnly?'touch-clock':shortOnly?'touch-short':lifecycleErrors?(rapidRetry?'touch-lifecycle-rapid':'touch-lifecycle-errors'):'touch-lifecycle');
+const output=process.env.BOMB_IT_CHECK_OUTPUT||path.join(root,'artifacts/bomb-it',baseline?'touch-baseline':gestureEdges?'touch-gesture-edges':padSize?'touch-pad-size':nearExpiry?'touch-near-expiry':clockOnly?'touch-clock':shortOnly?'touch-short':lifecycleErrors?(rapidRetry?'touch-lifecycle-rapid':'touch-lifecycle-errors'):'touch-lifecycle');
 // The explicitly requested diagnostic changes only the initial timer constant.
 // It never replaces content/game.swf or the production build inputs.
 const swf=nearExpiry?path.join(root,'artifacts/bomb-it/near-expiry/game.swf'):path.join(content,'game.swf');
@@ -53,7 +53,7 @@ if(prepareOnly){console.log(fs.readFileSync(path.join(path.dirname(swf),'fixture
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const origin='https://bomb-it.xanaduyonder.invalid/';
 fs.mkdirSync(output,{recursive:true});
-const result={baseline,nearExpiry,clockOnly,shortOnly,lifecycleErrors,rapidRetry,gestureEdges,content,swf,swfSha256:crypto.createHash('sha256').update(fs.readFileSync(swf)).digest('hex'),resourceSha256:{},checks:[],failures:[],requests:[],errors:[],pageErrorDetails:[],nativeMessages:[]};
+const result={baseline,nearExpiry,clockOnly,shortOnly,lifecycleErrors,rapidRetry,gestureEdges,padSize,content,swf,swfSha256:crypto.createHash('sha256').update(fs.readFileSync(swf)).digest('hex'),resourceSha256:{},checks:[],failures:[],requests:[],errors:[],pageErrorDetails:[],nativeMessages:[]};
 let browser,page;
 (async()=>{
   browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
@@ -146,6 +146,68 @@ let browser,page;
     }
     await page.waitForFunction(()=>{try{return document.querySelector('ruffle-player').ruffle().callExternalInterface('xanaduState')?.version===1;}catch(_){return false;}});
     const initial=await state();assert([0,1,2].includes(initial.mode));result.initialState=initial;
+    if(padSize){
+      const slider=page.locator('#direction-diameter');
+      const openSettings=()=>page.locator('#settings').tap();
+      const closeSettings=()=>page.locator('#modal-confirm').tap();
+      const setDiameter=async(value)=>{
+        await slider.fill(String(value));
+        assert.equal(await page.locator('#direction-diameter-value').textContent(),value+'%');
+      };
+      const stick=await rect('.left .joystick'),bomb=await rect('.p2-bomb'),stage=await rect('#player-frame');
+      await openSettings();
+      assert.equal(await slider.inputValue(),'100','existing installations keep their original diameter');
+      const track=await rect('#direction-diameter');
+      const thumb={x:track.x+track.width/3,y:track.y+track.height/2,id:71};
+      await touch('touchStart',[thumb]);
+      await touch('touchMove',[{...thumb,x:track.x+track.width-1}]);
+      await touch('touchEnd',[]);
+      assert.equal(await slider.inputValue(),'150','native touch drag changes the diameter');
+      assert.equal(await page.locator('#direction-diameter-value').textContent(),'150%');
+      assert.deepEqual(await held(),[],'slider gestures never send control keys');
+      await screenshot('settings-diameter');
+      await closeSettings();
+      assert((await rect('.left .joystick')).width>stick.width);
+      sameRect(bomb,await rect('.p2-bomb'));sameRect(stage,await rect('#player-frame'));
+      note('slider scales joystick without moving the bomb or shrinking the game viewport');
+
+      await page.reload();await page.waitForFunction(()=>BombItHost.status().ready);
+      await page.evaluate(()=>BombItHost.setViewportInsets(59,0,59,21));
+      await openSettings();assert.equal(await slider.inputValue(),'150','diameter survives a fresh page load');
+      await page.locator('[data-input-style="dpad"]').tap();
+      await setDiameter(100);await closeSettings();
+      const ring=await rect('.left .dpad'),ringBomb=await rect('.p2-bomb');
+      await openSettings();await setDiameter(150);await closeSettings();
+      const enlarged=await rect('.left .dpad');
+      assert(enlarged.width>ring.width && enlarged.y<ring.y-6,'direction keys grow above their old touch boundary');
+      sameRect(ringBomb,await rect('.p2-bomb'));
+      await enterBattle(1);
+      const edge=await center('.left .dpad',72,0,-enlarged.width/2+6);
+      await touch('touchStart',[edge]);assert.deepEqual(await held(),[38],'new visual upper edge receives Up');
+      await touch('touchCancel',[]);assert.deepEqual(await held(),[]);
+      note('enlarged direction pad updates its hit area and persists between launches');
+
+      await switchMode('duo');
+      for(const [width,height] of [[844,390],[568,320]]){
+        await page.setViewportSize({width,height});
+        await openSettings();await setDiameter(100);await closeSettings();
+        const p1=await rect('.p1-bomb'),p2=await rect('.p2-bomb');
+        await openSettings();await setDiameter(150);await closeSettings();
+        sameRect(p1,await rect('.p1-bomb'));sameRect(p2,await rect('.p2-bomb'));
+        const left=await rect('.left .dpad'),right=await rect('.right .dpad');
+        assert(left.x>=59 && right.x+right.width<=width-59,'both pads fit safe margins');
+        assert(left.x+left.width<right.x,'players do not share touch area');
+        assert(left.y+left.height<=p1.y && right.y+right.height<=p2.y,'pads do not cover the bomb buttons');
+        await screenshot('duo-max-'+width);
+      }
+      await enterBattle(2);
+      const first=await rect('.left .dpad'),second=await rect('.right .dpad');
+      await touch('touchStart',[{x:first.x+6,y:first.y+first.height/2,id:73},
+        {x:second.x+second.width-6,y:second.y+second.height/2,id:74}]);
+      assert.deepEqual(await held(),[39,65],'both enlarged pads handle their own player after resize');
+      await touch('touchCancel',[]);assert.deepEqual(await held(),[]);
+      assert.deepEqual(result.errors,[]);note('dual controls on short landscape screens preserve safe edges and bomb geometry');result.ok=true;return;
+    }
     if(gestureEdges){
       // Android system-gesture bands are not untouchable display cutouts. A
       // delivered tap on a visible control must work; only an unclaimed blank

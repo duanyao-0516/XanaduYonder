@@ -28,8 +28,10 @@ internal static class Program
         Run("strict history validation rejects injected moves and terminal ancestors", InvalidHistory);
         Run("ordinary input supports editable correct and incorrect player values", OrdinaryControls);
         Run("quick input chooses digit before writing and never covers formal values", QuickControls);
+        Run("switching quick mode preserves the focused given", QuickToggleKeepsGiven);
         Run("quick pencil toggles candidates without modifying formal values", QuickPencil);
-        Run("finishing a digit clears quick selection but zero remaining can highlight", ExhaustedDigit);
+        Run("finishing a digit advances quick selection and completed digits stay inspectable", ExhaustedDigit);
+        Run("quick advance wraps past completed digits and stops at a win", QuickAdvanceWrap);
         Run("control normalization rejects invalid selections and modes stay independent", NormalizeControls);
         Run("terminal controls cannot change board or selected quick source", TerminalControls);
         Run("revision exhaustion does not wrap or mutate the board", RevisionBoundary);
@@ -283,24 +285,38 @@ internal static class Program
 
     private static void QuickControls()
     {
-        var g = new SudokuGame(Puzzle()); var c = new SudokuControls(); c.SetQuick(true);
+        var g = new SudokuGame(Puzzle()); var c = new SudokuControls(); c.SetQuick(g, true);
         Assert(!c.SelectCell(g, 2).Changed && c.SelectedCell == 2, "no quick digit only selection");
         Assert(!c.SelectDigit(g, 4).Changed && c.QuickDigit == 4, "quick digit picks without writing");
+        Assert(c.SelectedCell == -1, "keypad clears preceding cell focus");
         Assert(c.SelectCell(g, 2).Changed && g.ValueAt(2) == 4, "quick empty writes");
         c.SelectDigit(g, 1); Assert(!c.SelectCell(g, 2).Changed && c.QuickDigit == 4, "correct is quick digit source");
         Assert(!c.SelectCell(g, 0).Changed && c.QuickDigit == 5, "given is quick digit source");
         c.SelectDigit(g, 1); c.SelectCell(g, 3); Assert(g.ValueAt(3) == 1 && g.Errors == 1, "quick formal errors count");
         c.SelectDigit(g, 2); Assert(!c.SelectCell(g, 3).Changed && c.QuickDigit == 2 && c.SelectedCell == 3, "red selects no overwrite or digit replacement");
-        c.SetQuick(false); Assert(c.QuickDigit == 0, "leaving quick clears digit");
+        c.SetQuick(g, false); Assert(c.QuickDigit == 0, "leaving quick clears digit");
     }
 
     private static void QuickPencil()
     {
-        var g = new SudokuGame(Puzzle()); var c = new SudokuControls(); c.SetQuick(true); c.TogglePencil();
+        var g = new SudokuGame(Puzzle()); var c = new SudokuControls(); c.SetQuick(g, true); c.TogglePencil();
         c.SelectDigit(g, 1); Assert(c.SelectCell(g, 2).Changed && g.NotesAt(2) == Bit(1), "quick pencil adds");
         Assert(c.SelectCell(g, 2).Changed && g.NotesAt(2) == 0, "quick pencil toggles");
         c.SelectCell(g, 0); Assert(c.QuickDigit == 5 && g.ValueAt(0) == 5 && g.NotesAt(0) == 0, "quick pencil given only picks");
         Assert(!c.SelectCell(g, 2).Changed && g.Errors == 0, "quick pencil conflict not formal error");
+    }
+
+    private static void QuickToggleKeepsGiven()
+    {
+        var g = new SudokuGame(Puzzle()); var c = new SudokuControls();
+        const int givenNine = 13;
+        Assert(g.IsGiven(givenNine) && g.ValueAt(givenNine) == 9, "fixture given");
+        c.SelectCell(g, givenNine);
+        c.SetQuick(g, true);
+        Assert(c.SelectedCell == givenNine && c.QuickDigit == g.ValueAt(givenNine), "opening quick preserves focus and same-number highlighting");
+        c.SetQuick(g, false);
+        Assert(c.SelectedCell == givenNine && c.QuickDigit == 0, "closing quick preserves focus for ordinary highlighting");
+        Assert(g.Revision == 0, "toggling modes does not change the puzzle");
     }
 
     private static void ExhaustedDigit()
@@ -308,17 +324,31 @@ internal static class Program
         var g = new SudokuGame(Puzzle()); var p = Puzzle(); int last = -1;
         for (int cell = 0; cell < 81; cell++) if (p.Solution[cell] == 1 && !g.IsGiven(cell)) last = cell;
         for (int cell = 0; cell < 81; cell++) if (p.Solution[cell] == 1 && !g.IsGiven(cell) && cell != last) g.EnterValue(cell, 1);
-        var c = new SudokuControls(); c.SetQuick(true); c.SelectDigit(g, 1); Assert(c.SelectCell(g, last).Changed && c.QuickDigit == 0, "last correct clears quick");
+        var c = new SudokuControls(); c.SetQuick(g, true); c.SelectDigit(g, 1);
+        Assert(c.SelectCell(g, last).Changed && c.QuickDigit == 2 && c.SelectedCell == -1, "last correct advances and clears completed cell focus");
+        c.SelectCell(g, last);
         Assert(!c.SelectDigit(g, 1).Changed && c.QuickDigit == 1, "completed digit selectable for highlight");
         Assert(!c.SelectCell(g, 2).Changed && g.Errors == 0 && g.ValueAt(2) == 0, "completed digit cannot write");
-        c.SetQuick(false); c.SelectCell(g, 2); Assert(!c.SelectDigit(g, 1).Changed, "ordinary completed digit cannot write");
+        c.SetQuick(g, false); c.SelectCell(g, 2); Assert(!c.SelectDigit(g, 1).Changed, "ordinary completed digit cannot write");
+    }
+
+    private static void QuickAdvanceWrap()
+    {
+        var p = Puzzle();
+        Array.Copy(p.Solution, p.Givens, 81);
+        const int two = 8, nine = 6;
+        p.Givens[two] = p.Givens[nine] = 0;
+        var g = new SudokuGame(p); var c = new SudokuControls(); c.SetQuick(g, true);
+        c.SelectDigit(g, 9);
+        Assert(c.SelectCell(g, nine).Changed && c.QuickDigit == 2 && c.SelectedCell == -1, "9 wraps past completed 1 to unfinished 2");
+        Assert(c.SelectCell(g, two).Changed && g.Phase == SudokuPhase.Won && c.QuickDigit == 0, "all complete leaves no active digit");
     }
 
     private static void NormalizeControls()
     {
         var g = new SudokuGame(Puzzle()); var c = new SudokuControls { SelectedCell = 100, QuickDigit = 12, Quick = true, Pencil = true };
         c.Normalize(g); Assert(c.SelectedCell == -1 && c.QuickDigit == 0 && c.Quick && c.Pencil, "invalid selections cleared");
-        c.SetQuick(false); Assert(c.Pencil && !c.Quick, "two modes independent"); c.TogglePencil(); Assert(!c.Pencil, "pencil toggles");
+        c.SetQuick(g, false); Assert(c.Pencil && !c.Quick, "two modes independent"); c.TogglePencil(); Assert(!c.Pencil, "pencil toggles");
         c.SelectCell(g, 2); c.SelectCell(g, -1); Assert(c.SelectedCell == 2, "invalid command keeps selection");
         c.SelectDigit(g, 10); Assert(g.Revision == 0, "invalid digit ignored");
         c.QuickDigit = 4; c.Normalize(g); Assert(c.QuickDigit == 0, "normal mode has no active quick digit");

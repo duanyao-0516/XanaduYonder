@@ -73,6 +73,9 @@ body[data-phase=battle] .joystick:not(.held),.joystick:not(.held){opacity:.62}
 #input-settings{display:flex;gap:3px;margin:0;padding:2px;border:1px solid var(--line);border-radius:11px}
 #input-settings button{display:block;min-height:34px;min-width:76px;padding:6px 12px;font-size:13px;border:0;border-radius:8px;box-shadow:none;background:transparent}
 #input-settings [aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.diameter-setting{display:flex;align-items:center;gap:8px;min-width:0}
+#direction-diameter{width:112px;min-width:60px;height:36px;margin:0;accent-color:var(--accent);cursor:pointer}
+#direction-diameter-value{min-width:39px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
 .setting-switch{display:flex;align-items:center;gap:10px;padding:0 2px;min-height:40px;border:0;background:transparent;box-shadow:none;font-size:13px;font-weight:400}
 .switch-track{display:block;width:38px;height:22px;border-radius:15px;background:#b6bfb4;padding:3px}
 .switch-track:after{content:'';display:block;width:16px;height:16px;border-radius:50%;background:#fffdf6;box-shadow:0 1px 3px #28473e33}

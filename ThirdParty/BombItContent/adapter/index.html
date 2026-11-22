@@ -101,6 +101,13 @@
               <button data-input-style="joystick" type="button" aria-pressed="true">摇杆</button>
               <button data-input-style="dpad" type="button" aria-pressed="false">方向键</button>
             </div></div>
+            <div class="setting-row">
+              <label for="direction-diameter">方向盘直径</label>
+              <div class="diameter-setting">
+                <input id="direction-diameter" type="range" min="75" max="150" step="5" value="100" aria-valuetext="100%">
+                <output id="direction-diameter-value" for="direction-diameter">100%</output>
+              </div>
+            </div>
             <div class="setting-row"><label id="sound-label">声音</label><button id="sound-setting" class="setting-switch" type="button" role="switch" aria-labelledby="sound-label" aria-checked="true"><span class="switch-value">开启</span><span class="switch-track" aria-hidden="true"></span></button></div>
             <div class="setting-row"><label id="haptics-label">触感</label><button id="haptics-setting" class="setting-switch" type="button" role="switch" aria-labelledby="haptics-label" aria-checked="true"><span class="switch-value">开启</span><span class="switch-track" aria-hidden="true"></span></button></div>
             <p class="setting-hint">触感用于放弹按键，也受系统触感设置影响。</p>

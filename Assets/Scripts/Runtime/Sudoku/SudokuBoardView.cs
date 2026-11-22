@@ -46,7 +46,8 @@ namespace XanaduYonder.Runtime.Sudoku
         public void Render(SudokuGame game, SudokuControls controls, int[] flashing, bool flashOn, int[] evidence = null, int inspectionDigit = 0)
         {
             int selectedCell = controls.SelectedCell;
-            int matching = inspectionDigit > 0 ? inspectionDigit : controls.Quick ? controls.QuickDigit : selectedCell >= 0 ? game.ValueAt(selectedCell) : 0;
+            int matching = inspectionDigit > 0 ? inspectionDigit :
+                controls.Quick && controls.QuickDigit > 0 ? controls.QuickDigit : game.ValueAt(selectedCell);
             for (int cell = 0; cell < 81; cell++)
             {
                 int value = game.ValueAt(cell), mask = game.NotesAt(cell);

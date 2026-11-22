@@ -50,14 +50,33 @@ namespace XanaduYonder.Runtime.Tetris
             }
             Vector2 direction = Kind == TetrisGraphicKind.Left ? Vector2.left :
                 Kind == TetrisGraphicKind.Right ? Vector2.right : Vector2.down;
+            if (Kind != TetrisGraphicKind.HardDrop)
+            {
+                DirectionArrow(mesh, bounds.center, size, direction);
+                return;
+            }
             Vector2 end = bounds.center + direction * size * .29f;
             Vector2 perpendicular = new Vector2(-direction.y, direction.x);
             Line(mesh, bounds.center - direction * size * .34f, end, stroke, color);
             Line(mesh, end, end - direction * size * .24f + perpendicular * size * .23f, stroke, color);
             Line(mesh, end, end - direction * size * .24f - perpendicular * size * .23f, stroke, color);
-            if (Kind == TetrisGraphicKind.HardDrop)
-                Line(mesh, bounds.center + new Vector2(-.33f, -.44f) * size,
-                    bounds.center + new Vector2(.33f, -.44f) * size, stroke, color);
+            Line(mesh, bounds.center + new Vector2(-.33f, -.44f) * size,
+                bounds.center + new Vector2(.33f, -.44f) * size, stroke, color);
+        }
+
+        private void DirectionArrow(VertexHelper mesh, Vector2 center, float size, Vector2 direction)
+        {
+            Vector2 normal = new Vector2(-direction.y, direction.x);
+            Vector2 tail = center - direction * size * .41f;
+            Vector2 tip = center + direction * size * .41f;
+            Vector2 headHalfWidth = normal * size * .31f;
+
+            Line(mesh, tail, center, size * .24f, color);
+            int first = mesh.currentVertCount;
+            mesh.AddVert(center - headHalfWidth, color, Vector2.zero);
+            mesh.AddVert(center + headHalfWidth, color, Vector2.zero);
+            mesh.AddVert(tip, color, Vector2.zero);
+            mesh.AddTriangle(first, first + 1, first + 2);
         }
 
         private static Vector2 ArcPoint(Vector2 center, float size, float mirror, float degrees)

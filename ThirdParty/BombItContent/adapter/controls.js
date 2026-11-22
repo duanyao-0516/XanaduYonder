@@ -4,14 +4,17 @@
     const runtime=window.__BombItControlsRuntime,shell=document.getElementById('shell');
     const owners=new Map(),held=new Map(),cancelled=new Set(),clicks=new Set();
     const preferenceKey='xanaduyonder.bomb-it.controls.v1';
+    const diameterKey='xanaduyonder.bomb-it.direction-diameter.v1';
     const validStyle=value=>value==='joystick'||value==='dpad';
+    const validDiameter=value=>Number.isInteger(value)&&value>=75&&value<=150&&value%5===0;
     const codes={single:{left:37,up:38,right:39,down:40,bomb:32},first:{left:65,up:87,right:68,down:83,bomb:32},second:{left:37,up:38,right:39,down:40,bomb:13}};
     const actions=['right','down','left','up'];
     const pads=[1,2].map(player=>({player,stick:document.querySelector('.joystick[data-player="'+player+'"]'),
       ring:document.querySelector('.dpad[data-player="'+player+'"]'),bomb:document.querySelector('.p'+player+'-bomb'),
       label:document.querySelector('.controls.'+(player===1?'left':'right')+' .player-label')}));
-    let mode='single',style='joystick',lastPhase=null,geometry='',zones=null,lastClick=null;
+    let mode='single',style='joystick',diameter=100,lastPhase=null,geometry='',zones=null,lastClick=null;
     try{const saved=localStorage.getItem(preferenceKey);if(validStyle(saved))style=saved;}catch(_){}
+    try{const saved=Number(localStorage.getItem(diameterKey));if(validDiameter(saved))diameter=saved;}catch(_){}
     document.body.dataset.input=style;
     function phase(){return runtime.phase();}
     function code(player,action){return (mode==='single'?codes.single:player===1?codes.first:codes.second)[action];}
@@ -94,9 +97,32 @@
       const tools=Array.from(document.querySelectorAll('.tools')).map(rect);
       return {safe,frame,hud,tools,width:innerWidth,height:innerHeight,top:Math.max(...tools.map(b=>b.bottom))+6};
     }
+    function resizeMovementHome(base,player,layout){
+      if(diameter===100)return base;
+      const safeLeft=layout.safe.left+4,safeRight=layout.width-layout.safe.right-4;
+      const middle=(safeLeft+safeRight)/2;
+      const left=player===1?safeLeft:middle+4,right=player===1?middle-4:safeRight;
+      const bottom=base.y+base.size/2;
+      const requested=base.size*diameter/100;
+      function fit(minX,maxX,maxY){
+        const size=Math.min(requested,maxX-minX,maxY-layout.top);
+        if(size<=0)return null;
+        const x=Math.max(minX+size/2,Math.min(base.x,maxX-size/2));
+        return {x,y:maxY-size/2,size};
+      }
+      const full=fit(left,right,bottom);
+      if(!full)return base;
+      const radius=full.size/2;
+      if(!overlaps({left:full.x-radius,right:full.x+radius,top:full.y-radius,bottom},layout.hud))return full;
+      // The same space bounds the visual disk and its touch area. Use the
+      // largest fit beside or above the original HUD.
+      const choices=[fit(left,Math.min(right,layout.hud.left-4),bottom),
+        fit(Math.max(left,layout.hud.right+4),right,bottom),fit(left,right,Math.min(bottom,layout.hud.top-8))];
+      return choices.reduce((best,home)=>home&&(!best||home.size>best.size)?home:best,null)||base;
+    }
     function update(){
       const nextPhase=phase(),next=measure();
-      const signature=JSON.stringify([next,mode,style,nextPhase]);
+      const signature=JSON.stringify([next,mode,style,diameter,nextPhase]);
       if(lastPhase!==nextPhase||geometry!==signature||runtime.blocked())release();
       document.body.dataset.phase=nextPhase;lastPhase=nextPhase;
       if(geometry===signature)return;
@@ -116,16 +142,18 @@
         const box={left:x-size/2,right:x+size/2,top:y-size/2,bottom:y+size/2};
         if(overlaps(box,next.hud))y=Math.min(y,next.hud.top-size/2-8);
         const stickSize=Math.min(96,size);
-        pad.home={x,y,size:stickSize};pad.ringHome={x,y,size};
-        place(pad.stick,x,y,stickSize);place(pad.ring,x,y,size);
-        pad.label.style.left=x+'px';pad.label.style.top=(y-size/2-22)+'px';
+        pad.home=resizeMovementHome({x,y,size:stickSize},pad.player,next);
+        pad.ringHome=resizeMovementHome({x,y,size},pad.player,next);
+        place(pad.stick,pad.home.x,pad.home.y,pad.home.size);
+        place(pad.ring,pad.ringHome.x,pad.ringHome.y,pad.ringHome.size);
+        const movement=style==='dpad'||diameter===100?pad.ringHome:pad.home;
+        pad.label.style.left=movement.x+'px';pad.label.style.top=(movement.y-movement.size/2-22)+'px';
         pad.label.hidden=false;
         const labelBox=rect(pad.label);
         pad.label.hidden=labelBox.top<next.top||next.tools.some(tool=>overlaps(labelBox,tool))||overlaps(labelBox,next.hud);
         const fireSize=mode==='single'?(style==='dpad'?size:stickSize):Math.min(64,size);
         const fireHeight=mode==='single'?fireSize:bombHeight;
-        // Single-player controls are equal circles on one horizontal line.
-        // Duo bombs align with each group's outer edge, clear of the SWF HUD.
+        // Bomb size and position use the original layout before resizing movement controls.
         const fireX=mode==='single'?x:x+(pad.player===1?-1:1)*(size-fireSize)/2;
         place(pad.bomb,fireX,mode==='single'?y:bottom-fireHeight/2,fireSize,fireHeight);
       }
@@ -135,6 +163,14 @@
       release();runtime.releaseInput();style=value;document.body.dataset.input=style;
       try{localStorage.setItem(preferenceKey,style);}catch(_){}
       geometry='';runtime.layout();update();if(!runtime.blocked())runtime.focus();return style;
+    }
+    function setDiameter(value){
+      if(!validDiameter(value)||value===diameter)return diameter;
+      runtime.releaseInput();
+      diameter=value;
+      try{localStorage.setItem(diameterKey,String(diameter));}catch(_){}
+      update();
+      return diameter;
     }
     function setMode(value){
       if(value!=='single'&&value!=='duo')return mode;
@@ -209,6 +245,6 @@
     window.addEventListener('resize',()=>{release();geometry='';update();});
     window.addEventListener('blur',release);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)release();});
-    runtime.attach({release,getStyle:()=>style,setStyle,setMode,update});update();
+    runtime.attach({release,getStyle:()=>style,setStyle,getDiameter:()=>diameter,setDiameter,setMode,update});update();
   });
 })();

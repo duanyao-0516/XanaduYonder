@@ -462,9 +462,79 @@ namespace XanaduYonder.EditorTools
                 Require(Get<GameObject>(page, "dialog") == null && session.CanPlay, "Closing help resumes live game");
                 session.Tick(1);
                 Require(session.ElapsedSeconds == seconds + 1, "Timer advances after rules close");
+                CheckSudokuQuickInput(f, page, puzzle);
                 Require(Get<SudokuProfileStore>(page, "store") == null, "Sudoku fixture never accesses player saves");
             }
             finally { Object.DestroyImmediate(root.gameObject); }
+        }
+
+        private static void CheckSudokuQuickInput(Fixture f, SudokuPage page, SudokuPuzzle puzzle)
+        {
+            const string helpKey = "sudoku.quick-input-help-seen";
+            bool hadHelpKey = PlayerPrefs.HasKey(helpKey);
+            int storedHelp = PlayerPrefs.GetInt(helpKey);
+            try
+            {
+                PlayerPrefs.DeleteKey(helpKey);
+                Invoke(page, "StartLevel", puzzle, true);
+                var session = Get<SudokuSession>(page, "session");
+                var cells = Get<Image[]>(Get<SudokuBoardView>(page, "board"), "backgrounds");
+                var digits = Get<Button[]>(page, "digits");
+                var quick = (RectTransform)Get<Button>(page, "quickButton").transform;
+                int given = Array.IndexOf(puzzle.Givens, 9);
+                int same = Array.IndexOf(puzzle.Givens, 9, given + 1);
+                int rowPeer = given / 9 * 9 + (given + 1) % 9;
+                int colPeer = (given + 9) % 81;
+                f.Click(cells[given].rectTransform);
+                Color matching = cells[same].color, row = cells[rowPeer].color, col = cells[colPeer].color;
+                Require(matching == UiFactory.Hex("C7DEC8") && row == UiFactory.Hex("EDF1E8") && col == row,
+                    "Selecting a given highlights matching digits plus its row and column");
+                f.Click(quick);
+                var overlay = Get<GameObject>(page, "dialog");
+                Require(overlay != null, "First quick-mode use opens help");
+                Button enable = null;
+                foreach (var button in overlay.GetComponentsInChildren<Button>())
+                    if (button.GetComponentInChildren<Text>().text == "开启") enable = button;
+                Require(enable != null, "Quick input help can confirm enabling");
+                f.Click((RectTransform)enable.transform);
+                Require(session.Controls.Quick && cells[given].GetComponent<Outline>().enabled &&
+                    cells[same].color == matching && cells[rowPeer].color == row && cells[colPeer].color == col,
+                    "Enabling quick mode preserves the existing digit and peer highlights");
+                f.Click(quick);
+                Require(!session.Controls.Quick && cells[given].GetComponent<Outline>().enabled &&
+                    cells[same].color == matching && cells[rowPeer].color == row && cells[colPeer].color == col,
+                    "Disabling quick mode preserves the existing digit and peer highlights");
+                Invoke(page, "StartLevel", puzzle, true);
+                session = Get<SudokuSession>(page, "session");
+                f.Click(quick);
+                Require(session.Controls.Quick && Get<GameObject>(page, "dialog") == null,
+                    "A new round enables quick mode without showing help again");
+
+                var eights = new List<int>();
+                for (int i = 0; i < 81; i++)
+                    if (puzzle.Solution[i] == 8 && !session.Game.IsGiven(i)) eights.Add(i);
+                f.Click((RectTransform)digits[7].transform);
+                f.Click(cells[eights[0]].rectTransform);
+                Require(cells[eights[0]].GetComponent<Outline>().enabled, "Quick fill focuses the newly filled cell");
+                f.Click((RectTransform)digits[8].transform);
+                Require(!cells[eights[0]].GetComponent<Outline>().enabled && cells[eights[0]].color != matching && cells[same].color == matching,
+                    "Selecting 9 highlights the 9s and clears the former 8 cell focus");
+
+                for (int i = 1; i < eights.Count - 1; i++) session.Game.EnterValue(eights[i], 8);
+                f.Click((RectTransform)digits[7].transform);
+                int lastEight = eights[eights.Count - 1];
+                f.Click(cells[lastEight].rectTransform);
+                Require(session.Game.RemainingDigit(8) == 0 && session.Controls.QuickDigit == 9 &&
+                    !cells[lastEight].GetComponent<Outline>().enabled && cells[same].color == matching,
+                    "Finishing digit 8 advances to 9 without keeping the last 8 highlighted");
+                f.Capture("sudoku-quick-next-digit");
+            }
+            finally
+            {
+                if (hadHelpKey) PlayerPrefs.SetInt(helpKey, storedHelp);
+                else PlayerPrefs.DeleteKey(helpKey);
+                PlayerPrefs.Save();
+            }
         }
 
         private static void CheckSudokuTerminal(Fixture f, bool won, int level, int difficulty)
