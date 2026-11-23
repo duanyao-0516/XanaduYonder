@@ -24,9 +24,9 @@ iOS 入口完成的是 Unity 导出，后续仍需 Xcode 编译、签名和安�
 
 | 内容 | Android | iOS |
 | --- | --- | --- |
-| Unity 原生玩法（含黄金矿工、Zuma、飞机大战、抓大鹅） | 20 个入口 | 20 个入口 |
+| Unity 原生玩法（含黄金矿工、Zuma、飞机大战、抓大鹅和四款新棋类） | 24 个入口 | 24 个入口 |
 | 赵云与阿斗、割绳子、只有一道门、Q版泡泡堂 | Android WebView，4 个入口 | WKWebView，4 个入口 |
-| 总计 | 24 个入口 | 24 个入口 |
+| 总计 | 28 个入口 | 28 个入口 |
 
 经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已移除。原生黄金矿工的 Source 5 战役保留迁移后的原关卡和必要美术，不包含经典网页引擎。
 
@@ -37,6 +37,20 @@ Q版泡泡堂的固定 SWF 和 Ruffle 输入保存在 `ThirdParty/BombItContent/
 每款网页游戏使用完整文件清单、大小和 SHA-256；staging、Unity 导出以及 iOS 加载前分别检查。`verify-removed-games.py` 对源输入、实际打包资源清单、APK／IPA 或 Xcode 导出检查已移除游戏路径、专属符号、Java 类和原生库。不能只检查 ZIP 文件名，因为 Unity 图片可能封装在 `resources.assets` 中。
 
 新增平台专属游戏时，应同时检查大厅入口、资源 staging、原生插件导入设置、生命周期／存档契约和最终产物。
+
+### 割绳子 Android 构建缓存
+
+Android Debug、Release 和棋类验证入口会先准备割绳子的两个 AAR。工作树已有完整且通过校验的产物时直接使用，并填充当前用户的共享缓存。同一台电脑的新工作树可按 Java、Android 清单、内容转换脚本和固定来源 ZIP 的 SHA-256 恢复同一份产物。棋类和其他模块的改动不会使这份缓存失效。复用时从跟踪的 ZIP 校验 `ctr.min.js`，无需展开原始游戏或重跑图片转换。
+
+默认缓存为 macOS 的 `~/Library/Caches/XanaduYonder/cut-the-rope` 或其他平台的 `~/.cache/XanaduYonder/cut-the-rope`，设置 `XDG_CACHE_HOME` 时使用其子目录。可通过 `XANADU_CTR_CACHE_DIR` 指定仓库外的自有私密目录（权限 `0700`）。没有匹配的本地或远端包时，脚本用固定原始 ZIP、现有转换脚本和 Unity Android SDK 36／OpenJDK 在临时目录重建。重建还需要 Node.js 和支持 AVIF 的 Pillow。自定义 SDK 路径可设 `UNITY_ANDROID_PLAYER`。两份 AAR 和校验报告仍是本地生成物。
+
+在有完整产物的机器导出跨机器复用包时，指定仓库外或已忽略的 `artifacts/` 下的新文件，记录命令输出的 SHA-256。
+
+```bash
+python3 scripts/cut-the-rope/prepare-build-input.py --export-bundle artifacts/cut-the-rope-inputs.zip
+```
+
+另一台机器将 `XANADU_CTR_BUNDLE` 设为本地 ZIP 路径或已获授权的 HTTPS 下载地址，并将 `XANADU_CTR_BUNDLE_SHA256` 设为可信渠道取得的 SHA-256，再使用正常构建入口。内部站点可通过 `SSL_CERT_FILE` 指定其可信 CA 文件。缓存未命中时才读取配置的包。包内含两个 AAR、构建报告、来源指纹和文件摘要，均在安装前校验。完整的旧来源包会触发重建。下载、摘要或归档校验失败会直接报错。只允许复用时可执行 `python3 scripts/cut-the-rope/prepare-build-input.py --no-rebuild`。导出只写本地文件。
 
 ## 环境与代码组织
 

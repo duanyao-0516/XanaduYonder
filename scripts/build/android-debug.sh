@@ -27,6 +27,7 @@ if [[ ! -x "$UNITY_EDITOR" ]]; then
     exit 1
 fi
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$APK_FILE")"
+UNITY_EDITOR="$UNITY_EDITOR" python3 "$PROJECT_ROOT/scripts/cut-the-rope/prepare-build-input.py" --root "$PROJECT_ROOT"
 python3 "$PROJECT_ROOT/scripts/bomb-it/build-content.py"
 build_start="$(mktemp "$PROJECT_ROOT/artifacts/builds/.debug-build-start.XXXXXX")"
 trap 'rm -f "$build_start"' EXIT

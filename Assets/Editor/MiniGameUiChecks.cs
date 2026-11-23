@@ -155,8 +155,8 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = LobbyDesignChecks.RecordForCheck(shell, "Sudoku").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
-                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom" };
+                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "ArmyChess", "Xiangqi", "Chess", "ChineseCheckers", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
+                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterArmyChess", "EnterXiangqi", "EnterChess", "EnterChineseCheckers", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom" };
                 float lastBottom = 0;
                 for (int i = 0; i < names.Length; i++)
                 {

@@ -101,12 +101,12 @@ namespace XanaduYonder.EditorTools
             }
         }
 
-        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou",
+        private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "ArmyChess", "Xiangqi", "Chess", "ChineseCheckers", "CutTheRope", "ZhaoyunAdou",
             "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
-        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterCutTheRope", "EnterZhaoyunAdou",
+        private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterArmyChess", "EnterXiangqi", "EnterChess", "EnterChineseCheckers", "EnterCutTheRope", "EnterZhaoyunAdou",
             "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 28, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5 };
-        private static string Category(int i) { return i < 7 ? "逻辑策略" : i < 14 ? "合成消除" : i < 23 ? "敏捷挑战" : "文字语言"; }
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 29, 30, 31, 32, 21, 23, 1, 4, 28, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5 };
+        private static string Category(int i) { return i < 11 ? "逻辑策略" : i < 18 ? "合成消除" : i < 27 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
         {
@@ -235,6 +235,7 @@ namespace XanaduYonder.EditorTools
                 CheckCutTheRopeArtwork(f, mode);
                 CheckLevelDevilArtwork(f, mode);
                 CheckRoundedLogoArtwork(f, mode);
+                CheckClassicBoardArtwork(f, mode);
                 var groupTitles = f.View.GetComponentsInChildren<Text>().Where(t => t.name == "Group title").ToArray();
                 Require(groupTitles.Length == (mode == 2 ? 0 : 4), "Single has no redundant category headers; compact modes retain four groups");
                 var subtitle = Named(f.View.transform, "Lobby subtitle");
@@ -267,6 +268,11 @@ namespace XanaduYonder.EditorTools
                 f.Capture("mode-" + mode + "-top");
                 f.ShowCard(FindCard(f.View.transform, "AircraftFire")); f.Capture("mode-" + mode + "-aircraft-fire");
                 f.ShowCard(FindCard(f.View.transform, "CutTheRope")); f.Capture("mode-" + mode + "-cut-the-rope");
+                f.ShowCard(FindCard(f.View.transform, "ArmyChess")); f.Capture("mode-" + mode + "-classic-boards");
+                if (mode == 2)
+                {
+                    f.ShowCard(FindCard(f.View.transform, "Chess")); f.Capture("mode-2-classic-boards-continued");
+                }
                 if (mode == 2)
                 {
                     f.ShowCard(FindCard(f.View.transform, "Zuma")); f.Capture("mode-2-zuma");
@@ -408,6 +414,31 @@ namespace XanaduYonder.EditorTools
                 Require(point.x >= slot.rect.xMin - .1f && point.x <= slot.rect.xMax + .1f &&
                     point.y >= slot.rect.yMin - .1f && point.y <= slot.rect.yMax + .1f,
                     "Aircraft Fire original logo fits its shared slot");
+            }
+        }
+
+        private static void CheckClassicBoardArtwork(Fixture f, int mode)
+        {
+            string[] names = { "ArmyChess", "Xiangqi", "Chess", "ChineseCheckers" };
+            string[] sprites = { "army-chess", "xiangqi", "chess", "chinese-checkers" };
+            for (int i = 0; i < names.Length; i++)
+            {
+                var card = FindCard(f.View.transform, names[i]);
+                if (mode != 2)
+                {
+                    var sprite = Named(card, "Game icon").GetComponent<Image>().sprite;
+                    Require(sprite != null && sprite == Resources.Load<Sprite>("Lobby/Icons/" + sprites[i]),
+                        names[i] + " uses its dedicated compact line icon.");
+                    continue;
+                }
+                var slot = Named(card, "Game logo");
+                var mask = slot.GetComponentsInChildren<Mask>().Single();
+                var reference = Named(FindCard(f.View.transform, "CutTheRope"), "Game logo").GetComponentsInChildren<Mask>().Single();
+                var artwork = mask.GetComponentsInChildren<Image>().Single(image => image.gameObject != mask.gameObject);
+                Require(!mask.showMaskGraphic && mask.GetComponent<Image>().sprite == reference.GetComponent<Image>().sprite,
+                    names[i] + " shares the established rounded logo mask.");
+                Require(artwork.sprite != null && artwork.sprite == Resources.Load<Sprite>("Lobby/Icons/" + sprites[i] + "-logo"),
+                    names[i] + " uses the approved large composition.");
             }
         }
 
