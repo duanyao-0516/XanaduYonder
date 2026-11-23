@@ -3,41 +3,13 @@ using UnityEngine.UI;
 
 namespace XanaduYonder.Runtime
 {
-    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart, Back, Undo, Eraser, Pencil, Bell, Lock, Blossom }
+    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart, Back, Undo, Eraser, Pencil, Bell, Lock }
 
     // Small UI symbols are meshes rather than font glyphs, so their shape and centering
     // do not depend on the bundled CJK font or platform font fallback.
     [RequireComponent(typeof(CanvasRenderer))]
     internal sealed class UiIconGraphic : MaskableGraphic
     {
-        private static readonly Vector2[] BlossomOutline =
-        {
-            new Vector2(.003f, .354f), new Vector2(-.014f, .380f), new Vector2(-.037f, .389f),
-            new Vector2(-.080f, .374f), new Vector2(-.126f, .337f), new Vector2(-.160f, .291f),
-            new Vector2(-.177f, .237f), new Vector2(-.177f, .189f), new Vector2(-.169f, .149f),
-            new Vector2(-.211f, .174f), new Vector2(-.257f, .189f), new Vector2(-.300f, .189f),
-            new Vector2(-.351f, .171f), new Vector2(-.391f, .143f), new Vector2(-.417f, .109f),
-            new Vector2(-.403f, .077f), new Vector2(-.434f, .060f), new Vector2(-.451f, .040f),
-            new Vector2(-.451f, .003f), new Vector2(-.437f, -.040f), new Vector2(-.406f, -.077f),
-            new Vector2(-.360f, -.109f), new Vector2(-.300f, -.129f), new Vector2(-.334f, -.160f),
-            new Vector2(-.354f, -.203f), new Vector2(-.360f, -.243f), new Vector2(-.349f, -.286f),
-            new Vector2(-.326f, -.323f), new Vector2(-.286f, -.337f), new Vector2(-.269f, -.369f),
-            new Vector2(-.229f, -.386f), new Vector2(-.174f, -.389f), new Vector2(-.126f, -.374f),
-            new Vector2(-.077f, -.346f), new Vector2(-.034f, -.306f), new Vector2(-.006f, -.254f),
-            new Vector2(.003f, -.234f), new Vector2(.020f, -.280f), new Vector2(.054f, -.326f),
-            new Vector2(.103f, -.363f), new Vector2(.154f, -.383f), new Vector2(.206f, -.391f),
-            new Vector2(.251f, -.377f), new Vector2(.271f, -.343f), new Vector2(.309f, -.329f),
-            new Vector2(.337f, -.291f), new Vector2(.351f, -.249f), new Vector2(.349f, -.209f),
-            new Vector2(.329f, -.163f), new Vector2(.297f, -.129f), new Vector2(.349f, -.109f),
-            new Vector2(.394f, -.074f), new Vector2(.426f, -.031f), new Vector2(.446f, .020f),
-            new Vector2(.449f, .066f), new Vector2(.411f, .097f), new Vector2(.414f, .126f),
-            new Vector2(.386f, .163f), new Vector2(.337f, .189f), new Vector2(.294f, .197f),
-            new Vector2(.251f, .186f), new Vector2(.211f, .166f), new Vector2(.177f, .149f),
-            new Vector2(.191f, .194f), new Vector2(.191f, .240f), new Vector2(.177f, .283f),
-            new Vector2(.151f, .329f), new Vector2(.111f, .366f), new Vector2(.066f, .386f),
-            new Vector2(.031f, .386f), new Vector2(.003f, .354f)
-        };
-
         [SerializeField] private UiIconKind kind;
 
         public UiIconKind Kind
@@ -93,9 +65,6 @@ namespace XanaduYonder.Runtime
                         Stroke(mesh, center, size, new Vector2(-.39f, i * .25f), new Vector2(-.23f, i * .25f));
                         Stroke(mesh, center, size, new Vector2(-.01f, i * .18f), new Vector2(.25f, i * .18f));
                     }
-                    break;
-                case UiIconKind.Blossom:
-                    Blossom(mesh, center, size);
                     break;
                 case UiIconKind.Close:
                     Stroke(mesh, center, size, new Vector2(-.30f, -.30f), new Vector2(.30f, .30f));
@@ -170,27 +139,6 @@ namespace XanaduYonder.Runtime
         private void Path(VertexHelper mesh, Vector2 center, float size, Vector2[] points)
         {
             for (var i = 1; i < points.Length; i++) Stroke(mesh, center, size, points[i - 1], points[i]);
-        }
-
-        private void Blossom(VertexHelper mesh, Vector2 center, float size)
-        {
-            Path(mesh, center, size, BlossomOutline);
-            // Inward seams keep the five cupped petals distinct at 20 units.
-            Path(mesh, center, size, new[] { new Vector2(-.169f, .149f), new Vector2(-.140f, .094f), new Vector2(-.101f, .061f) });
-            Path(mesh, center, size, new[] { new Vector2(.177f, .149f), new Vector2(.145f, .094f), new Vector2(.106f, .064f) });
-            Path(mesh, center, size, new[] { new Vector2(-.300f, -.129f), new Vector2(-.223f, -.105f), new Vector2(-.137f, -.111f) });
-            Path(mesh, center, size, new[] { new Vector2(.297f, -.129f), new Vector2(.221f, -.101f), new Vector2(.136f, -.107f) });
-            Stroke(mesh, center, size, new Vector2(.003f, -.234f), new Vector2(.003f, -.208f));
-
-            // Three short stamens use the same stroke as the outer silhouette.
-            Stroke(mesh, center, size, new Vector2(-.073f, -.009f), new Vector2(-.127f, .045f));
-            Stroke(mesh, center, size, new Vector2(0, .006f), new Vector2(0, .100f));
-            Stroke(mesh, center, size, new Vector2(.073f, -.009f), new Vector2(.127f, .045f));
-            Path(mesh, center, size, new[]
-            {
-                new Vector2(0, -.067f), new Vector2(.031f, -.085f), new Vector2(.028f, -.114f),
-                new Vector2(0, -.130f), new Vector2(-.028f, -.114f), new Vector2(-.031f, -.085f), new Vector2(0, -.067f)
-            });
         }
 
         private void CircularArrow(VertexHelper mesh, Vector2 center, float size, float start, float end)

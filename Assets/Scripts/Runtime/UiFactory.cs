@@ -126,7 +126,7 @@ namespace XanaduYonder.Runtime
             return button;
         }
 
-        internal static void AddIcon(Transform parent, UiIconKind kind, float size, Color color)
+        private static void AddIcon(Transform parent, UiIconKind kind, float size, Color color)
         {
             var iconRect = Rect(parent, kind + " icon", 0, 0, size, size);
             Center(iconRect);

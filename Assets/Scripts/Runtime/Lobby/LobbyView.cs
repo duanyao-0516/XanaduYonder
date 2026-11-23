@@ -228,13 +228,7 @@ namespace XanaduYonder.Runtime
 
             var directory = Mode == LobbyDisplayMode.Directory;
             var headTop = directory ? (height - 20) * .5f : (height - 42.5f) * .5f;
-            if (entry.BuildCompactIcon == null) Icon(card.transform, "Game icon", entry.Id, 10, headTop + 1, 20);
-            else
-            {
-                var icon = UiFactory.Rect(card.transform, "Game icon", 10, headTop + 1, 20, 20);
-                entry.BuildCompactIcon(icon);
-                foreach (var graphic in icon.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
-            }
+            Icon(card.transform, "Game icon", entry.Id, 10, headTop + 1, 20);
             Label(card.transform, "Game name", entry.Name, 38, headTop, width - 48, 20,
                 directory ? 13 : 14, UiFactory.Ink, TextAnchor.MiddleLeft,
                 directory ? FontStyle.Normal : FontStyle.Bold);

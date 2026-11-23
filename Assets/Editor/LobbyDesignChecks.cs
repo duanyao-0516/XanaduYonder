@@ -201,23 +201,15 @@ namespace XanaduYonder.EditorTools
                     if (mode != 2)
                     {
                         var icon = Named(card, "Game icon");
+                        var iconImage = icon.GetComponent<Image>();
+                        Require(iconImage != null && iconImage.sprite != null, Names[i] + " has its compact artwork");
                         if (Names[i] == "Feihualing")
                         {
-                            var flower = Named(icon, "Blossom icon");
-                            var graphic = flower.GetComponent<UiIconGraphic>();
-                            var center = icon.InverseTransformPoint(flower.TransformPoint(flower.rect.center));
-                            Require(graphic != null && graphic.Kind == UiIconKind.Blossom &&
-                                graphic.color == UiFactory.Accent && !graphic.raycastTarget,
-                                "Feihualing uses the shared ink blossom without intercepting card taps");
-                            Near(flower.rect.width, 20, "Feihualing blossom fills the slot width");
-                            Near(flower.rect.height, 20, "Feihualing blossom fills the slot height");
-                            Near(center.x, icon.rect.center.x, "Feihualing blossom is horizontally centered");
-                            Near(center.y, icon.rect.center.y, "Feihualing blossom is vertically centered");
-                        }
-                        else
-                        {
-                            var iconImage = icon.GetComponent<Image>();
-                            Require(iconImage != null && iconImage.sprite != null, Names[i] + " has its compact artwork");
+                            var flower = Resources.Load<Sprite>("Lobby/Icons/feihualing");
+                            Require(flower != null && iconImage.sprite == flower && iconImage.color == Color.white &&
+                                iconImage.preserveAspect && !iconImage.raycastTarget,
+                                "Feihualing displays the approved five-petal sprite without tint or tap interception");
+                            Require(flower.rect.size == new Vector2(96, 96), "Feihualing imports the full 96-pixel flower asset");
                         }
                         Near(icon.rect.width, 20, Names[i] + " icon width"); Near(icon.rect.height, 20, Names[i] + " icon height");
                         var iconCenter = card.InverseTransformPoint(icon.TransformPoint(icon.rect.center));

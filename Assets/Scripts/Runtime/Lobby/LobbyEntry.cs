@@ -24,6 +24,5 @@ namespace XanaduYonder.Runtime
         public string CompactRecord;
         public Action Enter;
         public Action<RectTransform> BuildLogo;
-        public Action<RectTransform> BuildCompactIcon;
     }
 }

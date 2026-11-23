@@ -8,15 +8,9 @@ namespace XanaduYonder.Runtime
     {
         private LobbyEntry BuildFeihualingEntry()
         {
-            var entry = LobbyGame("feihualing", "Feihualing", "飞花令", "33", "文字语言", "诗词接令",
+            return LobbyGame("feihualing", "Feihualing", "飞花令", "33", "文字语言", "诗词接令",
                 "循一字，接一行诗。", "单机 / 同机双人 · 学习 / 竞技 / 竞速", "学习 / 竞技 / 竞速",
                 EnterFeihualing, FeihualingPage.DrawLobbySeal);
-            entry.BuildCompactIcon = parent =>
-            {
-                var slot = ((RectTransform)parent).rect;
-                UiFactory.AddIcon(parent, UiIconKind.Blossom, Mathf.Min(slot.width, slot.height), UiFactory.Accent);
-            };
-            return entry;
         }
 
         private void AddPoetryCompanionSetting(RectTransform panel, Action after)
