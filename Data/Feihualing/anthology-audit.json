@@ -1,0 +1,480 @@
+{
+  "corpus": "feihualing-v2-ac119e75542abe64706aea35",
+  "method": "Count each pinned source record and punctuation unit. Report source forms absent from linked live answers.",
+  "anthologies": {
+    "全唐诗/唐诗三百首.json": {
+      "sourceRows": 366,
+      "counts": {
+        "direct": 348,
+        "sourceUnits": 3549,
+        "acceptedSourceUnits": 3524,
+        "sameAuthorReprint": 11,
+        "differentAttribution": 5,
+        "excludedAttribution": 1,
+        "alternateEdition": 1
+      },
+      "exceptions": [
+        {
+          "sourceRow": 4,
+          "author": "王昌龄",
+          "title": "横吹曲辞 出塞 一",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-e5c420b533e03d7a9b4acc57",
+              "王昌龄",
+              "出塞二首 一"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 40,
+          "author": "郑畋",
+          "title": "马嵬坡",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-758ffbb621c13a1bd29f8e11",
+              "郑畋",
+              "马嵬坡"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[玄]宗回马杨妃死"
+          ]
+        },
+        {
+          "sourceRow": 46,
+          "author": "元稹",
+          "title": "行宫",
+          "status": "differentAttribution",
+          "linkedWorks": [
+            [
+              "tang-48bec82478cb35e813c0979d",
+              "王建",
+              "故行宫"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 70,
+          "author": "朱庆余",
+          "title": "近试上张籍水部",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-08c092066bd9dec5415d1400",
+              "朱庆余",
+              "近试上张籍水部"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[妆]罢低声问夫壻"
+          ]
+        },
+        {
+          "sourceRow": 102,
+          "author": "刘长卿",
+          "title": "自夏口至鹦鹉洲夕望岳阳寄源中丞",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-33636fab100addad436be5c2",
+              "刘长卿",
+              "自夏口至鹦鹉洲夕望岳阳寄源中丞"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[汀]洲无浪复无烟"
+          ]
+        },
+        {
+          "sourceRow": 103,
+          "author": "刘长卿",
+          "title": "赋得",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-1e84d090c3b098a65fddd411",
+              "刘长卿",
+              "赋得"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[心]随明月到胡天"
+          ]
+        },
+        {
+          "sourceRow": 122,
+          "author": "李白",
+          "title": "蜀道难",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-43dd8c90d1a372b22a42fc0f",
+              "李白",
+              "蜀道难"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "噫吁戏"
+          ]
+        },
+        {
+          "sourceRow": 124,
+          "author": "杜荀鹤",
+          "title": "春宫怨",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-5e103fd4015d842d17838835",
+              "杜荀鹤",
+              "春宫怨"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 150,
+          "author": "丘为",
+          "title": "寻西山隐者不遇",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-cf5cebaf352372ea210d9cc9",
+              "丘为",
+              "寻西山隐者不遇"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "直[上]三十里"
+          ]
+        },
+        {
+          "sourceRow": 176,
+          "author": "黄拱",
+          "title": "还乡偶书  其二",
+          "status": "excludedAttribution",
+          "linkedWorks": [],
+          "unmatchedSourceUnits": [
+            "少小离家老大回",
+            "乡音难改鬓毛衰",
+            "儿童相见不相识",
+            "借问客从何处来"
+          ]
+        },
+        {
+          "sourceRow": 189,
+          "author": "周朴",
+          "title": "春宫怨",
+          "status": "differentAttribution",
+          "linkedWorks": [
+            [
+              "tang-5e103fd4015d842d17838835",
+              "杜荀鹤",
+              "春宫怨"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 204,
+          "author": "柳宗元",
+          "title": "渔翁",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-d12e8981d422ca09a1c071b9",
+              "柳宗元",
+              "渔翁"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[欸]乃一声山水绿"
+          ]
+        },
+        {
+          "sourceRow": 238,
+          "author": "朱斌",
+          "title": "登楼",
+          "status": "differentAttribution",
+          "linkedWorks": [
+            [
+              "tang-2b70109f122988e1a6d8ee59",
+              "王之涣",
+              "登鹳雀楼"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 250,
+          "author": "杜甫",
+          "title": "丹青引赠曹将军霸",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-6865a374a881a55d400e245a",
+              "杜甫",
+              "丹青引赠曹将军霸"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "褒公鄂公毛发动英姿飒爽来酣战"
+          ]
+        },
+        {
+          "sourceRow": 254,
+          "author": "张佖",
+          "title": "寄人二首  其一",
+          "status": "differentAttribution",
+          "linkedWorks": [
+            [
+              "tang-69bd524b2ee13cf60b0b3ca5",
+              "张泌",
+              "寄人 一"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 257,
+          "author": "李白",
+          "title": "杂曲歌辞 清平调 一",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-e6f467b489f7372dbe4fc909",
+              "李白",
+              "清平调 一"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 258,
+          "author": "李白",
+          "title": "杂曲歌辞 清平调 二",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-5c71de614ae6d5fb4d71fb3c",
+              "李白",
+              "清平调 二"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 277,
+          "author": "元结",
+          "title": "贼退示官吏",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "tang-05bcdf20ccb5b5aae051973a",
+              "元结",
+              "贼退示官吏"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "日[晏]犹得眠"
+          ]
+        },
+        {
+          "sourceRow": 300,
+          "author": "孙革",
+          "title": "访羊尊师",
+          "status": "differentAttribution",
+          "linkedWorks": [
+            [
+              "tang-751f6efc6979936e1b108c49",
+              "贾岛",
+              "寻隐者不遇"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 306,
+          "author": "李白",
+          "title": "关山月",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-b9e246b4d061d40c49172b22",
+              "李白",
+              "横吹曲辞 关山月"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "[戍]客望边色"
+          ]
+        },
+        {
+          "sourceRow": 308,
+          "author": "李白",
+          "title": "清平调词三首 一",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-e6f467b489f7372dbe4fc909",
+              "李白",
+              "清平调 一"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 337,
+          "author": "李白",
+          "title": "相和歌辞 蜀道难",
+          "status": "alternateEdition",
+          "linkedWorks": [
+            [
+              "tang-43dd8c90d1a372b22a42fc0f",
+              "李白",
+              "蜀道难"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "乃与秦塞通人烟",
+            "然后天梯石栈方钩连",
+            "黄鹤之飞尚不得",
+            "猨猱欲度愁攀缘",
+            "但见悲鸟号枯木",
+            "雄飞呼雌绕林间",
+            "使人听此彫朱颜",
+            "连峰去天不盈尺",
+            "飞湍瀑流相喧豗",
+            "砅崖转石万壑雷",
+            "其崄也若此"
+          ]
+        },
+        {
+          "sourceRow": 340,
+          "author": "李白",
+          "title": "相和歌辞 子夜四时歌四首 春歌",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-f02fc0e5d5f9e014031e0a22",
+              "李白",
+              "子夜吴歌 春歌"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 342,
+          "author": "李白",
+          "title": "相和歌辞 子夜四时歌四首 秋歌",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-d56d791612a3029531a04b61",
+              "李白",
+              "子夜吴歌 秋歌"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 343,
+          "author": "李白",
+          "title": "相和歌辞 子夜四时歌四首 冬歌",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-cc1345488c25e367c1491a67",
+              "李白",
+              "子夜吴歌 冬歌"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 345,
+          "author": "孟郊",
+          "title": "杂曲歌辞 游子吟",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-eef93ab1eb38bac708405e3d",
+              "孟郊",
+              "游子吟"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        },
+        {
+          "sourceRow": 356,
+          "author": "王涯",
+          "title": "杂曲歌辞 秋夜曲",
+          "status": "sameAuthorReprint",
+          "linkedWorks": [
+            [
+              "tang-648f00c59241c386ae54cb30",
+              "王涯",
+              "秋夜曲"
+            ]
+          ],
+          "unmatchedSourceUnits": []
+        }
+      ]
+    },
+    "宋词/宋词三百首.json": {
+      "sourceRows": 280,
+      "counts": {
+        "direct": 280,
+        "sourceUnits": 4644,
+        "acceptedSourceUnits": 4638
+      },
+      "exceptions": [
+        {
+          "sourceRow": 117,
+          "author": "岳飞",
+          "title": "满江红",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "ci-2df4f0b21dcbb4cba6839d84",
+              "岳飞",
+              "满江红"
+            ],
+            [
+              "ci-7492ba37622a4413825a9b2d",
+              "岳飞",
+              "满江红·怒发冲冠"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "驾长车踏破",
+            "贺兰山缺"
+          ]
+        },
+        {
+          "sourceRow": 242,
+          "author": "周邦彦",
+          "title": "蝶恋花",
+          "status": "direct",
+          "linkedWorks": [
+            [
+              "ci-1570a4ce6375d8e709e7521a",
+              "周邦彦",
+              "蝶恋花·月皎惊乌栖不定"
+            ]
+          ],
+          "unmatchedSourceUnits": [
+            "更漏将残",
+            "辘",
+            "牵金井",
+            "泪花落枕红棉泠"
+          ]
+        }
+      ]
+    }
+  }
+}

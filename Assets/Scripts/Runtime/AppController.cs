@@ -11,6 +11,7 @@ using XanaduYonder.Core.LinkMatch;
 using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Sheep;
 using XanaduYonder.Runtime.Idiom;
+using XanaduYonder.Runtime.Feihualing;
 using XanaduYonder.Runtime.Watermelon;
 using XanaduYonder.Runtime.Sudoku;
 using XanaduYonder.Runtime.Dino;
@@ -58,6 +59,7 @@ namespace XanaduYonder.Runtime
         private JumpPage jumpPage;
         private SheepPage sheepPage;
         private IdiomPage idiomPage;
+        private FeihualingPage feihualingPage;
         private WatermelonPage watermelonPage;
         private SudokuPage sudokuPage;
         private DinoPage dinoPage;
@@ -80,7 +82,7 @@ namespace XanaduYonder.Runtime
         private string flappyLoadWarning;
         private Text status;
         private Text lobbyStatus;
-        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake, BakeryBasket, ClassicBoards }
+        private enum Page { Lobby, Game2048, Jump, Sheep, Idiom, Sudoku, Watermelon, Minesweeper, Zuma, Dino, Gomoku, HappyBall, Sokoban, GoldMiner, SlidingPuzzle, Tetris, FlappyBird, LinkMatch, AircraftFire, Snake, BakeryBasket, ClassicBoards, Feihualing }
         private Page activePage;
         private bool inGame => activePage == Page.Game2048;
         private bool animating;
@@ -213,7 +215,8 @@ namespace XanaduYonder.Runtime
                 LobbyGame("level-devil", "LevelDevil", "只有一道门", "22", "敏捷挑战", "小心下一步", "越过意想不到的机关，走到门前。", "横屏离线 · 单人 / 双人 · 触屏操作", "单人 / 双人", EnterLevelDevil, AddLevelDevilPreview),
                 LobbyGame("bomb-it", "BombIt", "Q版泡泡堂", "27", "敏捷挑战", "经典炸弹人", "炸开道路，躲过火焰，战胜对手。", "初代原版 · 离线人机 / 同屏双人", "人机 / 双人", EnterBombIt, AddBombItPreview),
                 LobbyGame("aircraft-fire", "AircraftFire", "飞机大战", "20", "敏捷挑战", "指尖空战", "穿过弹幕，守住这一片天空。", "", "", EnterAircraftFire, AddAircraftFirePreview),
-                LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null)
+                LobbyGame("idiom", "Idiom", "成语接龙", "05", "文字语言", "一词一世界", "一来一往，认识更多好词。", "同字 / 同音 · 随时收藏生词", "同字 / 同音", EnterIdiom, null),
+                BuildFeihualingEntry()
             };
             lobbyView = root.gameObject.AddComponent<LobbyView>();
             lobbyView.Initialize(entries, OpenSettings, LobbyDisplayPreferences.Load(), LobbyDisplayPreferences.Save);
@@ -427,11 +430,11 @@ namespace XanaduYonder.Runtime
             idiomPage.Initialize(root, ShowLobby,
                 () => activePage == Page.Idiom && modal == null && !paused &&
                     (focused || (idiomPage.KeyboardVisible && idiomPage.KeyboardForeground)),
-                SetStatus, OpenIdiomModal, CloseModal);
+                SetStatus, OpenTextGameModal, CloseModal);
             idiomPage.Changed += RefreshIdiomRecord;
         }
 
-        private RectTransform OpenIdiomModal(string title, float height, Action back)
+        private RectTransform OpenTextGameModal(string title, float height, Action back)
         {
             var panel = CreateModal(title, height, back);
             SetModalBack(back);
@@ -1188,6 +1191,7 @@ namespace XanaduYonder.Runtime
             ResultPresentation.Clear(this);
             ResetBackExitConfirmation();
             boardPage?.Leave();
+            if (activePage == Page.Feihualing) feihualingPage?.Leave();
             LeaveAircraftFire();
             linkMatchPage?.Leave();
             tetrisPage?.Leave();
@@ -1253,6 +1257,7 @@ namespace XanaduYonder.Runtime
             if (activePage == Page.Minesweeper) { minesweeperPage?.CheckEndState(); return; }
             if (activePage == Page.Watermelon) { watermelonPage?.CheckEndState(); return; }
             if (activePage == Page.Idiom) { idiomPage?.CheckEndState(); return; }
+            if (activePage == Page.Feihualing) { feihualingPage?.CheckEndState(); return; }
             if (activePage == Page.Jump) { jumpPage.CheckEndState(); return; }
             if (activePage == Page.Sheep) { sheepPage.CheckEndState(); return; }
             if (activePage == Page.Sudoku) { sudokuPage.CheckEndState(); return; }
@@ -1300,7 +1305,9 @@ namespace XanaduYonder.Runtime
         {
             Action finish = () => { CloseModal(); if (after != null) after(); else CheckEndState(); };
             bool tetrisSettings = activePage == Page.Tetris && tetrisPage != null;
-            var panel = CreateModal("简单一点，刚刚好", tetrisSettings ? 574 : 488);
+            bool showPoetryCompanion = activePage == Page.Feihualing && feihualingPage != null && feihualingPage.ShowsAutoCompanionSetting;
+            bool extraSetting = tetrisSettings || showPoetryCompanion;
+            var panel = CreateModal("简单一点，刚刚好", extraSetting ? 574 : 488);
             UiFactory.Button(panel, "声音与触感说明", 32, 104, 532, 54, () => ShowFeedbackHelp(after));
             UiFactory.Button(panel, "声音  ·  " + (data.SoundEnabled ? "开启" : "关闭"), 32, 178, 532, 70, () =>
             {
@@ -1324,7 +1331,9 @@ namespace XanaduYonder.Runtime
                     tetrisPage.SetSwapControls(!tetrisPage.SwapControls);
                     CloseModal(); OpenSettings(after);
                 });
-            UiFactory.Button(panel, "完成", 32, tetrisSettings ? 462 : 376, 532, 74, finish, true);
+            if (showPoetryCompanion)
+                AddPoetryCompanionSetting(panel, after);
+            UiFactory.Button(panel, "完成", 32, extraSetting ? 462 : 376, 532, 74, finish, true);
             dismissModal = finish;
         }
 
@@ -1414,9 +1423,9 @@ namespace XanaduYonder.Runtime
 
         private void SetStatus(string message)
         {
-            var pageError = activePage == Page.Snake ? snakePage?.SaveError : activePage == Page.AircraftFire ? aircraftFirePage?.SaveError : activePage == Page.LinkMatch ? linkMatchPage?.SaveError : activePage == Page.FlappyBird ? flappyBirdPage?.SaveError : activePage == Page.SlidingPuzzle ? slidingPuzzlePage?.SaveError : activePage == Page.Tetris ? tetrisPage?.SaveError : activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.HappyBall ? happyBallPage?.SaveError : activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Zuma ? zumaPage?.SaveError : activePage == Page.Gomoku ? gomokuPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
+            var pageError = activePage == Page.Feihualing ? feihualingPage?.SaveError : activePage == Page.Snake ? snakePage?.SaveError : activePage == Page.AircraftFire ? aircraftFirePage?.SaveError : activePage == Page.LinkMatch ? linkMatchPage?.SaveError : activePage == Page.FlappyBird ? flappyBirdPage?.SaveError : activePage == Page.SlidingPuzzle ? slidingPuzzlePage?.SaveError : activePage == Page.Tetris ? tetrisPage?.SaveError : activePage == Page.GoldMiner ? goldMinerPage?.SaveError : activePage == Page.Sokoban ? sokobanPage?.SaveError : activePage == Page.HappyBall ? happyBallPage?.SaveError : activePage == Page.Dino ? dinoPage?.SaveError : activePage == Page.Zuma ? zumaPage?.SaveError : activePage == Page.Gomoku ? gomokuPage?.SaveError : activePage == Page.Minesweeper ? minesweeperPage?.SaveError : activePage == Page.Sudoku ? sudokuPage?.SaveError : activePage == Page.Watermelon ? watermelonPage?.SaveError : activePage == Page.Idiom ? idiomPage?.SaveError :
                 activePage == Page.Sheep ? sheepPage?.SaveError : activePage == Page.Jump ? jumpPage?.SaveError :
-                activePage == Page.Lobby ? snakePage?.SaveError ?? aircraftFirePage?.SaveError ?? aircraftFireLoadWarning ?? linkMatchPage?.SaveError ?? flappyBirdPage?.SaveError ?? flappyLoadWarning ?? slidingPuzzlePage?.SaveError ?? tetrisPage?.SaveError ?? goldMinerPage?.SaveError ?? sokobanPage?.SaveError ?? happyBallPage?.SaveError ?? dinoPage?.SaveError ?? zumaPage?.SaveError ?? gomokuPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
+                activePage == Page.Lobby ? snakePage?.SaveError ?? aircraftFirePage?.SaveError ?? aircraftFireLoadWarning ?? linkMatchPage?.SaveError ?? flappyBirdPage?.SaveError ?? flappyLoadWarning ?? slidingPuzzlePage?.SaveError ?? tetrisPage?.SaveError ?? goldMinerPage?.SaveError ?? sokobanPage?.SaveError ?? happyBallPage?.SaveError ?? dinoPage?.SaveError ?? zumaPage?.SaveError ?? gomokuPage?.SaveError ?? minesweeperPage?.SaveError ?? sudokuPage?.SaveError ?? watermelonPage?.SaveError ?? idiomPage?.SaveError ?? feihualingPage?.SaveError ?? sheepPage?.SaveError ?? jumpPage?.SaveError : null;
             var target = activePage == Page.Lobby ? lobbyStatus : status;
             // The normal footer is hidden in Minesweeper focus mode; preserve shared save errors there.
             if (activePage == Page.Snake) snakePage?.SetHostSaveWarning(saveFailed ? saveWarning : null);
@@ -1447,6 +1456,7 @@ namespace XanaduYonder.Runtime
             jumpPage?.Save();
             sheepPage?.Save();
             idiomPage?.Save();
+            if (activePage == Page.Feihualing) feihualingPage?.Save();
             watermelonPage?.Save();
             sudokuPage?.Save();
             minesweeperPage?.Save();
@@ -1511,7 +1521,7 @@ namespace XanaduYonder.Runtime
         {
             if (backExitPage != activePage) { ResetBackExitConfirmation(); backExitPage = activePage; }
             if (IsExternalGameRunning) return;
-            if (paused || (!focused && !(activePage == Page.Idiom && idiomPage != null && idiomPage.KeyboardVisible && idiomPage.KeyboardForeground))) return;
+            if (paused || (!focused && !IsTextKeyboardInForeground())) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 HandleBack();
@@ -1540,6 +1550,7 @@ namespace XanaduYonder.Runtime
             else if (activePage == Page.FlappyBird) flappyBirdPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Dino) dinoPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Idiom && idiomPage.HandleBack()) { }
+            else if (activePage == Page.Feihualing && feihualingPage.HandleBack()) { }
             else if (activePage == Page.Sudoku) sudokuPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Minesweeper) minesweeperPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.Snake) snakePage.HandleSystemBack(ConfirmSystemBackExit);
@@ -1574,7 +1585,14 @@ namespace XanaduYonder.Runtime
             if (activePage == Page.ClassicBoards && value) CloseModal();
             boardPage?.SetForeground(!paused && focused);
             sudokuPage?.SetForeground(!paused && focused);
-            if (value) { idiomPage?.PauseForBackground(); StopAnimation(); feedback?.Stop(); Save(); }
+            if (value)
+            {
+                if (activePage == Page.Feihualing) feihualingPage?.PauseForBackground();
+                idiomPage?.PauseForBackground();
+                StopAnimation();
+                feedback?.Stop();
+                Save();
+            }
             else CheckEndState();
         }
 
@@ -1602,7 +1620,7 @@ namespace XanaduYonder.Runtime
             {
                 // Android's soft input dialog sends focus(false) while the Activity
                 // remains resumed. Real backgrounding is handled by OnApplicationPause.
-                if (activePage != Page.Idiom) StopAnimation();
+                if (activePage != Page.Idiom && activePage != Page.Feihualing) StopAnimation();
                 feedback?.Stop();
                 Save();
             }
@@ -1620,6 +1638,14 @@ namespace XanaduYonder.Runtime
             if (flappyLobbySprite != null) Destroy(flappyLobbySprite);
         }
 
-        private void OnApplicationQuit() { snakePage?.Suspend(); aircraftFirePage?.Suspend(); zumaPage?.Suspend(); linkMatchPage?.Suspend(); Save(); }
+        private void OnApplicationQuit()
+        {
+            if (activePage == Page.Feihualing) feihualingPage?.PauseForBackground();
+            snakePage?.Suspend();
+            aircraftFirePage?.Suspend();
+            zumaPage?.Suspend();
+            linkMatchPage?.Suspend();
+            Save();
+        }
     }
 }

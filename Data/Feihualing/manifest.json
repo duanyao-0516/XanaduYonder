@@ -1,0 +1,1452 @@
+{
+  "format": 1,
+  "corpus": "feihualing-v2-ac119e75542abe64706aea35",
+  "upstream": "chinese-poetry/chinese-poetry",
+  "upstreamCommit": "b8594f81a89752241442f2ce267d6f66f96704ee",
+  "sourceLockSha256": "12422cebe82110674b38786720bc30d675a3e385e421aa5c39c2948affd38f4e",
+  "editorialSha256": {
+    "editorial.json": "48519bacc8a915df00b82525d435fd8d68ae1394cc9e7dc931984692470f25ab",
+    "editorial-themes.json": "d315722fb317e4e6fb6f24e49b770a57f79a3d9614bf50609845be8218740ee0",
+    "editorial-canon.json": "846cb5f0908d38da2e099474b7afb0a3c3d30c35e101ec47e9b8b15f94e05a06",
+    "editorial-supplements.json": "91b4a7513c410b4740172c0e88fbb3f8bd824572b17c4f834865a836519eec0a",
+    "editorial-classics-amendments.json": "32a5916ad4f8aea61718e2639aa8d1517292c26bb57958354e39f9f519a22d48"
+  },
+  "catalogSha256": "7a5d79982742836a2d0bd136a0a99ea396f9693f90f768253254b6ab6f7cd961",
+  "provenanceSha256": "a59f223665dd3a0831afee257820037721dd701800a4833f1fce9ddb64cd38f6",
+  "licenseSha256": "c195319aeaa3ffcbe16aa5d26eec19eae5a42f84337dd2b3dc3c9d5ccbbd6507",
+  "catalogBytes": 7862022,
+  "converter": "ICU 78.3",
+  "zlib": "1.2.12",
+  "fontSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+  "eligibleWorks": {
+    "song": 243097,
+    "tang": 50661,
+    "ci": 19720
+  },
+  "excludedInputRecords": {
+    "editorialExclusion": 1,
+    "incompleteWork": 2241,
+    "missingFontGlyph": 1913,
+    "missingMetadata": 27,
+    "uncertainBoundaries": 15891
+  },
+  "works": {
+    "tang": 10031,
+    "ci": 6014,
+    "song": 11007
+  },
+  "lines": 253739,
+  "groups": 247780,
+  "aliasCount": 153347,
+  "aliasesDiscardedAsRedundantOrAmbiguous": 100468,
+  "commonWorks": {
+    "tang": 397,
+    "ci": 302,
+    "song": 31
+  },
+  "sourceFiles": 340,
+  "sourceBytes": 144080138,
+  "canonWorks": 132,
+  "cardsByKind": {
+    "0": 16,
+    "1": 14,
+    "2": 12,
+    "3": 11
+  },
+  "baseCorpus": "feihualing-v2-fc0a511ef50a59044028dee5",
+  "previousCorpus": "feihualing-v2-c7e498a4832a31f2219067de",
+  "retiredRows": [
+    5537,
+    5538
+  ],
+  "supplementWorks": 52,
+  "cardAudit": [
+    {
+      "id": "char-moon",
+      "candidateCounts": [
+        6461
+      ],
+      "uniqueGroups": [
+        6289
+      ],
+      "commonGroups": 260,
+      "workCount": 6002,
+      "distinctGroupWitness": [
+        3,
+        20,
+        25,
+        47,
+        53,
+        76,
+        82,
+        95,
+        124,
+        137
+      ]
+    },
+    {
+      "id": "char-flower",
+      "candidateCounts": [
+        7656
+      ],
+      "uniqueGroups": [
+        7489
+      ],
+      "commonGroups": 319,
+      "workCount": 6687,
+      "distinctGroupWitness": [
+        23,
+        43,
+        72,
+        103,
+        133,
+        158,
+        206,
+        280,
+        301,
+        321
+      ]
+    },
+    {
+      "id": "char-spring",
+      "candidateCounts": [
+        6981
+      ],
+      "uniqueGroups": [
+        6811
+      ],
+      "commonGroups": 308,
+      "workCount": 6181,
+      "distinctGroupWitness": [
+        13,
+        19,
+        40,
+        86,
+        98,
+        109,
+        117,
+        183,
+        206,
+        223
+      ]
+    },
+    {
+      "id": "char-mountain",
+      "candidateCounts": [
+        9407
+      ],
+      "uniqueGroups": [
+        9235
+      ],
+      "commonGroups": 270,
+      "workCount": 8106,
+      "distinctGroupWitness": [
+        8,
+        80,
+        88,
+        96,
+        127,
+        129,
+        208,
+        234,
+        236,
+        292
+      ]
+    },
+    {
+      "id": "char-wind",
+      "candidateCounts": [
+        10441
+      ],
+      "uniqueGroups": [
+        10212
+      ],
+      "commonGroups": 383,
+      "workCount": 9449,
+      "distinctGroupWitness": [
+        1,
+        11,
+        18,
+        33,
+        42,
+        183,
+        223,
+        248,
+        256,
+        273
+      ]
+    },
+    {
+      "id": "char-snow",
+      "candidateCounts": [
+        2252
+      ],
+      "uniqueGroups": [
+        2203
+      ],
+      "commonGroups": 81,
+      "workCount": 2185,
+      "distinctGroupWitness": [
+        24,
+        51,
+        79,
+        121,
+        230,
+        239,
+        299,
+        310,
+        313,
+        315
+      ]
+    },
+    {
+      "id": "char-rain",
+      "candidateCounts": [
+        3868
+      ],
+      "uniqueGroups": [
+        3777
+      ],
+      "commonGroups": 187,
+      "workCount": 3730,
+      "distinctGroupWitness": [
+        1,
+        42,
+        80,
+        108,
+        128,
+        154,
+        296,
+        367,
+        397,
+        425
+      ]
+    },
+    {
+      "id": "char-river",
+      "candidateCounts": [
+        4089
+      ],
+      "uniqueGroups": [
+        4000
+      ],
+      "commonGroups": 192,
+      "workCount": 3661,
+      "distinctGroupWitness": [
+        13,
+        23,
+        33,
+        47,
+        119,
+        128,
+        132,
+        137,
+        169,
+        190
+      ]
+    },
+    {
+      "id": "char-autumn",
+      "candidateCounts": [
+        3796
+      ],
+      "uniqueGroups": [
+        3723
+      ],
+      "commonGroups": 158,
+      "workCount": 3612,
+      "distinctGroupWitness": [
+        7,
+        81,
+        133,
+        169,
+        177,
+        183,
+        206,
+        241,
+        252,
+        370
+      ]
+    },
+    {
+      "id": "char-water",
+      "candidateCounts": [
+        5772
+      ],
+      "uniqueGroups": [
+        5647
+      ],
+      "commonGroups": 217,
+      "workCount": 5309,
+      "distinctGroupWitness": [
+        9,
+        20,
+        34,
+        48,
+        138,
+        159,
+        160,
+        164,
+        191,
+        325
+      ]
+    },
+    {
+      "id": "char-cloud",
+      "candidateCounts": [
+        8013
+      ],
+      "uniqueGroups": [
+        7872
+      ],
+      "commonGroups": 245,
+      "workCount": 7297,
+      "distinctGroupWitness": [
+        4,
+        35,
+        112,
+        115,
+        121,
+        180,
+        235,
+        307,
+        328,
+        338
+      ]
+    },
+    {
+      "id": "char-sun",
+      "candidateCounts": [
+        6734
+      ],
+      "uniqueGroups": [
+        6575
+      ],
+      "commonGroups": 228,
+      "workCount": 6228,
+      "distinctGroupWitness": [
+        12,
+        45,
+        97,
+        102,
+        118,
+        329,
+        338,
+        341,
+        371,
+        380
+      ]
+    },
+    {
+      "id": "char-willow",
+      "candidateCounts": [
+        1865
+      ],
+      "uniqueGroups": [
+        1826
+      ],
+      "commonGroups": 102,
+      "workCount": 1815,
+      "distinctGroupWitness": [
+        109,
+        392,
+        482,
+        504,
+        620,
+        724,
+        784,
+        1092,
+        1159,
+        1255
+      ]
+    },
+    {
+      "id": "char-night",
+      "candidateCounts": [
+        3585
+      ],
+      "uniqueGroups": [
+        3478
+      ],
+      "commonGroups": 218,
+      "workCount": 3435,
+      "distinctGroupWitness": [
+        0,
+        12,
+        21,
+        27,
+        28,
+        42,
+        77,
+        128,
+        132,
+        192
+      ]
+    },
+    {
+      "id": "char-dream",
+      "candidateCounts": [
+        2556
+      ],
+      "uniqueGroups": [
+        2507
+      ],
+      "commonGroups": 143,
+      "workCount": 2460,
+      "distinctGroupWitness": [
+        192,
+        193,
+        271,
+        466,
+        516,
+        743,
+        763,
+        808,
+        856,
+        886
+      ]
+    },
+    {
+      "id": "char-wine",
+      "candidateCounts": [
+        2831
+      ],
+      "uniqueGroups": [
+        2754
+      ],
+      "commonGroups": 145,
+      "workCount": 2702,
+      "distinctGroupWitness": [
+        21,
+        28,
+        60,
+        69,
+        74,
+        110,
+        135,
+        143,
+        181,
+        207
+      ]
+    },
+    {
+      "id": "position-moon-5",
+      "candidateCounts": [
+        307,
+        726,
+        310,
+        436,
+        517
+      ],
+      "uniqueGroups": [
+        299,
+        706,
+        302,
+        428,
+        503
+      ],
+      "commonGroups": 71,
+      "workCount": 2178,
+      "distinctGroupWitness": [
+        243,
+        82,
+        350,
+        670,
+        318,
+        76,
+        3,
+        47,
+        316,
+        264
+      ]
+    },
+    {
+      "id": "position-moon-7",
+      "candidateCounts": [
+        349,
+        469,
+        218,
+        675,
+        391,
+        477,
+        468
+      ],
+      "uniqueGroups": [
+        343,
+        460,
+        214,
+        655,
+        376,
+        470,
+        455
+      ],
+      "commonGroups": 123,
+      "workCount": 2834,
+      "distinctGroupWitness": [
+        997,
+        189,
+        888,
+        299,
+        25,
+        206,
+        137,
+        290,
+        183,
+        191,
+        124,
+        20,
+        169,
+        53
+      ]
+    },
+    {
+      "id": "position-spring-5",
+      "candidateCounts": [
+        603,
+        185,
+        458,
+        494,
+        457
+      ],
+      "uniqueGroups": [
+        590,
+        177,
+        447,
+        481,
+        445
+      ],
+      "commonGroups": 61,
+      "workCount": 2060,
+      "distinctGroupWitness": [
+        98,
+        610,
+        699,
+        1022,
+        398,
+        40,
+        13,
+        86,
+        289,
+        351
+      ]
+    },
+    {
+      "id": "position-flower-7",
+      "candidateCounts": [
+        313,
+        794,
+        548,
+        842,
+        461,
+        610,
+        438
+      ],
+      "uniqueGroups": [
+        306,
+        777,
+        534,
+        816,
+        455,
+        603,
+        431
+      ],
+      "commonGroups": 160,
+      "workCount": 3617,
+      "distinctGroupWitness": [
+        781,
+        321,
+        334,
+        540,
+        490,
+        526,
+        280,
+        570,
+        645,
+        206,
+        133,
+        158,
+        301,
+        23
+      ]
+    },
+    {
+      "id": "position-wind-5",
+      "candidateCounts": [
+        785,
+        957,
+        489,
+        699,
+        494
+      ],
+      "uniqueGroups": [
+        771,
+        931,
+        481,
+        687,
+        484
+      ],
+      "commonGroups": 88,
+      "workCount": 3254,
+      "distinctGroupWitness": [
+        273,
+        223,
+        42,
+        962,
+        3047,
+        11,
+        33,
+        1,
+        256,
+        1731
+      ]
+    },
+    {
+      "id": "position-wind-7",
+      "candidateCounts": [
+        562,
+        971,
+        950,
+        879,
+        443,
+        641,
+        660
+      ],
+      "uniqueGroups": [
+        555,
+        944,
+        934,
+        870,
+        439,
+        632,
+        651
+      ],
+      "commonGroups": 187,
+      "workCount": 4754,
+      "distinctGroupWitness": [
+        311,
+        298,
+        622,
+        426,
+        493,
+        367,
+        988,
+        248,
+        18,
+        431,
+        183,
+        482,
+        300,
+        662
+      ]
+    },
+    {
+      "id": "position-mountain-5",
+      "candidateCounts": [
+        785,
+        821,
+        489,
+        959,
+        476
+      ],
+      "uniqueGroups": [
+        768,
+        808,
+        482,
+        944,
+        467
+      ],
+      "commonGroups": 96,
+      "workCount": 3062,
+      "distinctGroupWitness": [
+        1335,
+        88,
+        2352,
+        234,
+        864,
+        96,
+        80,
+        2331,
+        8,
+        721
+      ]
+    },
+    {
+      "id": "position-mountain-7",
+      "candidateCounts": [
+        692,
+        873,
+        718,
+        953,
+        364,
+        765,
+        523
+      ],
+      "uniqueGroups": [
+        684,
+        865,
+        706,
+        938,
+        359,
+        749,
+        512
+      ],
+      "commonGroups": 126,
+      "workCount": 4179,
+      "distinctGroupWitness": [
+        366,
+        572,
+        577,
+        553,
+        2020,
+        292,
+        343,
+        314,
+        336,
+        208,
+        373,
+        627,
+        129,
+        127
+      ]
+    },
+    {
+      "id": "position-flower-5",
+      "candidateCounts": [
+        402,
+        534,
+        373,
+        575,
+        285
+      ],
+      "uniqueGroups": [
+        396,
+        520,
+        364,
+        564,
+        282
+      ],
+      "commonGroups": 64,
+      "workCount": 2032,
+      "distinctGroupWitness": [
+        344,
+        1575,
+        1437,
+        698,
+        1684,
+        43,
+        881,
+        1017,
+        103,
+        670
+      ]
+    },
+    {
+      "id": "position-spring-7",
+      "candidateCounts": [
+        542,
+        196,
+        760,
+        198,
+        699,
+        530,
+        546
+      ],
+      "uniqueGroups": [
+        529,
+        191,
+        749,
+        195,
+        691,
+        520,
+        535
+      ],
+      "commonGroups": 153,
+      "workCount": 3178,
+      "distinctGroupWitness": [
+        206,
+        3131,
+        183,
+        3603,
+        496,
+        1025,
+        548,
+        117,
+        2421,
+        19,
+        1040,
+        300,
+        644,
+        109
+      ]
+    },
+    {
+      "id": "position-river-5",
+      "candidateCounts": [
+        430,
+        155,
+        266,
+        435,
+        33
+      ],
+      "uniqueGroups": [
+        421,
+        154,
+        264,
+        428,
+        32
+      ],
+      "commonGroups": 62,
+      "workCount": 1236,
+      "distinctGroupWitness": [
+        47,
+        1470,
+        1525,
+        259,
+        12178,
+        13,
+        671,
+        33,
+        239,
+        8057
+      ]
+    },
+    {
+      "id": "position-river-7",
+      "candidateCounts": [
+        455,
+        216,
+        568,
+        202,
+        244,
+        419,
+        41
+      ],
+      "uniqueGroups": [
+        444,
+        209,
+        558,
+        198,
+        243,
+        415,
+        40
+      ],
+      "commonGroups": 84,
+      "workCount": 1907,
+      "distinctGroupWitness": [
+        291,
+        206,
+        132,
+        202,
+        191,
+        714,
+        7298,
+        219,
+        23,
+        119,
+        128,
+        137,
+        638,
+        661
+      ]
+    },
+    {
+      "id": "position-cloud-5",
+      "candidateCounts": [
+        590,
+        647,
+        427,
+        939,
+        327
+      ],
+      "uniqueGroups": [
+        580,
+        640,
+        423,
+        922,
+        323
+      ],
+      "commonGroups": 65,
+      "workCount": 2703,
+      "distinctGroupWitness": [
+        1108,
+        719,
+        865,
+        35,
+        2427,
+        235,
+        328,
+        613,
+        4,
+        2011
+      ]
+    },
+    {
+      "id": "position-cloud-7",
+      "candidateCounts": [
+        534,
+        669,
+        522,
+        566,
+        402,
+        869,
+        299
+      ],
+      "uniqueGroups": [
+        527,
+        663,
+        512,
+        559,
+        397,
+        859,
+        292
+      ],
+      "commonGroups": 112,
+      "workCount": 3539,
+      "distinctGroupWitness": [
+        1098,
+        307,
+        550,
+        579,
+        1032,
+        340,
+        1260,
+        1048,
+        115,
+        180,
+        338,
+        642,
+        112,
+        380
+      ]
+    },
+    {
+      "id": "pair-wind-rain",
+      "candidateCounts": [
+        641
+      ],
+      "uniqueGroups": [
+        618
+      ],
+      "commonGroups": 48,
+      "workCount": 634,
+      "distinctGroupWitness": [
+        1,
+        42,
+        367,
+        397,
+        431,
+        437,
+        515,
+        823,
+        962,
+        1004
+      ]
+    },
+    {
+      "id": "pair-flower-moon",
+      "candidateCounts": [
+        267
+      ],
+      "uniqueGroups": [
+        261
+      ],
+      "commonGroups": 14,
+      "workCount": 261,
+      "distinctGroupWitness": [
+        206,
+        321,
+        668,
+        670,
+        3990,
+        4985,
+        5102,
+        5296,
+        5312,
+        6002
+      ]
+    },
+    {
+      "id": "pair-mountain-water",
+      "candidateCounts": [
+        551
+      ],
+      "uniqueGroups": [
+        538
+      ],
+      "commonGroups": 17,
+      "workCount": 532,
+      "distinctGroupWitness": [
+        460,
+        503,
+        627,
+        662,
+        1270,
+        1294,
+        1574,
+        2076,
+        2700,
+        2701
+      ]
+    },
+    {
+      "id": "pair-spring-rain",
+      "candidateCounts": [
+        185
+      ],
+      "uniqueGroups": [
+        184
+      ],
+      "commonGroups": 8,
+      "workCount": 182,
+      "distinctGroupWitness": [
+        296,
+        1800,
+        2129,
+        2602,
+        5071,
+        6034,
+        6274,
+        6364,
+        8675,
+        9705
+      ]
+    },
+    {
+      "id": "pair-river-moon",
+      "candidateCounts": [
+        183
+      ],
+      "uniqueGroups": [
+        173
+      ],
+      "commonGroups": 13,
+      "workCount": 165,
+      "distinctGroupWitness": [
+        47,
+        137,
+        169,
+        191,
+        206,
+        259,
+        764,
+        1470,
+        1587,
+        1618
+      ]
+    },
+    {
+      "id": "pair-bright-moon",
+      "candidateCounts": [
+        950
+      ],
+      "uniqueGroups": [
+        917
+      ],
+      "commonGroups": 49,
+      "workCount": 934,
+      "distinctGroupWitness": [
+        82,
+        95,
+        124,
+        191,
+        243,
+        264,
+        316,
+        318,
+        346,
+        402
+      ]
+    },
+    {
+      "id": "pair-spring-flower",
+      "candidateCounts": [
+        481
+      ],
+      "uniqueGroups": [
+        473
+      ],
+      "commonGroups": 22,
+      "workCount": 474,
+      "distinctGroupWitness": [
+        206,
+        1010,
+        1300,
+        2090,
+        2129,
+        2973,
+        3848,
+        3865,
+        4304,
+        5186
+      ]
+    },
+    {
+      "id": "pair-cloud-mountain",
+      "candidateCounts": [
+        549
+      ],
+      "uniqueGroups": [
+        541
+      ],
+      "commonGroups": 15,
+      "workCount": 537,
+      "distinctGroupWitness": [
+        1260,
+        1291,
+        1603,
+        1609,
+        1856,
+        1880,
+        1961,
+        2023,
+        2463,
+        4480
+      ]
+    },
+    {
+      "id": "pair-fragrant-grass",
+      "candidateCounts": [
+        338
+      ],
+      "uniqueGroups": [
+        326
+      ],
+      "commonGroups": 22,
+      "workCount": 338,
+      "distinctGroupWitness": [
+        4,
+        461,
+        785,
+        1673,
+        3837,
+        4528,
+        4728,
+        4809,
+        5203,
+        5220
+      ]
+    },
+    {
+      "id": "pair-falling-flower",
+      "candidateCounts": [
+        641
+      ],
+      "uniqueGroups": [
+        618
+      ],
+      "commonGroups": 29,
+      "workCount": 635,
+      "distinctGroupWitness": [
+        43,
+        490,
+        698,
+        737,
+        1463,
+        1491,
+        1684,
+        1882,
+        2430,
+        2503
+      ]
+    },
+    {
+      "id": "pair-river-water",
+      "candidateCounts": [
+        290
+      ],
+      "uniqueGroups": [
+        279
+      ],
+      "commonGroups": 17,
+      "workCount": 283,
+      "distinctGroupWitness": [
+        191,
+        590,
+        680,
+        703,
+        1847,
+        2076,
+        2379,
+        2653,
+        2771,
+        3896
+      ]
+    },
+    {
+      "id": "pair-spring-wind",
+      "candidateCounts": [
+        832
+      ],
+      "uniqueGroups": [
+        809
+      ],
+      "commonGroups": 36,
+      "workCount": 820,
+      "distinctGroupWitness": [
+        183,
+        223,
+        300,
+        426,
+        575,
+        685,
+        723,
+        863,
+        1014,
+        1446
+      ]
+    },
+    {
+      "id": "topic-homesick",
+      "candidateCounts": [
+        17
+      ],
+      "uniqueGroups": [
+        17
+      ],
+      "commonGroups": 17,
+      "workCount": 12,
+      "distinctGroupWitness": [
+        6,
+        14,
+        15,
+        27,
+        36,
+        100,
+        101,
+        104,
+        105,
+        118
+      ]
+    },
+    {
+      "id": "topic-spring",
+      "candidateCounts": [
+        23
+      ],
+      "uniqueGroups": [
+        23
+      ],
+      "commonGroups": 23,
+      "workCount": 10,
+      "distinctGroupWitness": [
+        41,
+        42,
+        43,
+        495,
+        496,
+        548,
+        559,
+        560,
+        589,
+        590
+      ]
+    },
+    {
+      "id": "topic-autumn",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 6,
+      "distinctGroupWitness": [
+        80,
+        81,
+        133,
+        248,
+        250,
+        290,
+        456,
+        457,
+        458,
+        459
+      ]
+    },
+    {
+      "id": "topic-moon-night",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 8,
+      "distinctGroupWitness": [
+        25,
+        82,
+        95,
+        243,
+        264,
+        268,
+        316,
+        318,
+        402,
+        413
+      ]
+    },
+    {
+      "id": "topic-farewell",
+      "candidateCounts": [
+        20
+      ],
+      "uniqueGroups": [
+        20
+      ],
+      "commonGroups": 20,
+      "workCount": 10,
+      "distinctGroupWitness": [
+        96,
+        99,
+        110,
+        111,
+        129,
+        130,
+        226,
+        274,
+        276,
+        277
+      ]
+    },
+    {
+      "id": "topic-wine",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 7,
+      "distinctGroupWitness": [
+        28,
+        29,
+        56,
+        57,
+        110,
+        228,
+        229,
+        231,
+        346,
+        347
+      ]
+    },
+    {
+      "id": "topic-travel",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 7,
+      "distinctGroupWitness": [
+        8,
+        9,
+        44,
+        257,
+        340,
+        341,
+        343,
+        605,
+        665,
+        667
+      ]
+    },
+    {
+      "id": "topic-frontier",
+      "candidateCounts": [
+        13
+      ],
+      "uniqueGroups": [
+        13
+      ],
+      "commonGroups": 13,
+      "workCount": 6,
+      "distinctGroupWitness": [
+        25,
+        30,
+        31,
+        124,
+        125,
+        126,
+        127,
+        368,
+        391,
+        392
+      ]
+    },
+    {
+      "id": "topic-history",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 6,
+      "distinctGroupWitness": [
+        16,
+        18,
+        19,
+        23,
+        280,
+        282,
+        283,
+        333,
+        334,
+        335
+      ]
+    },
+    {
+      "id": "topic-river-view",
+      "candidateCounts": [
+        13
+      ],
+      "uniqueGroups": [
+        13
+      ],
+      "commonGroups": 13,
+      "workCount": 7,
+      "distinctGroupWitness": [
+        10,
+        251,
+        296,
+        297,
+        323,
+        637,
+        638,
+        714,
+        715,
+        716
+      ]
+    },
+    {
+      "id": "topic-snow",
+      "candidateCounts": [
+        12
+      ],
+      "uniqueGroups": [
+        12
+      ],
+      "commonGroups": 12,
+      "workCount": 5,
+      "distinctGroupWitness": [
+        79,
+        121,
+        236,
+        237,
+        239,
+        299,
+        300,
+        301,
+        310,
+        315
+      ]
+    }
+  ]
+}

@@ -38,6 +38,8 @@ namespace XanaduYonder.Runtime.Idiom
         public bool NeedsRecovery { get; private set; }
         public IdiomLoadState LoadState { get; private set; }
         protected virtual bool IsReady { get { return true; } }
+        protected virtual string RecoveryDirectoryName => "idiom-recovery";
+        protected virtual bool PreserveCorruptPrimaryAfterBackup => false;
 
         public T Load(out string warning)
         {
@@ -124,6 +126,8 @@ namespace XanaduYonder.Runtime.Idiom
                 Directory.CreateDirectory(directory);
                 using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
                 { stream.Write(bytes, 0, bytes.Length); stream.Flush(true); }
+                if (primaryExists && !previousValid && PreserveCorruptPrimaryAfterBackup)
+                    CopyRecoveryFile(SavePath, CreateRecoveryDirectory());
                 if (primaryExists) File.Replace(temporary, SavePath, previousValid ? SavePath + ".bak" : null);
                 else File.Move(temporary, SavePath);
                 LoadState = IdiomLoadState.Loaded;
@@ -152,15 +156,12 @@ namespace XanaduYonder.Runtime.Idiom
             {
                 var paths = new[] { SavePath, SavePath + ".bak", SavePath + ".tmp" };
                 foreach (string path in paths) if (Directory.Exists(path)) throw new IOException();
-                string archive = Path.Combine(directory, "idiom-recovery", Path.GetFileName(SavePath) + "-" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(archive);
+                string archive = CreateRecoveryDirectory();
                 // Copy every original durably before removing any active filename.
                 foreach (string path in paths)
                 {
                     if (!File.Exists(path)) continue;
-                    using (var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (var output = new FileStream(Path.Combine(archive, Path.GetFileName(path)), FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                    { input.CopyTo(output); output.Flush(true); }
+                    CopyRecoveryFile(path, archive);
                 }
                 foreach (string path in paths) if (File.Exists(path)) File.Delete(path);
                 CanWrite = true; NeedsRecovery = false; LoadState = IdiomLoadState.Missing;
@@ -168,6 +169,23 @@ namespace XanaduYonder.Runtime.Idiom
             }
             catch (Exception ex) when (IdiomStoreErrors.IsExpected(ex))
             { error = "原记录尚未安全归档，暂时无法重建，请重试。"; return false; }
+        }
+
+        private string CreateRecoveryDirectory()
+        {
+            string archive = Path.Combine(directory, RecoveryDirectoryName, Path.GetFileName(SavePath) + "-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(archive);
+            return archive;
+        }
+
+        private static void CopyRecoveryFile(string path, string archive)
+        {
+            using (var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var output = new FileStream(Path.Combine(archive, Path.GetFileName(path)), FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                input.CopyTo(output);
+                output.Flush(true);
+            }
         }
     }
 }

@@ -1,0 +1,46 @@
+{
+  "baseCorpus": "feihualing-v2-fc0a511ef50a59044028dee5",
+  "works": [
+    {
+      "source": ["宋词/ci.song.0.json", 624],
+      "sourceTitle": "生查子",
+      "kind": "ci",
+      "author": "欧阳修",
+      "title": "生查子·元夕",
+      "body": "去年元夜时，花市灯如昼。\n月上柳梢头，人约黄昏后。\n今年元夜时，月与灯依旧。\n不见去年人，泪湿春衫袖。",
+      "lines": ["去年元夜时", "花市灯如昼", "月上柳梢头", "人约黄昏后", "今年元夜时", "月与灯依旧", "不见去年人", "泪湿春衫袖"],
+      "reference": "https://www.jsxc.gov.cn/zt/jieri/yuanxiao/shici/202602/t20260228_90752.shtml",
+      "reason": "上游作者取欧阳修；展示采用所引通行文本，保留源本的月到和泪满写法。"
+    },
+    {
+      "source": ["五代诗词/nantang/poetrys.json", 4],
+      "sourceTitle": "虞美人·春花秋月何时了",
+      "kind": "ci",
+      "author": "李煜",
+      "title": "虞美人·春花秋月何时了",
+      "lines": ["春花秋月何时了", "往事知多少", "小楼昨夜又东风", "故国不堪回首月明中", "雕栏玉砌应犹在", "只是朱颜改", "问君能有几多愁", "恰似一江春水向东流"],
+      "reference": "https://www.moe.gov.cn/s78/A07/zcs_ztzl/2017_zt06/17zt06_bznr/bznr_zzggkdg/202008/P020200821550330709003.pdf",
+      "reason": "南唐词单首补录，采用固定提交南唐正文且只取原词。全唐诗分片另有同篇，题为《虞美人 二》，作者作後主煜，正文有用字和句读差异。"
+    }
+  ],
+  "aliases": [
+    {
+      "source": ["宋词/ci.song.0.json", 624],
+      "answer": "月上柳梢头",
+      "accept": ["月到柳梢头", "月上柳梢頭", "月到柳梢頭"],
+      "reason": "采用通行本的月上，同时接受上游月到和两者的对应繁体字形。"
+    },
+    {
+      "source": ["宋词/ci.song.0.json", 624],
+      "answer": "泪湿春衫袖",
+      "accept": ["泪满春衫袖"],
+      "reason": "保留源本以泪满写沾衣的异文。"
+    },
+    {
+      "source": ["五代诗词/nantang/poetrys.json", 4],
+      "answer": "春花秋月何时了",
+      "accept": ["春花秋月何時了"],
+      "reason": "保留同一固定提交全唐诗条目中的原始繁体。"
+    }
+  ]
+}

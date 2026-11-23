@@ -10,7 +10,7 @@ Q版泡泡堂初代以净化后的原版 SWF＋Ruffle 离线运行，保留人�
 
 ## 当前状态
 
-当前源码版本为 **0.9.8**（build **17**），Android 与 iOS 的源码目录均包含 **28 个大厅入口**。赵云与阿斗、割绳子、只有一道门、Q版泡泡堂分别由 Android WebView／iOS WKWebView 运行。Zuma、飞机大战、抓大鹅和四款新增棋类使用 Unity 原生实现。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。网页玩法的编译和设备结果见[迁移记录](docs/verification-ios-web-games.md)。
+当前源码版本为 **0.9.8**（build **17**），Android 与 iOS 的源码目录均包含 **29 个大厅入口**。赵云与阿斗、割绳子、只有一道门、Q版泡泡堂分别由 Android WebView／iOS WKWebView 运行。Zuma、飞机大战、抓大鹅、四款新增棋类和飞花令使用 Unity 原生实现。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。网页玩法的编译和设备结果见[迁移记录](docs/verification-ios-web-games.md)。
 
 Android 当前发布版本为 **0.9.8**（build **17**），提供沿用正式签名的 ARM64 Release APK，正式包名为 `com.duanyao.xanaduyonder`。下载与本轮范围见[v0.9.8 发布记录](docs/releases/v0.9.8.md)。本次不构建或发布 iOS，iOS 最新公开附件仍为 [v0.9.6 的未签名 IPA](docs/releases/v0.9.6.md)，需使用自己的 Apple 签名后安装；其内容不等于当前源码。历史 v0.9.4 的 20 入口范围见[旧发布记录](docs/releases/v0.9.4.md)。
 
@@ -187,6 +187,17 @@ scripts/test-link-match-ui.sh
 运行资源位于 `Assets/Resources/Idioms`，普通构建不需要下载或运行清洗。重新导出用 `python3 scripts/pack-idioms.py`；只在进入游戏时加载索引，释义按分片读取。
 
 多个工作树同时开发时，使用 `scripts/build-idiom-validation.sh` 在本树生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-idiom-validation.apk`。该包标识为 `com.duanyao.xanaduyonder.idiomtest`，不会覆盖正式应用和其他游戏分支的标准安装；使用 `install-android.sh` 时显式指定本次 APK 路径和期望包名。验证情况见[成语接龙验收记录](docs/verification-idiom.md)。
+
+## 飞花令
+
+从大厅的「文字语言」进入。单机和同机双人均支持学习、竞技和竞速，可选单字令、字位令、双字令和主题令。学习只提示邻句或关联句，单机可从设置开启离线陪练。竞技轮流接句，每场可用三条线索。竞速使用倒计时。各模式均可点开已答诗句查看并收藏原诗，已收藏的作品带黄色五角星。单机竞技也可长按电脑答句直接收藏。App 使用随包诗库、本地判题和独立存档，首次使用即可离线。
+
+诗库在电脑端生成并校验，普通构建直接使用随包资源。[玩法、数据与接入说明](docs/feihualing-research.md)
+
+```sh
+scripts/test-feihualing-core.sh
+scripts/test-feihualing-storage.sh
+```
 
 ## 旸了个旸算法与设计
 

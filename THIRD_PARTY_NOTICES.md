@@ -219,3 +219,8 @@ SOFTWARE.
 - Only the sanitized SWF is bundled: the FWAd_AS2 advertising classes, registrations and export symbols are removed, and the SWF network flag is cleared. The 4399 loader, platform wrappers and advertising resources are excluded. The mobile controls, Unity launchers and platform adapters are local integration code. See [integration and validation](docs/bomb-it.md).
 - Ruffle [v0.7.1](https://github.com/ruffle-rs/ruffle/releases/tag/v0.7.1) is distributed under MIT OR Apache-2.0. Both original licenses are retained under [ThirdParty/Ruffle](ThirdParty/Ruffle/) and bundled alongside the runtime. The fixed upstream archive and all retained files have pinned hashes; source maps and development metadata are not shipped. Android and iOS reuse their system WebView engines.
 - The large lobby logo is bitmap 425 extracted unchanged from the original SWF and retains the original game's rights. The small green bomb outline is original project artwork, with editable SVG in `docs/design/lobby-v2/additional-icons/svg/bomb-it.svg`.
+
+## chinese-poetry corpus (飞花令)
+
+- Source is [chinese-poetry/chinese-poetry](https://github.com/chinese-poetry/chinese-poetry/tree/b8594f81a89752241442f2ce267d6f66f96704ee), pinned to commit `b8594f81a89752241442f2ce267d6f66f96704ee`. The upstream MIT license and its 2016 JackeyGao copyright notice are reproduced in [Chinese-Poetry-MIT.txt](Assets/Resources/Feihualing/Licenses/Chinese-Poetry-MIT.txt).
+- The app bundles selected Tang verse, Song verse and Song lyrics from the two anthologies and the locked shards. The catalog contains authors, titles or tune names, adopted classical text, and locally produced game indexes and thematic evidence. [Content provenance and reproduction](Data/Feihualing/README.md).

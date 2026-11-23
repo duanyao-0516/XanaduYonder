@@ -102,10 +102,10 @@ namespace XanaduYonder.EditorTools
         }
 
         private static readonly string[] Names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "ArmyChess", "Xiangqi", "Chess", "ChineseCheckers", "CutTheRope", "ZhaoyunAdou",
-            "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
+            "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom", "Feihualing" };
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterArmyChess", "EnterXiangqi", "EnterChess", "EnterChineseCheckers", "EnterCutTheRope", "EnterZhaoyunAdou",
-            "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom" };
-        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 29, 30, 31, 32, 21, 23, 1, 4, 28, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5 };
+            "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom", "EnterFeihualing" };
+        private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 29, 30, 31, 32, 21, 23, 1, 4, 28, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5, 33 };
         private static string Category(int i) { return i < 11 ? "逻辑策略" : i < 18 ? "合成消除" : i < 27 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)
@@ -201,8 +201,24 @@ namespace XanaduYonder.EditorTools
                     if (mode != 2)
                     {
                         var icon = Named(card, "Game icon");
-                        var iconImage = icon.GetComponent<Image>();
-                        Require(iconImage != null && iconImage.sprite != null, Names[i] + " has its compact artwork");
+                        if (Names[i] == "Feihualing")
+                        {
+                            var flower = Named(icon, "Blossom icon");
+                            var graphic = flower.GetComponent<UiIconGraphic>();
+                            var center = icon.InverseTransformPoint(flower.TransformPoint(flower.rect.center));
+                            Require(graphic != null && graphic.Kind == UiIconKind.Blossom &&
+                                graphic.color == UiFactory.Accent && !graphic.raycastTarget,
+                                "Feihualing uses the shared ink blossom without intercepting card taps");
+                            Near(flower.rect.width, 20, "Feihualing blossom fills the slot width");
+                            Near(flower.rect.height, 20, "Feihualing blossom fills the slot height");
+                            Near(center.x, icon.rect.center.x, "Feihualing blossom is horizontally centered");
+                            Near(center.y, icon.rect.center.y, "Feihualing blossom is vertically centered");
+                        }
+                        else
+                        {
+                            var iconImage = icon.GetComponent<Image>();
+                            Require(iconImage != null && iconImage.sprite != null, Names[i] + " has its compact artwork");
+                        }
                         Near(icon.rect.width, 20, Names[i] + " icon width"); Near(icon.rect.height, 20, Names[i] + " icon height");
                         var iconCenter = card.InverseTransformPoint(icon.TransformPoint(icon.rect.center));
                         var nameCenter = card.InverseTransformPoint(title.rectTransform.TransformPoint(title.rectTransform.rect.center));
@@ -226,6 +242,12 @@ namespace XanaduYonder.EditorTools
                             Names[i] + " retains original ordinal, category and gameplay tag");
                         Require(card.GetComponentsInChildren<RectTransform>().Any(r => r.name == "Game logo") == (Names[i] != "Idiom"),
                             Names[i] + " uses its real large logo, with the approved text-only Idiom exception");
+                        if (Names[i] == "Feihualing")
+                        {
+                            var seal = Named(card, "Feihualing seal");
+                            Require(seal.GetComponentsInChildren<Text>().Single().text == "诗",
+                                "Feihualing retains its 诗 seal on the large lobby card");
+                        }
                     }
                     foreach (var decoration in card.GetComponentsInChildren<Graphic>())
                         if (decoration.transform != card) Require(!decoration.raycastTarget, "Decorative children cannot steal taps: " + decoration.name);

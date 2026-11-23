@@ -1,0 +1,979 @@
+{
+  "reference": {
+    "course": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582344386456.pdf",
+    "major": "唐诗三百首、宋词三百首或应补入的通行名篇",
+    "dalinsi": "https://yllhj.beijing.gov.cn/ztxx/bjhx/bzhz/201903/t20190321_759352.shtml"
+  },
+  "works": [
+    {
+      "source": [
+        "全唐诗/poet.tang.22000.json",
+        870
+      ],
+      "author": "白居易",
+      "title": "大林寺桃花",
+      "lines": [
+        "人间四月芳菲尽",
+        "山寺桃花始盛开",
+        "长恨春归无觅处",
+        "不知转入此中来"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.11000.json",
+        219
+      ],
+      "author": "杜甫",
+      "title": "春夜喜雨",
+      "lines": [
+        "随风潜入夜"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        360
+      ],
+      "author": "王之涣",
+      "title": "登鹳雀楼",
+      "lines": [
+        "白日依山尽"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        310
+      ],
+      "author": "李白",
+      "title": "静夜思",
+      "lines": [
+        "低头思故乡"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.8000.json",
+        639
+      ],
+      "author": "李白",
+      "title": "望庐山瀑布水二首 二",
+      "lines": [
+        "日照香炉生紫烟"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        203
+      ],
+      "author": "柳宗元",
+      "title": "江雪",
+      "lines": [
+        "独钓寒江雪"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.25000.json",
+        870
+      ],
+      "author": "李绅",
+      "title": "古风二首 二",
+      "lines": [
+        "锄禾日当午"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.25000.json",
+        869
+      ],
+      "author": "李绅",
+      "title": "古风二首 一",
+      "lines": [
+        "春种一粒粟"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        179
+      ],
+      "author": "白居易",
+      "title": "赋得古原草送别",
+      "lines": [
+        "离离原上草"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        271
+      ],
+      "author": "孟郊",
+      "title": "游子吟",
+      "lines": [
+        "慈母手中线"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.4000.json",
+        285
+      ],
+      "author": "骆宾王",
+      "title": "咏鹅",
+      "lines": [
+        "白毛浮绿水"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        326
+      ],
+      "author": "李白",
+      "title": "早发白帝城",
+      "lines": [
+        "朝辞白帝彩云间"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        143
+      ],
+      "author": "王维",
+      "title": "辋川集 竹里馆",
+      "lines": [
+        "独坐幽篁里"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.28000.json",
+        559
+      ],
+      "author": "杜牧",
+      "title": "山行",
+      "lines": [
+        "远上寒山石径斜"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.28000.json",
+        345
+      ],
+      "author": "杜牧",
+      "title": "江南春绝句",
+      "lines": [
+        "千里莺啼绿映江"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        142
+      ],
+      "author": "王维",
+      "title": "辋川集 鹿柴",
+      "lines": [
+        "空山不见人"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.5000.json",
+        473
+      ],
+      "author": "贺知章",
+      "title": "咏柳",
+      "lines": [
+        "二月春风似剪刀"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        168
+      ],
+      "author": "王昌龄",
+      "title": "出塞二首 一",
+      "lines": [
+        "秦时明月汉时关"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        171
+      ],
+      "author": "王昌龄",
+      "title": "芙蓉楼送辛渐二首 一",
+      "lines": [
+        "平明送客楚山孤"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        105
+      ],
+      "author": "王翰",
+      "title": "凉州词二首 一",
+      "lines": [
+        "葡萄美酒夜光杯"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        361
+      ],
+      "author": "王之涣",
+      "title": "凉州词二首 一",
+      "lines": [
+        "羌笛何须怨杨柳"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.10000.json",
+        544
+      ],
+      "author": "高适",
+      "title": "别董大二首 一",
+      "lines": [
+        "莫愁前路无知己"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        148
+      ],
+      "author": "王维",
+      "title": "渭城曲",
+      "lines": [
+        "劝君更尽一杯酒"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        320
+      ],
+      "author": "李白",
+      "title": "黄鹤楼送孟浩然之广陵",
+      "lines": [
+        "唯见长江天际流"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.8000.json",
+        652
+      ],
+      "author": "李白",
+      "title": "望天门山",
+      "lines": [
+        "天门中断楚江开"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.8000.json",
+        345
+      ],
+      "author": "李白",
+      "title": "赠汪伦",
+      "lines": [
+        "桃花潭水深千尺"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.8000.json",
+        746
+      ],
+      "author": "李白",
+      "title": "独坐敬亭山",
+      "lines": [
+        "众鸟高飞尽"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        120
+      ],
+      "author": "孟浩然",
+      "title": "春晓",
+      "lines": [
+        "春眠不觉晓"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.19000.json",
+        517
+      ],
+      "author": "刘禹锡",
+      "title": "望洞庭",
+      "lines": [
+        "湖光秋月两相和"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.19000.json",
+        391
+      ],
+      "author": "刘禹锡",
+      "title": "浪淘沙九首 一",
+      "lines": [
+        "九曲黄河万里沙"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        268
+      ],
+      "author": "刘禹锡",
+      "title": "金陵五题 乌衣巷",
+      "lines": [
+        "旧时王谢堂前燕"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.3000.json",
+        752
+      ],
+      "author": "李峤",
+      "title": "风",
+      "lines": [
+        "解落三秋叶"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        182
+      ],
+      "author": "贾岛",
+      "title": "寻隐者不遇",
+      "lines": [
+        "松下问童子"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        279
+      ],
+      "author": "张继",
+      "title": "枫桥夜泊",
+      "lines": [
+        "月落乌啼霜满天"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.23000.json",
+        249
+      ],
+      "author": "白居易",
+      "title": "钱唐湖春行",
+      "lines": [
+        "几处早莺争暖树"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.23000.json",
+        191
+      ],
+      "author": "白居易",
+      "title": "暮江吟",
+      "lines": [
+        "一道残阳铺水中"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.49000.json",
+        161
+      ],
+      "author": "白居易",
+      "title": "忆江南 一",
+      "lines": [
+        "江南好"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.24000.json",
+        257
+      ],
+      "author": "白居易",
+      "title": "池上二绝 二",
+      "lines": [
+        "小娃撑小艇"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        181
+      ],
+      "author": "白居易",
+      "title": "问刘十九",
+      "lines": [
+        "绿螘新醅酒"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.22000.json",
+        410
+      ],
+      "author": "白居易",
+      "title": "夜雪",
+      "lines": [
+        "夜深知雪重"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        178
+      ],
+      "author": "白居易",
+      "title": "琵琶引",
+      "lines": [
+        "枫叶荻花秋索索"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.32000.json",
+        720
+      ],
+      "author": "王安石",
+      "title": "泊船瓜洲",
+      "lines": [
+        "春风自绿江南岸"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.32000.json",
+        559
+      ],
+      "author": "王安石",
+      "title": "元日",
+      "lines": [
+        "爆竹声中一岁除"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.32000.json",
+        536
+      ],
+      "author": "王安石",
+      "title": "梅花",
+      "lines": [
+        "墙角数枝梅"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.32000.json",
+        690
+      ],
+      "author": "王安石",
+      "title": "书湖阴先生壁二首  其一",
+      "lines": [
+        "一水护田将绿绕"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.33000.json",
+        29
+      ],
+      "author": "王安石",
+      "title": "登飞来峰",
+      "lines": [
+        "不畏浮云遮望眼"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.141000.json",
+        18
+      ],
+      "author": "杨万里",
+      "title": "晓出浄慈送林子方二首  其二",
+      "lines": [
+        "接天莲叶无穷碧"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.139000.json",
+        453
+      ],
+      "author": "杨万里",
+      "title": "小池",
+      "lines": [
+        "小荷才露尖尖角"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.142000.json",
+        95
+      ],
+      "author": "杨万里",
+      "title": "宿新市徐公店二首  其一",
+      "lines": [
+        "篱落疎疎一迳深"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.91000.json",
+        720
+      ],
+      "author": "李清照",
+      "title": "夏日绝句",
+      "lines": [
+        "生当为人杰"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.170000.json",
+        507
+      ],
+      "author": "林升",
+      "title": "题临安邸",
+      "lines": [
+        "山外青山楼外楼"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.45000.json",
+        362
+      ],
+      "author": "苏轼",
+      "title": "题西林壁",
+      "lines": [
+        "横看成岭侧成峰"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.44000.json",
+        550
+      ],
+      "author": "苏轼",
+      "title": "饮湖上初晴后雨二首  其二",
+      "lines": [
+        "水光潋滟晴方好"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.45000.json",
+        535
+      ],
+      "author": "苏轼",
+      "title": "惠崇春江晚景二首  其一",
+      "lines": [
+        "竹外桃花三两枝"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.127000.json",
+        696
+      ],
+      "author": "陆游",
+      "title": "游山西村",
+      "lines": [
+        "山重水复疑无路"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.136000.json",
+        705
+      ],
+      "author": "陆游",
+      "title": "示儿",
+      "lines": [
+        "但悲不见九州同"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.130000.json",
+        720
+      ],
+      "author": "陆游",
+      "title": "十一月四日风雨大作二首  其二",
+      "lines": [
+        "铁马冰河入梦来"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.130000.json",
+        615
+      ],
+      "author": "陆游",
+      "title": "秋夜将晓出篱门迎凉有感二首  其二",
+      "lines": [
+        "三万里河东入海"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.147000.json",
+        785
+      ],
+      "author": "朱熹",
+      "title": "春日",
+      "lines": [
+        "万紫千红总是春"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.147000.json",
+        787
+      ],
+      "author": "朱熹",
+      "title": "观书有感二首  其一",
+      "lines": [
+        "半亩方塘一鉴开"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.192000.json",
+        335
+      ],
+      "author": "叶绍翁",
+      "title": "游园不值",
+      "lines": [
+        "一枝红杏出墙来"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.138000.json",
+        406
+      ],
+      "author": "范成大",
+      "title": "四时田园杂兴六十首 夏日田园杂兴十二绝 其七",
+      "lines": [
+        "昼出耘田夜绩麻"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.138000.json",
+        400
+      ],
+      "author": "范成大",
+      "title": "四时田园杂兴六十首 夏日田园杂兴十二绝 其一",
+      "lines": [
+        "梅子金黄杏子肥"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.95000.json",
+        191
+      ],
+      "author": "曾几",
+      "title": "三衢道中",
+      "lines": [
+        "梅子黄时日日晴"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/ci.song.6000.json",
+        685
+      ],
+      "author": "李清照",
+      "title": "如梦令",
+      "lines": [
+        "应是绿肥红瘦"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/ci.song.6000.json",
+        684
+      ],
+      "author": "李清照",
+      "title": "如梦令",
+      "lines": [
+        "常记溪亭日暮"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/ci.song.6000.json",
+        712
+      ],
+      "author": "李清照",
+      "title": "武陵春",
+      "lines": [
+        "风住尘香花已尽"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        159
+      ],
+      "author": "晏殊",
+      "title": "浣溪沙",
+      "lines": [
+        "无可奈何花落去"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/ci.song.0.json",
+        42
+      ],
+      "author": "范仲淹",
+      "title": "渔家傲",
+      "lines": [
+        "浊酒一杯家万里"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        139
+      ],
+      "author": "范仲淹",
+      "title": "苏幕遮",
+      "lines": [
+        "秋色连波"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/ci.song.11000.json",
+        272
+      ],
+      "author": "辛弃疾",
+      "title": "西江月",
+      "lines": [
+        "明月别枝惊鹊"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/ci.song.11000.json",
+        205
+      ],
+      "author": "辛弃疾",
+      "title": "清平乐",
+      "lines": [
+        "茅檐低小"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/ci.song.11000.json",
+        507
+      ],
+      "author": "辛弃疾",
+      "title": "破阵子",
+      "lines": [
+        "醉里挑灯看剑"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        60
+      ],
+      "author": "辛弃疾",
+      "title": "永遇乐",
+      "lines": [
+        "千古江山"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        38
+      ],
+      "author": "苏轼",
+      "title": "水调歌头",
+      "lines": [
+        "把酒问青天"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/ci.song.1000.json",
+        467
+      ],
+      "author": "苏轼",
+      "title": "念奴娇",
+      "lines": [
+        "大江东去"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/ci.song.1000.json",
+        573
+      ],
+      "author": "苏轼",
+      "title": "江神子・江城子",
+      "lines": [
+        "老夫聊发少年狂"
+      ],
+      "basis": "course"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        40
+      ],
+      "author": "苏轼",
+      "title": "定风波",
+      "lines": [
+        "莫听穿林打叶声"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        142
+      ],
+      "author": "柳永",
+      "title": "雨霖铃",
+      "lines": [
+        "念去去、千里烟波"
+      ],
+      "basis": "major"
+    },
+    {
+      "source": [
+        "宋词/宋词三百首.json",
+        13
+      ],
+      "author": "陆游",
+      "title": "卜算子",
+      "lines": [
+        "驿外断桥边"
+      ],
+      "basis": "course"
+    }
+  ],
+  "unresolved": [
+    {
+      "author": "杜牧",
+      "title": "清明",
+      "reason": "固定提交的唐诗、宋诗、宋词三类正文分片无载，待补经核实的独立文本来源。"
+    }
+  ]
+}

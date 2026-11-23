@@ -1,0 +1,376 @@
+{
+  "revision": "2026-11-22.2",
+  "include": [
+    ["全唐诗/poet.song.32000.json", 536],
+    ["全唐诗/poet.song.44000.json", 550],
+    ["全唐诗/poet.song.45000.json", 362],
+    ["全唐诗/poet.song.45000.json", 535],
+    ["全唐诗/poet.song.127000.json", 696],
+    ["全唐诗/poet.song.132000.json", 382],
+    ["全唐诗/poet.song.136000.json", 705],
+    ["全唐诗/poet.song.138000.json", 400],
+    ["全唐诗/poet.song.138000.json", 406],
+    ["全唐诗/poet.song.139000.json", 453],
+    ["全唐诗/poet.song.147000.json", 785],
+    ["全唐诗/poet.song.147000.json", 787],
+    ["全唐诗/poet.song.170000.json", 507],
+    ["全唐诗/poet.song.192000.json", 335],
+    ["全唐诗/poet.tang.5000.json", 475],
+    ["全唐诗/poet.tang.6000.json", 143],
+    ["全唐诗/poet.tang.8000.json", 842],
+    ["宋词/宋词三百首.json", 142]
+  ],
+  "exclude": [
+    {
+      "source": ["全唐诗/唐诗三百首.json", 176],
+      "reason": "选集将与贺知章《回乡偶书二首》相近的文字列为黄拱作品。保留原始数据供核查，游戏采用《全唐诗》贺知章条目。",
+      "reference": "https://www.nopss.gov.cn/n1/2022/0208/c219544-32025809.html"
+    }
+  ],
+  "edits": [
+    {
+      "source": [
+        "全唐诗/poet.tang.4000.json",
+        285
+      ],
+      "author": "骆宾王",
+      "title": "咏鹅",
+      "body": "鹅、鹅、鹅，曲项向天歌。\n白毛浮绿水，红掌拨清波。",
+      "resegment": true,
+      "reason": "按全句诵读保留三次鹅的内部节奏，将连续的呼唤作为一个分句。",
+      "reference": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582344386456.pdf"
+    },
+    {
+      "source": ["全唐诗/唐诗三百首.json", 310],
+      "author": "李白",
+      "title": "静夜思",
+      "body": "床前明月光，疑是地上霜。\n举头望明月，低头思故乡。",
+      "reason": "展示通行教育版本；上游所用看月光与望山月版本继续作为等价分句。",
+      "reference": "https://www.moe.gov.cn/srcsite/A06/s3331/201612/W020161213303084709835.pdf"
+    }
+  ],
+  "aliases": [
+    {
+      "source": [
+        "全唐诗/poet.tang.4000.json",
+        285
+      ],
+      "answer": "鹅、鹅、鹅",
+      "accept": [
+        "鹅，鹅，鹅",
+        "鹅鹅鹅"
+      ],
+      "reason": "三次鹅连续为一个分句，接受上游逗号写法和连续录入。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        72
+      ],
+      "answer": "折戟沈沙铁未销",
+      "accept": [
+        "折戟沉沙铁未销"
+      ],
+      "reason": "源本沈同义于沉，登记通行用字。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        72
+      ],
+      "answer": "铜雀春深鏁二乔",
+      "accept": [
+        "铜雀春深锁二乔"
+      ],
+      "reason": "源本的鏁为锁的异体字。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        181
+      ],
+      "answer": "绿螘新醅酒",
+      "accept": [
+        "绿蚁新醅酒"
+      ],
+      "reason": "源本螘为蚁的异体字，指浮蚁。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        181
+      ],
+      "answer": "红泥小火垆",
+      "accept": [
+        "红泥小火炉"
+      ],
+      "reason": "通行本用炉来称盛火的器具。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        203
+      ],
+      "answer": "万迳人踪灭",
+      "accept": [
+        "万径人踪灭"
+      ],
+      "reason": "万迳与万径登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        217
+      ],
+      "answer": "不尽长江衮衮来",
+      "accept": [
+        "不尽长江滚滚来"
+      ],
+      "reason": "通行选本用滚滚写长江的水势。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        236
+      ],
+      "answer": "天涯若比隣",
+      "accept": [
+        "天涯若比邻"
+      ],
+      "reason": "比隣与通行的比邻登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        294
+      ],
+      "answer": "忽然一夜春风来",
+      "accept": [
+        "忽如一夜春风来"
+      ],
+      "reason": "通行选本的忽如与源本忽然登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.8000.json",
+        652
+      ],
+      "answer": "碧水东流至北回",
+      "accept": [
+        "碧水东流至此回"
+      ],
+      "reason": "原录至北回，通行选本至此回，登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/poet.tang.28000.json",
+        345
+      ],
+      "answer": "千里莺啼绿映江",
+      "accept": [
+        "千里莺啼绿映红"
+      ],
+      "reason": "原录绿映江，通行选本绿映红，登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.32000.json",
+        720
+      ],
+      "answer": "春风自绿江南岸",
+      "accept": [
+        "春风又绿江南岸"
+      ],
+      "reason": "原录自绿与通行选本的又绿登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.91000.json",
+        720
+      ],
+      "answer": "生当为人杰",
+      "accept": [
+        "生当作人杰"
+      ],
+      "reason": "源本为人杰与通行版本作人杰登记同一句。"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.142000.json",
+        95
+      ],
+      "answer": "篱落疎疎一迳深",
+      "accept": [
+        "篱落疏疏一径深"
+      ],
+      "reason": "登记疎疎一迳的通行字形。"
+    },
+    {
+      "source": [
+        "全唐诗/唐诗三百首.json",
+        151
+      ],
+      "answer": "昔人已乘白云去",
+      "accept": [
+        "昔人已乘黄鹤去",
+        "昔人已乘黃鶴去"
+      ],
+      "reason": "黄鹤与白云是本诗首句的传本异文，通行黄鹤本可作同一句提交。",
+      "reference": "https://m.ccdi.gov.cn/content/3f/b8/27694.html"
+    },
+    {
+      "source": [
+        "全唐诗/poet.song.170000.json",
+        507
+      ],
+      "answer": "暖风薰得游人醉",
+      "accept": [
+        "暖风熏得游人醉"
+      ],
+      "reason": "将通行本所用熏字与源本薰字登记为本句异文。",
+      "reference": "https://www.yantai.gov.cn/art/2025/1/3/art_78903_3233682.html"
+    },
+    {
+      "source": ["全唐诗/唐诗三百首.json", 310],
+      "answer": "床前明月光",
+      "accept": ["床前看月光", "牀前明月光"],
+      "reason": "上游本的首句及通行本的床字异体。早期刊本例见参考资料。",
+      "reference": "https://www.gdwsw.gov.cn/wsbl/content/post_38152.html"
+    },
+    {
+      "source": ["全唐诗/唐诗三百首.json", 310],
+      "answer": "举头望明月",
+      "accept": ["举头望山月", "舉頭望明月"],
+      "reason": "上游本的第三句及通行本的繁体写法。",
+      "reference": "https://www.gdwsw.gov.cn/wsbl/content/post_38152.html"
+    },
+    {
+      "source": ["全唐诗/poet.tang.5000.json", 475],
+      "answer": "乡音难改鬓毛衰",
+      "accept": ["乡音无改鬓毛衰", "鄉音無改鬢毛衰"],
+      "reason": "贺知章《回乡偶书》的另一种常见用字，无改与难改在此处同组。",
+      "reference": "https://www.ccdi.gov.cn/lswh/wenhua/wenyuan/201905/t20190523_194495.html"
+    },
+    {
+      "source": ["宋词/宋词三百首.json", 142],
+      "answer": "念去去、千里烟波",
+      "accept": ["念去去千里烟波"],
+      "reason": "这个顿号记录领字后的句内停顿。略写仍是一条完整长短句。"
+    },
+    {
+      "source": ["宋词/宋词三百首.json", 142],
+      "answer": "杨柳岸、晓风残月",
+      "accept": ["杨柳岸晓风残月", "楊柳岸曉風殘月", "楊柳岸、曉風殘月"],
+      "reason": "同一问句的两个相接意象，保留书面顿号并准许省略该处停顿。"
+    }
+  ],
+  "repeatLinks": [
+    ["杨柳岸、晓风残月", "杨柳岸晓风残月"]
+  ],
+  "cards": [
+    {"id": "char-moon", "kind": 0, "title": "月", "key": "月"},
+    {"id": "char-flower", "kind": 0, "title": "花", "key": "花"},
+    {"id": "char-spring", "kind": 0, "title": "春", "key": "春"},
+    {"id": "char-mountain", "kind": 0, "title": "山", "key": "山"},
+    {"id": "char-wind", "kind": 0, "title": "风", "key": "风"},
+    {"id": "char-snow", "kind": 0, "title": "雪", "key": "雪"},
+    {"id": "char-rain", "kind": 0, "title": "雨", "key": "雨"},
+    {"id": "char-river", "kind": 0, "title": "江", "key": "江"},
+    {"id": "char-autumn", "kind": 0, "title": "秋", "key": "秋"},
+    {"id": "char-water", "kind": 0, "title": "水", "key": "水"},
+    {"id": "char-cloud", "kind": 0, "title": "云", "key": "云"},
+    {"id": "char-sun", "kind": 0, "title": "日", "key": "日"},
+    {"id": "char-willow", "kind": 0, "title": "柳", "key": "柳"},
+    {"id": "char-night", "kind": 0, "title": "夜", "key": "夜"},
+    {"id": "char-dream", "kind": 0, "title": "梦", "key": "梦"},
+    {"id": "char-wine", "kind": 0, "title": "酒", "key": "酒"},
+    {"id": "position-moon-5", "kind": 1, "title": "月", "key": "月", "width": 5},
+    {"id": "position-moon-7", "kind": 1, "title": "月", "key": "月", "width": 7},
+    {"id": "position-spring-5", "kind": 1, "title": "春", "key": "春", "width": 5},
+    {"id": "position-flower-7", "kind": 1, "title": "花", "key": "花", "width": 7},
+    {"id": "position-wind-5", "kind": 1, "title": "风", "key": "风", "width": 5},
+    {"id": "position-wind-7", "kind": 1, "title": "风", "key": "风", "width": 7},
+    {"id": "position-mountain-5", "kind": 1, "title": "山", "key": "山", "width": 5},
+    {"id": "position-mountain-7", "kind": 1, "title": "山", "key": "山", "width": 7},
+    {"id": "position-flower-5", "kind": 1, "title": "花", "key": "花", "width": 5},
+    {"id": "position-spring-7", "kind": 1, "title": "春", "key": "春", "width": 7},
+    {"id": "position-river-5", "kind": 1, "title": "江", "key": "江", "width": 5},
+    {"id": "position-river-7", "kind": 1, "title": "江", "key": "江", "width": 7},
+    {"id": "position-cloud-5", "kind": 1, "title": "云", "key": "云", "width": 5},
+    {"id": "position-cloud-7", "kind": 1, "title": "云", "key": "云", "width": 7},
+    {"id": "pair-wind-rain", "kind": 2, "title": "风＋雨", "key": "风", "secondKey": "雨"},
+    {"id": "pair-flower-moon", "kind": 2, "title": "花＋月", "key": "花", "secondKey": "月"},
+    {"id": "pair-mountain-water", "kind": 2, "title": "山＋水", "key": "山", "secondKey": "水"},
+    {"id": "pair-spring-rain", "kind": 2, "title": "春＋雨", "key": "春", "secondKey": "雨"},
+    {"id": "pair-river-moon", "kind": 2, "title": "江＋月", "key": "江", "secondKey": "月"},
+    {"id": "pair-bright-moon", "kind": 2, "title": "明＋月", "key": "明", "secondKey": "月"},
+    {"id": "pair-spring-flower", "kind": 2, "title": "春＋花", "key": "春", "secondKey": "花"},
+    {"id": "pair-cloud-mountain", "kind": 2, "title": "云＋山", "key": "云", "secondKey": "山"},
+    {"id": "pair-fragrant-grass", "kind": 2, "title": "芳＋草", "key": "芳", "secondKey": "草"},
+    {"id": "pair-falling-flower", "kind": 2, "title": "落＋花", "key": "落", "secondKey": "花"},
+    {"id": "pair-river-water", "kind": 2, "title": "江＋水", "key": "江", "secondKey": "水"},
+    {"id": "pair-spring-wind", "kind": 2, "title": "春＋风", "key": "春", "secondKey": "风"}
+  ],
+  "themes": [
+    {
+      "id": "topic-homesick",
+      "title": "思乡",
+      "rule": "句中直接怀念故乡、故园亲人，或在篇内明确承担怀乡、望乡、想归而不得的表达。",
+      "answers": [
+        {"source": ["全唐诗/唐诗三百首.json", 310], "author": "李白", "line": "低头思故乡", "reason": "举头望过明月，低头直接写出思念故乡。"},
+        {"source": ["全唐诗/唐诗三百首.json", 210], "author": "杜甫", "line": "月是故乡明", "reason": "同一轮明月因思乡而觉得故乡的月更明，与分散的兄弟相照应。"},
+        {"source": ["全唐诗/唐诗三百首.json", 147], "author": "王维", "line": "独在异乡为异客", "reason": "诗人独居异乡，下句逢重阳而思念家中的兄弟。"},
+        {"source": ["全唐诗/唐诗三百首.json", 147], "author": "王维", "line": "每逢佳节倍思亲", "reason": "独处异乡的游子在重阳节格外想念家乡亲人。"},
+        {"source": ["全唐诗/唐诗三百首.json", 145], "author": "王维", "line": "君自故乡来", "reason": "诗人向家乡来客发问，引出对故乡窗前寒梅的牵念。"},
+        {"source": ["全唐诗/唐诗三百首.json", 145], "author": "王维", "line": "应知故乡事", "reason": "诗人向家乡来客打听旧居，牵挂之细落在绮窗前那株寒梅。"},
+        {"source": ["全唐诗/唐诗三百首.json", 151], "author": "崔颢", "line": "日暮乡关何处是", "reason": "远眺黄鹤楼外的日暮江景，诗人直接追问故乡在何处。"},
+        {"source": ["全唐诗/唐诗三百首.json", 151], "author": "崔颢", "line": "烟波江上使人愁", "reason": "承接日暮追问乡关，江上烟波写出望不见故乡的怅惘。"},
+        {"source": ["全唐诗/唐诗三百首.json", 113], "author": "孟浩然", "line": "乡泪客中尽", "reason": "羁旅江上，隔着楚云遥念襄水边的家，泪为思乡而流。"},
+        {"source": ["全唐诗/唐诗三百首.json", 51], "author": "王湾", "line": "乡书何处达", "reason": "泊舟北固山下，诗人想把家书寄回故乡洛阳。"},
+        {"source": ["全唐诗/唐诗三百首.json", 51], "author": "王湾", "line": "归雁洛阳边", "reason": "承接上句乡书，诗人盼北归的大雁捎信到故乡洛阳。"},
+        {"source": ["全唐诗/poet.tang.8000.json", 842], "author": "李白", "line": "何人不起故园情", "reason": "客居洛城听见折柳笛曲，因乐声而想起故园。"},
+        {"source": ["全唐诗/poet.tang.10000.json", 550], "author": "高适", "line": "故乡今夜思千里", "reason": "除夕独宿旅馆，转从故乡亲人想念千里游子这一面来写乡愁。"},
+        {"source": ["全唐诗/唐诗三百首.json", 88], "author": "李益", "line": "一夜征人尽望乡", "reason": "边地芦管声惊起征人的乡愁，众人都朝故乡遥望。"},
+        {"source": ["宋词/ci.song.0.json", 42], "author": "范仲淹", "line": "浊酒一杯家万里", "reason": "戍边人饮一杯浊酒，念及远在万里之外的家。"},
+        {"source": ["宋词/ci.song.0.json", 42], "author": "范仲淹", "line": "燕然未勒归无计", "reason": "承接上句万里家乡，战事未定使戍边人有归意而不能归。"},
+        {"source": ["全唐诗/唐诗三百首.json", 34], "author": "韦庄", "line": "乡书不可寄", "reason": "羁居听秋雁，想到写给故乡的信无法寄出。"}
+      ],
+      "rejected": [
+        {"source": ["全唐诗/poet.tang.8000.json", 842], "line": "谁家玉笛暗飞声", "reason": "这句的家是疑问语气中的人家。作品下句明写故园之情，笛声本句仍只纳入字面玩法。"}
+      ]
+    },
+    {
+      "id": "topic-spring",
+      "title": "春景",
+      "rule": "描写春季自然物候和景象；季节可由句面点明，也可由同段明确交代。",
+      "answers": [
+        {"source": ["全唐诗/poet.tang.22000.json", 870], "author": "白居易", "line": "山寺桃花始盛开", "reason": "山下春花已谢，山寺桃花却初开，写同一时令因山地高差而异的春日物候。"},
+        {"source": ["全唐诗/poet.song.45000.json", 535], "author": "苏轼", "line": "竹外桃花三两枝", "reason": "题画诗先写竹林外初开的桃花，用少量花枝交代早春。"},
+        {"source": ["全唐诗/poet.song.45000.json", 535], "author": "苏轼", "line": "春江水暖鸭先知", "reason": "水温转暖，鸭子下水最先感知，写初春江边的物候。"},
+        {"source": ["全唐诗/poet.song.192000.json", 335], "author": "叶绍翁", "line": "春色满园关不住", "reason": "园门闭着，仍可由伸出墙外的杏枝想见满园春色。"},
+        {"source": ["全唐诗/poet.song.192000.json", 335], "author": "叶绍翁", "line": "一枝红杏出墙来", "reason": "墙外一枝红杏盛开，从园外可见的花枝写满园春意。"},
+        {"source": ["全唐诗/poet.song.147000.json", 785], "author": "朱熹", "line": "万紫千红总是春", "reason": "承接泗水滨寻芳与东风，句面写百花色彩所见的春光。"},
+        {"source": ["全唐诗/唐诗三百首.json", 120], "author": "孟浩然", "line": "处处闻啼鸟", "reason": "承接春眠初醒，以四面鸟鸣描写春日清晨。"},
+        {"source": ["全唐诗/唐诗三百首.json", 120], "author": "孟浩然", "line": "夜来风雨声", "reason": "写春晓时回想昨夜风雨，对应紧接着的落花。"},
+        {"source": ["全唐诗/唐诗三百首.json", 120], "author": "孟浩然", "line": "花落知多少", "reason": "春日晨起，想到一夜风雨后花落的情景。"},
+        {"source": ["全唐诗/poet.tang.5000.json", 473], "author": "贺知章", "line": "万条垂下绿丝绦", "reason": "把春柳低垂的万条嫩绿枝条比作丝带，末句点明二月。"},
+        {"source": ["全唐诗/poet.tang.5000.json", 473], "author": "贺知章", "line": "二月春风似剪刀", "reason": "把二月春风比作剪刀，仿佛由它裁出新柳的细叶。"},
+        {"source": ["全唐诗/poet.tang.18000.json", 274], "author": "韩愈", "line": "天街小雨润如酥", "reason": "题中点明早春，用细雨润泽写新草萌生的时节。"},
+        {"source": ["全唐诗/poet.tang.18000.json", 274], "author": "韩愈", "line": "草色遥看近却无", "reason": "早春新草稀疏，远处刚泛青，走近便难辨。"},
+        {"source": ["全唐诗/poet.tang.18000.json", 274], "author": "韩愈", "line": "绝胜烟柳满皇都", "reason": "把眼前早春新草与满城柳色的浓春相比，两种春景有先后。"},
+        {"source": ["宋词/ci.song.0.json", 561], "author": "晏殊", "line": "燕子来时新社", "reason": "春社时燕子归来，以候鸟的时令写春景。"},
+        {"source": ["宋词/ci.song.0.json", 561], "author": "晏殊", "line": "梨花落后清明", "reason": "用梨花凋落对应清明节气，写仲春花事。"},
+        {"source": ["宋词/ci.song.0.json", 561], "author": "晏殊", "line": "池上碧苔三四点", "reason": "上句交代清明时节，池旁几点碧苔写眼前春色。"},
+        {"source": ["宋词/ci.song.0.json", 561], "author": "晏殊", "line": "叶底黄鹂一两声", "reason": "写清明前后枝叶间的黄鹂声，与池上碧苔构成声色。"},
+        {"source": ["宋词/ci.song.0.json", 561], "author": "晏殊", "line": "日长飞絮轻", "reason": "春昼渐长，柳絮轻飞，承接前文清明的物候。"},
+        {"source": ["宋词/宋词三百首.json", 168], "author": "宋祁", "line": "红杏枝头春意闹", "reason": "盛开的红杏写春色浓盛，以闹字表现枝头生机。"},
+        {"source": ["宋词/宋词三百首.json", 168], "author": "宋祁", "line": "绿杨烟外晓寒轻", "reason": "绿杨如烟，清晨寒意渐轻，与同句组的红杏相映成春景。"},
+        {"source": ["宋词/ci.song.1000.json", 579], "author": "苏轼", "line": "花褪残红青杏小", "reason": "残红褪落，枝上幼杏初结，点明暮春物候。"},
+        {"source": ["宋词/ci.song.1000.json", 579], "author": "苏轼", "line": "枝上柳绵吹又少", "reason": "柳絮被风吹得又少一些，承接杏花已谢的暮春图景。"}
+      ],
+      "rejected": [
+        {"source": ["全唐诗/唐诗三百首.json", 133], "line": "随意春芳歇", "reason": "全篇点明晚来秋，春芳歇以春景消歇作反衬，正面所写是秋日山居。"}
+      ]
+    }
+  ]
+}
