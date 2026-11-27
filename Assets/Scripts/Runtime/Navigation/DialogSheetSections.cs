@@ -19,7 +19,7 @@ namespace XanaduYonder.Runtime
             this.gap = gap;
             unit = content.rect.width / 720f;
             this.rowHeight = Mathf.Max(rowHeight, Mathf.Ceil(88 * unit));
-            Inset = inset;
+            Inset = Mathf.Max(inset, DialogTypography.ReadingInset * 2 * unit);
             Top = top;
         }
 
@@ -54,6 +54,14 @@ namespace XanaduYonder.Runtime
         public Button Switch(string title, bool value, Action<bool> changed, bool enabled = true)
             => DialogUi.SwitchRow(content, title, Inset, Reserve(rowHeight), Width, rowHeight, value, changed, enabled,
                 Mathf.RoundToInt(23 * unit));
+
+        public Button Entry(string title, Action select)
+        {
+            int size = Mathf.RoundToInt(23 * unit);
+            float padding = DialogUi.DisclosureInset(Width, size);
+            return DialogUi.Disclosure(content, title, Inset - padding, Reserve(rowHeight),
+                Width + 2 * padding, rowHeight, select, size);
+        }
 
         public Button Action(string title, Action tap, bool primary = false, bool enabled = true)
         {

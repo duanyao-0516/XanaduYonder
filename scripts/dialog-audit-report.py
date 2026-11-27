@@ -5,6 +5,7 @@ from collections import defaultdict
 from html import escape
 from functools import lru_cache
 import gzip
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -60,9 +61,9 @@ def semantic_key(entry):
 
 RUNTIME = Path(__file__).resolve().parents[1] / "Assets/Scripts/Runtime"
 SOURCE_CALLS = re.compile(
-    r'\b(?:CreateModal|CreateSheet|Dialog|ShowDialog|OpenPanel|OpenDialog|BeginDialog|ShowMessageDialog|OpenSheet|'
+    r'\b(?:CreateModal|CreateReadingModal|CreateSheet|Dialog|ShowDialog|OpenPanel|OpenDialog|BeginDialog|ShowMessageDialog|OpenSheet|'
     r'OpenModal|OpenSheetPage|Confirm)\s*\(\s*"([^"\n]+)"\s*[,)]|'
-    r'\bDialogTitle\(sheet,\s*width,\s*"([^"\n]+)"\s*\)', re.IGNORECASE)
+    r'\bDialogTitle\s*\(\s*sheet\s*,\s*width\s*,\s*"([^"\n]+)"\s*[,)]', re.IGNORECASE)
 
 
 def source_windows(rendered):
@@ -84,6 +85,149 @@ def source_windows(rendered):
     return [{"game": game, "window": window, "locations": where,
              "verified": any((owner, window) in rendered for owner in (BOARDS if game == "BoardGames" else {game}))}
             for (game, window), where in sorted(locations.items())]
+
+
+def alignment_issues(entry):
+    """Compare the text column inside one rendered surface, normalized to a width of 360."""
+    labels = entry.get("alignmentLabels")
+    if not labels:
+        return ["缺少本帧的文字布局测量"]
+    errors = []
+    title = next((label for label in labels if label["role"] == "heading"), None)
+    sections = [label for label in labels if label["role"] == "section"]
+    sheet = entry["presentation"] == "sheet"
+    rows = [label for label in labels if label["role"] in ("disclosure", "switch") and not label["compact"]]
+    navigation = [label for label in rows if label["role"] == "disclosure"]
+    prose = [label for label in labels if label["role"] == "label" and label["width"] >= 215
+             and any(char.isalpha() for char in label["text"])]
+    # Map paragraphs, full-width control captions, and section headers to separate columns.
+    # A compact two-column choice, numeric stepper or confirmation button has its own internal alignment.
+    def left(label):
+        return label["alignment"].endswith("Left")
+
+    def snippet(label):
+        return repr(label["text"].splitlines()[0][:16])
+
+    def need_left(label, category):
+        if not left(label):
+            errors.append(f"{category} {snippet(label)} 使用 {label['alignment']}")
+
+    def same_column(category, items):
+        if len(items) < 2:
+            return
+        lo, hi = min(items, key=lambda item: item["left"]), max(items, key=lambda item: item["left"])
+        # Approximately one pixel on a 320-wide capture with an inset rounded independently at both ends.
+        if hi["left"] - lo["left"] > 2:
+            errors.append(f"{category} {snippet(lo)} 和 {snippet(hi)} 的左边线为 {lo['left']:.1f} 和 {hi['left']:.1f}")
+
+    # A numbered directory is identifiable even if every item was built as a plain action button.
+    numbered_rows = [label for label in labels if label["role"] in ("control", "disclosure") and
+                     not label["compact"] and re.match(r"^\s*\d+(?:[.．、]\s*|\s+)\D", label["text"])]
+    if len(numbered_rows) >= 2:
+        for row in numbered_rows:
+            need_left(row, "编号目录项")
+        same_column("编号目录项", numbered_rows)
+
+    controls = defaultdict(list)
+    for label in labels:
+        if label["role"] == "control" and not label["compact"] and label["width"] >= 215 and label.get("control"):
+            controls[label.get("controlId") or label["control"]].append(label)
+    descriptions = []
+    for group in controls.values():
+        # Two stacked captions of similar width are a row title and description, including
+        # custom navigation/choice rows implemented without the shared Disclosure component.
+        if len(group) == 2 and 2 < abs(group[0]["top"] - group[1]["top"]) <= 40 and abs(group[0]["width"] - group[1]["width"]) < 8:
+            for label in group:
+                need_left(label, "菜单项标题和说明")
+            descriptions.extend(group)
+    same_column("菜单项标题和说明", descriptions)
+
+    for row in rows:
+        need_left(row, "通栏设置/菜单项")
+    same_column("同列菜单标签", navigation)
+    same_column("同列开关标签", [label for label in rows if label["role"] == "switch"])
+    nav_groups = defaultdict(list)
+    for row in navigation:
+        nav_groups[row.get("group")].append(row)
+    for group, siblings in nav_groups.items():
+        if len(siblings) < 2:
+            continue
+        top, bottom = min(row["top"] for row in siblings), max(row["top"] for row in siblings)
+        for label in labels:
+            if (label["role"] == "control" and label.get("group") == group and not label["compact"] and top < label["top"] < bottom
+                    and any(abs(label["controlLeft"] - row["controlLeft"]) < 2 and
+                            abs(label["controlWidth"] - row["controlWidth"]) < 2 for row in siblings)):
+                need_left(label, "同一组菜单项")
+
+    if title is None:
+        return errors  # Label-only HUD covers still have an inventory of every rendered text/control.
+    # Numbered instructions use hanging indents. Match each leading number against
+    # the adjacent paragraph in its row and validate both columns independently.
+    markers = [label for label in labels if label["role"] == "label" and label["text"].isdigit() and label["width"] <= 45]
+    numbered = [(marker, body) for body in prose for marker in markers
+                if abs(body["top"] - marker["top"]) <= 3 and
+                0 <= body["left"] - marker["left"] - marker["width"] <= 32]
+    if len({marker["text"] for marker, _ in numbered}) < 2:
+        numbered = []
+    numbered_bodies = [body for _, body in numbered]
+    numbered_markers = [marker for marker, _ in numbered]
+    for body in numbered_bodies:
+        need_left(body, "编号条目正文")
+    same_column("编号条目正文", numbered_bodies)
+    same_column("编号列", numbered_markers)
+    read = []
+    for label in prose:
+        if label in numbered_bodies:
+            continue
+        paragraph = label["text"]
+        detailed = len(paragraph) >= 55 and (paragraph.count("。") >= 2 or
+                    ("\n\n" in paragraph and any(sum(c.isalpha() for c in line) >= 28 for line in paragraph.splitlines())))
+        sentence = any(char in paragraph for char in "。！？")
+        if ((label["reading"] and (left(label) or detailed or left(title))) or
+                (label["direct"] and (detailed or (left(title) and sentence)))):
+            read.append(label)
+    # Only actual reading groups (including compact informational cards with a left-aligned message)
+    # bind the heading to the paragraph. A centered score and its short centered status remain a valid result card.
+    plain = [label for label in prose if label["direct"] and left(label) and label not in numbered_bodies]
+    if sheet or read or plain or numbered or descriptions or len(navigation) >= 2 or len(numbered_rows) >= 2:
+        need_left(title, "阅读/设置标题")
+        for label in sections + read:
+            need_left(label, "分组或正文")
+        peers = [*sections, *numbered_markers]
+        if not sheet and len(navigation) >= 2:
+            peers.extend(navigation)
+        cards = defaultdict(list)
+        for label in read:
+            if label.get("card"):
+                cards[label["card"]].append(label)
+            else:
+                peers.append(label)
+        for card in cards.values():
+            same_column("卡片内正文", card)
+        if sheet:
+            for label in prose:
+                if label["direct"] and label not in peers and label not in numbered_bodies:
+                    need_left(label, "设置说明")
+                    peers.append(label)
+        else:
+            peers.extend(label for label in plain if label not in peers)
+        same_column("标题与正文", [title, *peers])
+    return errors
+
+
+def image_issues(path, entry, root, pixel_owners):
+    errors = []
+    with Image.open(path) as image:
+        if image.size != (entry["width"], entry["height"]):
+            errors.append("Unexpected dimensions in " + str(path))
+        pixels = image.convert("RGB")
+        if all(low == high for low, high in pixels.getextrema()):
+            errors.append("Empty frame " + str(path))
+        digest = (image.size, hashlib.sha256(pixels.tobytes()).digest())
+        owner, first_path = pixel_owners.setdefault(digest, (entry["window"], path))
+        if owner != entry["window"]:
+            errors.append(f"不同标题共享完全相同的实帧：{first_path.relative_to(root)} / {path.relative_to(root)}")
+    return errors
 
 
 def review(root):
@@ -119,16 +263,20 @@ def review(root):
     raw_windows = set()
     evidence = defaultdict(list)
     problems = []
+    alignment_frames = 0
+    alignment_failures = []
+    pixel_owners = {}
     for (key, path), entry in sorted(pictures.items()):
         if not path.is_file():
             problems.append("Missing PNG " + str(path))
             continue
-        with Image.open(path) as image:
-            if image.size != (entry["width"], entry["height"]):
-                problems.append("Unexpected dimensions in " + str(path))
-            if all(low == high for low, high in image.convert("RGB").getextrema()):
-                problems.append("Empty frame " + str(path))
+        problems.extend(image_issues(path, entry, root, pixel_owners))
         suite, game, overlay, window, kind = key
+        issues = alignment_issues(entry)
+        if not issues:
+            alignment_frames += 1
+        else:
+            alignment_failures.extend(str(path.relative_to(root)) + " · " + issue for issue in issues)
         roles.add(semantic_key(entry))
         owner, _ = semantic_key(entry)
         raw_windows.add((owner, window))
@@ -157,6 +305,7 @@ def review(root):
                "missing_source_windows": missing_declared, "unpresented_templates": [" / ".join(key) for key in sorted(unpresented)], "interaction_fixture_windows": len(diagnostics), "observed_windows": len(observed_roles), "rendered_windows": len(roles),
                "known_windows_required": len(known), "known_windows_verified": len(known & roles),
                "missing_known_windows": missing_known,
+               "alignment_verified_frames": alignment_frames, "alignment_errors": alignment_failures,
                "screenshots": sum(map(len, evidence.values())), "board_settings_required": required_sections,
                "board_settings_verified": required_sections - len(missing_board), "missing_board_settings": missing_board,
                "observed_without_frame": unrendered, "style_or_image_errors": sorted(set(problems))}
@@ -167,8 +316,8 @@ def review(root):
              "figure{margin:0;padding:12px;border:1px solid #d8ddd8;border-radius:12px;background:white}"
              "img{width:100%;height:310px;object-fit:contain}small{color:#506055}summary{cursor:pointer}</style>",
              f"<h1>弹窗画面核验</h1><p>记录 {len(observed_roles)} 类窗口，{len(roles)} 类有实帧，共 {summary['screenshots']} 张。"
-             f"四棋设置分组已核验 {summary['board_settings_verified']}/{required_sections}；源码标题已核验 {len(declared) - len(missing_declared)}/{len(declared)}。</p>"]
-    for title, rows in (("源码声明缺少的窗口", missing_declared), ("基线缺少的窗口", missing_known), ("未采到实帧", unrendered), ("四棋缺少的实帧", missing_board), ("样式或文件异常", problems)):
+             f"文字对齐通过 {alignment_frames}/{summary['screenshots']} 帧，四棋设置分组已核验 {summary['board_settings_verified']}/{required_sections}；源码标题已核验 {len(declared) - len(missing_declared)}/{len(declared)}。</p>"]
+    for title, rows in (("源码声明缺少的窗口", missing_declared), ("基线缺少的窗口", missing_known), ("未采到实帧", unrendered), ("四棋缺少的实帧", missing_board), ("样式或文件异常", problems), ("文字对齐异常", alignment_failures)):
         if rows:
             cards.append(f"<details><summary>{title} · {len(rows)}</summary><ul>")
             cards.extend("<li>" + escape(row) + "</li>" for row in rows)
@@ -193,7 +342,7 @@ def main():
     parser.add_argument("--require-complete", action="store_true", help="also require a real frame for every observed window and board setting")
     args = parser.parse_args()
     result = review(args.directory.resolve())
-    return bool(result["style_or_image_errors"] or result["missing_known_windows"] or (args.require_complete and
+    return bool(result["alignment_errors"] or result["style_or_image_errors"] or result["missing_known_windows"] or (args.require_complete and
                 (result["missing_board_settings"] or result["observed_without_frame"] or result["missing_source_windows"])))
 
 

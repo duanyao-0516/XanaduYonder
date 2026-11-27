@@ -47,8 +47,8 @@ namespace XanaduYonder.Runtime.FlappyBird
         {
             return DialogUi.ActionButton(panel, title, 24, y, 252, 44, action, primary, quiet ? 13 : 15, unitScale: .5f);
         }
-        private void DialogHeading(RectTransform panel,string title,float y)
-        { Label(panel,title,24,y,252,38,24,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold); }
+        private void DialogHeading(RectTransform panel,string title,float y, TextAnchor alignment = TextAnchor.MiddleCenter)
+        { Label(panel,title,24,y,252,38,24,UiFactory.Ink,alignment,FontStyle.Bold); }
         private void ShowPause()
         {
             var panel=BeginDialog(DialogKind.Pause,308);
@@ -86,7 +86,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         private void ShowHelpDialog()
         {
             var panel=BeginDialog(DialogKind.Help,468);
-            DialogHeading(panel,"怎么飞？",26);
+            DialogHeading(panel,"怎么飞？",26,TextAnchor.MiddleLeft);
             var close=ActionButton(panel,"Close help",256,8,36,36,()=>{ CloseDialog(); Refresh(); },0,true);
             var closeIcon=UiFactory.Rect(close.transform,"Close symbol",9,9,18,18).gameObject.AddComponent<UiIconGraphic>(); closeIcon.Kind=UiIconKind.Close; closeIcon.color=UiFactory.Muted; closeIcon.raycastTarget=false;
             Rule(panel,"1","轻点场地，小鸟就向上拍翼一次。松手后自然下落。",82,48);
@@ -99,9 +99,10 @@ namespace XanaduYonder.Runtime.FlappyBird
         }
         private void Rule(RectTransform parent,string number,string copy,float y,float height)
         {
-            var badge=FlappyScene.Shape(parent,"Rule "+number,24,y,22,22,7,UiFactory.Hex("E7EDE4"));
+            var row=UiFactory.Rect(parent,"Numbered rule "+number,24,y,252,height);
+            var badge=FlappyScene.Shape(row,"Rule "+number,0,0,22,22,7,UiFactory.Hex("E7EDE4"));
             Label(badge.transform,number,0,0,22,22,10,UiFactory.Accent,TextAnchor.MiddleCenter);
-            var text=Label(parent,copy,56,y-1,220,height,12,UiFactory.Hex("64786B"),TextAnchor.UpperLeft); text.lineSpacing=1.2f;
+            var text=Label(row,copy,32,-1,220,height,12,UiFactory.Hex("64786B"),TextAnchor.UpperLeft); text.lineSpacing=1.2f;
         }
         private void ShowExit()
         {

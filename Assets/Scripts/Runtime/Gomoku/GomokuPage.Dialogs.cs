@@ -12,7 +12,7 @@ namespace XanaduYonder.Runtime.Gomoku
         private bool dialogResume;
         private bool dialogBackLeavesGame;
 
-        private RectTransform Overlay(string title, float height, Action setupCancel = null)
+        private RectTransform Overlay(string title, float height, Action setupCancel = null, bool reading = false)
         {
             CloseDialog();
             dialogResume = session != null && !session.Paused;
@@ -30,7 +30,8 @@ namespace XanaduYonder.Runtime.Gomoku
             DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             var panel = DialogCorners.Panel(overlay.transform, "Gomoku dialog", 0, 0, 596, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
-            UiFactory.Label(panel.transform, title, 32, 24, 532, 70, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            UiFactory.Label(panel.transform, title, 32, 24, 532, 70, 33, UiFactory.Ink,
+                reading ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter, FontStyle.Bold);
             Refresh();
             return panel.rectTransform;
         }
@@ -67,7 +68,7 @@ namespace XanaduYonder.Runtime.Gomoku
             void CancelSetup() { CloseDialog(); Refresh(); EnsureSearch(); }
             var panel = Overlay(ai ? "开始人机对战" : "开始本地双人", ai ? 726 : 646, CancelSetup);
             string explanation = invalidSave ? "旧存档无法恢复。确认后创建新存档。" : session != null && session.Game.MoveCount > 0 ? "确认后替换本模式对局，另一模式保留。" : "15 路棋盘 · 黑棋先手 · 连成五子获胜";
-            UiFactory.Label(panel, explanation, 32, 108, 532, 78, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, explanation, 32, 108, 532, 78, 22, UiFactory.Muted, TextAnchor.MiddleLeft);
             float sideY;
             if (ai)
             {
@@ -90,7 +91,7 @@ namespace XanaduYonder.Runtime.Gomoku
                 if (ai) human = index == 0 ? GomokuStone.Black : GomokuStone.White;
                 else blackPlayer = index + 1;
             });
-            if (!ai) UiFactory.Label(panel, "两位玩家轮流使用同一台设备。\n悔棋需另一位玩家确认；再来一局默认换边。\n玩家身份保持不变，黑白执子随新局调整。", 32, 362, 532, 106, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            if (!ai) UiFactory.Label(panel, "两位玩家轮流使用同一台设备。\n悔棋需另一位玩家确认；再来一局默认换边。\n玩家身份保持不变，黑白执子随新局调整。", 32, 362, 532, 106, 23, UiFactory.Muted, TextAnchor.MiddleLeft);
             float startY = ai ? 560 : 480;
             DialogUi.ActionButton(panel, "确认开始", 32, startY, 532, 72, DialogSheetLayout.AfterClose(panel, () => StartGame(mode, difficulty, human, blackPlayer)), true);
             DialogUi.ActionButton(panel, "取消", 32, startY + 84, 532, 62, dismissDialog);
@@ -118,7 +119,7 @@ namespace XanaduYonder.Runtime.Gomoku
         private void ShowRules()
         {
             if (!Allowed) return;
-            var panel = Overlay("五子棋玩法", 820);
+            var panel = Overlay("五子棋玩法", 820, reading: true);
             DialogUi.ScrollText(panel, "黑棋先手，双方轮流在交叉点落子。\n横、竖、斜方向连续五子或更多即获胜。\n采用自由规则，无禁手；满盘未分胜负为和棋。\n\n点击预选，再按确认；落子前可取消或换点。\n坐标从左到右 A–O，从下到上 1–15。\n\n人机悔棋撤回你上一回合；双人需对方同意。\n两种模式分别保存一局，恢复后点击继续。", 32, 114, 532, 524, 24);
             Action finish = () => { CloseDialog(); Refresh(); EnsureSearch(); };
             DialogUi.ActionButton(panel, "知道了", 32, 690, 532, 74, finish, true);

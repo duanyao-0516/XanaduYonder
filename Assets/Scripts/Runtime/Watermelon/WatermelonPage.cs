@@ -350,8 +350,9 @@ namespace XanaduYonder.Runtime.Watermelon
             Suspend(); Save();
             Action close = () => { closeModal(); CheckEndState(); };
             var panel = openModal("合成图鉴 · " + WatermelonArtwork.ThemeNames[data.Theme], 870, close);
-            UiFactory.Label(panel, "拖动选位置，松手投放；点击也能投放。\n同级碰撞升一级，加合并前的等级分。\n初始随机 1–5 级，合到 11 级达成目标。", 32, 108, 532, 100, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Label(panel, "左右越界仍然可以投放，上下越界不可投放", 32, 214, 532, 38, 21, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            DialogUi.AlignReadingTitle(panel);
+            UiFactory.Label(panel, "拖动选位置，松手投放；点击也能投放。\n同级碰撞升一级，加合并前的等级分。\n初始随机 1–5 级，合到 11 级达成目标。", 32, 108, 532, 100, 22, UiFactory.Muted, TextAnchor.MiddleLeft);
+            UiFactory.Label(panel, "左右越界仍然可以投放，上下越界不可投放", 32, 214, 532, 38, 21, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             for (int i = 0; i < 11; i++)
             {
                 int column = i % 4, row = i / 4;
@@ -359,7 +360,7 @@ namespace XanaduYonder.Runtime.Watermelon
                 UiFactory.Label(panel, data.Theme == 2 ? (i + 1) + " " + WatermelonArtwork.CampusNames[i] : "第 " + (i + 1) + " 级",
                     32 + column * 134, 338 + row * 132, 132, 34, data.Theme == 2 ? 17 : 20, UiFactory.Ink, TextAnchor.MiddleCenter);
             }
-            UiFactory.Label(panel, "落稳后仍越线 2 秒，本局结束。\n切换主题不影响进度；离开会自动存档。", 32, 674, 532, 74, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, "落稳后仍越线 2 秒，本局结束。\n切换主题不影响进度；离开会自动存档。", 32, 674, 532, 74, 22, UiFactory.Muted, TextAnchor.MiddleLeft);
             DialogUi.ActionButton(panel, "知道了", 32, 770, 532, 66, close, true);
         }
 

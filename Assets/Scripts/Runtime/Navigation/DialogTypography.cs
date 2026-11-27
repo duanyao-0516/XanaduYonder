@@ -10,7 +10,7 @@ namespace XanaduYonder.Runtime
     internal sealed class DialogTypography : MonoBehaviour
     {
         internal const float Title = 15, Body = 13, Note = 12, Action = 13;
-        internal const float TitleInset = 20, BodyInset = 16;
+        internal const float ReadingInset = 20;
         private static int activeScopes;
         private bool queued, applying;
         private readonly List<Text> labels = new List<Text>();
@@ -156,7 +156,7 @@ namespace XanaduYonder.Runtime
             float left = surface.InverseTransformPoint(corners[0]).x - surface.rect.xMin;
             float right = surface.rect.xMax - surface.InverseTransformPoint(corners[3]).x;
             if (!heading && surface.rect.width - left - right < surface.rect.width * .65f) return;
-            float inset = (heading ? TitleInset : BodyInset) / dp;
+            float inset = ReadingInset / dp;
             float start = Mathf.Max(0, inset - left), end = Mathf.Max(0, inset - right);
             float units = surface.InverseTransformVector(parent.TransformVector(Vector3.right)).magnitude;
             if (units <= .0001f || start + end < .01f || text.rect.width * Mathf.Abs(text.localScale.x) < (start + end) / units + 8) return;

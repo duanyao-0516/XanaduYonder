@@ -67,10 +67,10 @@ namespace XanaduYonder.Runtime.Idiom
             RectTransform viewport, content;
             Scroll(parent, "Scrollable explanation", out viewport, out content);
             Place(viewport, x, y, width, height);
-            var label = Label(content, text, 2, 0, width - 12, height, 24, UiFactory.Ink, TextAnchor.UpperLeft);
+            var label = Label(content, text, 0, 0, width, height, 24, UiFactory.Ink, TextAnchor.UpperLeft);
             var fullHeight = Mathf.Max(height, label.preferredHeight + 20);
             Place(content, 0, 0, width, fullHeight);
-            Place(label.rectTransform, 2, 0, width - 12, fullHeight);
+            Place(label.rectTransform, 0, 0, width, fullHeight);
         }
 
         public static void Caption(Button button, string text)

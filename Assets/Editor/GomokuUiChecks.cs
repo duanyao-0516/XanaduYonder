@@ -322,6 +322,9 @@ namespace XanaduYonder.EditorTools
                     "Pause clears preview and displays an opaque cover");
                 var cover = Get<GameObject>(g.Page, "pauseCover").GetComponent<Image>();
                 Near(cover.color.a, 1, "Pause cover is opaque");
+                Require(g.Dialog == null && HasText(cover.gameObject, "对局已暂停"),
+                    "The standalone pause cover is visible without the rules dialog above it");
+                DialogScreenshotAudit.CaptureCurrent(cover.transform);
                 g.TapCell(112, false);
                 Require(!g.Session.SelectedIndex.HasValue && g.Session.Game.MoveCount == 0, "Covered board clicks cannot select or move");
                 f.Capture("paused"); g.ClickField("confirmButton"); g.TapCell(82);

@@ -80,6 +80,7 @@ namespace XanaduYonder.Runtime.Feihualing
             if (!CanInteract) return;
             SuspendForMenu();
             var panel = OpenDialog("飞花令 · 玩法说明", DetailHeight());
+            DialogUi.AlignReadingTitle(panel, ModalMargin);
             IdiomUi.ScrollText(panel,
                 "先选人数、目标和令题。每次只发送一个诗词分句，例如「床前明月光」。句末标点可省略。同一小局已答过的诗句不能重复，收录的繁简或异文写法也算同一句。\n\n" +
                 "四种令题\n" +
@@ -162,6 +163,7 @@ namespace XanaduYonder.Runtime.Feihualing
             if (!CanInteract || profile == null || match != null) return;
             var selected = SelectedCard();
             var panel = OpenDialog("选择令题", DetailHeight());
+            DialogUi.AlignReadingTitle(panel, ModalMargin);
             IdiomUi.Scroll(panel, "Scrollable poetry topics", out var viewport, out var content);
             var bottom = panel.rect.height - 82;
             IdiomUi.Place(viewport, ModalMargin, 106, ModalWidth, bottom - 122);
@@ -201,6 +203,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 return;
             }
             var panel = OpenDialog("诗句线索", DetailHeight());
+            DialogUi.AlignReadingTitle(panel, ModalMargin);
             hintCandidates = candidates;
             hintNotice = IdiomUi.Label(panel, HintCaption(), ModalMargin, 104, ModalWidth, 47, 21, UiFactory.Muted);
             hintScroll = IdiomUi.Scroll(panel, "Scrollable Hint Accordion", out hintViewport, out hintContent);
@@ -356,8 +359,8 @@ namespace XanaduYonder.Runtime.Feihualing
             panel.pivot = new Vector2(.5f, .5f);
             panel.anchoredPosition = Vector2.zero;
             panel.sizeDelta = new Vector2(720, 0);
-            UiFactory.IconButton(panel, UiIconKind.Back, 56, 34, 58, 58, DismissDialog);
-            IdiomUi.Label(panel, "原诗", 200, 31, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            UiFactory.IconButton(panel, UiIconKind.Close, 630, 34, 58, 58, DismissDialog);
+            IdiomUi.Label(panel, "原诗", 50, 31, 556, 66, 35, UiFactory.Ink, TextAnchor.MiddleLeft, true);
 
             IdiomUi.Scroll(panel, "Scrollable poem", out var viewport, out var content);
             UiFactory.Stretch(viewport);

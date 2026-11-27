@@ -718,7 +718,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     ]];
     UILabel *title = [[UILabel alloc] init];
     title.text = self.isBombIt ? @"游戏暂时无法继续" : @"游戏尚未完成保存或加载";
-    title.textAlignment = NSTextAlignmentCenter;
+    title.textAlignment = NSTextAlignmentNatural;
     title.numberOfLines = 0;
     title.font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleHeadline] scaledFontForFont:[UIFont systemFontOfSize:16 weight:UIFontWeightSemibold]];
     title.adjustsFontForContentSizeCategory = YES;
@@ -726,6 +726,7 @@ static NSDictionary *CutSave(NSDictionary *request)
     [items addArrangedSubview:title];
     UILabel *detail = [[UILabel alloc] init];
     detail.text = self.pendingFailure;
+    detail.textAlignment = NSTextAlignmentNatural;
     detail.numberOfLines = 0;
     detail.font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleSubheadline] scaledFontForFont:[UIFont systemFontOfSize:14]];
     detail.adjustsFontForContentSizeCategory = YES;

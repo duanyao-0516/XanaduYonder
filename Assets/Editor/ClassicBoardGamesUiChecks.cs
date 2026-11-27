@@ -1082,6 +1082,20 @@ namespace XanaduYonder.EditorTools
                 int index = Array.FindIndex(lessons, lesson => lesson.Title == title);
                 Require(index >= 0, "Tutorial chapter is in the directory: " + title);
                 var scroll = NamedRect("Tutorial lessons").GetComponent<ScrollRect>();
+                var rows = scroll.content.GetComponentsInChildren<Button>();
+                var directoryTitle = NamedRect("Board modal backdrop").GetComponentsInChildren<Text>().Single(label => label.text == "教程目录");
+                int selected = (int)Field(typeof(BoardGamePage), "lessonIndex").GetValue(Page);
+                Require(rows.Length == lessons.Length, "Every tutorial lesson has a navigable row.");
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    var row = rows[i];
+                    var label = row.GetComponentInChildren<Text>();
+                    Require(label.alignment == TextAnchor.MiddleLeft && row.transform.Find("Disclosure") != null
+                        && Mathf.Abs(Bounds(label.rectTransform).xMin - Bounds(directoryTitle.rectTransform).xMin) < 1,
+                        "Lesson names share the directory heading's visible leading edge with a trailing navigation icon.");
+                    Require((row.targetGraphic.color == UiFactory.Accent) == (i == selected),
+                        "Only the active tutorial lesson is highlighted.");
+                }
                 float travel = scroll.content.rect.height - scroll.viewport.rect.height;
                 if (travel > 0) scroll.verticalNormalizedPosition = 1 - Mathf.Clamp01(index * 72 / travel);
                 Click((index + 1) + ". " + title);
@@ -1138,8 +1152,17 @@ namespace XanaduYonder.EditorTools
                     Require(sheet == NamedRect("Board modal backdrop") && layout == sheet.GetComponentInChildren<DialogSheetLayout>(),
                         "All settings positions are rendered inside the same window.");
                 }
-                Require(!HasLabel("暂无其他可继续的对局。") && sheet.GetComponentsInChildren<Button>().Any(button =>
-                    button.GetComponentInChildren<Text>().text.Contains(" · ")), "Resumable saved games are offered directly in settings.");
+                var recordsHeading = sheet.GetComponentsInChildren<Text>().Single(label => label.text == "继续其他对局");
+                var savedGames = sheet.GetComponentsInChildren<Button>().Where(button =>
+                    button.GetComponentInChildren<Text>().text.Contains(" · ")).ToArray();
+                Require(!HasLabel("暂无其他可继续的对局。") && savedGames.Length > 0, "Resumable saved games are offered directly in settings.");
+                foreach (var savedGame in savedGames)
+                {
+                    var label = savedGame.GetComponentInChildren<Text>();
+                    Require(label.alignment == TextAnchor.MiddleLeft && savedGame.transform.Find("Disclosure") != null
+                        && Mathf.Abs(Bounds(label.rectTransform).xMin - Bounds(recordsHeading.rectTransform).xMin) < 1,
+                        "Saved game names and progress share the section's visible leading edge.");
+                }
                 scroll.verticalNormalizedPosition = 0;
                 var done = Button("完成");
                 Require(Bounds(scroll.viewport).Contains(Bounds(done.transform).center), "The last action is reachable at the actual bottom.");

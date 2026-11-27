@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.TypedValue;
+import android.text.Layout;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -128,6 +129,7 @@ public final class Runner extends Instrumentation {
         return count;
     }
 
+    private float readingEdge;
     private int checkTextSizes(View view, int seen) {
         if (view instanceof TextView) {
             int sp = seen == 0 ? 16 : 14;
@@ -135,6 +137,18 @@ public final class Runner extends Instrumentation {
                     activity.getResources().getDisplayMetrics());
             if (Math.abs(((TextView) view).getTextSize() - expected) > 1)
                 throw new AssertionError(game + " incorrect font size for " + ((TextView) view).getText());
+            if (seen < 2) {
+                TextView text = (TextView) view;
+                Layout layout = text.getLayout();
+                if (layout == null || layout.getLineCount() == 0)
+                    throw new AssertionError(game + " reading text has no layout");
+                int[] location = new int[2];
+                text.getLocationOnScreen(location);
+                float x = location[0] + text.getCompoundPaddingLeft() + layout.getLineLeft(0);
+                if (seen == 0) readingEdge = x;
+                else if (Math.abs(x - readingEdge) > 1)
+                    throw new AssertionError(game + " title and detail do not share their reading edge");
+            }
             return seen + 1;
         }
         if (view instanceof ViewGroup) {

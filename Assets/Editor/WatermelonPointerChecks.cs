@@ -191,11 +191,19 @@ namespace XanaduYonder.EditorTools
                     var panel = UiFactory.Rect(canvas.transform, "Help panel", 62, 225, 596, 870);
                     Set(page, "visible", true); Set(page, "acceptsInput", (Func<bool>)(() => true)); Set(page, "data", new WatermelonSaveData { Theme = theme });
                     Set(page, "artwork", new WatermelonArtwork()); Set(page, "closeModal", (Action)(() => { }));
-                    Set(page, "openModal", (Func<string, float, Action, RectTransform>)((title, height, close) => panel));
+                    Set(page, "openModal", (Func<string, float, Action, RectTransform>)((title, height, close) =>
+                    {
+                        UiFactory.Label(panel, title, 98, 30, 400, 72, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+                        return panel;
+                    }));
                     // Initialize is deliberately not called: Save sees null store/game and never opens a player file.
                     typeof(WatermelonPage).GetMethod("ShowHelp", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(page, null);
                     Flush(); Capture("help-theme-" + theme + ".png");
                     var rule = panel.GetComponentsInChildren<Text>().SingleOrDefault(t => t.text == EdgeRule);
+                    var heading = panel.GetComponentInChildren<Text>();
+                    Require(heading.alignment == TextAnchor.MiddleLeft && rule != null
+                        && Mathf.Abs(Bounds(panel, heading.rectTransform).xMin - Bounds(panel, rule.rectTransform).xMin) < 1,
+                        "guide heading and instructions share a reading column");
                     Require(rule != null && rule.fontStyle == FontStyle.Bold, "help must show the exact rule in real bold text");
                     Require(rule.preferredWidth <= rule.rectTransform.rect.width + 1, "bold rule fits its line");
                     foreach (var text in panel.GetComponentsInChildren<Text>())

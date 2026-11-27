@@ -56,6 +56,9 @@ extern "C" int XanaduAudio_PrepareSession(void) { return 1; }
                 UIStackView *items = (UIStackView *)panel.subviews.firstObject;
                 UILabel *heading = (UILabel *)items.arrangedSubviews[0], *body = (UILabel *)items.arrangedSubviews[1];
                 UIButton *action = (UIButton *)items.arrangedSubviews[2];
+                NSAssert(heading.textAlignment == NSTextAlignmentNatural && body.textAlignment == NSTextAlignmentNatural
+                    && fabs(CGRectGetMinX(heading.frame) - CGRectGetMinX(body.frame)) < .5
+                    && action.titleLabel.textAlignment == NSTextAlignmentCenter, @"Title and detail share a leading edge");
                 CGFloat headingSize = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleHeadline] scaledValueForValue:16];
                 CGFloat bodySize = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleSubheadline] scaledValueForValue:14];
                 CGFloat actionSize = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleBody] scaledValueForValue:14];

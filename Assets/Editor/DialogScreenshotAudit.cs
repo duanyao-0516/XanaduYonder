@@ -22,6 +22,7 @@ namespace XanaduYonder.EditorTools
         {
             public string suite, game, window, overlay, presentation, role, section, png;
             public int width, height;
+            public DialogAlignmentAudit.Label[] alignmentLabels;
             public float scrimAlpha;
             public bool bottomAligned;
         }
@@ -53,7 +54,7 @@ namespace XanaduYonder.EditorTools
             // Closing synchronously before a fixture renders is a coverage gap worth recording.
             if (!Rendered.Remove(scope) && scope != null && scope.transform.childCount > 0)
             {
-                var entry = Describe(scope);
+                var entry = Describe(scope, out _);
                 string key = Identity(entry);
                 if (Observed.Add(key)) Write(entry);
             }
@@ -82,12 +83,12 @@ namespace XanaduYonder.EditorTools
             return parent == null ? Suite : parent.name;
         }
 
-        private static Entry Describe(Transform scope)
+        private static Entry Describe(Transform scope, out Text heading)
         {
             var canvas = scope.GetComponentInParent<Canvas>(true);
             var sheet = scope.GetComponentInChildren<DialogSheetLayout>(true);
             var labels = scope.GetComponentsInChildren<Text>(true);
-            var heading = labels.FirstOrDefault(t => t.name == "LinkMatch dialog title" && !string.IsNullOrWhiteSpace(t.text)) ??
+            heading = labels.FirstOrDefault(t => t.name == "LinkMatch dialog title" && !string.IsNullOrWhiteSpace(t.text)) ??
                 labels.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t.text) && t.text.Any(char.IsLetter) &&
                 t.GetComponentInParent<Selectable>(true) == null);
             if (heading == null) heading = labels.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t.text));
@@ -135,52 +136,85 @@ namespace XanaduYonder.EditorTools
             File.AppendAllText(Path.Combine(Output, Suite, "windows.jsonl"), JsonUtility.ToJson(e) + "\n", new UTF8Encoding(false));
         }
 
+        // Camera pixels describe one composited frame. Assign them only to the frontmost
+        // active surface on that camera, even when a paused board remains visible beneath it.
+        private static Transform ForegroundScope(Camera camera)
+        {
+            Transform front = null;
+            Graphic top = null;
+            foreach (var scope in Open)
+            {
+                if (scope == null || !scope.gameObject.activeInHierarchy || scope.childCount == 0) continue;
+                foreach (var graphic in scope.GetComponentsInChildren<Graphic>())
+                {
+                    if (!graphic.isActiveAndEnabled || graphic.canvas == null || graphic.depth < 0 ||
+                        graphic.canvasRenderer.cull || graphic.color.a * graphic.canvasRenderer.GetInheritedAlpha() <= .01f) continue;
+                    var canvas = graphic.canvas.rootCanvas;
+                    if (canvas.renderMode == RenderMode.ScreenSpaceOverlay || canvas.worldCamera != camera) continue;
+                    if (top != null && !(top == graphic && scope.IsChildOf(front)) && !DrawsAbove(graphic, top)) continue;
+                    top = graphic;
+                    front = scope;
+                }
+            }
+            return front;
+        }
+
+        private static bool DrawsAbove(Graphic first, Graphic second)
+        {
+            var a = first.canvas.rootCanvas;
+            var b = second.canvas.rootCanvas;
+            if (a != b)
+            {
+                int layerA = SortingLayer.GetLayerValueFromID(a.sortingLayerID);
+                int layerB = SortingLayer.GetLayerValueFromID(b.sortingLayerID);
+                if (layerA != layerB) return layerA > layerB;
+                if (a.sortingOrder != b.sortingOrder) return a.sortingOrder > b.sortingOrder;
+                if (a.renderOrder != b.renderOrder) return a.renderOrder > b.renderOrder;
+            }
+            return first.depth > second.depth;
+        }
+
         private static void AfterCamera(Camera camera)
         {
             var target = camera.targetTexture;
             if (target == null || Open.Count == 0) return;
-            foreach (var scope in Open.ToArray())
+            var scope = ForegroundScope(camera);
+            if (scope == null) return;
+            var sheet = scope.GetComponentInChildren<DialogSheetLayout>();
+            if (sheet != null && sheet.IsDismissing) return;
+            var entry = Describe(scope, out var heading);
+            string identity = Identity(entry);
+            string size = target.width + "x" + target.height;
+            string key = identity + "/" + size;
+            if (Rendered.TryGetValue(scope, out var last) && last == key) return;
+            if (Captured.Contains(key)) { Rendered[scope] = key; return; }
+            entry.width = target.width; entry.height = target.height;
+            var folder = Path.Combine(Output, Suite, Safe(entry.game, 40));
+            Directory.CreateDirectory(folder);
+            string name = Safe(entry.overlay, 36) + "-" + Safe(entry.window, 46) + "-" + size + "-" +
+                Hash128.Compute(identity).ToString().Substring(0, 8) + ".png";
+            var previous = RenderTexture.active;
+            var texture = new Texture2D(target.width, target.height, TextureFormat.RGB24, false);
+            try
             {
-                if (scope == null || !scope.gameObject.activeInHierarchy || scope.transform.childCount == 0) continue;
-                var parent = scope.GetComponentInParent<Canvas>();
-                if (parent == null) continue;
-                var canvas = parent.rootCanvas;
-                if (canvas.worldCamera != camera || canvas.renderMode == RenderMode.ScreenSpaceOverlay) continue;
-                var sheet = scope.GetComponentInChildren<DialogSheetLayout>();
-                if (sheet != null && sheet.IsDismissing) continue;
-                var entry = Describe(scope);
-                string identity = Identity(entry);
-                string size = target.width + "x" + target.height;
-                string key = identity + "/" + size;
-                if (Rendered.TryGetValue(scope, out var last) && last == key) continue;
-                if (Captured.Contains(key)) { Rendered[scope] = key; continue; }
-                entry.width = target.width; entry.height = target.height;
-                var folder = Path.Combine(Output, Suite, Safe(entry.game, 40));
-                Directory.CreateDirectory(folder);
-                string name = Safe(entry.overlay, 36) + "-" + Safe(entry.window, 46) + "-" + size + "-" +
-                    Hash128.Compute(identity).ToString().Substring(0, 8) + ".png";
-                var previous = RenderTexture.active;
-                var texture = new Texture2D(target.width, target.height, TextureFormat.RGB24, false);
-                try
-                {
-                    RenderTexture.active = target;
-                    texture.ReadPixels(new Rect(0, 0, target.width, target.height), 0, 0);
-                    texture.Apply();
-                    // A newly attached world-space canvas can render one clear-only frame before its UI layer is ready.
-                    // Keep waiting for the first frame with drawn pixels instead of deduplicating against the blank image.
-                    var pixels = texture.GetRawTextureData<byte>();
-                    bool drawn = false;
-                    for (int index = 3; index < pixels.Length; index++)
-                        if (pixels[index] != pixels[index % 3]) { drawn = true; break; }
-                    if (!drawn) continue;
-                    Rendered[scope] = key;
-                    File.WriteAllBytes(Path.Combine(folder, name), texture.EncodeToPNG());
-                    entry.png = Safe(entry.game, 40) + "/" + name;
-                    Write(entry);
-                    Captured.Add(key);
-                }
-                finally { Object.DestroyImmediate(texture); RenderTexture.active = previous; }
+                RenderTexture.active = target;
+                texture.ReadPixels(new Rect(0, 0, target.width, target.height), 0, 0);
+                texture.Apply();
+                // A newly attached world-space canvas can render one clear-only frame before its UI layer is ready.
+                // Keep waiting for the first frame with drawn pixels instead of deduplicating against the blank image.
+                var pixels = texture.GetRawTextureData<byte>();
+                bool drawn = false;
+                for (int index = 3; index < pixels.Length; index++)
+                    if (pixels[index] != pixels[index % 3]) { drawn = true; break; }
+                if (!drawn) return;
+                Rendered[scope] = key;
+                File.WriteAllBytes(Path.Combine(folder, name), texture.EncodeToPNG());
+                entry.png = Safe(entry.game, 40) + "/" + name;
+                entry.alignmentLabels = DialogAlignmentAudit.Measure(scope, heading, sheet);
+                Write(entry);
+                Captured.Add(key);
             }
+            finally { Object.DestroyImmediate(texture); RenderTexture.active = previous; }
         }
 
         private static void SampleBeforeInput(Transform origin)
@@ -189,7 +223,7 @@ namespace XanaduYonder.EditorTools
             for (var owner = origin; owner != null; owner = owner.parent)
             {
                 if (!Open.Contains(owner) || !owner.gameObject.activeInHierarchy) continue;
-                var current = Describe(owner);
+                var current = Describe(owner, out _);
                 if (current.scrimAlpha <= 0 || (Rendered.TryGetValue(owner, out string key) &&
                     key.StartsWith(Identity(current) + "/", StringComparison.Ordinal))) return;
                 CaptureCurrent(owner);

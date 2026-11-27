@@ -62,6 +62,7 @@ namespace XanaduYonder.Runtime.Feihualing
         private void ShowNotebook(float scrollOffset)
         {
             var panel = OpenDialog("诗词收藏", DetailHeight());
+            DialogUi.AlignReadingTitle(panel, ModalMargin);
             var entries = notebookStore.Entries;
             var bottom = panel.rect.height - 82;
             if (!string.IsNullOrEmpty(notebookWarning))
@@ -71,7 +72,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 var message = string.IsNullOrEmpty(notebookWarning)
                     ? "还没有收藏。点开任意已答诗句的原诗，即可收藏整首。"
                     : "可以继续点开已答诗句查看原诗。";
-                IdiomUi.Label(panel, message, ModalMargin, 183, ModalWidth, 142, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
+                IdiomUi.Label(panel, message, ModalMargin, 183, ModalWidth, 142, 24, UiFactory.Muted, TextAnchor.MiddleLeft);
             }
             else
             {

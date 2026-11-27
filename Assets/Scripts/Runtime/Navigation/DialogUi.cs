@@ -39,19 +39,48 @@ namespace XanaduYonder.Runtime
         }
 
         public static Button Disclosure(Transform parent, string title, float x, float y, float w,
-            float h, Action action, int fontSize = 25, float unitScale = 1f)
+            float h, Action action, int fontSize = 25, float unitScale = 1f, string description = null)
         {
             var row = DialogCorners.Panel(parent, title, x, y, w, h, Row, DialogCorners.Row * unitScale);
             var button = MenuButton(row, action);
-            float inset = Mathf.Min(fontSize * .75f, w * .08f);
-            Caption(row.transform, title, inset, w - 2 * inset - fontSize, h, fontSize,
-                UiFactory.Ink, TextAnchor.MiddleLeft);
+            float inset = DisclosureInset(w, fontSize);
+            float textWidth = w - 2 * inset - fontSize;
+            if (string.IsNullOrEmpty(description))
+                Caption(row.transform, title, inset, textWidth, h, fontSize, UiFactory.Ink, TextAnchor.MiddleLeft);
+            else
+            {
+                var label = Caption(row.transform, title, inset, textWidth, h, fontSize, UiFactory.Ink, TextAnchor.MiddleLeft);
+                int noteSize = DialogTypography.FitSize(row.transform, Mathf.RoundToInt(fontSize * .84f), DialogTypography.Note);
+                var note = UiFactory.Label(row.transform, description, inset, 0, textWidth, h, noteSize, UiFactory.Muted);
+                note.name = "Row description";
+                note.supportRichText = false;
+                float titleHeight = Mathf.Ceil(label.preferredHeight);
+                float noteHeight = Mathf.Ceil(note.preferredHeight);
+                float top = (h - titleHeight - noteHeight) * .5f;
+                label.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, titleHeight);
+                label.rectTransform.anchoredPosition = new Vector2(inset, -top);
+                note.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, noteHeight);
+                note.rectTransform.anchoredPosition = new Vector2(inset, -top - titleHeight);
+            }
             var chevron = UiFactory.Rect(row.transform, "Disclosure", w - inset - fontSize,
                 (h - fontSize) * .5f, fontSize, fontSize).gameObject.AddComponent<UiIconGraphic>();
             chevron.Kind = UiIconKind.Chevron;
             chevron.color = UiFactory.Muted;
             chevron.raycastTarget = false;
             return button;
+        }
+
+        internal static float DisclosureInset(float width, int fontSize) => Mathf.Min(fontSize * .75f, width * .08f);
+
+        // Called on a dialog whose first label is its heading. Keep the trailing clearance for a close button.
+        internal static void AlignReadingTitle(RectTransform panel, float inset = 32)
+        {
+            var title = panel.GetComponentInChildren<Text>();
+            var rect = title.rectTransform;
+            float right = Mathf.Max(inset, panel.rect.width - rect.anchoredPosition.x - rect.rect.width);
+            rect.anchoredPosition = new Vector2(inset, rect.anchoredPosition.y);
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, panel.rect.width - inset - right);
+            title.alignment = TextAnchor.MiddleLeft;
         }
 
         public static Button SwitchRow(Transform parent, string title, float x, float y, float w, float h,
@@ -110,7 +139,7 @@ namespace XanaduYonder.Runtime
         }
 
         public static Text ScrollText(Transform parent, string message, float x, float y, float w,
-            float h, int fontSize, bool fitHeight = false)
+            float h, int fontSize, bool fitHeight = false, Text heading = null)
         {
             var viewport = UiFactory.Rect(parent, "Reading area", x, y, w, h);
             if (parent.GetComponentInParent<DialogTypography>() != null)
@@ -118,7 +147,7 @@ namespace XanaduYonder.Runtime
             var label = UiFactory.Label(viewport, message, 0, 0, w, h, fontSize, UiFactory.Ink,
                 TextAnchor.MiddleLeft);
             label.supportRichText = false;
-            viewport.gameObject.AddComponent<DialogReadingArea>().Initialize(viewport, label, h, fitHeight);
+            viewport.gameObject.AddComponent<DialogReadingArea>().Initialize(viewport, label, h, fitHeight, heading);
             return label;
         }
 

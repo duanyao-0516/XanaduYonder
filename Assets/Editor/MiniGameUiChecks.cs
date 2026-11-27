@@ -748,15 +748,17 @@ namespace XanaduYonder.EditorTools
                 Set(page, "shellAcceptsInput", (Func<bool>)(() => true));
                 Set(page, "showDialog", (Action<string, string, string, Action, string, Action>)((title, body, yes, confirm, no, cancel) =>
                 {
-                    var confirmation = Open(title, 440, cancel);
-                    DialogUi.ActionButton(confirmation, yes, 32, 216, 532, 64, confirm, true);
-                    DialogUi.ActionButton(confirmation, no, 32, 304, 532, 64, cancel);
+                    Invoke(shell, "ShowDialog", title, body, yes, confirm, no, cancel);
+                    layer = Get<GameObject>(shell, "modal");
+                    panel = (RectTransform)layer.transform.Find("Dialog safe area/Dialog");
                 }));
                 Set(page, "openModal", (Func<string, float, Action, RectTransform>)Open);
                 Set(page, "openSheet", (Func<string, float, Action, RectTransform>)OpenSheet);
                 Set(page, "closeModal", (Action)Close);
                 Invoke(page, "ShowModes");
+                CheckSheepMenuColumn(panel, "第一关热身");
                 Click("玩法设置");
+                CheckSheepSettingsColumn(panel);
                 f.Capture("sheep-settings");
                 f.Capture("sheep-settings-difficulty");
                 Click("困难");
@@ -791,7 +793,9 @@ namespace XanaduYonder.EditorTools
                 uint endlessState = session.Data.Endless.RandomState;
                 Invoke(page, "ShowModes");
                 Require(panel.GetComponentsInChildren<Button>().Length == 5, "Both saved slots share one row per mode");
+                CheckSheepMenuColumn(panel, "第一关热身");
                 Click("第二关挑战");
+                CheckSheepReadingColumn(panel, "第二关挑战", "已有进行中的对局。");
                 Click("另开新局");
                 Click("取消");
                 Require(session.Data.Challenge.RandomState == challengeState && session.Data.Endless.RandomState == endlessState,
@@ -803,17 +807,24 @@ namespace XanaduYonder.EditorTools
                 Click("第二关挑战");
                 Click("另开新局");
                 Click("开始新局");
+                CheckSheepChallengeColumn(panel);
                 Click("开始挑战");
                 var restarted = store.Load(out _);
                 Require(restarted.Challenge.Difficulty == SheepDifficulty.Normal && restarted.Endless.RandomState == endlessState,
                     "A confirmed replacement affects only its chosen slot");
                 Invoke(page, "ShowModes");
                 Click("无尽模式");
+                CheckSheepReadingColumn(panel, "无尽模式", "已有进行中的对局。");
                 Click("继续无尽");
                 Require(session.Game.GetSnapshot().RandomState == endlessState, "The other saved mode still resumes");
                 Set(page, "visible", true);
+                Invoke(page, "ConfirmRestart");
+                Require(panel.Find("Reading area").GetComponentInChildren<Text>().text.Contains("当前模式的进度将清空"),
+                    "Restart uses the production shell explanation");
+                DialogScreenshotAudit.CaptureCurrent(panel);
+                Click("继续本局");
                 Invoke(page, "ShowHelp");
-                Require(panel != null && FindCaption(panel, "知道了") != null, "Sheep opens the rules above the current round.");
+                CheckSheepRulesLayout(panel);
                 DialogScreenshotAudit.CaptureCurrent(panel);
                 Click("知道了");
                 foreach (var mode in new[] { SheepMode.Tutorial, SheepMode.Challenge })
@@ -824,6 +835,7 @@ namespace XanaduYonder.EditorTools
                     foreach (int id in generated.SolutionIds) Require(session.Game.Pick(id).Changed, "The production layout solution remains playable.");
                     Require(session.Game.Phase == SheepPhase.Won, "Completing the deal reaches its real result.");
                     Invoke(page, "Refresh");
+                    CheckSheepResultColumn(page);
                     f.Capture("sheep-terminal-" + mode);
                 }
                 session.Start(SheepMode.Endless, SheepDifficulty.Normal, 1);
@@ -836,6 +848,7 @@ namespace XanaduYonder.EditorTools
                 }
                 Require(session.Game.Phase == SheepPhase.Lost, "A full tray reaches the recoverable loss panel.");
                 Invoke(page, "Refresh");
+                CheckSheepResultColumn(page);
                 f.Capture("sheep-terminal-full-tray");
             }
             finally

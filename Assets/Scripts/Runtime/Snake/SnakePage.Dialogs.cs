@@ -11,7 +11,7 @@ namespace XanaduYonder.Runtime.Snake
         private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,
             string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=620,bool primaryEnabled=true,bool reading=false)
         {
-            var panel = OpenDialog(title, height);
+            var panel = OpenDialog(title, height, reading: reading);
             float actions=tertiary!=null?270:secondary!=null?182:94;
             var body = reading ? DialogUi.ScrollText(panel, message, 32, 116, 532, height - actions - 132, 26) :
                 UiFactory.Label(panel, message, 32, 116, 532, height - actions - 132, 26, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -25,7 +25,7 @@ namespace XanaduYonder.Runtime.Snake
             return panel;
         }
 
-        private RectTransform OpenDialog(string title, float height, Action sheetBack = null)
+        private RectTransform OpenDialog(string title, float height, Action sheetBack = null, bool reading = false)
         {
             input.Cancel();session.Pause();board.FinishAnimation();levelDropdown.Hide();countdown.SetActive(false);CloseDialog();Save();
             var overlay = DialogUi.ModalOverlay(root, "Snake dialog overlay");
@@ -40,7 +40,8 @@ namespace XanaduYonder.Runtime.Snake
             }
             var panel=DialogCorners.Panel(overlay.transform,"Snake dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
-            UiFactory.Label(panel.transform,title,32,30,532,72,36,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
+            UiFactory.Label(panel.transform,title,32,30,532,72,36,UiFactory.Ink,
+                reading ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;
         }
 

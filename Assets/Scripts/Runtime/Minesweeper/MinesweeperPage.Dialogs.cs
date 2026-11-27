@@ -6,7 +6,7 @@ namespace XanaduYonder.Runtime.Minesweeper
 {
     internal sealed partial class MinesweeperPage
     {
-        private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=660,bool reading=false)
+        private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=660,bool reading=false, bool illustrated=false)
         {
             CancelInput(); ExitOverview(); CloseDialog(); feedback.Stop();
             if(!choosing) session?.SetBlocked(true);
@@ -15,7 +15,8 @@ namespace XanaduYonder.Runtime.Minesweeper
             DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             dialog = overlay.gameObject;
             var panel=DialogCorners.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
-            UiFactory.Label(panel.transform,title,32,28,532,70,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
+            UiFactory.Label(panel.transform,title,32,28,532,70,33,UiFactory.Ink,
+                reading || illustrated ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter,FontStyle.Bold);
             float actions=tertiary!=null?260:secondary!=null?172:90;
             var body = reading ? DialogUi.ScrollText(panel.transform, message, 32, 116, 532, height - actions - 140, 24) :
                 UiFactory.Label(panel.transform, message, 32, 116, 532, height - actions - 140, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
@@ -37,7 +38,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             void Finish() { profile.TutorialSeen = true; Save(); }
             const string tips = "数字表示周围八格的雷数，首次点击安全。\n轻点翻开，长按 0.4 秒插旗。\n连续标记时，可切换到「插旗」模式。\n单指拖动，双指缩放和平移。\n中高级可全屏，总览只供观察和定位，计时照常。";
-            var panel = ShowDialog("从数字开始", tips, "知道了", Finish, height: 550);
+            var panel = ShowDialog("从数字开始", tips, "知道了", Finish, height: 550, illustrated: true);
             dismissDialog = () => { CloseDialog(); Finish(); Refresh(); };
             var diagram = UiFactory.Rect(panel, "Tutorial diagram", 226, 108, 144, 144);
             var message = panel.Find("Dialog message").GetComponent<Text>();

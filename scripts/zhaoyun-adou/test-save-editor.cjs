@@ -1036,6 +1036,20 @@ async function canvasDialogs(browser) {
         await manager.uo(name,true,data);
       },name);
       await page.waitForTimeout(1300); // The upstream card draws its entrance after its promise resolves.
+      if (name === 'NoticeDialog' || name === 'WeaponIntroDialog') {
+        const layout = await page.evaluate(name => {
+          const box = __XanaduZhaoyunInternals.SceneMgr.instance().ho.get(name).getChildByName('box');
+          const notice = name === 'NoticeDialog';
+          const heading = box.getChildByName(notice ? 'title' : 'weaponName');
+          const body = box.getChildByName(notice ? 'contentPanel' : 'weaponIntroTxt');
+          const close = box.getChildByName('xBtn');
+          return {align:heading.align, leading:heading.x, body:body.x,
+            trailing:heading.x + heading.width, closeLeft:close.x - close.width * close.anchorX};
+        },name);
+        assert.equal(layout.align,'left',name+' reading title');
+        assert.equal(layout.leading,layout.body,name+' reading column');
+        assert(layout.trailing < layout.closeLeft,name+' close target overlaps the title');
+      }
       const before = await disk(page);
       await page.screenshot({path:path.join(shots,name+'.png')});
       await page.touchscreen.tap(4,4);

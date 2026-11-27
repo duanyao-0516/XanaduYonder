@@ -31,8 +31,8 @@ namespace XanaduYonder.Runtime.Sudoku
             var panel = DialogCorners.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, maxHeight, DialogUi.Surface, DialogCorners.Surface).rectTransform;
             panel.GetComponent<Image>().raycastTarget = true;
             UiFactory.Center(panel);
-            UiFactory.Label(panel, title, inset, inset, width, 60, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            var body = DialogUi.ScrollText(panel, message, inset, bodyTop, width, maxBodyHeight, 24, fitHeight: true);
+            var heading = UiFactory.Label(panel, title, inset, inset, width, 60, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            var body = DialogUi.ScrollText(panel, message, inset, bodyTop, width, maxBodyHeight, 24, fitHeight: true, heading: heading);
             float y = bodyTop + Mathf.Min(body.rectTransform.rect.height, maxBodyHeight) + bodyGap;
             panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y + footerHeight);
             if (more != null)

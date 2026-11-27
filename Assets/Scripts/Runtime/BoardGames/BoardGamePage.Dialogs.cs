@@ -161,8 +161,8 @@ namespace XanaduYonder.Runtime.BoardGames
             foreach (var saved in savedMatches)
             {
                 hasOther = true;
-                Command(Mode(saved.Options) + (saved.Terminal ? " · 已结束" : " · " + saved.MoveCount + " 手"),
-                    () => { ActivateMatch(saved, true); Save(); Render(); });
+                rows.Entry(Mode(saved.Options) + (saved.Terminal ? " · 已结束" : " · " + saved.MoveCount + " 手"),
+                    DialogSheetLayout.AfterClose(sheet, () => { ActivateMatch(saved, true); Save(); Render(); }));
             }
             if (!hasOther) rows.Body("暂无其他可继续的对局。", 19);
             if (InMatch)
@@ -195,8 +195,8 @@ namespace XanaduYonder.Runtime.BoardGames
             if (previous != saveFailed) DrawSettings();
         }
 
-        private static void DialogTitle(Transform sheet, float width, string title) =>
-            UiFactory.Label(sheet, title, 27, 20, width - 54, 77, 38, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+        private static void DialogTitle(Transform sheet, float width, string title, float inset = 27) =>
+            UiFactory.Label(sheet, title, inset, 20, width - 2 * inset, 77, 38, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
 
         private static void DialogText(Transform sheet, float width, float y, float height, string text) =>
             UiFactory.Label(sheet, text, 28, y, width - 56, height, 24, UiFactory.Ink, TextAnchor.UpperLeft);

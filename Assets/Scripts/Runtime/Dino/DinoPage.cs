@@ -481,18 +481,18 @@ namespace XanaduYonder.Runtime.Dino
 
         private void ShowHelpWithReturn(Action back)
         {
-            Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
+            Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586,reading: true);
             float doneY = panel.rect.height - 32 - 74;
             float licenseY = doneY - 14 - 74;
-            PanelLabel(panel,Rules,110,licenseY-128,24);
+            PanelLabel(panel,Rules,110,licenseY-128,24,TextAnchor.MiddleLeft);
             PanelButton(panel,"素材与许可",licenseY,()=>ShowLicenseWithReturn(()=>ShowHelpWithReturn(back)));
             PanelButton(panel,"知道了",doneY,back,true);overlayBack=back;
         }
         private void ShowLicenseWithReturn(Action back)
         {
-            var panel=OpenPanel("Chromium 许可",Mathf.Min(840,viewport.Height-40));
+            var panel=OpenPanel("Chromium 许可",Mathf.Min(840,viewport.Height-40),reading: true);
             float panelW=panel.rect.width, panelH=panel.rect.height;
-            var area=UiFactory.Rect(panel,"License viewport",24,100,panelW-48,panelH-210);
+            var area=UiFactory.Rect(panel,"License viewport",32,100,panelW-64,panelH-210);
             var img=area.gameObject.AddComponent<Image>();img.color=Color.clear;img.raycastTarget=true;
             area.gameObject.AddComponent<RectMask2D>();
             var scroll=area.gameObject.AddComponent<ScrollRect>();scroll.viewport=area;scroll.horizontal=false;
@@ -635,7 +635,7 @@ namespace XanaduYonder.Runtime.Dino
         }
         private void AddTouch(GameObject target,Action<int> down,Action<int> up)
         {var input=target.AddComponent<DinoTouchControl>();input.Initialize(down,up);touches.Add(input);}
-        private RectTransform OpenPanel(string title,float requestedHeight, Action sheetBack = null)
+        private RectTransform OpenPanel(string title,float requestedHeight, Action sheetBack = null, bool reading = false)
         {
             CloseOverlay();ClearPhysicalInputs();
             overlay = DialogUi.ModalOverlay(root, "Dino modal overlay").rectTransform;
@@ -650,11 +650,12 @@ namespace XanaduYonder.Runtime.Dino
             float w=Mathf.Min(596,viewport.Width-64),h=Mathf.Min(requestedHeight,viewport.Height-32);
             var panel=DialogCorners.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h, DialogUi.Surface, DialogCorners.Surface);
             panel.raycastTarget=true;
-            UiFactory.Label(panel.transform,title,32,36,w-64,62,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
+            UiFactory.Label(panel.transform,title,32,36,w-64,62,33,UiFactory.Ink,
+                reading ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;
         }
-        private void PanelLabel(RectTransform panel,string message,float y,float h,int size)
-        {UiFactory.Label(panel,message,32,y,panel.rect.width-64,h,size,UiFactory.Muted,TextAnchor.MiddleCenter).supportRichText=false;}
+        private void PanelLabel(RectTransform panel,string message,float y,float h,int size,TextAnchor alignment = TextAnchor.MiddleCenter)
+        {UiFactory.Label(panel,message,32,y,panel.rect.width-64,h,size,UiFactory.Muted,alignment).supportRichText=false;}
         private void PanelButton(RectTransform panel,string title,float y,Action action,bool primary=false)
         {DialogUi.ActionButton(panel,title,32,y,panel.rect.width-64,74,action,primary);}
         private void CloseOverlay(){if(overlay!=null){overlay.gameObject.SetActive(false);Destroy(overlay.gameObject);overlay=null;}overlayBack=null;}

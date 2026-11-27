@@ -26,6 +26,25 @@ def sha(data):
 def write_json(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
+def align_reading_card(path, title_name, body_name):
+    scene = json.loads(path.read_text())
+    box = next(child for child in scene['_$child'] if child['name'] == 'box')
+    children = {child['name']: child for child in box['_$child']}
+    title, body, close = children[title_name], children[body_name], children['xBtn']
+    # Both upstream cards place their close control on the leading corner. Mirror
+    # it before giving the heading the same reading column as the description.
+    close['x'] = box['width'] - close['x']
+    title['align'] = 'left'
+    title['x'] = body['x']
+    title['width'] = int(close['x'] - close['width'] * close['anchorX'] - title['x'] - 8)
+    if title_name == 'weaponName':
+        stats = {child['name']: child for child in children['Image']['_$child']}
+        quality, attack = stats['Text'], stats['Text_1']
+        quality['align'] = 'left'
+        quality['x'] = attack['x']
+    write_json(path, scene)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=ROOT/'artifacts/4399-262277/source')
@@ -76,6 +95,8 @@ def main():
         missing = 'res://5bf43f39-5425-4fb0-bffd-b4d58ddcac67'
         assert old.count(missing) == 1, 'Expected one missing victory-bag reference'
         scene.write_text(old.replace(missing, 'resources/img/mainUI/bag1.png'), encoding='utf-8')
+        align_reading_card(staging/'dialog/NoticeDialog.lh', 'title', 'contentPanel')
+        align_reading_card(staging/'dialog/WeaponIntroDialog.lh', 'weaponName', 'weaponIntroTxt')
         local_scripts = ['offline-adapter.js','settings-ui.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
                          'battle-aid.js','battle-aid-ui.js','battle-speed.js']
         shared_dialogs = [ROOT / 'ThirdParty/WebGameUI' / name for name in ('dialogs.js', 'dialogs.css')]

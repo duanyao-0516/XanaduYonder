@@ -211,9 +211,13 @@ namespace XanaduYonder.Runtime.Sheep
             if (!AcceptsInput) return;
             Action finish = () => { closeModal(); CheckEndState(); };
             var panel = openModal("旸了个旸 · 玩法", 652, finish);
-            UiFactory.Label(panel, "只取未被盖住的牌，三个相同即消除。\n卡槽满 7 张失败，移出区最多暂存 6 张。\n移出：把卡槽前三张放到移出区。\n撤回：退回最近一张尚未消除的牌。\n洗牌：重排棋盘图案，不影响卡槽。\n每局可免费复活一次，移出前三张。\n无尽每消除一个计 1 分，清空后换波。\n道具整局共用，设置只影响新开对局。",
-                32, 116, 532, 376, 23, UiFactory.Muted, TextAnchor.MiddleLeft);
-            DialogUi.ActionButton(panel, "知道了", 32, 550, 532, 64, finish, true);
+            const float bodyTop = 108, gap = 24, buttonHeight = 88, bottom = 28;
+            float maxBodyHeight = panel.rect.height - bodyTop - gap - buttonHeight - bottom;
+            var body = DialogUi.ScrollText(panel, "只取未被盖住的牌，三个相同即消除。\n卡槽满 7 张失败，移出区最多暂存 6 张。\n移出：把卡槽前三张放到移出区。\n撤回：退回最近一张尚未消除的牌。\n洗牌：重排棋盘图案，不影响卡槽。\n每局可免费复活一次，移出前三张。\n无尽每消除一个计 1 分，清空后换波。\n道具整局共用，设置只影响新开对局。",
+                ReadingInset, bodyTop, panel.rect.width - 2 * ReadingInset, maxBodyHeight, 23, fitHeight: true);
+            float buttonTop = bodyTop + Mathf.Min(Mathf.Ceil(body.preferredHeight), maxBodyHeight) + gap;
+            panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, buttonTop + buttonHeight + bottom);
+            DialogUi.ActionButton(panel, "知道了", 32, buttonTop, panel.rect.width - 64, buttonHeight, finish, true);
         }
 
         public void Save()

@@ -42,7 +42,7 @@ namespace XanaduYonder.Runtime
         private void ShowBakeryHelp()
         {
             bakeryPage.Suspend();
-            var panel = CreateModal(BakeryPage.DisplayName + " · 玩法说明", 610, CloseModal);
+            var panel = CreateReadingModal(BakeryPage.DisplayName + " · 玩法说明", 610, CloseModal);
             UiFactory.Label(panel,
                 "轻按物件查看轮廓，松手取进下方消除栏。\n可以连续点取，三件同类物品自动消除。\n\n「移出」把消除栏最前面最多三件放进六格暂存区。点暂存物件可放回消除栏。\n\n清空篮子、消除栏和暂存区即可获胜。\n点「颠一下」能翻动物件。切换篮型会重开。",
                 32, 112, 532, 340, 24, UiFactory.Muted, TextAnchor.MiddleLeft);

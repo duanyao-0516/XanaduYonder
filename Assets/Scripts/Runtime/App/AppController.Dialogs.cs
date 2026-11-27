@@ -67,7 +67,11 @@ namespace XanaduYonder.Runtime
             {
                 const float bodyTop = 112, gap = 24;
                 float maxHeight = panel.rect.height - bodyTop - gap - footerHeight;
-                var body = DialogUi.ScrollText(panel, message, 32, bodyTop, width, maxHeight, 24, fitHeight: true);
+                var heading = panel.GetComponentInChildren<Text>();
+                // The message card has no trailing close icon. Its title and message share the entire text column.
+                heading.rectTransform.anchoredPosition = new Vector2(32, heading.rectTransform.anchoredPosition.y);
+                heading.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                var body = DialogUi.ScrollText(panel, message, 32, bodyTop, width, maxHeight, 24, fitHeight: true, heading: heading);
                 footer = bodyTop + Mathf.Min(body.rectTransform.rect.height, maxHeight) + gap;
             }
             panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, footer + footerHeight);
@@ -103,6 +107,13 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(panel.transform, title, inset, 36, width - 2 * inset, 62, 33, UiFactory.Ink,
                 TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
             return panel.rectTransform;
+        }
+
+        private RectTransform CreateReadingModal(string title, float height, Action outsideDismiss = null)
+        {
+            var panel = CreateModal(title, height, outsideDismiss);
+            DialogUi.AlignReadingTitle(panel);
+            return panel;
         }
 
         private RectTransform CreateSheet(string title, float height, Action onDismissed = null)

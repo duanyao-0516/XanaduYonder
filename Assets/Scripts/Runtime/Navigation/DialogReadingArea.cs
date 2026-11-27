@@ -8,17 +8,18 @@ namespace XanaduYonder.Runtime
     internal sealed class DialogReadingArea : MonoBehaviour
     {
         private RectTransform viewport;
-        private Text label;
+        private Text label, heading;
         private ScrollRect scroll;
         private RectMask2D mask;
         private Image hitArea;
         private float height;
         private bool measuring, queued, centeredWhenShort;
 
-        internal void Initialize(RectTransform frame, Text body, float maximumHeight, bool fitHeight)
+        internal void Initialize(RectTransform frame, Text body, float maximumHeight, bool fitHeight, Text heading = null)
         {
             viewport = frame;
             label = body;
+            this.heading = heading;
             centeredWhenShort = fitHeight;
             // A compact message card places its footer just below this viewport. Later changes
             // to the message must scroll within this space to keep its actions reachable.
@@ -59,6 +60,11 @@ namespace XanaduYonder.Runtime
                 var alignment = overflow ? TextAnchor.UpperLeft :
                     centeredWhenShort && label.text.IndexOf('\n') < 0 && label.preferredWidth <= rect.rect.width ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft;
                 if (label.alignment != alignment) label.alignment = alignment;
+                if (heading != null)
+                {
+                    var titleAlignment = alignment == TextAnchor.MiddleCenter ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft;
+                    if (heading.alignment != titleAlignment) heading.alignment = titleAlignment;
+                }
                 if (overflow && scroll == null)
                 {
                     hitArea = gameObject.AddComponent<Image>();

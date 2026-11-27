@@ -52,8 +52,9 @@ namespace XanaduYonder.Runtime.Sheep
             resultPanel = shade.gameObject;
             var panel = DialogCorners.Panel(shade.transform, "Round result", 0, 0, 544, 390, UiFactory.Paper, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
-            resultTitle = UiFactory.Label(panel.transform, "", 24, 20, 496, 64, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            resultMessage = UiFactory.Label(panel.transform, "", 32, 92, 480, 106, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            float textWidth = panel.rectTransform.rect.width - 2 * ReadingInset;
+            resultTitle = UiFactory.Label(panel.transform, "", ReadingInset, 20, textWidth, 64, 34, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            resultMessage = UiFactory.Label(panel.transform, "", ReadingInset, 92, textWidth, 106, 22, UiFactory.Muted, TextAnchor.MiddleLeft);
             resultPrimary = DialogUi.ActionButton(panel.transform, "", 32, 210, 480, 68, ResultAction, true);
             resultPrimaryLabel = resultPrimary.GetComponentInChildren<Text>();
             DialogUi.ActionButton(panel.transform, "重新开始", 32, 300, 232, 60, ConfirmRestart);

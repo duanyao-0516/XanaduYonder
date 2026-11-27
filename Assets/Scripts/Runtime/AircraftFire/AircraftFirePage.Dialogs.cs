@@ -20,7 +20,9 @@ namespace XanaduYonder.Runtime.AircraftFire
             dialog = overlay.gameObject; dialogKind = kind;
             var panel = DialogCorners.Panel(overlay.transform, "Aircraft dialog", 0, 0, 568, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
-            UiFactory.Label(panel.transform, title, 24, 24, 520, 54, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            bool reading = kind == DialogKind.Help || kind == DialogKind.Records;
+            UiFactory.Label(panel.transform, title, 32, 24, 504, 54, 32, UiFactory.Ink,
+                reading ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter, FontStyle.Bold);
             return panel.rectTransform;
         }
         private void DismissOutside()
@@ -74,7 +76,7 @@ namespace XanaduYonder.Runtime.AircraftFire
                 + "\n疯狂进攻    " + profile.CrazyBestScore.ToString("N0")
                 + "\n关卡模式    " + profile.LevelBestScore.ToString("N0")
                 + "\n最高到达    第 " + profile.HighestStage + " 关";
-            UiFactory.Label(panel, records, 42, 112, 484, 230, 27, UiFactory.Ink, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, records, 32, 112, 504, 230, 27, UiFactory.Ink, TextAnchor.MiddleLeft);
             DialogUi.ActionButton(panel, "返回", 28, 362, 512, 62, CloseDialog, true);
             if (SaveError != null)
                 DialogUi.ActionButton(panel, "纪录未保存 · 点击重试", 28, 444, 512, 42, () => { RetrySave(); ShowRecords(); });

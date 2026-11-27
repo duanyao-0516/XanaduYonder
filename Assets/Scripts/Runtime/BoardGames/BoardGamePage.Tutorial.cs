@@ -69,11 +69,12 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DrawLessonDirectory(Transform sheet, float width, float height)
         {
-            DialogTitle(sheet, width, "教程目录");
             const float margin = 26;
             const float top = 106;
             const float rowHeight = 72;
             float listWidth = width - 2 * margin;
+            const int labelSize = 25;
+            DialogTitle(sheet, width, "教程目录", margin + DialogUi.DisclosureInset(listWidth, labelSize));
             float listHeight = height - top - 106;
             var viewport = UiFactory.Rect(sheet, "Tutorial lessons", margin, top, listWidth, listHeight);
             viewport.gameObject.AddComponent<RectMask2D>();
@@ -85,8 +86,14 @@ namespace XanaduYonder.Runtime.BoardGames
             for (int i = 0; i < lessons.Length; i++)
             {
                 int index = i;
-                GameButton(content, (i + 1) + ". " + lessons[i].Title, 0, i * rowHeight,
-                    listWidth, rowHeight - 7, () => SelectLesson(index), i == lessonIndex);
+                var row = DialogUi.Disclosure(content, (i + 1) + ". " + lessons[i].Title, 0, i * rowHeight,
+                    listWidth, rowHeight - 7, () => SelectLesson(index), labelSize);
+                if (i == lessonIndex)
+                {
+                    row.targetGraphic.color = UiFactory.Accent;
+                    row.GetComponentInChildren<Text>().color = Color.white;
+                    row.GetComponentInChildren<UiIconGraphic>().color = Color.white;
+                }
             }
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
             scroll.viewport = viewport;

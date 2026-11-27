@@ -7,6 +7,8 @@ namespace XanaduYonder.Runtime.Sheep
 {
     internal sealed partial class SheepPage
     {
+        private const float ReadingInset = DialogTypography.ReadingInset * 2;
+
         private static string DifficultyName(SheepDifficulty difficulty)
         {
             switch (difficulty) { case SheepDifficulty.Easy: return "简单"; case SheepDifficulty.Hard: return "困难";
@@ -16,33 +18,34 @@ namespace XanaduYonder.Runtime.Sheep
         private void ShowModes()
         {
             Suspend(); Save();
-            var panel = openModal("旸了个旸 · 选择模式", 660, returnLobby);
+            var panel = openModal("旸了个旸 · 选择模式", 574, returnLobby);
             bool challenge = data.Challenge != null && new SheepGame(data.Challenge).Phase != SheepPhase.Won;
             bool endless = data.Endless != null;
-            DialogUi.Disclosure(panel, "第二关挑战", 32, 108, 532, 70, () =>
+            // The title and each row's text share a leading edge inside the card.
+            const int rowFont = 25;
+            float rowLeft = ReadingInset - DialogUi.DisclosureInset(panel.rect.width, rowFont);
+            float rowWidth = panel.rect.width - 2 * rowLeft;
+            DialogUi.Disclosure(panel, "第二关挑战", rowLeft, 108, rowWidth, 98, () =>
             {
                 if (challenge) ShowSavedMode(SheepMode.Challenge); else ChooseChallenge();
-            });
-            UiFactory.Label(panel, challenge ? "有进行中的挑战" : "四档难度 · 清空全部牌面", 42, 179, 512, 34, 21, UiFactory.Muted);
-            DialogUi.Disclosure(panel, "无尽模式", 32, 225, 532, 70, () =>
+            }, rowFont, description: challenge ? "有进行中的挑战" : "四档难度 · 清空全部牌面");
+            DialogUi.Disclosure(panel, "无尽模式", rowLeft, 216, rowWidth, 98, () =>
             {
                 if (endless) ShowSavedMode(SheepMode.Endless); else Begin(SheepMode.Endless, SheepDifficulty.Normal);
-            });
-            UiFactory.Label(panel, (endless ? "可继续上次对局 · " : "") + "标准最高 " + data.EndlessBest,
-                42, 296, 512, 34, 21, UiFactory.Muted);
-            DialogUi.ActionButton(panel, data.Tutorial == null ? "第一关热身" : "继续热身", 32, 352, 532, 64, () =>
+            }, rowFont, description: (endless ? "可继续上次对局 · " : "") + "标准最高 " + data.EndlessBest);
+            DialogUi.Disclosure(panel, data.Tutorial == null ? "第一关热身" : "继续热身", rowLeft, 324, rowWidth, 66, () =>
             {
                 if (data.Tutorial == null) Begin(SheepMode.Tutorial, SheepDifficulty.Normal); else Resume(SheepMode.Tutorial);
-            });
-            DialogUi.Disclosure(panel, "玩法设置", 32, 438, 532, 64, () => OpenSettings(true));
-            DialogUi.ActionButton(panel, "返回大厅", 32, 550, 532, 64, () => { closeModal(); returnLobby(); });
+            }, rowFont);
+            DialogUi.Disclosure(panel, "玩法设置", rowLeft, 400, rowWidth, 66, () => OpenSettings(true), rowFont);
+            DialogUi.ActionButton(panel, "返回大厅", rowLeft, 490, rowWidth, 64, () => { closeModal(); returnLobby(); });
         }
 
         private void ShowSavedMode(SheepMode mode)
         {
             bool challenge = mode == SheepMode.Challenge;
             var panel = openModal(challenge ? "第二关挑战" : "无尽模式", 474, ShowModes);
-            UiFactory.Label(panel, "已有进行中的对局。", 32, 108, 532, 48, 24, UiFactory.Muted);
+            UiFactory.Label(panel, "已有进行中的对局。", ReadingInset, 108, panel.rect.width - 2 * ReadingInset, 48, 24, UiFactory.Muted);
             DialogUi.ActionButton(panel, challenge ? "继续第二关" : "继续无尽", 32, 174, 532, 68, () => Resume(mode), true);
             DialogUi.ActionButton(panel, "另开新局", 32, 258, 532, 64, () =>
                 showDialog("开始新的一局？", "将替换这个模式的当前进度，\n其他模式的对局会保留。", "开始新局",
@@ -54,16 +57,24 @@ namespace XanaduYonder.Runtime.Sheep
         {
             if (data.Preferences.SkipDifficultyPrompt) { Begin(SheepMode.Challenge, data.Preferences.DefaultDifficulty); return; }
             var selected = data.Preferences.DefaultDifficulty;
-            var panel = openSheet("选择第二关难度", 526, ShowModes);
-            var description = UiFactory.Label(panel, DifficultyDescription(selected), 32, 200, panel.rect.width - 64, 52, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
-            DifficultyChoices(panel, 122, selected, value => { selected = value; description.text = DifficultyDescription(value); });
+            var panel = openSheet("选择第二关难度", 540, ShowModes);
+            var sections = new DialogSheetSections(panel);
+            float choicesTop = sections.Reserve(88);
+            var description = sections.Body(DifficultyDescription(selected));
+            DifficultyChoices(panel, choicesTop, selected, value =>
+            {
+                selected = value;
+                description.text = DifficultyDescription(value);
+            }, sections.Inset);
             bool remember = false;
-            DialogUi.SwitchRow(panel, "下次直接使用此难度", 32, 266, panel.rect.width - 64, 66, false, value => remember = value);
-            DialogUi.ActionButton(panel, "开始挑战", 32, 350, panel.rect.width - 64, 64, DialogSheetLayout.AfterClose(panel, () => {
+            sections.Switch("下次直接使用此难度", false, value => remember = value);
+            sections.Action("开始挑战", DialogSheetLayout.AfterClose(panel, () =>
+            {
                 closeModal(); Suspend(); session.StartChallenge(selected, remember, NewSeed()); Save(); Refresh();
                 setStatus(warning ?? "第 2 关 · " + DifficultyName(selected) + " · 挑战开始");
             }), true);
-            DialogUi.ActionButton(panel, "返回模式选择", 32, 434, panel.rect.width - 64, 52, DialogSheetLayout.AfterClose(panel, ShowModes));
+            sections.Action("返回模式选择", DialogSheetLayout.AfterClose(panel, ShowModes));
+            sections.Finish();
         }
 
         private void OpenSettings() { if (AcceptsInput) OpenSettings(false); }
@@ -80,7 +91,7 @@ namespace XanaduYonder.Runtime.Sheep
             {
                 draft.DefaultDifficulty = value;
                 description.text = DifficultyDescription(value);
-            }, sections.Inset, 88);
+            }, sections.Inset);
             var skip = sections.Switch("直接使用默认难度", draft.SkipDifficultyPrompt, value => draft.SkipDifficultyPrompt = value);
             sections.Heading("新局道具次数");
             sections.Body("每种道具可用 0–99 次，0 表示禁用。无尽换波不补次数。自定义次数的对局不计入标准无尽纪录。");
@@ -111,14 +122,14 @@ namespace XanaduYonder.Runtime.Sheep
             sections.Finish();
         }
 
-        private static Button[] DifficultyChoices(RectTransform panel, float top, SheepDifficulty selected, Action<SheepDifficulty> select, float inset = 32, float height = 58)
+        private static Button[] DifficultyChoices(RectTransform panel, float top, SheepDifficulty selected, Action<SheepDifficulty> select, float inset)
         {
             var buttons = new Button[4];
             float cell = (panel.rect.width - inset * 2 - 36) / 4;
             for (var i = 0; i < buttons.Length; i++)
             {
                 var difficulty = (SheepDifficulty)i;
-                buttons[i] = DialogUi.ActionButton(panel, DifficultyName(difficulty), inset + i * (cell + 12), top, cell, height,
+                buttons[i] = DialogUi.ActionButton(panel, DifficultyName(difficulty), inset + i * (cell + 12), top, cell, 88,
                     () => { select(difficulty); PaintDifficulties(buttons, difficulty); });
             }
             PaintDifficulties(buttons, selected); return buttons;

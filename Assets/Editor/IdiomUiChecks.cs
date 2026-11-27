@@ -1026,7 +1026,7 @@ namespace XanaduYonder.EditorTools
             {
                 actual.Append(segment.text);
                 Require(!segment.supportRichText && segment.text.Length <= 2048, "Source segments are literal text with bounded mesh size");
-                Require(segment.preferredHeight <= segment.rectTransform.rect.height + .5f, "Every segment fits its measured height");
+                Require(segment.preferredHeight <= segment.rectTransform.rect.height + .5f, "Every segment fits its measured height: " + segment.preferredHeight + " in " + segment.rectTransform.rect);
             }
             Require(actual.ToString() == expectedText, "Rendered Text segments exactly reproduce formatter output");
             foreach (var button in modal.GetComponentsInChildren<Button>())

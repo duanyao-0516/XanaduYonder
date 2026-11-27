@@ -497,7 +497,7 @@ namespace XanaduYonder.Runtime
 
         private RectTransform OpenSheepModal(string title, float height, Action back)
         {
-            var panel = CreateModal(title, height);
+            var panel = CreateReadingModal(title, height);
             SetModalBack(back);
             return panel;
         }

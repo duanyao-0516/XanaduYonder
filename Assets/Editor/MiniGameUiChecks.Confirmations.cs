@@ -41,7 +41,8 @@ namespace XanaduYonder.EditorTools
             Invoke(host, "ShowDialog", "提示", "一条简短说明。", "知道了", confirm, null, null);
             panel = (RectTransform)Get<GameObject>(host, "modal").transform.Find("Dialog safe area/Dialog");
             var shortText = panel.Find("Reading area").GetComponentInChildren<Text>();
-            Require(shortText.alignment == TextAnchor.MiddleCenter && panel.rect.height < 320 &&
+            Require(panel.GetComponentInChildren<Text>().alignment == TextAnchor.MiddleCenter &&
+                shortText.alignment == TextAnchor.MiddleCenter && panel.rect.height < 320 &&
                 Mathf.Abs(shortText.rectTransform.rect.height - shortText.preferredHeight) <= 1,
                 "One-line copy is centered and the panel follows its measured text height");
             Invoke(host, "CloseModal");
@@ -52,6 +53,14 @@ namespace XanaduYonder.EditorTools
             var scroll = panel.GetComponentInChildren<ScrollRect>();
             var accept = (RectTransform)FindCaption(panel, "确认这项需要说明的操作").transform;
             var cancel = (RectTransform)FindCaption(panel, "取消").transform;
+            var title = panel.GetComponentInChildren<Text>();
+            var paragraphText = scroll.content.GetComponent<Text>();
+            Canvas.ForceUpdateCanvases();
+            var titleStart = title.rectTransform.TransformPoint(title.rectTransform.rect.xMin, 0, 0);
+            var bodyStart = paragraphText.rectTransform.TransformPoint(paragraphText.rectTransform.rect.xMin, 0, 0);
+            Require(title.alignment == TextAnchor.MiddleLeft && paragraphText.alignment == TextAnchor.UpperLeft &&
+                Mathf.Abs(panel.InverseTransformPoint(titleStart).x - panel.InverseTransformPoint(bodyStart).x) <= 1,
+                "The long message and its heading share one rendered leading edge");
             Require(scroll != null && scroll.content.rect.height > scroll.viewport.rect.height &&
                 accept.anchoredPosition.y - cancel.anchoredPosition.y >= accept.rect.height &&
                 -cancel.anchoredPosition.y + cancel.rect.height <= panel.rect.height,

@@ -11,16 +11,31 @@ async function settingsMetrics(card, actionSelector, leftInset = 0, rightInset =
     const action = surface.querySelector(selector);
     const font = el => parseFloat(getComputedStyle(el).fontSize);
     const css = getComputedStyle(surface);
+    const title = surface.querySelector('h2');
+    function firstGlyphX(element) {
+      const node = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode();
+      const range = document.createRange();
+      range.setStart(node,0);
+      range.setEnd(node,1);
+      return range.getBoundingClientRect().left;
+    }
+    const column = firstGlyphX(title);
+    const readingOffsets = [...surface.querySelectorAll('h3,p')]
+      .filter(element => element.textContent.trim() && element.getClientRects().length)
+      .map(element => ({text:element.textContent.trim(), offset:firstGlyphX(element) - column}));
     return {
       width: window.innerWidth, height: window.innerHeight,
       left: parseFloat(css.paddingLeft), right: parseFloat(css.paddingRight),
-      heading: font(surface.querySelector('h2')), label: font(label), action: font(action),
+      readingOffsets, heading: font(title), label: font(label), action: font(action),
       rowHeight: row.getBoundingClientRect().height, actionHeight: action.getBoundingClientRect().height,
       switchGap: track.getBoundingClientRect().left - textBounds.getBoundingClientRect().right
     };
   }, actionSelector);
   const {width,height} = metrics;
   const gutter = width >= 480 && width > height ? 24 : width >= 360 ? 20 : 16;
+  assert(metrics.readingOffsets.length > 0, 'missing visible reading text');
+  for (const item of metrics.readingOffsets)
+    assert(Math.abs(item.offset) <= 2, item.text + ' is displaced from the heading by ' + item.offset + 'px');
   assert.equal(metrics.heading,16);
   assert.equal(metrics.label,14);
   assert.equal(metrics.action,14);

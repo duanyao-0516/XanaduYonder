@@ -64,6 +64,7 @@ namespace XanaduYonder.Runtime.Idiom
             if (candidate == null || Game == null || Game.IsEnded) return;
             var hintCount = IsLocal ? Game.HintCountFor(Game.NextActor) : Game.HintCount;
             var panel = Dialog((IsLocal ? TurnName + " · " : "本轮") + "第 " + hintCount + " 次提示", 282 + candidate.EntryIds.Count * 98, null);
+            DialogUi.AlignReadingTitle(panel);
             IdiomUi.Label(panel, hintCount >= 3 ? "最后一次提示，仍可选词继续。" : "点选填入，或先看看释义。", 32, 104, 532, 44, 23, UiFactory.Muted);
             for (var i = 0; i < candidate.EntryIds.Count; i++)
             {
@@ -139,8 +140,9 @@ namespace XanaduYonder.Runtime.Idiom
             if (found) { word = definition.Word; pinyin = definition.Pinyin; }
             if ((found || saved != null) && entry != null && Game != null) Game.RecordDefinitionViewed(id);
             var panel = Dialog(word, Mathf.Clamp(root.rect.height * .74f, 680, 1000), back);
+            DialogUi.AlignReadingTitle(panel);
             var pinyinCaption = found ? IdiomDefinitionText.PinyinCaption(definition) : IdiomDefinitionText.CompactPinyin(pinyin);
-            IdiomUi.Label(panel, pinyinCaption, 32, 104, 532, 42, 25, UiFactory.Accent, TextAnchor.MiddleCenter);
+            IdiomUi.Label(panel, pinyinCaption, 32, 104, 532, 42, 25, UiFactory.Accent, TextAnchor.MiddleLeft);
             var added = FindNotebookItem(id) != null;
             var canRemove = added;
             var footerTop = panel.rect.height - (canRemove ? 196 : 132);
@@ -202,7 +204,7 @@ namespace XanaduYonder.Runtime.Idiom
                     if (SaveNotebook(updated, () => learning.RemoveNotebook(id))) { ReturnFromDialog(); RefreshNotebook(); }
                 }, false, 21);
             var source = found ? (definition.Sources != null ? "各词库原文分别列示" : definition.SourceLabel) : saved != null ? "显示加入生词本时保存的资料" : "本地离线资料";
-            var sourceLabel = IdiomUi.Label(panel, source, 32, panel.rect.height - 48, 532, 32, 16, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var sourceLabel = IdiomUi.Label(panel, source, 32, panel.rect.height - 48, 532, 32, 16, UiFactory.Muted, TextAnchor.MiddleLeft);
             sourceLabel.verticalOverflow = VerticalWrapMode.Truncate;
             dialogNotice = sourceLabel;
         }
@@ -215,15 +217,15 @@ namespace XanaduYonder.Runtime.Idiom
             RectTransform viewport, content;
             IdiomUi.Scroll(panel, "Scrollable explanation", out viewport, out content);
             IdiomUi.Place(viewport, 32, 164, 532, height);
-            var top = 0f;
+            IdiomUi.Place(content, 0, 0, 532, height);
+            var paragraphs = content.gameObject.AddComponent<DialogParagraphLayout>();
+            paragraphs.childControlHeight = true;
+            paragraphs.childForceExpandHeight = false;
+            paragraphs.padding.bottom = 20;
+            content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             foreach (var segment in IdiomDefinitionText.DisplaySegments(text))
-            {
-                var label = IdiomUi.Label(content, segment, 2, top, 520, 1, 24, UiFactory.Ink, TextAnchor.UpperLeft);
-                var segmentHeight = Mathf.Max(1, label.preferredHeight);
-                IdiomUi.Place(label.rectTransform, 2, top, 520, segmentHeight);
-                top += segmentHeight;
-            }
-            IdiomUi.Place(content, 0, 0, 532, Mathf.Max(height, top + 20));
+                IdiomUi.Label(content, segment, 0, 0, 532, 1, 24, UiFactory.Ink, TextAnchor.UpperLeft);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
 
         private void ShowMenu()
@@ -304,6 +306,7 @@ namespace XanaduYonder.Runtime.Idiom
         private void ShowHelp(Action back)
         {
             var panel = Dialog("成语接龙 · 玩法", 750, back);
+            DialogUi.AlignReadingTitle(panel);
             IdiomUi.ScrollText(panel, HelpText, 32, 116, 532, panel.rect.height - 218);
             DialogUi.ActionButton(panel, "知道了", 32, panel.rect.height - 84, 532, 62, ReturnFromDialog, true);
         }
