@@ -386,6 +386,7 @@ namespace XanaduYonder.EditorTools
                 f.Click((RectTransform)Icon(nav, UiIconKind.Settings).transform);
                 Require(Get<GameObject>(shell, "modal").GetComponentInChildren<DialogSheetLayout>() != null,
                     "Jump's settings entry uses the production bottom sheet.");
+                f.Capture("jump-settings");
                 CloseHost();
                 var scene = Get<JumpSceneView>(page, "scene");
                 Get<Camera>(scene, "sceneCamera").Render();
@@ -900,8 +901,9 @@ namespace XanaduYonder.EditorTools
                 events = new GameObject("Fixture events", typeof(EventSystem)).GetComponent<EventSystem>(); events.transform.SetParent(owner.transform, false);
             }
             public RectTransform Page(string name) { var rect = UiFactory.Rect(Root, name, 0, 0, 720, Height); UiFactory.Stretch(rect); return rect; }
-            private void Flush()
+            private void Flush(bool settleSheets = true)
             {
+                if (settleSheets) DialogSheetGeometryChecks.CompletePresentation(Root);
                 Canvas.ForceUpdateCanvases();
                 camera.Render();
                 Canvas.ForceUpdateCanvases();
@@ -926,7 +928,7 @@ namespace XanaduYonder.EditorTools
             }
             public void CheckCardGestures(ScrollRect scroll, Button card)
             {
-                LobbyInputTestDriver.CheckGestures(events, camera, scroll, card, Flush, Require);
+                LobbyInputTestDriver.CheckGestures(events, camera, scroll, card, () => Flush(), Require);
             }
             private Rect ScreenRect(RectTransform rect)
             {
@@ -1029,9 +1031,9 @@ namespace XanaduYonder.EditorTools
                     "Review control stays entirely in the rendered frame");
             }
 
-            public void Capture(string name, bool requireVisibleIcons = false)
+            public void Capture(string name, bool requireVisibleIcons = false, bool settleSheets = true)
             {
-                Flush();
+                Flush(settleSheets);
                 var previous = RenderTexture.active; RenderTexture.active = target;
                 var image = new Texture2D(720, Height, TextureFormat.RGB24, false);
                 try

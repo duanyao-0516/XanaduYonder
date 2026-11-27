@@ -3,12 +3,16 @@
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from web_dialog_assets import INPUTS as DIALOG_INPUTS, shared_dialog_files
+
 VENDOR = ROOT / 'ThirdParty/ZhaoyunAdouContent'
 BUNDLE_SHA = '249945e2ac02d62f259336b049751de805d913c252169111cbda2c684eaebf0e'
 ANCHOR = '})();function _0x2d19'
@@ -99,9 +103,9 @@ def main():
         align_reading_card(staging/'dialog/WeaponIntroDialog.lh', 'weaponName', 'weaponIntroTxt')
         local_scripts = ['offline-adapter.js','settings-ui.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
                          'battle-aid.js','battle-aid-ui.js','battle-speed.js']
-        shared_dialogs = [ROOT / 'ThirdParty/WebGameUI' / name for name in ('dialogs.js', 'dialogs.css')]
-        for shared in shared_dialogs:
-            shutil.copyfile(shared, staging/shared.name)
+        shared_dialogs = [ROOT / name for name in DIALOG_INPUTS]
+        for name, payload in shared_dialog_files(ROOT).items():
+            (staging/name).write_bytes(payload)
         for name in ['index.html','offline.css',*local_scripts]:
             shutil.copyfile(VENDOR/name, staging/name)
         for name in ['js/bundle.js',*local_scripts]:

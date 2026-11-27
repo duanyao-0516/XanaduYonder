@@ -21,6 +21,8 @@ namespace XanaduYonder.EditorTools
             fixture.Click((RectTransform)opener.transform);
             var settings = Get<GameObject>(host, "modal");
             Require(settings != null, "The lobby settings button opens its bottom sheet");
+            DialogSheetGeometryChecks.CheckFirstPresentation(settings.transform,
+                phase => fixture.Capture("dialog-lobby-settings-" + phase, settleSheets: false));
             DialogTypographyChecks.CheckProductionSheet(FindCaption(settings.transform, "完成"), "设置", true);
             Require(settings.GetComponent<Image>().color == new Color(0f, 0f, 0f, .4f) && settings.GetComponent<Image>().raycastTarget,
                 "The settings sheet dims the lobby with a 40% black pointer-blocking scrim");
@@ -71,17 +73,38 @@ namespace XanaduYonder.EditorTools
             Require(sheet.IsDismissing && gate != null && !gate.interactable && gate.blocksRaycasts &&
                 !opener.IsInteractable(), "The backdrop closes the sheet, locks controls, and still owns pointer rays");
             float startY = sheet.transform.position.y;
-            sheet.AdvanceDismissal(.10f);
+            float duration = DialogSheetLayout.TransitionDuration;
+            sheet.AdvanceMotion(duration / 2);
             float alpha = outside.GetComponent<Image>().color.a;
             Require(sheet.transform.position.y < startY && alpha > 0 && alpha < DialogUi.Scrim.a,
                 "Halfway through dismissal the sheet has moved down and the scrim is partially transparent");
+            fixture.Capture("dialog-lobby-settings-exit-middle", settleSheets: false);
             fixture.Click((RectTransform)opener.transform);
             Invoke(host, "HandleBack");
             Require(Get<GameObject>(host, "modal") == outside && !opener.IsInteractable(),
                 "Repeated taps and Back during dismissal cannot reopen settings or confirm app exit");
-            DialogSheetGeometryChecks.CompleteDismissal(outside.transform);
+            sheet.AdvanceMotion(duration * .49f);
+            Require(sheet.IsDismissing && Get<GameObject>(host, "modal") == outside,
+                "The owner remains in place just before the shared transition duration.");
+            sheet.AdvanceMotion(duration * .011f);
             Require(Get<GameObject>(host, "modal") == null && opener.IsInteractable(),
-                "Dismissing through the scrim returns to the same lobby");
+                "At the same duration as opening, dismissal releases the surface and restores the lobby");
+
+            fixture.Click((RectTransform)opener.transform);
+            var interrupted = Get<GameObject>(host, "modal");
+            sheet = interrupted.GetComponentInChildren<DialogSheetLayout>();
+            sheet.AdvanceMotion(duration / 2);
+            float interruptedY = sheet.transform.position.y;
+            float interruptedAlpha = interrupted.GetComponent<Image>().color.a;
+            Invoke(host, "HandleBack");
+            Require(sheet.IsDismissing && Mathf.Approximately(interruptedY, sheet.transform.position.y) &&
+                Mathf.Approximately(interruptedAlpha, interrupted.GetComponent<Image>().color.a),
+                "Back halfway through opening reverses from the current visible position and opacity.");
+            sheet.AdvanceMotion(duration * .49f);
+            Require(sheet.IsDismissing && !opener.IsInteractable(), "A reversed sheet keeps blocking the underlying lobby.");
+            sheet.AdvanceMotion(duration * .011f);
+            Require(Get<GameObject>(host, "modal") == null && opener.IsInteractable(),
+                "Reversing halfway through opening travels only the remaining distance.");
         }
 
         // Edit mode allows a real AppController move without Awake opening player saves.

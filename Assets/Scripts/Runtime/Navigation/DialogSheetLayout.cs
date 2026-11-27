@@ -15,12 +15,33 @@ namespace XanaduYonder.Runtime
         private GameObject lastSelection;
         private readonly Vector3[] selectionCorners = new Vector3[4];
         private float designWidth, contentHeight;
-        private const float DismissDuration = .20f;
+        [Serializable]
+        private sealed class MotionSettings { public int durationMs; }
+        private static float transitionDuration;
+        internal static float TransitionDuration
+        {
+            get
+            {
+                if (transitionDuration <= 0) transitionDuration = LoadTransitionDuration();
+                return transitionDuration;
+            }
+        }
+
+        private static float LoadTransitionDuration()
+        {
+            var asset = Resources.Load<TextAsset>("DialogSheetMotion");
+            var settings = asset == null ? null : JsonUtility.FromJson<MotionSettings>(asset.text);
+            if (settings == null || settings.durationMs <= 0)
+                throw new InvalidOperationException("DialogSheetMotion must specify a positive durationMs.");
+            return settings.durationMs / 1000f;
+        }
         private Action didDismiss;
         private Image shade;
         private Color initialShade;
-        private float elapsed, travel;
-        private int dismissalFrame;
+        private float visibility = 1f, travel;
+        private int motionFrame;
+        private bool firstOpeningStep;
+        internal bool IsPresenting { get; private set; }
         internal bool IsDismissing => didDismiss != null;
         internal RectTransform Content => content;
         internal float NormalizedPosition
@@ -80,6 +101,15 @@ namespace XanaduYonder.Runtime
             content.SetParent(layout.viewport, false);
             content.anchorMin = content.anchorMax = content.pivot = new Vector2(.5f, 1);
             content.sizeDelta = new Vector2(designWidth, contentHeight);
+            var focus = surface.parent.GetComponentInParent<DialogFocusScope>();
+            layout.shade = focus != null ? focus.GetComponent<Image>() : surface.parent.GetComponent<Image>();
+            if (layout.shade != null) layout.initialShade = layout.shade.color;
+            if (Application.isPlaying)
+            {
+                layout.motionFrame = Time.frameCount;
+                layout.IsPresenting = layout.firstOpeningStep = true;
+                layout.SetVisibility(0);
+            }
             layout.Refresh();
         }
 
@@ -95,10 +125,9 @@ namespace XanaduYonder.Runtime
                 finished();
                 return;
             }
-            layout.shade = overlay.GetComponent<Image>();
-            layout.initialShade = layout.shade.color;
+            layout.IsPresenting = false;
             layout.didDismiss = finished;
-            layout.dismissalFrame = Time.frameCount;
+            layout.motionFrame = Time.frameCount;
             // Preserve the resting appearance as the entire sheet becomes non-interactive.
             foreach (var button in overlay.GetComponentsInChildren<Button>())
             {
@@ -113,23 +142,49 @@ namespace XanaduYonder.Runtime
 
         private void Update()
         {
-            if (IsDismissing && dismissalFrame != Time.frameCount) AdvanceDismissal(Time.unscaledDeltaTime);
+            if ((!IsPresenting && !IsDismissing) || motionFrame == Time.frameCount) return;
+            float step = Time.unscaledDeltaTime;
+            // The frame that constructed a large settings list may also have loaded its game assets.
+            // Always paint a moving frame before an unusually long first update can finish the entrance.
+            if (IsPresenting && firstOpeningStep)
+            {
+                firstOpeningStep = false;
+                step = Mathf.Min(step, TransitionDuration * .5f);
+            }
+            AdvanceMotion(step);
         }
 
         internal void AdvanceDismissal(float unscaledSeconds)
         {
-            if (!IsDismissing) return;
-            elapsed += Mathf.Max(0, unscaledSeconds);
-            float t = Mathf.Clamp01(elapsed / DismissDuration);
-            travel = t * (.4f + .6f * t);
-            var color = initialShade;
-            color.a *= 1 - t;
-            shade.color = color;
+            if (IsDismissing) AdvanceMotion(unscaledSeconds);
+        }
+
+        internal void AdvanceMotion(float unscaledSeconds)
+        {
+            if (!IsPresenting && !IsDismissing) return;
+            float target = IsPresenting ? 1f : 0f;
+            SetVisibility(Mathf.MoveTowards(visibility, target, Mathf.Max(0, unscaledSeconds) / TransitionDuration));
             Refresh();
-            if (t < 1) return;
+            if (visibility != target) return;
+            if (IsPresenting)
+            {
+                IsPresenting = false;
+                return;
+            }
             var finish = didDismiss;
             didDismiss = null;
             finish();
+        }
+
+        private void SetVisibility(float value)
+        {
+            visibility = value;
+            float hidden = 1 - value;
+            travel = hidden * (.4f + .6f * hidden);
+            if (shade == null) return;
+            var color = initialShade;
+            color.a *= value;
+            shade.color = color;
         }
 
         private void OnEnable() { Canvas.preWillRenderCanvases += Refresh; }

@@ -2,6 +2,7 @@
 // Real original game, local assets, Chromium touchscreen. NODE_PATH may point to a
 // separately installed playwright-core. Use --source DIR to check a candidate build.
 const { settingsMetrics, swipeSettings, swipeUp } = require('../../Tests/WebDialogs/metrics.cjs');
+const { sheetMotion } = require('../../Tests/WebDialogs/motion.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -112,6 +113,7 @@ async function openEditor(page) {
   await touchMain(page, 'offlineSaveEditorButton');
   const dialog = page.getByRole('dialog', {name:'存档管理',exact:true});
   await dialog.waitFor({state:'visible',timeout:8000});
+  dialog.checkSheetExit = await sheetMotion(dialog);
   return dialog;
 }
 
@@ -208,6 +210,7 @@ async function submit(page, panel, name) {
 async function closeEditor(panel) {
   await button(panel,'返回游戏').tap();
   await panel.waitFor({state:'hidden'});
+  await panel.checkSheetExit();
 }
 
 function progress(data) {
@@ -603,10 +606,40 @@ async function verifyBattle(page) {
   note('real battle starts by touch, only the player pool adds seven special letters; editor is absent during battle');
 }
 
+async function watchAvatarMotion(page, opening) {
+  const handle = await page.evaluateHandle(() => {
+    const samples = [];
+    let frame;
+    function sample() {
+      const scene = __XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene');
+      const card = scene?.parent && scene.getChildByName('settingsSurface');
+      if (card?.height > 0) {
+        const visible = (scene.height - card.y) / card.height;
+        samples.push({visible, alpha:scene.bg.alpha});
+      }
+      frame = requestAnimationFrame(sample);
+    }
+    sample();
+    return {stop:() => { cancelAnimationFrame(frame); return samples; }};
+  });
+  return async () => {
+    const samples = await handle.evaluate(watch => watch.stop());
+    await handle.dispose();
+    assert(samples.some(sample => sample.visible > .02 && sample.visible < .98), 'missing intermediate avatar sheet position');
+    for (let i = 0; i < samples.length; i++) {
+      const {visible,alpha} = samples[i];
+      assert(Math.abs(alpha - .4 * visible) < .01, 'avatar backdrop must follow its panel');
+      if (i) assert((visible - samples[i-1].visible) * (opening ? 1 : -1) >= -.005,
+        'avatar sheet must travel towards its destination');
+    }
+  };
+}
+
 async function checkSettingsSheets(page) {
   await touchMain(page, 'settingBtn');
   const settings = page.getByRole('dialog', {name:'游戏设置'});
   await settings.waitFor();
+  const checkSettingsExit = await sheetMotion(settings);
   const surface = await settings.boundingBox(), view = page.viewportSize();
   assert.equal(surface.width, view.width);
   assert.equal(surface.y + surface.height, view.height);
@@ -634,10 +667,17 @@ async function checkSettingsSheets(page) {
   assert.equal((await disk(page))._setting.musicVolume,.72);
   await page.touchscreen.tap(4,4);
   await settings.waitFor({state:'hidden'});
+  await checkSettingsExit();
   await page.waitForFunction(()=>!__XanaduZhaoyunInternals.SceneMgr.instance().co('SettingScene')?.parent);
+  const checkAvatarEntrance = await watchAvatarMotion(page,true);
   await touchMain(page, 'avatarArea');
   await page.waitForFunction(()=>__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')?.getChildByName('settingsSurface'));
-  await page.waitForTimeout(300);
+  await page.waitForFunction(() => {
+    const scene = __XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene');
+    const card = scene?.getChildByName('settingsSurface');
+    return card && scene.bg.alpha === .4 && card.y + card.height === scene.height;
+  });
+  await checkAvatarEntrance();
   const avatar = () => page.evaluate(()=>__XanaduZhaoyunInternals.AvatarMgr.instance().U0);
   const selected = await avatar();
   const position = await page.evaluate(()=>{
@@ -665,8 +705,10 @@ async function checkSettingsSheets(page) {
   await page.waitForFunction(()=>__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')
     ?.getChildByName('settingsSurface')?.getChildByName('avatarOptions')?.vScrollBar?.value>0);
   await page.screenshot({path:path.join(evidence,'avatar-settings-landscape-scroll.png')});
+  const checkAvatarExit = await watchAvatarMotion(page,false);
   await page.touchscreen.tap(4,4);
   await page.waitForFunction(()=>!__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')?.parent);
+  await checkAvatarExit();
   assert.equal(await avatar(), selected);
   await page.setViewportSize(view);
   note('game and avatar settings use bottom sheets; original audio/toggles persist and outside cancellation leaves the avatar intact');

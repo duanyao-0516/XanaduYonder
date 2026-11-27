@@ -174,6 +174,7 @@ namespace XanaduYonder.EditorTools
             var sheet = canvas.GetComponentInChildren<DialogSheetLayout>();
             Require(sheet != null && sheet.GetComponentInParent<RectMask2D>() == null,
                 "The settings surface is outside the letterboxed gameplay mask.");
+            DialogSheetGeometryChecks.CompletePresentation(canvas.transform);
             DialogScreenshotAudit.CaptureOverlay(canvas);
             var scope = sheet.GetComponentInParent<DialogFocusScope>();
             var tap = scope.GetComponent<DialogOutsideTap>();

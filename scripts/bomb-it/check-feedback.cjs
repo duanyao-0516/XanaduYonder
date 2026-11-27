@@ -1,6 +1,7 @@
 // Computer-only integration checks. Real Ruffle/SWF; native feedback ACKs are
 // explicitly simulated. This does not verify physical audio or phone vibration.
 const { settingsMetrics, swipeSettings } = require('../../Tests/WebDialogs/metrics.cjs');
+const { sheetMotion } = require('../../Tests/WebDialogs/motion.cjs');
 const fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const root=path.resolve(__dirname,'../..'),content=path.join(root,'artifacts/bomb-it/content');
@@ -45,6 +46,7 @@ fs.mkdirSync(output,{recursive:true});
       const spacing=await page.evaluate(()=>document.querySelector('#mode-switch').getBoundingClientRect().top-document.querySelector('.brand-row').getBoundingClientRect().bottom);
       assert(spacing>=8,'brand and player-mode group need visible separation');
       await page.locator('#settings').tap();
+      const checkExit = await sheetMotion(page.locator('.sheet'));
       assert.equal(await page.locator('#modal').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0.4)');
       const box=await page.locator('.sheet-scroll').evaluate(e=>({height:e.clientHeight,scroll:e.scrollHeight}));
       const settingsCard=await page.locator('.sheet').elementHandle();
@@ -62,15 +64,53 @@ fs.mkdirSync(output,{recursive:true});
       assert(await page.locator('#direction-diameter').isVisible());
       await shot('control-settings-'+width+'x'+height);
       await page.touchscreen.tap(5,5);await page.locator('#modal').waitFor({state:'hidden'});
+      await checkExit();
       note('compact settings and backdrop '+width+'x'+height,box);
     }
     await page.setViewportSize({width:320,height:568});
     await page.locator('#settings').tap();
+    const portraitExit = await sheetMotion(page.locator('.sheet'));
     await shot('settings-320x568');
     await page.locator('#direction-diameter').scrollIntoViewIfNeeded();
     await shot('control-settings-320x568');
     await page.locator('#modal-confirm').tap();
     await page.locator('#modal').waitFor({state:'hidden'});
+    await portraitExit();
+    await page.locator('#settings').tap();
+    const interrupted = await page.locator('#modal').evaluate(layer => {
+      const panel = layer.firstElementChild;
+      for (const animation of [layer,panel].flatMap(node => node.getAnimations())) {
+        animation.pause();
+        animation.currentTime = XanaduDialogs.durationMs() / 3;
+      }
+      const offset = () => new DOMMatrix(getComputedStyle(panel).transform).m42;
+      const before = offset(), shade = getComputedStyle(layer).backgroundColor;
+      layer.querySelector('#modal-close').click();
+      const closing = [layer,panel].flatMap(node => node.getAnimations());
+      for (const animation of closing) {
+        animation.pause();
+        animation.currentTime = 0;
+      }
+      const after = offset(), sameShade = getComputedStyle(layer).backgroundColor === shade;
+      const guarded = panel.inert && document.elementFromPoint(4,4) === layer;
+      XanaduDialogs.dismissTop();
+      closing.forEach(animation => animation.play());
+      return {before,after,sameShade,guarded,height:panel.clientHeight};
+    });
+    assert(interrupted.before > 0 && interrupted.before < interrupted.height);
+    assert(Math.abs(interrupted.before - interrupted.after) < .5 && interrupted.sameShade && interrupted.guarded);
+    await page.locator('#modal').waitFor({state:'hidden'});
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await page.locator('#settings').tap();
+    const reduced = await page.locator('#modal').evaluate(layer => {
+      const card = layer.firstElementChild;
+      const playing = card.getAnimations().length + layer.getAnimations().length;
+      const duration = XanaduDialogs.durationMs();
+      layer.querySelector('#modal-confirm').click();
+      return {playing,duration,closed:layer.hidden};
+    });
+    assert.deepEqual(reduced,{playing:0,duration:0,closed:true});
+    await page.emulateMedia({reducedMotion:'no-preference'});
     await page.setViewportSize({width:844,height:390});await page.evaluate(()=>BombItHost.setViewportInsets(24,0,0,21));
     for(const id of ['hall','settings','help'])assert.notEqual(await page.locator('#'+id).evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
     await page.locator('#settings').tap();await page.locator('#sound-setting').tap();await waitSound(false);

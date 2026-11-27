@@ -264,7 +264,12 @@ namespace XanaduYonder.EditorTools
                 Require(g.Session == null && Get<Button>(g.Page, "confirmButton").interactable, "Empty page has an actionable new-game confirmation");
                 g.ClickField("confirmButton"); g.Click("确认开始");
                 string id = g.Session.SessionId;
-                g.Click("新一局"); g.Click("困难"); g.Click("白棋 · 后手"); g.Click("取消");
+                g.Click("新一局");
+                var setup = g.Dialog.GetComponentInChildren<DialogSheetLayout>();
+                g.Click("困难"); g.Click("白棋 · 后手");
+                Require(setup == g.Dialog.GetComponentInChildren<DialogSheetLayout>() && !setup.IsPresenting,
+                    "Changing setup draft values retains the settled sheet without replaying its entrance");
+                g.Click("取消");
                 Require(g.Session.SessionId == id && g.Session.Difficulty == GomokuDifficulty.Normal && g.Session.HumanStone == GomokuStone.Black,
                     "Canceling AI setup preserves the current game and options");
                 var data = Get<GomokuSaveData>(g.Page, "data");
@@ -807,7 +812,10 @@ namespace XanaduYonder.EditorTools
 
             public RectTransform Page()
             { var page = UiFactory.Rect(root, "Gomoku fixture page", 0, 0, 720, Height); UiFactory.Stretch(page); return page; }
-            public void Flush() { Canvas.ForceUpdateCanvases(); camera.Render(); Canvas.ForceUpdateCanvases(); }
+            public void Flush() {
+                DialogSheetGeometryChecks.CompletePresentation(root);
+                Canvas.ForceUpdateCanvases(); camera.Render(); Canvas.ForceUpdateCanvases();
+            }
             public Rect Bounds(RectTransform rect)
             {
                 Flush(); var corners = new Vector3[4]; rect.GetWorldCorners(corners);

@@ -9,10 +9,14 @@ import hashlib
 import importlib.util
 import io
 import json
+import sys
 from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from web_dialog_assets import shared_dialog_files
+
 SOURCE = ROOT / 'ThirdParty/BombItContent'
 RUFFLE = ROOT / 'ThirdParty/Ruffle'
 OUTPUT = ROOT / 'artifacts/bomb-it/content'
@@ -62,8 +66,7 @@ def build():
         path = SOURCE / 'adapter' / name
         require(path.is_file() and not path.is_symlink(), 'Missing adapter: ' + str(path))
         files[name] = path.read_bytes()
-    for name in ('dialogs.css', 'dialogs.js'):
-        files[name] = (ROOT / 'ThirdParty/WebGameUI' / name).read_bytes()
+    files.update(shared_dialog_files(ROOT))
     types = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
              '.swf': 'application/x-shockwave-flash', '.wasm': 'application/wasm'}
     manifest = {'files': [{'path': name, 'bytes': len(data), 'sha256': sha(data),

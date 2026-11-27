@@ -47,6 +47,9 @@ async function settingsMetrics(card, actionSelector, leftInset = 0, rightInset =
 }
 // Send native touch input through Chromium's compositor, as a finger drag would.
 async function swipeSettings(page, scroller) {
+  // Measure the touch path on the settled card. During entry these points move relative to the window.
+  await scroller.evaluate(node => Promise.all((node.closest('.xy-sheet')?.firstElementChild?.getAnimations() || [])
+    .map(animation => animation.finished)));
   const {height, overflow, offset, top, left, width} = await scroller.evaluate(node => {
     node.scrollTop = 0;
     const rect = node.getBoundingClientRect();

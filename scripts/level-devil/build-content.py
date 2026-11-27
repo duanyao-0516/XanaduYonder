@@ -4,12 +4,16 @@ import argparse
 import hashlib
 import io
 import json
+import sys
 from pathlib import Path
 import re
 import zipfile
 from verify_original import verify as verify_original
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from web_dialog_assets import shared_dialog_files
+
 SOURCE = ROOT / 'ThirdParty/LevelDevil'
 OUTPUT = SOURCE / 'generated'
 AAR = ROOT / 'Assets/Plugins/Android/LevelDevilContent.aar'
@@ -115,8 +119,7 @@ def build():
     files['index.html'] = (SOURCE / 'adapter/index.html').read_bytes()
     files['entry.js'] = (SOURCE / 'adapter/entry.js').read_bytes()
     files['style.css'] = (SOURCE / 'adapter/style.css').read_bytes()
-    for name in ('dialogs.css', 'dialogs.js'):
-        files[name] = (ROOT / 'ThirdParty/WebGameUI' / name).read_bytes()
+    files.update(shared_dialog_files(ROOT))
     types = {'.html':'text/html','.js':'application/javascript','.css':'text/css','.mp3':'audio/mpeg','.pak':'application/octet-stream','.png':'image/png'}
     content_manifest = {'files':[{'path':name,'sha256':sha(data),'bytes':len(data),'mime':types[Path(name).suffix]} for name,data in sorted(files.items())]}
     files['manifest.json'] = (json.dumps(content_manifest,ensure_ascii=False,indent=2)+'\n').encode()

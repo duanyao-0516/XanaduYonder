@@ -35,6 +35,45 @@ namespace XanaduYonder.EditorTools
             sheet.AdvanceDismissal(1f);
         }
 
+        // Static layout and input fixtures sample a fully opened sheet. Motion checks render the
+        // untouched opening state and advance the production clock explicitly instead.
+        internal static void CompletePresentation(Transform root)
+        {
+            foreach (var sheet in root.GetComponentsInChildren<DialogSheetLayout>())
+                if (sheet.IsPresenting) sheet.AdvanceMotion(DialogSheetLayout.TransitionDuration);
+        }
+
+        internal static void CheckFirstPresentation(Transform overlay, Action<string> capture)
+        {
+            var sheet = overlay.GetComponentInChildren<DialogSheetLayout>();
+            var surface = (RectTransform)sheet.transform;
+            var boundary = (RectTransform)sheet.GetComponentInParent<Canvas>().transform;
+            var corners = new Vector3[4];
+            float VisibleFraction()
+            {
+                surface.GetWorldCorners(corners);
+                float top = boundary.InverseTransformPoint(corners[1]).y;
+                float bottom = boundary.InverseTransformPoint(corners[0]).y;
+                return (top - boundary.rect.yMin) / (top - bottom);
+            }
+            var shade = overlay.GetComponent<UnityEngine.UI.Image>();
+            float duration = DialogSheetLayout.TransitionDuration;
+            capture("entrance-start");
+            Check(sheet.IsPresenting && Mathf.Abs(VisibleFraction()) < .001f && shade.color.a < .001f,
+                "The first rendered settings frame starts entirely below the canvas and the scrim starts clear.");
+            sheet.AdvanceMotion(duration / 2);
+            capture("entrance-middle");
+            float visible = VisibleFraction();
+            Check(sheet.IsPresenting && visible > .01f && visible < .99f && shade.color.a > 0 && shade.color.a < DialogUi.Scrim.a,
+                "Halfway through opening, the sheet is visibly crossing the bottom edge and the scrim is fading in.");
+            sheet.AdvanceMotion(duration * .49f);
+            Check(sheet.IsPresenting, "Opening is still running just before the shared transition duration.");
+            sheet.AdvanceMotion(duration * .011f);
+            capture("entrance-end");
+            Check(!sheet.IsPresenting && Near(VisibleFraction(), 1) && Near(shade.color.a, DialogUi.Scrim.a),
+                "At the shared duration the sheet rests at the bottom and the scrim reaches its intended opacity.");
+        }
+
         private static void CheckOwnedCanvas()
         {
             var window = new GameObject("Sheet geometry window", typeof(RectTransform), typeof(Canvas));
@@ -52,6 +91,7 @@ namespace XanaduYonder.EditorTools
                 var surface = UiFactory.Rect(safeFrame, "Sheet", 2, 5, 330, 280);
                 var content = UiFactory.Rect(surface, "Sheet content", 0, 0, 1, 1);
                 DialogSheetLayout.Attach(surface, content, 390, 310);
+                CompletePresentation(surface);
                 var expected = new Vector3[4];
                 var actual = new Vector3[4];
                 child.GetWorldCorners(expected);
@@ -79,6 +119,7 @@ namespace XanaduYonder.EditorTools
                 var body = UiFactory.Rect(surface, "Settings", 0, 0, 540, 690);
                 var last = UiFactory.Rect(body, "Last action", 26, 600, 488, 66);
                 DialogSheetLayout.Attach(surface, body, 540, 690);
+                CompletePresentation(surface);
                 var scroll = surface.GetComponentInChildren<UnityEngine.UI.ScrollRect>();
                 Check(scroll != null && scroll.enabled && scroll.viewport.rect.height < body.rect.height,
                     "Long settings can scroll in a short landscape window.");

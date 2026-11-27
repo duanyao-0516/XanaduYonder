@@ -1342,7 +1342,10 @@ namespace XanaduYonder.EditorTools
                 return rect;
             }
 
-            public void Flush() { Canvas.ForceUpdateCanvases(); camera.Render(); Canvas.ForceUpdateCanvases(); }
+            public void Flush() {
+                DialogSheetGeometryChecks.CompletePresentation(Root);
+                Canvas.ForceUpdateCanvases(); camera.Render(); Canvas.ForceUpdateCanvases();
+            }
 
             public Rect Bounds(RectTransform rect)
             {

@@ -385,6 +385,7 @@ namespace XanaduYonder.EditorTools
                     Require(f.Bounds(f.Find("Settings")).xMax <= f.Width && f.Bounds(f.Find("Pause")).xMax <= f.Width, "Host-built page keeps right controls inside final safe width");
                     f.CheckHit(f.Find("Settings")); f.CheckHit(f.Find("Pause")); f.Capture("host-short-screen");
                     f.Click(f.Find("Settings"));
+                    DialogSheetGeometryChecks.CompletePresentation(Get<GameObject>(host, "modal").transform);
                     Require(Get<GameObject>(host, "modal") != null, "Real AppController creates shared settings"); RequireConcealed(f, page, "host settings"); f.Capture("host-settings");
                     Invoke(host, "OnApplicationPause", true);
                     Require(Get<GameObject>(host, "modal") == null && !page.Session.Foreground, "Host background closes settings and suspends its actual session");

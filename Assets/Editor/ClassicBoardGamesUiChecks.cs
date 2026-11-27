@@ -1373,6 +1373,7 @@ namespace XanaduYonder.EditorTools
 
             private void Flush()
             {
+                DialogSheetGeometryChecks.CompletePresentation(canvasRoot);
                 Canvas.ForceUpdateCanvases();
                 camera.Render();
                 Canvas.ForceUpdateCanvases();

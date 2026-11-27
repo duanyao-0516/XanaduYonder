@@ -151,7 +151,7 @@ namespace XanaduYonder.EditorTools
                 fixture.CheckModalControlGeometry("pause");
                 if (coop) yield return fixture.CheckLongScreenPause();
                 yield return fixture.CheckExitConfirmation(prefix);
-                yield return fixture.Click(fixture.Button("更多选项"));
+                yield return fixture.Click(fixture.Button("更多选项"), checkOpening: true);
                 // The click installed a new hierarchy. Let UGUI generate its live text meshes.
                 yield return null;
                 Canvas.ForceUpdateCanvases();
@@ -631,7 +631,7 @@ namespace XanaduYonder.EditorTools
                 throw new InvalidOperationException("Missing button: " + title);
             }
 
-            public IEnumerator Click(Button button)
+            public IEnumerator Click(Button button, bool checkOpening = false)
             {
                 // Let Unity destroy the previous modal and render the replacement.
                 // ForceUpdateCanvases alone does not establish Graphic.depth for a
@@ -639,6 +639,7 @@ namespace XanaduYonder.EditorTools
                 // underlying mine even though the replacement will be drawn next frame.
                 yield return null;
                 yield return null;
+                DialogSheetGeometryChecks.CompletePresentation(Owner.transform);
                 Require(button.interactable, "Button is enabled: " + button.name);
                 button.GetComponentInParent<DialogSheetLayout>()?.Reveal(button.GetComponent<RectTransform>());
                 Canvas.ForceUpdateCanvases();
@@ -651,6 +652,22 @@ namespace XanaduYonder.EditorTools
                     "; actualHit=" + data.pointerCurrentRaycast.gameObject.name + "; clickTarget=" + (clicked == null ? "null" : clicked.name) + "; point=" + point);
                 var sheet = button.GetComponentInParent<DialogSheetLayout>();
                 ExecuteEvents.Execute(clicked, data, ExecuteEvents.pointerClickHandler);
+                if (checkOpening)
+                {
+                    var overlay = Get<RectTransform>(Page, "modal");
+                    var opening = overlay.GetComponentInChildren<DialogSheetLayout>();
+                    var shade = overlay.GetComponent<Image>();
+                    float start = opening.transform.position.y;
+                    Require(opening.IsPresenting && shade.color.a < .001f, "Opening more options starts hidden.");
+                    yield return null;
+                    Require(opening.IsPresenting && opening.transform.position.y > start &&
+                        shade.color.a > 0 && shade.color.a < DialogUi.Scrim.a,
+                        "The next real Unity update paints a moving sheet before it reaches the resting position.");
+                    double deadline = Time.realtimeSinceStartupAsDouble + 2;
+                    while (opening.IsPresenting && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                    Require(!opening.IsPresenting && Mathf.Approximately(shade.color.a, DialogUi.Scrim.a),
+                        "The frame loop completes the entrance without fixture clock advancement.");
+                }
                 if (sheet != null && sheet.IsDismissing)
                 {
                     double deadline = Time.realtimeSinceStartupAsDouble + 2;
@@ -950,6 +967,7 @@ namespace XanaduYonder.EditorTools
             public void CheckModalControlGeometry(string context)
             {
                 var modal = Get<RectTransform>(Page, "modal");
+                DialogSheetGeometryChecks.CompletePresentation(modal);
                 var sheet = modal.GetComponentInChildren<DialogSheetLayout>();
                 var panel = sheet != null ? (RectTransform)sheet.transform : modal.Find("Dialog panel") as RectTransform;
                 Require(panel != null, context + " has a real dialog panel");
@@ -1340,6 +1358,7 @@ namespace XanaduYonder.EditorTools
 
             public void Capture(string name)
             {
+                DialogSheetGeometryChecks.CompletePresentation(Owner.transform);
                 int width = Screen.width, height = Screen.height;
                 var texture = new RenderTexture(width, height, 24); texture.Create();
                 var image = new Texture2D(width, height, TextureFormat.RGB24, false);

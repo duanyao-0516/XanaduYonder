@@ -127,7 +127,13 @@
   border: 0;
   border-radius: var(--xy-radius-sheet);
 }
-.xy-sheet.xy-closing { animation: xy-scrim-out 200ms ease-in both; }
-.xy-sheet.xy-closing > :first-child { animation: xy-sheet-out 200ms cubic-bezier(.4,0,1,1) both; }
-@keyframes xy-sheet-out { to { transform: translateY(100%); } }
-@keyframes xy-scrim-out { to { background-color: transparent; } }
+@media (prefers-reduced-motion: no-preference) {
+  .xy-sheet { animation: xy-scrim-in var(--xy-sheet-duration) ease-out both; }
+  .xy-sheet > :first-child { animation: xy-sheet-in var(--xy-sheet-duration) cubic-bezier(.22,1,.36,1) both; }
+  .xy-sheet.xy-closing { animation: xy-scrim-out var(--xy-sheet-duration) ease-in both; }
+  .xy-sheet.xy-closing > :first-child { animation: xy-sheet-out var(--xy-sheet-duration) cubic-bezier(.4,0,1,1) both; }
+}
+@keyframes xy-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes xy-scrim-in { from { background-color: transparent; } }
+@keyframes xy-sheet-out { from { transform: var(--xy-leave-transform); } to { transform: translateY(100%); } }
+@keyframes xy-scrim-out { from { background-color: var(--xy-leave-scrim); } to { background-color: transparent; } }

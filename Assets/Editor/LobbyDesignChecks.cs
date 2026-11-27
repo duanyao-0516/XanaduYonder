@@ -752,7 +752,10 @@ namespace XanaduYonder.EditorTools
                 }
                 catch { Dispose(); throw; }
             }
-            internal void Flush() { Canvas.ForceUpdateCanvases(); Camera.Render(); Canvas.ForceUpdateCanvases(); }
+            internal void Flush() {
+                DialogSheetGeometryChecks.CompletePresentation(owner.transform);
+                Canvas.ForceUpdateCanvases(); Camera.Render(); Canvas.ForceUpdateCanvases();
+            }
             internal Vector2 ScreenPoint(RectTransform rect) { return RectTransformUtility.WorldToScreenPoint(Camera, rect.TransformPoint(rect.rect.center)); }
             internal void Tap(Button button)
             {

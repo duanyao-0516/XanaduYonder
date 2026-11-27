@@ -190,6 +190,7 @@ namespace XanaduYonder.EditorTools
                     page.Initialize(root,()=>{},done=>Invoke(host,"OpenSettings",done),()=>Get<GameObject>(host,"modal")==null&&!Get<bool>(host,"paused")&&Get<bool>(host,"focused"),()=>false,()=>false,Get<GameFeedback>(host,"feedback"),message=>Invoke(host,"SetStatus",message),initialData:new FlappySaveData());
                     page.enabled=false;page.Enter();f.Click(f.Find("Settings"));
                     Require(Get<GameObject>(host,"modal")!=null&&page.SettingsBlocked,"Actual shared settings blocks page");
+                    DialogScreenshotAudit.CaptureCurrent(Get<GameObject>(host,"modal").transform);
                     Invoke(host,"OnApplicationPause",true);Invoke(host,"OnApplicationPause",false);
                     Require(Get<GameObject>(host,"modal")==null&&!page.SettingsBlocked&&page.Session.Phase==FlappyPhase.Ready,"Actual foreground clears stale settings and restores Ready");
                     f.Click(page.Surface);page.Advance(1f/60);Invoke(host,"OnApplicationFocus",false);Invoke(host,"OnApplicationFocus",true);

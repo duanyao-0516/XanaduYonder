@@ -165,8 +165,16 @@
     const backdrop = element('div', '', 'xanadu-avatar-backdrop');
     document.body.append(backdrop);
     XanaduDialogs.bindBackdrop(backdrop, () => scene.closeBtn.event(Laya.Event.CLICK, new Laya.Event()));
-    scene.bg.alpha = .4;
-    const state = {scene, original, originalVisible, closeHitArea, box, paper, backdrop, screenMode, closing:false, frame:0};
+    const state = {scene, original, originalVisible, closeHitArea, box, paper, backdrop, screenMode,
+      progress:0, closing:false, frame:0};
+    state.paint = progress => {
+      state.progress = progress;
+      paper.y = scene.height - progress * paper.height;
+      scene.bg.alpha = .4 * progress;
+      const canvas = document.querySelector('canvas').getBoundingClientRect();
+      const top = paper.localToGlobal(new Laya.Point()).y;
+      backdrop.style.height = state.closing ? '100%' : Math.max(0, canvas.top + top * canvas.height / Laya.stage.height) + 'px';
+    };
     state.layout = () => {
       const cssScale = Laya.stage.width / window.innerWidth;
       const insets = getComputedStyle(document.body,'::before');
@@ -181,15 +189,14 @@
       box.anchorX = box.anchorY = 0;
       box.scale(scale, scale);
       box.pos(left+(scene.width-left-right-box.width*scale)/2, 0);
-      paper.pos(0, scene.height - height);
+      paper.x = 0;
       paper.size(scene.width, height);
       viewport.size(scene.width, height - safe);
       const scrollType = box.height * scale > viewport.height + 1 ? Laya.ScrollType.Vertical : Laya.ScrollType.None;
       if (viewport.scrollType !== scrollType) viewport.scrollType = scrollType;
       viewport.refresh();
       const canvas = document.querySelector('canvas').getBoundingClientRect();
-      const top = paper.localToGlobal(new Laya.Point()).y;
-      backdrop.style.height = Math.max(0, canvas.top + top * canvas.height / Laya.stage.height) + 'px';
+      state.paint(state.progress);
       const target = 44 * Laya.stage.height / canvas.height / scale;
       const close = scene.closeBtn;
       close.hitArea = new Laya.Rectangle((close.width-target)/2,(close.height-target)/2,target,target);
@@ -200,27 +207,32 @@
     state.layout();
     Laya.stage.on(Laya.Event.RESIZE, state, state.layout);
     formatCanvasDialog(paper);
+    animateAvatar(state, 1);
+  }
+  function animateAvatar(state, target, done) {
+    cancelAnimationFrame(state.frame);
+    const start = performance.now(), from = state.progress;
+    const duration = XanaduDialogs.durationMs();
+    function step(now) {
+      if (avatar !== state) return;
+      const t = duration ? Math.min(1, (now - start) / duration) : 1;
+      const eased = state.closing ? t * t : 1 - (1 - t) ** 3;
+      state.paint(from + (target - from) * eased);
+      if (t < 1) state.frame = requestAnimationFrame(step);
+      else if (done) done();
+    }
+    step(start);
   }
   function dismissAvatar(done) {
     const state = avatar;
-    if (!state || matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
+    if (!state) return done();
     if (state.closing) return;
     state.closing = true;
-    state.backdrop.style.height = '100%';
     state.box.mouseEnabled = false;
-    const start = performance.now(), from = state.paper.y, height = state.paper.height;
-    const step = now => {
-      if (avatar !== state) return;
-      const t = Math.min(1, (now - start) / 200);
-      state.paper.y = from + t*t*height;
-      state.scene.bg.alpha = .4 * (1-t);
-      if (t < 1) state.frame = requestAnimationFrame(step);
-      else {
-        state.box.mouseEnabled = true;
-        done();
-      }
-    };
-    state.frame = requestAnimationFrame(step);
+    animateAvatar(state, 0, () => {
+      state.box.mouseEnabled = true;
+      done();
+    });
   }
   function back() {
     if (window.__XanaduDismissCanvasCard()) return true;

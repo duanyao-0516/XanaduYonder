@@ -302,6 +302,7 @@ namespace XanaduYonder.EditorTools
                     page.Enter(); page.ContinueGame(); page.LayoutNow(); yield return null;
                     f.Click(f.Find("Settings"));
                     Require(Get<GameObject>(host, "modal") != null && page.Session.Blocked, "Actual shared host settings blocks Sokoban");
+                    DialogSheetGeometryChecks.CompletePresentation(Get<GameObject>(host, "modal").transform);
                     f.Capture("host-settings");
                     Invoke(host, "OnApplicationPause", true);
                     Require(Get<GameObject>(host, "modal") == null && !page.Session.Foreground, "Background closes host modal and suspends session");

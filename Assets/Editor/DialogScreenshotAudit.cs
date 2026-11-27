@@ -181,7 +181,7 @@ namespace XanaduYonder.EditorTools
             var scope = ForegroundScope(camera);
             if (scope == null) return;
             var sheet = scope.GetComponentInChildren<DialogSheetLayout>();
-            if (sheet != null && sheet.IsDismissing) return;
+            if (sheet != null && (sheet.IsPresenting || sheet.IsDismissing)) return;
             var entry = Describe(scope, out var heading);
             string identity = Identity(entry);
             string size = target.width + "x" + target.height;
@@ -223,6 +223,8 @@ namespace XanaduYonder.EditorTools
             for (var owner = origin; owner != null; owner = owner.parent)
             {
                 if (!Open.Contains(owner) || !owner.gameObject.activeInHierarchy) continue;
+                var sheet = owner.GetComponentInChildren<DialogSheetLayout>();
+                if (sheet != null && sheet.IsPresenting) return;
                 var current = Describe(owner, out _);
                 if (current.scrimAlpha <= 0 || (Rendered.TryGetValue(owner, out string key) &&
                     key.StartsWith(Identity(current) + "/", StringComparison.Ordinal))) return;
@@ -244,6 +246,7 @@ namespace XanaduYonder.EditorTools
         internal static void CaptureCurrent(Transform owner)
         {
             if (string.IsNullOrWhiteSpace(Output) || capturing || owner == null) return;
+            DialogSheetGeometryChecks.CompletePresentation(owner);
             var parent = owner.GetComponentInParent<Canvas>();
             Canvas temporary = null;
             if (parent == null && owner.root is RectTransform bounds)

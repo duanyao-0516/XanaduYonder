@@ -54,7 +54,8 @@ def validate(root):
                     if p.is_file() and p.suffix in {'.js', '.html', '.css', '.json', '.java', '.xml'}
                     and 'tests' not in p.relative_to(root/directory).parts}
         if report is content:
-            relevant.update({'ThirdParty/WebGameUI/dialogs.css', 'ThirdParty/WebGameUI/dialogs.js'})
+            relevant.update({'ThirdParty/WebGameUI/dialogs.css', 'ThirdParty/WebGameUI/dialogs.js',
+                             'Assets/Resources/DialogSheetMotion.json', 'scripts/web_dialog_assets.py'})
         require(relevant <= sources, 'Unfingerprinted source files: ' + ', '.join(sorted(relevant-sources)))
     require(sha(content_path.read_bytes()) == runtime['contentBuildSha256'], 'Content report changed after AAR build')
     files = content['files']

@@ -414,6 +414,7 @@ namespace XanaduYonder.EditorTools
                     page.Move(1); yield return new WaitForSeconds(.18f);
                     f.Click(f.Find("Settings"));
                     Require(Get<GameObject>(host, "modal") != null && page.Session.Blocked, "Actual shared settings blocks the Sliding Puzzle session");
+                    DialogSheetGeometryChecks.CompletePresentation(Get<GameObject>(host, "modal").transform);
                     f.Capture("host-settings");
                     Invoke(host, "OnApplicationPause", true);
                     Require(Get<GameObject>(host, "modal") == null && !page.Session.Foreground, "Host background closes shared settings and pauses the page");
