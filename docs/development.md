@@ -13,7 +13,7 @@
 - .NET SDK **10.0.403** 用于独立测试，`global.json` 允许同 feature band 的后续补丁。它不替代 Unity 的脚本编译器与 Android 构建工具。
 - Android 8.0/API 26 或以上的 **ARM64 真机**，开启开发者选项与 USB 调试，并授权当前电脑。首版固定 target SDK 36，避免跟随机器中额外安装的 SDK 自动变化。
 
-Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成。许可文件、Android 调试签名和个人 IDE 配置不进入 Git。
+首次运行前，在 Unity Hub 登录并激活编辑器许可。图形编辑器若显示 Unity 使用条款，可按本机使用者的授权在窗口中确认，随后继续原验证。许可文件、Android 调试签名和个人 IDE 配置不进入 Git。
 
 本机通过官方 Unity CLI 安装的 Android 模块位于 `/Applications/Unity/Hub/Editor/6000.3.27f1/PlaybackEngines/AndroidPlayer`，与 `Unity.app` 同级；这是已通过真实构建的安装布局。环境检查同时兼容旧的 `Unity.app/Contents/PlaybackEngines/AndroidPlayer` 布局，不需要手动移动模块或创建软链接。
 
@@ -37,7 +37,9 @@ python3 scripts/test.py core input feihualing-storage
 python3 scripts/test.py --group dotnet
 ```
 
-`dotnet` 组运行规则、输入和存档用例。`data` 组校验内容和文档。`platform` 组检查 Web 宿主和随包资源，使用 Node、Python 和 Unity Android OpenJDK，内容输入按[构建指南](building.md)准备。`unity` 组逐项运行编辑器检查，其中启动遮罩需要可交互的 GameView。运行 Unity 组前关闭同一工作树的交互编辑器。需要传入模块专属参数时直接使用下列脚本。每次验收记录提交、命令、产物和实际运行平台。
+`dotnet` 组运行规则、输入和存档用例。`data` 组校验内容和文档。`platform` 组检查 Web 宿主和随包资源，使用 Node、Python 和 Unity Android OpenJDK，内容输入按[构建指南](building.md)准备。
+
+日常 Unity 回归运行 `python3 scripts/test.py --group unity`，25 项检查均使用后台批处理。启动遮罩像素检查属于 `interactive` 组，单独运行 `python3 scripts/test.py startup-overlay` 会打开图形编辑器并聚焦 GameView。需要测量真实画面时使用空闲桌面。同一工作树一次只能由一个编辑器进程打开。每次验收记录提交、命令、产物和实际运行平台。
 
 改动 Markdown 后运行 `python3 scripts/test.py doc-links`。它检查 Git 已跟踪及工作树新增文档的仓内文件链接、图片和标题跳转。
 

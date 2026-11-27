@@ -13,7 +13,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
-GROUPS = ("dotnet", "data", "platform", "unity")
+GROUPS = ("dotnet", "data", "platform", "unity", "interactive")
 EDITOR_CHECKS = {
     "bakery-basket-ui": ("BakeryBasketChecks.Run", "BAKERY_BASKET_CHECKS_PASS"),
     "classic-boards-ui": ("ClassicBoardGamesUiChecks.Run", "CLASSIC_BOARD_GAMES_UI_CHECKS_PASS"),
@@ -36,7 +36,7 @@ PLATFORM_CHECKS = {
 }
 UNITY_SUITES = {
     "dino-ground", "dino-page", "dino-visual", "lobby-design", "startup-handoff",
-    "startup-overlay", "watermelon-physics", "watermelon-pointer", "zuma-navigation",
+    "watermelon-physics", "watermelon-pointer", "zuma-navigation",
 }
 
 
@@ -65,6 +65,9 @@ def suites():
         name = path.stem[len("test-"):]
         if name in entries:
             group = entries[name][0]
+        elif name == "startup-overlay":
+            # This real GameView check opens and focuses the graphical editor.
+            group = "interactive"
         elif name.endswith("-ui") or name in UNITY_SUITES:
             group = "unity"
         else:
@@ -110,7 +113,7 @@ def main():
         "and the Bomb It and Level Devil content AARs and extracted files. See docs/building.md. "
         "The runner never prepares these inputs."))
     parser.add_argument("--list", action="store_true", help="show available suites")
-    parser.add_argument("--group", choices=GROUPS, help="select a complete group")
+    parser.add_argument("--group", choices=GROUPS, help="select a complete group (interactive opens the Unity GameView)")
     parser.add_argument("names", nargs="*", metavar="suite")
     args = parser.parse_args()
     entries = suites()
