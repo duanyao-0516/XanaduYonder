@@ -6,9 +6,10 @@ Android 和 iOS 共用 **29 个大厅入口**，包括 25 个 Unity 原生玩法
 
 | 要做的事 | 从哪里开始 |
 | --- | --- |
+| 接入新玩法或复用已有组件 | [公共组件与接入示例](shared-components.md)、[弹窗与设置规范](dialogs.md) |
 | 在编辑器运行项目 | [项目总览](../README.md)、[工具链与启动场景](development.md#打开项目) |
 | 查找游戏规则、页面或存档 | [玩法模块与存储](architecture.md#玩法模块与存储)、[Core](../Assets/Scripts/Core/)、[Runtime](../Assets/Scripts/Runtime/) |
-| 检查大厅、导航和共享交互 | [大厅入口清单](../Assets/Scripts/Runtime/Lobby/AppController.Lobby.cs)、[大厅设计](design/lobby-v2/README.md)、[小游戏 UI 开发参考](sokoban-development-guide.md)、[项目整理基线](project-refactor-baseline.md) |
+| 检查大厅、导航和共享交互 | [大厅入口清单](../Assets/Scripts/Runtime/Lobby/AppController.Lobby.cs)、[大厅设计](design/lobby-v2/README.md)、[弹窗与设置规范](dialogs.md)、[小游戏 UI 开发参考](sokoban-development-guide.md)、[项目整理基线](project-refactor-baseline.md) |
 | 执行模块测试 | [按模块选择验证](development.md#按模块选择验证)、[独立测试项目](../Tests/)、[Unity 编辑器检查](../Assets/Editor/) |
 | 构建 Android 或导出 iOS | [统一构建命令、平台清单与签名](building.md)、[iOS 自动续签](ios-auto-renew.md) |
 

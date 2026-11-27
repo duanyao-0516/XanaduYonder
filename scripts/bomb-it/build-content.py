@@ -62,6 +62,7 @@ def build():
         path = SOURCE / 'adapter' / name
         require(path.is_file() and not path.is_symlink(), 'Missing adapter: ' + str(path))
         files[name] = path.read_bytes()
+    files['dialogs.css'] = (ROOT / 'ThirdParty/WebGameUI/dialogs.css').read_bytes()
     types = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
              '.swf': 'application/x-shockwave-flash', '.wasm': 'application/wasm'}
     manifest = {'files': [{'path': name, 'bytes': len(data), 'sha256': sha(data),

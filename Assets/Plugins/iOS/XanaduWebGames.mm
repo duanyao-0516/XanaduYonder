@@ -676,7 +676,10 @@ static NSDictionary *CutSave(NSDictionary *request)
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:self.isBombIt ? @"游戏暂时无法继续" : @"游戏尚未完成保存或加载" message:self.pendingFailure preferredStyle:UIAlertControllerStyleAlert];
     self.failureAlert = alert;
     __weak XanaduWebGameController *weakSelf = self;
-    [alert addAction:[UIAlertAction actionWithTitle:self.ready ? (self.isBombIt ? @"重试" : @"重试保存") : @"重新加载" style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) { [weakSelf retry]; }]];
+    UIAlertAction *retry = [UIAlertAction actionWithTitle:self.ready ? (self.isBombIt ? @"重试" : @"重试保存") : @"重新加载"
+                                                  style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) { [weakSelf retry]; }];
+    [alert addAction:retry];
+    alert.preferredAction = retry;
     [alert addAction:[UIAlertAction actionWithTitle:self.ready && !self.isBombIt ? @"返回大厅（未确认本次保存）" : @"返回大厅" style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction *action) {
         XanaduWebGameController *owner = weakSelf; if (owner) [owner finish:owner.pendingFailure];
     }]];

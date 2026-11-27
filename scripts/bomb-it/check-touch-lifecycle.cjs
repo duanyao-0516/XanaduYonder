@@ -90,7 +90,7 @@ let browser,page;
   const held=()=>page.evaluate(()=>Array.from(__heldKeys).sort((a,b)=>a-b));
   const rect=selector=>page.locator(selector).boundingBox();
   const screenshot=name=>page.screenshot({path:path.join(output,name+'.png')});
-  async function style(value){await page.locator('#settings').tap();await page.locator('[data-input-style="'+value+'"]').tap();await page.locator('#modal-confirm').tap();}
+  async function style(value){await page.locator('#settings').tap();if(!baseline)await page.locator('#control-preferences').tap();await page.locator('[data-input-style="'+value+'"]').tap();await page.locator('#modal-confirm').tap();}
   async function flashTap(x,y){const b=await rect('#bombit-player');await page.touchscreen.tap(b.x+x*b.width/550,b.y+y*b.height/400);await page.waitForTimeout(300);}
   await page.goto(origin+'index.html');await page.waitForFunction(()=>window.BombItHost?.status().ready);console.log('READY '+JSON.stringify(await page.evaluate(()=>BombItHost.status())));await page.waitForTimeout(600);
   await page.evaluate(()=>BombItHost.setViewportInsets(59,0,59,21));
@@ -148,7 +148,7 @@ let browser,page;
     const initial=await state();assert([0,1,2].includes(initial.mode));result.initialState=initial;
     if(padSize){
       const slider=page.locator('#direction-diameter');
-      const openSettings=()=>page.locator('#settings').tap();
+      const openSettings=async()=>{await page.locator('#settings').tap();await page.locator('#control-preferences').tap();};
       const closeSettings=()=>page.locator('#modal-confirm').tap();
       const setDiameter=async(value)=>{
         await slider.fill(String(value));

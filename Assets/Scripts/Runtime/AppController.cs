@@ -972,7 +972,7 @@ namespace XanaduYonder.Runtime
             board = boardImage.gameObject.AddComponent<BoardView>();
             board.Initialize(Move, () => CanAcceptMove);
             var actions = UiFactory.Band(root, "Game actions", 1062, 76, .72f);
-            UiFactory.Button(actions, "重新开始", 212, 0, 296, 76, ConfirmRestart);
+            DialogUi.ActionButton(actions, "重新开始", 212, 0, 296, 76, ConfirmRestart);
             var instructions = UiFactory.Band(root, "Game instructions", 1170, 44, .86f);
             UiFactory.Label(instructions, "上下左右滑动，相同数字合并。", 56, 0, 608, 44, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
         }
@@ -1112,7 +1112,7 @@ namespace XanaduYonder.Runtime
 
         private void ConfirmRestart()
         {
-            ShowDialog("重新开始这一局？", "当前棋盘将被清空，\n最高纪录和设置会保留。", "重新开始", Restart, "继续当前游戏", CheckEndState);
+            ShowMessageDialog("重新开始这一局？", "当前棋盘将被清空，\n最高纪录和设置会保留。", "重新开始", Restart, "继续当前游戏", CheckEndState, true);
         }
 
         private void Restart()
@@ -1128,106 +1128,6 @@ namespace XanaduYonder.Runtime
         private void ShowHelp()
         {
             ShowDialog("让相同的数字相遇", "滑动棋盘，相同方块相遇时合成两倍数字。\n每次有效移动后，会出现一个新方块。\n合成 2048 即可获胜，也能继续挑战。\n合并时有短触感；说明见大厅设置。", "知道了", CheckEndState);
-        }
-
-        private void OpenSettings() { OpenSettings(null); }
-
-        private void OpenSettings(Action after)
-        {
-            Action finish = () => { CloseModal(); if (after != null) after(); else CheckEndState(); };
-            bool tetrisSettings = activePage == Page.Tetris && tetrisPage != null;
-            bool showPoetryCompanion = activePage == Page.Feihualing && feihualingPage != null && feihualingPage.ShowsAutoCompanionSetting;
-            bool extraSetting = tetrisSettings || showPoetryCompanion;
-            var panel = CreateModal("简单一点，刚刚好", extraSetting ? 574 : 488);
-            UiFactory.Button(panel, "声音与触感说明", 32, 104, 532, 54, () => ShowFeedbackHelp(after));
-            AddFeedbackToggle(panel, true, 178);
-            AddFeedbackToggle(panel, false, 264);
-            if (tetrisSettings)
-                UiFactory.Button(panel, "方向与旋转对调  ·  " + (tetrisPage.SwapControls ? "开启" : "关闭"), 32, 350, 532, 70, () =>
-                {
-                    tetrisPage.SetSwapControls(!tetrisPage.SwapControls);
-                    CloseModal(); OpenSettings(after);
-                });
-            if (showPoetryCompanion)
-                AddPoetryCompanionSetting(panel, after);
-            UiFactory.Button(panel, "完成", 32, extraSetting ? 462 : 376, 532, 74, finish, true);
-            dismissModal = finish;
-        }
-
-        private void AddFeedbackToggle(RectTransform panel, bool soundSetting, float top)
-        {
-            bool Enabled() => soundSetting ? data.SoundEnabled : data.HapticsEnabled;
-            string Caption() => (soundSetting ? "声音  ·  " : "触感  ·  ") + (Enabled() ? "开启" : "关闭");
-            Button button = null;
-            void Toggle()
-            {
-                SetFeedbackSetting(soundSetting, !Enabled());
-                if (soundSetting) goldMinerPage?.SettingsChanged();
-                button.name = Caption();
-                var label = button.GetComponentInChildren<Text>();
-                label.name = label.text = button.name;
-            }
-            button = UiFactory.Button(panel, Caption(), 32, top, 532, 70, Toggle);
-        }
-
-        private void ShowDialog(string title, string message, string primary, Action primaryAction, string secondary = null, Action secondaryAction = null)
-        {
-            var panel = CreateModal(title);
-            UiFactory.Label(panel, message, 32, 114, 532, 166, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(panel, primary, 32, 300, 532, 74, () => { CloseModal(); primaryAction(); }, true);
-            if (secondary != null)
-                UiFactory.Button(panel, secondary, 32, 390, 532, 62, () => { CloseModal(); secondaryAction(); });
-            dismissModal = () =>
-            {
-                CloseModal();
-                if (secondaryAction != null) secondaryAction();
-                else CheckEndState();
-            };
-            modalBackReturnsToLobby = secondaryAction == (Action)ShowLobby;
-        }
-
-        private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
-        {
-            if (inGame || activePage == Page.Lobby) Settle2048Animation();
-            else StopAnimation();
-            CloseModal();
-            var overlay = UiFactory.Panel(canvasRoot, "Dialog overlay", 0, 0, 720, 1320, new Color(.06f, .14f, .1f, .48f), false);
-            UiFactory.Stretch(overlay.rectTransform);
-            overlay.raycastTarget = true;
-            modal = overlay.gameObject;
-            if (outsideDismiss != null)
-            {
-                // Keep the dismiss button behind, rather than above, the panel. A click
-                // on panel whitespace must not bubble to a parent dismiss handler.
-                var backdrop = UiFactory.Panel(overlay.transform, "Dismiss outside dialog", 0, 0, 720, 1320, Color.clear, false);
-                UiFactory.Stretch(backdrop.rectTransform);
-                backdrop.raycastTarget = true;
-                var dismiss = backdrop.gameObject.AddComponent<Button>();
-                dismiss.targetGraphic = backdrop;
-                dismiss.transition = Selectable.Transition.None;
-                dismiss.onClick.AddListener(() => outsideDismiss());
-            }
-            var modalFrame = UiFactory.Rect(modal.transform, "Dialog safe area", 0, 0, 720, 1320);
-            modalFrame.gameObject.AddComponent<SafeDesignFrame>().Initialize(modalFrame, canvasRoot);
-            var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, modalFrame.rect.height - 64));
-            var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, 596, height, UiFactory.Paper);
-            panel.raycastTarget = true;
-            UiFactory.Center(panel.rectTransform);
-            UiFactory.Label(panel.transform, title, outsideDismiss != null ? 98 : 32, 36,
-                outsideDismiss != null ? 400 : 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
-            return panel.rectTransform;
-        }
-
-        private void CloseModal()
-        {
-            if (modal != null)
-            {
-                modal.SetActive(false);
-                Destroy(modal);
-                modal = null;
-            }
-            dismissModal = null;
-            modalBackReturnsToLobby = false;
         }
 
         private void Refresh2048Scores()

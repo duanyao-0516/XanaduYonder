@@ -85,6 +85,9 @@ const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.js
     await phase('user pause and own audio preference survive host toggles',async()=>{
       await page.evaluate(()=>{const i=window.__XanaduZhaoyunInternals;i.TimeMgr.instance().pause(false);i.SoundMgr.instance().setMusicVolume(0);i.SoundMgr.instance().setSoundVolume(0);const p=i.DataMgr.instance().player;p.setSettingData({...p.settingData,musicVolume:0,soundVolume:0});});
       await page.evaluate(()=>{window.XanaduZhaoyun.setActive(false);window.XanaduZhaoyun.setActive(true);});
+      const resume = page.locator('.xanadu-resume');
+      assert.equal(await resume.evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0.4)');
+      await page.screenshot({path:path.join(evidence,'battle-resume-360.png')});
       await page.getByRole('button',{name:'继续游戏',exact:true}).tap();assert.equal((await status()).paused,true);
       await page.evaluate(()=>{window.XanaduZhaoyun.configure({soundEnabled:false});window.XanaduZhaoyun.configure({soundEnabled:true});});
       const volumes=await page.evaluate(()=>({music:Laya.SoundManager.musicVolume,sound:Laya.SoundManager.soundVolume}));

@@ -136,6 +136,7 @@ namespace XanaduYonder.EditorTools
             private readonly string directory;
             private readonly int height;
             private readonly float designHeight;
+            private bool hostAcceptsInput = true;
             public Fixture(int height)
             {
                 this.height=height; designHeight=height*720f/388;
@@ -152,7 +153,7 @@ namespace XanaduYonder.EditorTools
                 frame=UiFactory.Rect(rect,"Tetris page",0,0,720,designHeight);UiFactory.Stretch(frame);
                 if(EventSystem.current==null)new GameObject("Events",typeof(EventSystem),typeof(StandaloneInputModule)).transform.SetParent(root.transform);
                 page=frame.gameObject.AddComponent<TetrisPage>();
-                page.Initialize(frame,()=>{},after=>after(),()=>true,()=>false,()=>false,null,_=>{},(a,b,c,d,e,f)=>{},new TetrisSaveStore(directory));
+                page.Initialize(frame,()=>{},after=>after(),()=>hostAcceptsInput,()=>false,()=>false,null,_=>{},(a,b,c,d,e,f)=>{},new TetrisSaveStore(directory));
                 SetLayer(canvasObject.transform);Canvas.ForceUpdateCanvases();page.Enter();
             }
             private static void SetLayer(Transform t){t.gameObject.layer=5;foreach(Transform child in t)SetLayer(child);}
@@ -183,7 +184,83 @@ namespace XanaduYonder.EditorTools
                 var icons=frame.GetComponentsInChildren<UiIconGraphic>(true);
                 foreach(var kind in new[]{UiIconKind.Home,UiIconKind.Book,UiIconKind.Settings})Require(icons.Count(i=>i.Kind==kind)==1,"Shared navigation icon "+kind);
                 Require(!File.Exists(Path.Combine(directory,"tetris-v1.json")),"Preview creates no active save");
+                var coveredPause=frame.GetComponentsInChildren<Button>().Single(button=>button.name=="Tetris pause");
+                ExecuteEvents.Execute(coveredPause.gameObject,new BaseEventData(EventSystem.current),ExecuteEvents.submitHandler);
+                Require(!coveredPause.IsInteractable()&&page.Session.Phase==TetrisSessionPhase.Ready,
+                    "The covered pause shortcut cannot start play behind the full-screen ready dialog");
                 Capture("ready");
+                CheckCanvasScrim();
+            }
+
+            private void CheckCanvasScrim()
+            {
+                var overlay = page.View.OverlayRoot;
+                var backdrop = overlay.GetComponentInChildren<DialogBackdrop>();
+                Require(backdrop != null && !overlay.GetComponent<Image>().enabled, "The ready dialog uses a single full-canvas scrim.");
+                var oldPivot = frame.pivot;
+                frame.localScale = Vector3.one * .3f;
+                frame.anchorMin = frame.anchorMax = frame.pivot = new Vector2(.5f, .5f);
+                frame.sizeDelta = new Vector2(720, designHeight);
+                frame.anchoredPosition = Vector2.zero;
+                frame.localRotation = Quaternion.Euler(0, 0, 23);
+                try
+                {
+                    var samples = new[] { new Vector2Int(7, height / 2), new Vector2Int(380, height / 2),
+                        new Vector2Int(194, 7), new Vector2Int(194, height - 8) };
+                    var shaded = ReadScrimPixels(samples);
+                    foreach (var point in samples)
+                    {
+                        var hits = new System.Collections.Generic.List<RaycastResult>();
+                        EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = (Vector2)point }, hits);
+                        Require(hits.Count > 0 && hits[0].gameObject == backdrop.gameObject,
+                            "The visible scrim receives taps beyond a scaled, rotated safe frame at " + point);
+                    }
+                    backdrop.enabled = false;
+                    var clear = ReadScrimPixels(samples);
+                    for (int i = 0; i < samples.Length; i++)
+                        Require(shaded[i].grayscale + .08f < clear[i].grayscale, "The rendered scrim darkens the canvas edge " + samples[i]);
+                    var innerCanvas = frame.gameObject.AddComponent<Canvas>();
+                    try
+                    {
+                        innerCanvas.overrideSorting = true;
+                        backdrop.enabled = true;
+                        Canvas.ForceUpdateCanvases();
+                        foreach (var point in samples)
+                            Require(!backdrop.Raycast(point, camera), "An independent inner canvas limits the scrim to its own bounds.");
+                    }
+                    finally { Object.DestroyImmediate(innerCanvas); }
+                }
+                finally
+                {
+                    backdrop.enabled = true;
+                    frame.localRotation = Quaternion.identity;
+                    frame.localScale = Vector3.one;
+                    frame.pivot = oldPivot;
+                    UiFactory.Stretch(frame);
+                    Canvas.ForceUpdateCanvases();
+                }
+            }
+
+            private Color[] ReadScrimPixels(Vector2Int[] samples)
+            {
+                SetLayer(frame.parent);
+                Canvas.ForceUpdateCanvases();
+                camera.Render();
+                var previous = RenderTexture.active;
+                var pixel = new Texture2D(1, 1, TextureFormat.RGB24, false);
+                var values = new Color[samples.Length];
+                try
+                {
+                    RenderTexture.active = texture;
+                    for (int i = 0; i < samples.Length; i++)
+                    {
+                        pixel.ReadPixels(new Rect(samples[i].x, samples[i].y, 1, 1), 0, 0);
+                        pixel.Apply();
+                        values[i] = pixel.GetPixel(0, 0);
+                    }
+                    return values;
+                }
+                finally { RenderTexture.active = previous; Object.DestroyImmediate(pixel); }
             }
             private Rect Bounds(RectTransform r)
             {
@@ -229,6 +306,13 @@ namespace XanaduYonder.EditorTools
                 Require(pauseTexts.Length==3&&pauseTexts.Contains("已暂停")&&pauseTexts.Contains("继续游戏")&&pauseTexts.Contains("重新开始"),"Pause contains only its title and two actions");
                 Require(page.View.PauseRoot.GetComponentsInChildren<Text>().Single(t=>t.text=="已暂停").color==Color.white,"Pause title is white");
                 Capture("paused");
+                hostAcceptsInput = false;
+                Invoke(page, "LateUpdate");
+                Require(!page.View.PauseRoot.gameObject.activeSelf && !page.View.OverlayRoot.gameObject.activeSelf,
+                    "While a host dialog owns input, the local arena and ready card add no second scrim.");
+                hostAcceptsInput = true;
+                Invoke(page, "LateUpdate");
+                Require(page.View.PauseRoot.gameObject.activeSelf, "Returning from host settings restores the arena pause card.");
                 Click(page.View.PauseRoot.GetComponentsInChildren<Button>().Single(b=>b.GetComponentInChildren<Text>().text=="继续游戏"));
                 Require(page.Session.Phase==TetrisSessionPhase.Countdown,"Continue button uses three-second countdown");
                 Require(!page.View.OverlayRoot.gameObject.activeSelf,"Countdown does not reuse the pause dialog");

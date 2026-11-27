@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="../../Assets/Scripts/Runtime/AtomicSaveFile.cs" Link="Runtime/AtomicSaveFile.cs" />
     <Compile Include="../../Assets/Scripts/Core/Jump/**/*.cs" Link="Core/Jump/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../Assets/Scripts/Runtime/Jump/JumpSave*.cs" Link="Runtime/Jump/%(Filename)%(Extension)" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />

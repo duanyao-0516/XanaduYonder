@@ -416,10 +416,13 @@ namespace XanaduYonder.EditorTools
                 var compactHeight = firstRow.Root.rect.height;
                 var historyCount = game.History.Count;
                 var gameRoot = Get<RectTransform>(page, "gameRoot");
+                var settings = gameRoot.Find("Settings button").GetComponent<Button>();
                 fixture.Click(Center((RectTransform)gameRoot.Find("Book button")));
+                Require(!settings.IsInteractable(), "Rules block the settings button behind the modal");
                 fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "知道了").transform));
                 Require(Get<GameObject>(shell, "modal") == null, "Closing rules opened from the game returns to the conversation");
-                fixture.Click(Center((RectTransform)gameRoot.Find("Settings button")));
+                Require(settings.IsInteractable(), "Closing rules restores the conversation settings button");
+                fixture.Click(Center((RectTransform)settings.transform));
                 fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "玩法说明").transform));
                 fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "知道了").transform));
                 var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
@@ -430,8 +433,12 @@ namespace XanaduYonder.EditorTools
                     !WorldRect((RectTransform)fixedSides.transform).Overlaps(WorldRect((RectTransform)show.transform)), "Fixed-side switch has its own target");
                 Require(!WorldRect((RectTransform)show.transform).Overlaps(WorldRect((RectTransform)close.transform)),
                     "Preference switches have separate touch targets");
-                fixture.Click(Center((RectTransform)show.transform));
-                Require(data.ShowPinyin, "Real settings switch enables pinyin immediately");
+                var events = EventSystem.current;
+                events.SetSelectedGameObject(close.gameObject);
+                ExecuteEvents.Execute(close.gameObject, new AxisEventData(events) { moveDir = MoveDirection.Down }, ExecuteEvents.moveHandler);
+                Require(events.currentSelectedGameObject == show.gameObject, "Down selects the next preference switch in the modal");
+                ExecuteEvents.Execute(events.currentSelectedGameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
+                Require(data.ShowPinyin, "Submitting the selected switch enables pinyin immediately");
                 fixture.Flush();
                 foreach (var row in Get<List<IdiomVirtualList.Row>>(chat, "rows"))
                 {
@@ -458,6 +465,18 @@ namespace XanaduYonder.EditorTools
                 CheckTranscript(page, game, "pinyin disabled again");
                 Near(firstRow.Root.rect.height, compactHeight, "Disabling pinyin restores compact row height");
                 Require(game.History.Count == historyCount && !game.IsEnded, "Settings toggles preserve the live game");
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "对局管理").transform));
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "结束本轮").transform));
+                var confirm = FindNamedButton(Get<GameObject>(shell, "modal"), "回顾本轮");
+                var cancel = FindNamedButton(Get<GameObject>(shell, "modal"), "取消");
+                events.SetSelectedGameObject(confirm.gameObject);
+                ExecuteEvents.Execute(confirm.gameObject, new AxisEventData(events) { moveDir = MoveDirection.Left }, ExecuteEvents.moveHandler);
+                Require(events.currentSelectedGameObject == cancel.gameObject, "Left moves from the confirmation to its cancel action");
+                fixture.Click(Center((RectTransform)cancel.transform));
+                Require(!game.IsEnded && game.History.Count == historyCount, "Cancelling an end-of-round confirmation preserves play");
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "返回设置").transform));
+                Require(FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch") != null,
+                    "Management returns to the preference page");
                 Invoke(page, "ReturnFromDialog");
                 data.ActiveMatchKind = IdiomMatchKind.Local;
                 var local = Get<IdiomGame>(page, "localCharacterGame");
@@ -541,10 +560,18 @@ namespace XanaduYonder.EditorTools
                 var input = Get<InputField>(page, "input"); var send = Get<Button>(page, "send");
                 input.text = "一心一意"; Invoke(page, "Update");
                 FocusInput(input);
+                int beforeSend = game.History.Count;
+                var events = EventSystem.current;
+                Require(events.currentSelectedGameObject == input.gameObject && send.navigation.mode == Navigation.Mode.None,
+                    "The composer owns selection while editing");
+                ExecuteEvents.Execute(input.gameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
+                input.onEndEdit.Invoke(input.text);
+                Require(game.History.Count == beforeSend && input.text == "一心一意", "IME confirmation keeps the answer as a draft");
                 var pointer = fixture.Press(Center((RectTransform)send.transform));
                 Require(input.isFocused, match + " send pointer-down retains input ownership for close=" + closeAfterSend);
                 fixture.Release(pointer);
-                Require(game.History.Count > 0, "Real send release submits the idiom");
+                Require(game.History.Count == beforeSend + (match == IdiomMatchKind.Local ? 1 : 2),
+                    "One send records one player answer and the computer reply in a computer match");
                 Require(input.isFocused == !closeAfterSend, "Only successful send obeys close-after-send preference");
                 Require(input.text.Length == 0, "Successful send clears the committed word while keeping the configured focus state");
                 var historyCount = game.History.Count;
@@ -1009,7 +1036,11 @@ namespace XanaduYonder.EditorTools
             var modal = Get<GameObject>(shell, "modal");
             Set(shell, "modal", null);
             Set(shell, "dismissModal", null);
-            if (modal != null) Object.DestroyImmediate(modal);
+            if (modal != null)
+            {
+                modal.SetActive(false);
+                Object.DestroyImmediate(modal);
+            }
         }
 
         private static void CheckMesh(UiIconGraphic icon, bool centered)

@@ -53,6 +53,8 @@ def validate(root):
         relevant = {p.relative_to(root).as_posix() for p in (root/directory).rglob('*')
                     if p.is_file() and p.suffix in {'.js', '.html', '.css', '.json', '.java', '.xml'}
                     and 'tests' not in p.relative_to(root/directory).parts}
+        if report is content:
+            relevant.add('ThirdParty/WebGameUI/dialogs.css')
         require(relevant <= sources, 'Unfingerprinted source files: ' + ', '.join(sorted(relevant-sources)))
     require(sha(content_path.read_bytes()) == runtime['contentBuildSha256'], 'Content report changed after AAR build')
     files = content['files']
@@ -67,7 +69,7 @@ def validate(root):
         require(len(data) == entry['bytes'] and sha(data) == entry['sha256'], 'Content changed: ' + path)
     actual = {p.relative_to(base/'content').as_posix() for p in (base/'content').rglob('*') if p.is_file()}
     require(actual == set(expected), 'Content inventory changed after build')
-    require({'index.html', 'offline.css', 'offline-adapter.js', 'host-bridge.js', 'panel-select.js', 'save-editor-data.js',
+    require({'index.html', 'offline.css', 'dialogs.css', 'offline-adapter.js', 'host-bridge.js', 'panel-select.js', 'save-editor-data.js',
              'save-editor-ui.js', 'battle-aid.js', 'battle-aid-ui.js', 'battle-speed.js', 'js/bundle.js'} <= set(expected),
             'Missing offline entry/adapter')
     aar = root/'Assets/Plugins/Android/ZhaoyunAdouRuntime.aar'

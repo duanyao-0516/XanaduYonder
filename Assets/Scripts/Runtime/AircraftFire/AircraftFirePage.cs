@@ -106,6 +106,7 @@ namespace XanaduYonder.Runtime.AircraftFire
         public void HandleSystemBack(Func<bool> confirmExit)
         {
             if (!visible || settingsBlocked) return;
+            if (dialogKind == DialogKind.Restart) { ShowPause(); return; }
             if (dialogKind == DialogKind.Help || dialogKind == DialogKind.Records)
             {
                 CloseDialog();

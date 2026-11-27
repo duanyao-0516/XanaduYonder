@@ -84,7 +84,7 @@ namespace XanaduYonder.Runtime.Watermelon
             for (int i = 0; i < 3; i++)
             {
                 int theme = i;
-                themes[i] = UiFactory.Button(themeBand, WatermelonArtwork.ThemeNames[i], 56 + i * 208, 0, 192, 48, () => SetTheme(theme));
+                themes[i] = DialogUi.ActionButton(themeBand, WatermelonArtwork.ThemeNames[i], 56 + i * 208, 0, 192, 48, () => SetTheme(theme));
             }
             var statistics = UiFactory.Band(root, "Watermelon scores", 268, 74, .14f);
             score = Stat(statistics, "本局得分", 56);
@@ -107,17 +107,19 @@ namespace XanaduYonder.Runtime.Watermelon
             dangerLabel = UiFactory.Label(board, "警戒线", 10, (WatermelonRules.Height - WatermelonRules.DangerY) * Scale + 5, BoardWidth - 20, 28, 17, UiFactory.Hex("B49364"), TextAnchor.UpperRight);
             ghost = artwork.Icon(board, "Current ball preview", 0, 0, 40, data.Theme, 0);
             effectLayer = UiFactory.Rect(board, "Merge effects", 0, 0, BoardWidth, BoardHeight);
-            var overlay = UiFactory.Panel(board, "Paused overlay", 0, 0, BoardWidth, BoardHeight, new Color(.97f, .96f, .91f, .88f), false);
+            var overlay = UiFactory.Panel(board, "Paused overlay", 0, 0, BoardWidth, BoardHeight, DialogUi.Scrim, false);
             overlay.raycastTarget = true;
             pauseOverlay = overlay.gameObject;
-            UiFactory.Label(overlay.transform, "歇一会儿。", 30, 220, BoardWidth - 60, 76, 42, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            UiFactory.Label(overlay.transform, "这一局的进度，会一直为你保留。", 30, 306, BoardWidth - 60, 48, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(overlay.transform, "继续游戏", 140, 392, BoardWidth - 280, 66, TogglePause, true);
+            var card = UiFactory.Panel(overlay.transform, "Pause card", 0, 0, BoardWidth - 72, 308, DialogUi.Surface).rectTransform;
+            UiFactory.Center(card);
+            UiFactory.Label(card, "已暂停", 20, 20, card.rect.width - 40, 76, 42, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            UiFactory.Label(card, "这一局的进度，会一直为你保留。", 20, 108, card.rect.width - 40, 48, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            DialogUi.ActionButton(card, "继续游戏", 60, 207, card.rect.width - 120, 66, TogglePause, true);
             pauseOverlay.SetActive(false);
             var hintBand = UiFactory.Band(root, "Watermelon hint", 1120, 48, .82f);
             hint = UiFactory.Label(hintBand, "拖动瞄准，松手投放", 56, 0, 608, 48, 23, UiFactory.Accent, TextAnchor.MiddleCenter);
             var actions = UiFactory.Band(root, "Watermelon actions", 1196, 64, 1);
-            UiFactory.Button(actions, "重新开始", 56, 0, 296, 64, ConfirmRestart);
+            DialogUi.ActionButton(actions, "重新开始", 56, 0, 296, 64, ConfirmRestart);
             var pause = UiFactory.Button(actions, "暂停", 368, 0, 296, 64, TogglePause);
             pauseLabel = pause.GetComponentInChildren<Text>();
         }
@@ -252,7 +254,18 @@ namespace XanaduYonder.Runtime.Watermelon
                 themes[i].GetComponentInChildren<Text>().color = data.Theme == i ? Color.white : UiFactory.Ink;
             }
             pauseLabel.text = manuallyPaused ? "继续" : "暂停";
-            pauseOverlay.SetActive(manuallyPaused && !snapshot.GameOver);
+            RefreshPauseCover();
+        }
+
+        private void LateUpdate()
+        {
+            if (visible && manuallyPaused) RefreshPauseCover();
+        }
+
+        private void RefreshPauseCover()
+        {
+            bool show = manuallyPaused && !game.GameOver && acceptsInput();
+            if (pauseOverlay.activeSelf != show) pauseOverlay.SetActive(show);
         }
 
         private void RenderPreview(WatermelonSnapshot snapshot)
@@ -344,7 +357,7 @@ namespace XanaduYonder.Runtime.Watermelon
                     32 + column * 134, 338 + row * 132, 132, 34, data.Theme == 2 ? 17 : 20, UiFactory.Ink, TextAnchor.MiddleCenter);
             }
             UiFactory.Label(panel, "落稳后仍越线 2 秒，本局结束。\n切换主题不影响进度；离开会自动存档。", 32, 674, 532, 74, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.Button(panel, "知道了", 32, 770, 532, 66, close, true);
+            DialogUi.ActionButton(panel, "知道了", 32, 770, 532, 66, close, true);
         }
 
         public void Save()

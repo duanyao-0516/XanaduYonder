@@ -66,17 +66,17 @@ namespace XanaduYonder.Runtime.Idiom
                 IdiomEntry entry;
                 if (!lexicon.TryGetById(id, out entry)) continue;
                 var y = 162 + i * 98;
-                var choose = IdiomUi.Button(panel, "", 32, y, 414, 84, () =>
+                var choose = DialogUi.ActionButton(panel, "", 32, y, 414, 84, () =>
                 {
                     CloseDialog(); SetDraft(entry.Word); draftDirty = true;
                     Save(); Refresh(); input.ActivateInputField();
                 });
                 IdiomUi.Label(choose.transform, entry.Word, 18, 1, 378, 48, 30, UiFactory.Ink, bold: true);
                 IdiomUi.Label(choose.transform, IdiomDefinitionText.CompactPinyin(entry.Pinyin), 18, 48, 378, 30, 19, UiFactory.Accent);
-                IdiomUi.Button(panel, "释义", 460, y, 104, 84,
+                DialogUi.ActionButton(panel, "释义", 460, y, 104, 84,
                     () => ShowDefinition(id, () => ShowHint(candidate), null), false, 23);
             }
-            IdiomUi.Button(panel, "先想一想", 32, panel.rect.height - 86, 532, 62, ReturnFromDialog);
+            DialogUi.ActionButton(panel, "先想一想", 32, panel.rect.height - 86, 532, 62, ReturnFromDialog);
         }
 
         private void ShowSummary()
@@ -107,7 +107,7 @@ namespace XanaduYonder.Runtime.Idiom
                     var id = candidate.EntryIds[i];
                     IdiomEntry entry;
                     if (!lexicon.TryGetById(id, out entry)) continue;
-                    var row = IdiomUi.Button(panel, "", 32, 364 + i * 82, 532, 72,
+                    var row = DialogUi.ActionButton(panel, "", 32, 364 + i * 82, 532, 72,
                         () => ShowDefinition(id, ShowSummary, null));
                     IdiomUi.Label(row.transform, entry.Word, 18, 0, 300, 42, 28, UiFactory.Ink, bold: true);
                     IdiomUi.Label(row.transform, IdiomDefinitionText.CompactPinyin(entry.Pinyin), 18, 39, 420, 28, 18, UiFactory.Accent);
@@ -115,9 +115,9 @@ namespace XanaduYonder.Runtime.Idiom
                 }
             }
             var bottom = panel.rect.height - 170;
-            IdiomUi.Button(panel, "再来一局", 32, bottom, 258, 68, () => { CloseDialog(); Restart(); }, true);
-            IdiomUi.Button(panel, "生词本", 306, bottom, 258, 68, () => OpenNotebook(true));
-            IdiomUi.Button(panel, "回看本轮", 32, bottom + 84, 532, 62, ReturnFromDialog);
+            DialogUi.ActionButton(panel, "再来一局", 32, bottom, 258, 68, () => { CloseDialog(); Restart(); }, true);
+            DialogUi.ActionButton(panel, "生词本", 306, bottom, 258, 68, () => OpenNotebook(true));
+            DialogUi.ActionButton(panel, "回看本轮", 32, bottom + 84, 532, 62, ReturnFromDialog);
         }
 
         private void ShowDefinition(string id, Action back, IdiomNotebookItem saved, bool expanded = false)
@@ -146,12 +146,12 @@ namespace XanaduYonder.Runtime.Idiom
             var expandHeight = longStories || !found ? 58 : 0;
             ScrollDefinition(panel, text, footerTop - 184 - expandHeight);
             if (longStories)
-                IdiomUi.Button(panel, expanded ? "收起长典故" : "展开典故", 32, footerTop - 62, 532, 48,
+                DialogUi.ActionButton(panel, expanded ? "收起长典故" : "展开典故", 32, footerTop - 62, 532, 48,
                     () => ShowDefinition(id, back, saved, !expanded), false, 21);
             else if (!found)
-                IdiomUi.Button(panel, "重新读取资料", 32, footerTop - 62, 532, 48,
+                DialogUi.ActionButton(panel, "重新读取资料", 32, footerTop - 62, 532, 48,
                     () => ShowDefinition(id, back, saved, expanded), false, 21);
-            var add = IdiomUi.Button(panel, added ? "我记住了" : "加入生词本", 32, footerTop, 340, 64, () =>
+            var add = DialogUi.ActionButton(panel, added ? "我记住了" : "加入生词本", 32, footerTop, 340, 64, () =>
             {
                 if (store == null || !store.CanWrite || notebook == null)
                 {
@@ -181,12 +181,12 @@ namespace XanaduYonder.Runtime.Idiom
                 if (SaveNotebook(updated, () => learning.AddNotebook(id, addedAt))) ShowDefinition(id, back, saved, expanded);
             }, true);
             add.interactable = added ? entry != null : found;
-            IdiomUi.Button(panel, "复制成语", 388, footerTop, 176, 64, () =>
+            DialogUi.ActionButton(panel, "复制成语", 388, footerTop, 176, 64, () =>
             {
                 GUIUtility.systemCopyBuffer = word; setStatus("已复制“" + word + "”。");
             }, false, 21);
             if (canRemove)
-                IdiomUi.Button(panel, "移出生词本", 32, footerTop + 76, 532, 48, () =>
+                DialogUi.ActionButton(panel, "移出生词本", 32, footerTop + 76, 532, 48, () =>
                 {
                     if (notebook == null || store == null || !store.CanWrite)
                     {
@@ -224,8 +224,7 @@ namespace XanaduYonder.Runtime.Idiom
         private void ShowMenu()
         {
             Save();
-            var recoverCurrent = Game != null && store != null && store.NeedsRecovery;
-            var panel = Dialog("成语接龙 · 设置", recoverCurrent ? 808 : 712, null);
+            var panel = Dialog("成语接龙 · 设置", 626, null);
             IdiomPreferenceSwitch.Create(panel, "发送后收起键盘", 114, data == null || data.CloseKeyboardAfterSend, data != null, value =>
             {
                 data.CloseKeyboardAfterSend = value; Save();
@@ -238,20 +237,32 @@ namespace XanaduYonder.Runtime.Idiom
             {
                 data.FixedLocalActionSides = value; Save(); Refresh();
             });
-            IdiomUi.Button(panel, "玩法说明", 32, 356, 532, 72, () => ShowHelp(ShowMenu));
-            var finish = IdiomUi.Button(panel, "结束本轮", 32, 452, 258, 72, () =>
+            DialogUi.Disclosure(panel, "玩法说明", 32, 350, 532, 68, () => ShowHelp(ShowMenu));
+            DialogUi.Disclosure(panel, "对局管理", 32, 428, 532, 68, ShowGameActions);
+            DialogUi.ActionButton(panel, "继续", 32, 526, 532, 66, ReturnFromDialog, true);
+        }
+
+        private void ShowGameActions()
+        {
+            bool recoverCurrent = Game != null && store != null && store.NeedsRecovery;
+            var panel = Dialog("对局管理", recoverCurrent ? 550 : 468, ShowMenu);
+            var finish = DialogUi.ActionButton(panel, "结束本轮", 32, 112, 532, 70, () =>
             {
                 Confirm("结束这一轮？", "已完成的成语仍可回看，\n生词本会一直保留。", "回顾本轮", () =>
                 {
                     Game.Finish(); Save(); Refresh(); Changed?.Invoke(); ShowSummary();
-                }, ShowMenu);
+                }, ShowGameActions);
             });
             finish.interactable = Game != null && Game.IsStarted && !Game.IsEnded;
-            var restart = IdiomUi.Button(panel, "新一局", 306, 452, 258, 72, () => { CloseDialog(); Restart(); }, true);
+            var restart = DialogUi.ActionButton(panel, "新一局", 32, 198, 532, 70, () =>
+            {
+                CloseDialog(); RestartWithReturn(ShowGameActions);
+            });
             restart.interactable = Game != null;
             if (recoverCurrent)
-                IdiomUi.Button(panel, "保留旧档，保存当前进度", 32, 548, 532, 72, ConfirmCurrentGameRecovery, false, 23);
-            IdiomUi.Button(panel, "继续", 32, panel.rect.height - 104, 532, 62, ReturnFromDialog);
+                DialogUi.ActionButton(panel, "保留旧档，保存当前进度", 32, 284, 532, 70,
+                    () => ConfirmCurrentGameRecoveryWithReturn(ShowGameActions), false, 23);
+            DialogUi.ActionButton(panel, "返回设置", 32, panel.rect.height - 102, 532, 66, ReturnFromDialog, true);
         }
 
         private void ShowHelp(Action back)
@@ -266,23 +277,25 @@ namespace XanaduYonder.Runtime.Idiom
                 "人机对战中，生词本外独立接出的词会进入个人熟悉词；本回合提示过或查看过释义的词不算独立输入。生词仍由你点击“我记住了”确认。双人不会积累个人熟悉词。\n\n" +
                 "生词本中的“我记住了”会把词转为熟悉词；单纯移出只取消收藏。四种对局各自续玩，生词本共用。",
                 32, 116, 532, panel.rect.height - 218);
-            IdiomUi.Button(panel, "知道了", 32, panel.rect.height - 84, 532, 62, ReturnFromDialog, true);
+            DialogUi.ActionButton(panel, "知道了", 32, panel.rect.height - 84, 532, 62, ReturnFromDialog, true);
         }
 
-        private void Confirm(string title, string message, string action, Action confirmed, Action cancelled)
+        private void Confirm(string title, string message, string action, Action confirmed, Action cancelled, bool destructive = false)
         {
             var panel = Dialog(title, 430, cancelled);
             IdiomUi.Label(panel, message, 32, 116, 532, 148, 25, UiFactory.Muted, TextAnchor.MiddleCenter);
-            IdiomUi.Button(panel, "取消", 32, 316, 258, 70, ReturnFromDialog);
-            IdiomUi.Button(panel, action, 306, 316, 258, 70, () => { CloseDialog(); confirmed(); }, true);
+            DialogUi.ActionButton(panel, "取消", 32, 316, 258, 70, ReturnFromDialog);
+            DialogUi.ActionButton(panel, action, 306, 316, 258, 70, () => { CloseDialog(); confirmed(); }, true, destructive: destructive);
         }
 
-        private void Restart()
+        private void Restart() { RestartWithReturn(null); }
+
+        private void RestartWithReturn(Action back)
         {
             if (Game == null) return;
             if (Game.IsStarted && !Game.IsEnded)
             {
-                Confirm("开始新的一局？", "当前这一局将结束，\n最佳记录和生词本会保留。", "新一局", ResetMode, null);
+                Confirm("开始新的一局？", "当前这一局将结束，\n最佳记录和生词本会保留。", "新一局", ResetMode, back, destructive: true);
             }
             else ResetMode();
         }
@@ -324,11 +337,6 @@ namespace XanaduYonder.Runtime.Idiom
                 saveError = null; saveFailed = false; initialWarning = null;
                 Save(); Refresh(true); Changed?.Invoke();
             }, null);
-        }
-
-        private void ConfirmCurrentGameRecovery()
-        {
-            ConfirmCurrentGameRecoveryWithReturn(ShowMenu);
         }
 
         private void ConfirmCurrentGameRecoveryWithReturn(Action back)

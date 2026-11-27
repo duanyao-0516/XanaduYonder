@@ -13,16 +13,6 @@ namespace XanaduYonder.Runtime
                 EnterFeihualing, FeihualingPage.DrawLobbySeal);
         }
 
-        private void AddPoetryCompanionSetting(RectTransform panel, Action after)
-        {
-            UiFactory.Button(panel, "离线陪练  ·  " + (feihualingPage.AutoCompanionEnabled ? "开启" : "关闭"), 32, 350, 532, 70, () =>
-            {
-                feihualingPage.SetAutoCompanion(!feihualingPage.AutoCompanionEnabled);
-                CloseModal();
-                OpenSettings(after);
-            });
-        }
-
         private void EnterFeihualing()
         {
             // This entry is available only from the lobby, so other pages have left

@@ -40,6 +40,10 @@ Q版泡泡堂的固定 SWF 和 Ruffle 输入保存在 `ThirdParty/BombItContent/
 
 新增平台专属游戏时，应同时检查大厅入口、资源 staging、原生插件导入设置、生命周期／存档契约和最终产物。
 
+### Android 增量构建的资源清单
+
+如果 Android 构建报告同时出现 `player data was not rebuilt` 和 `The detailed packed-asset inventory is empty`，已有 APK 仍缺本轮资源清单。等该工作树的 Unity 构建或编辑器退出，将 `Library/PlayerDataCache/Android/DataBuildDirtyInfo.json` 移入本次验收的独立备份目录，再运行相同的构建命令。核对 APK 与 `.packed-assets.txt` 都是本次生成，并以包内校验通过为准。[相同故障的验证记录](bomb-it.md)
+
 ### 割绳子 Android 构建缓存
 
 Android Debug、Release 和棋类验证入口会先准备割绳子的两个 AAR。工作树已有完整且通过校验的产物时直接使用，并填充当前用户的共享缓存。同一台电脑的新工作树可按 Java、Android 清单、内容转换脚本和固定来源 ZIP 的 SHA-256 恢复同一份产物。棋类和其他模块的改动不会使这份缓存失效。复用时从跟踪的 ZIP 校验 `ctr.min.js`，无需展开原始游戏或重跑图片转换。

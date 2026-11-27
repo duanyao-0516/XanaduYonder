@@ -14,11 +14,18 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
         private RectTransform OpenDialog(string title,float height)
         {
             CancelInput();CloseDialog();
-            var overlay=UiFactory.Panel(root,"SlidingPuzzle dialog overlay",0,0,root.rect.width,root.rect.height,new Color(.09f,.24f,.21f,.46f),false);
-            UiFactory.Stretch(overlay.rectTransform);overlay.raycastTarget=true;dialog=overlay.gameObject;
-            var panel=Panel(overlay.transform,"SlidingPuzzle dialog",0,0,342,height,UiFactory.Paper,14);UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
+            var overlay = DialogUi.ModalOverlay(root, "SlidingPuzzle dialog overlay");
+            dialog = overlay.gameObject;
+            var panel=Panel(overlay.transform,"SlidingPuzzle dialog",0,0,342,height,DialogUi.Surface,14);UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             Label(panel.transform,"Dialog title",title,21,25,300,40,26,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             dismissDialog=CloseDialog;SynchronizeGate();Save();return panel.rectTransform;
+        }
+        private void ModalAction(Transform parent, string name, string title, float x, float y, float w, float h,
+            Action action, bool primary, int size)
+        {
+            float scale = Scale;
+            DialogUi.ActionButton(parent, title, x * scale, y * scale, w * scale, h * scale,
+                action, primary, Mathf.RoundToInt(size * scale)).name = name;
         }
         private void CloseDialog()
         {
@@ -42,7 +49,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             }
             Label(panel,"Rule goal","从左到右、从上到下排列，空格留在右下角。\n已经归位的数字仍可移动，无需合并数字。",21,344,300,46,13,Secondary);
             Label(panel,"Rule assistance","首次移动开始计时，离开或打开弹窗暂停。\n撤回增加 1 步并标记练习，闯关仍可解锁。",21,398,300,46,13,Secondary);
-            Button(panel,"Rules done","明白了",21,457,300,42,()=>{CloseDialog();CheckEndState();},true,14);
+            ModalAction(panel,"Rules done","明白了",21,457,300,42,()=>{CloseDialog();CheckEndState();},true,14);
             dismissDialog=()=>{CloseDialog();CheckEndState();};
         }
         private void ConfirmRestart()
@@ -52,9 +59,9 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             var panel=OpenDialog(free?"重新开始":"重玩本关？",free?304:250);
             dialogKind=DialogKind.Restart;
             Label(panel,"Restart description",free?"想再试一次，还是换个局面？\n当前尺寸的对局将被替换。":"回到本关初始局面，重新计时、计步。\n已解锁进度和个人纪录会保留。",21,79,300,48,13,Secondary);
-            Button(panel,"Replay same",free?"重玩这题":"重玩本关",21,147,300,42,Restart,true,14);
-            if(free)Button(panel,"New puzzle","换一题",21,199,300,42,NewFree,false,14);
-            Button(panel,"Cancel restart","继续当前对局",21,free?251:199,300,32,CloseDialog,false,13);
+            ModalAction(panel,"Replay same",free?"重玩这题":"重玩本关",21,147,300,42,Restart,true,14);
+            if(free)ModalAction(panel,"New puzzle","换一题",21,199,300,42,NewFree,false,14);
+            ModalAction(panel,"Cancel restart","继续当前对局",21,free?251:199,300,32,CloseDialog,false,13);
         }
         public void CheckEndState()
         {
@@ -76,9 +83,9 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             SetNumber(Label(time.transform,"Result time value","",10,30,125,35,26,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold),FormatTime(Session.ElapsedSeconds));
             Label(moves.transform,"Result moves label","步数",10,9,125,20,12,Secondary,TextAnchor.MiddleCenter);
             SetNumber(Label(moves.transform,"Result moves value","",10,30,125,35,26,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold),Session.Game.Moves.ToString());
-            Button(panel,"Result continue",campaign?(next?"下一关":"返回选关"):"再来一局",21,282,300,42,()=>
+            ModalAction(panel,"Result continue",campaign?(next?"下一关":"返回选关"):"再来一局",21,282,300,42,()=>
             {CloseDialog();if(campaign){if(next)StartLevel(index+1);else ShowLevels();}else NewFree();},true,14);
-            Button(panel,"View solved board","查看棋盘",21,334,300,36,()=>{CloseDialog();Refresh();},false,13);
+            ModalAction(panel,"View solved board","查看棋盘",21,334,300,36,()=>{CloseDialog();Refresh();},false,13);
             dismissDialog=()=>{CloseDialog();Refresh();};
         }
     }

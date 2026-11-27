@@ -45,55 +45,67 @@ namespace XanaduYonder.Runtime
             UiFactory.Label(panel,
                 "轻按物件查看轮廓，松手取进下方消除栏。\n可以连续点取，三件同类物品自动消除。\n\n「移出」把消除栏最前面最多三件放进六格暂存区。点暂存物件可放回消除栏。\n\n清空篮子、消除栏和暂存区即可获胜。\n点「颠一下」能翻动物件。切换篮型会重开。",
                 32, 112, 532, 340, 24, UiFactory.Muted, TextAnchor.MiddleLeft);
-            UiFactory.Button(panel, "知道了", 32, 503, 532, 68, CloseModal, true);
+            DialogUi.ActionButton(panel, "知道了", 32, 503, 532, 68, CloseModal, true);
             dismissModal = CloseModal;
         }
 
         private void OpenBakerySettings()
         {
             bakeryPage.Suspend();
-            var panel = CreateModal(BakeryPage.DisplayName + " · 设置", 631, CloseModal);
-            UiFactory.Button(panel, "篮底小件数量 · " + (bakeryPreferences.ShowBottom ? "显示" : "隐藏"), 32, 114, 532, 66, () =>
+            var panel = CreateSheet(BakeryPage.DisplayName + " · 设置", 480, CloseModal);
+            float width = panel.rect.width - 64;
+            DialogUi.Disclosure(panel, "数量显示", 32, 108, width, 70, OpenBakeryCounters);
+            DialogUi.Disclosure(panel, "3D 主题 · " + BakeryThemeCatalog.Get(bakeryPage.ActiveTheme).Title,
+                32, 190, width, 70, ChooseBakeryTheme);
+            DialogUi.Disclosure(panel, "声音与触感", 32, 272, width, 70, () => OpenSettings(OpenBakerySettings));
+            DialogUi.ActionButton(panel, "完成", 32, 380, width, 72, CloseModal, true);
+            SetModalBack(CloseModal);
+        }
+
+        private void OpenBakeryCounters()
+        {
+            var panel = CreateSheet("数量显示", 408, OpenBakerySettings);
+            float width = panel.rect.width - 64;
+            DialogUi.SwitchRow(panel, "篮底小件数量", 32, 108, width, 72, bakeryPreferences.ShowBottom, value =>
             {
-                bakeryPreferences.ShowBottom = !bakeryPreferences.ShowBottom;
+                bakeryPreferences.ShowBottom = value;
                 SaveBakeryDisplay();
             });
-            UiFactory.Button(panel, "篮中剩余数量 · " + (bakeryPreferences.ShowRemaining ? "显示" : "隐藏"), 32, 193, 532, 66, () =>
+            DialogUi.SwitchRow(panel, "篮中剩余数量", 32, 190, width, 72, bakeryPreferences.ShowRemaining, value =>
             {
-                bakeryPreferences.ShowRemaining = !bakeryPreferences.ShowRemaining;
+                bakeryPreferences.ShowRemaining = value;
                 SaveBakeryDisplay();
             });
-            UiFactory.Button(panel, "3D 主题 · " + BakeryThemeCatalog.Get(bakeryPage.ActiveTheme).Title,
-                32, 272, 532, 66, ChooseBakeryTheme);
-            UiFactory.Button(panel, "进入时随机主题 · " + (bakeryPreferences.RandomOnEntry ? "开启" : "关闭"), 32, 351, 532, 66, () =>
-            {
-                bakeryPreferences.RandomOnEntry = !bakeryPreferences.RandomOnEntry;
-                SaveBakeryDisplay();
-            });
-            UiFactory.Button(panel, "声音与触感", 32, 430, 532, 66, () => OpenSettings(OpenBakerySettings));
-            UiFactory.Button(panel, "完成", 32, 528, 532, 68, CloseModal, true);
-            dismissModal = CloseModal;
+            DialogUi.ActionButton(panel, "返回设置", 32, 308, width, 72, OpenBakerySettings, true);
+            SetModalBack(OpenBakerySettings);
         }
 
         private void SaveBakeryDisplay()
         {
             bakeryPreferences.Save();
             bakeryPage.ApplyDisplay();
-            OpenBakerySettings();
         }
 
         private void ChooseBakeryTheme()
         {
-            var panel = CreateModal("3D 主题", 454, OpenBakerySettings);
-            UiFactory.Label(panel, "切换主题会重开当前篮。", 32, 103, 532, 52, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
+            int rows = (BakeryThemeCatalog.All.Count + 1) / 2;
+            var panel = CreateSheet("3D 主题", 424 + rows * 80, OpenBakerySettings);
+            float width = panel.rect.width - 64;
+            DialogUi.SwitchRow(panel, "进入时随机主题", 32, 108, width, 70, bakeryPreferences.RandomOnEntry, value =>
+            {
+                bakeryPreferences.RandomOnEntry = value;
+                SaveBakeryDisplay();
+            });
+            UiFactory.Label(panel, "切换主题会重开当前篮。", 32, 200, width, 52, 24, UiFactory.Muted);
+            float column = (width - 16) / 2;
             for (int i = 0; i < BakeryThemeCatalog.All.Count; i++)
             {
                 var option = BakeryThemeCatalog.All[i];
-                UiFactory.Button(panel, option.Title, 32 + i % 2 * 276, 171 + i / 2 * 78, 256, 66,
+                DialogUi.ActionButton(panel, option.Title, 32 + i % 2 * (column + 16), 260 + i / 2 * 80, column, 68,
                     () => SelectBakeryTheme(option.Theme), bakeryPage.ActiveTheme == option.Theme);
             }
-            UiFactory.Button(panel, "返回设置", 32, 344, 532, 66, OpenBakerySettings);
-            dismissModal = OpenBakerySettings;
+            DialogUi.ActionButton(panel, "返回设置", 32, panel.rect.height - 100, width, 72, OpenBakerySettings);
+            SetModalBack(OpenBakerySettings);
         }
 
         private void SelectBakeryTheme(BakeryTheme theme)

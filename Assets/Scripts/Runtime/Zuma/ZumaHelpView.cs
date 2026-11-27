@@ -15,17 +15,15 @@ namespace XanaduYonder.Runtime.Zuma
 
         public ZumaHelpView(RectTransform root,Action close)
         {
-            var blocker=root.gameObject.AddComponent<Image>();
-            blocker.color=new Color(0,0,0,.58f);blocker.raycastTarget=true;
-            var paper=UiFactory.Panel(root,"Xanadu Zuma help",48,32,1184,656,UiFactory.Paper);
+            var paper=UiFactory.Panel(root,"Xanadu Zuma help",48,32,1184,656,DialogUi.Surface);
             paper.raycastTarget=true;panel=paper.rectTransform;
             UiFactory.Label(panel,"Zuma · 玩法说明",28,16,900,58,34,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
-            UiFactory.Button(panel,"关闭",1008,20,148,52,close);
+            DialogUi.ActionButton(panel,"关闭",1008,20,148,52,close);
             UiFactory.Label(panel,"熟悉操作，再慢慢挑战。英文界面的翻译与功能都在这里。",28,76,1096,28,19,UiFactory.Muted);
             for(var i=0;i<tabs.Length;i++)
             {
                 var index=i;
-                tabs[i]=UiFactory.Button(panel,titles[i],28+i*190,112,178,46,()=>ShowTab(index));
+                tabs[i]=DialogUi.ActionButton(panel,titles[i],28+i*190,112,178,46,()=>ShowTab(index));
                 tabs[i].GetComponentInChildren<Text>().fontSize=22;
             }
             UiFactory.Label(panel,"向上滑动查看完整内容 · 系统返回键也可关闭",28,618,1128,28,18,UiFactory.Muted);

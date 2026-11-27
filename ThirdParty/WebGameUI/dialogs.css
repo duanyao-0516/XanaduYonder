@@ -1,0 +1,78 @@
+/* Shared phone menus. Gameplay canvases and on-screen controls never use these classes. */
+.xy-dialog {
+  background: rgba(0, 0, 0, .40);
+  --xy-surface: #f8f7f1;
+  --xy-ink: #173d35;
+  --xy-accent: #276653;
+  --xy-muted: #52675d;
+  --xy-line: #d7dfd5;
+  --xy-secondary: #e7ede5;
+  color: var(--xy-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans", sans-serif;
+}
+.xy-dialog .xy-switch {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  text-align: start;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--xy-line);
+  border-radius: 0;
+  color: var(--xy-ink);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.xy-switch .xy-switch-label { flex: 1; }
+.xy-switch .switch-value { font-size: 13px; color: var(--xy-muted); }
+.xy-switch .switch-track,
+.xy-dialog input.xy-switch-input {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #748579;
+}
+.xy-dialog input.xy-switch-input { appearance: none; -webkit-appearance: none; }
+.xy-switch .switch-track::after,
+.xy-dialog input.xy-switch-input::after {
+  content: "";
+  position: absolute;
+  inset: 3px auto auto 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+}
+.xy-switch[aria-checked="true"] .switch-track,
+.xy-dialog input.xy-switch-input:checked { background: var(--xy-accent); }
+.xy-switch[aria-checked="true"] .switch-track::after,
+.xy-dialog input.xy-switch-input:checked::after { transform: translateX(16px); }
+.xy-dialog .xy-primary,
+.xy-dialog .xy-secondary {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background: var(--xy-accent);
+  touch-action: manipulation;
+}
+.xy-dialog .xy-secondary { color: var(--xy-ink); background: var(--xy-secondary); }
+.xy-dialog button:disabled { opacity: .55; }
+.xy-dialog :focus-visible { outline: 2px solid var(--xy-accent); outline-offset: -2px; }

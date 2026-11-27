@@ -31,11 +31,12 @@ namespace XanaduYonder.Runtime.LinkMatch
         {
             if(dialogKind==null)return;
             float s=S,cssWidth=(float)layout.CssWidth,width=Math.Min(316,cssWidth-48)*s;
-            var shade=Shape(root,"LinkMatch dialog shade",0,0,root.rect.width,root.rect.height,0,new Color(23/255f,61/255f,53/255f,.36f));shade.raycastTarget=true;dialog=shade.gameObject;
+            var shade = DialogUi.ModalOverlay(root, "LinkMatch dialog shade");
+            dialog = shade.gameObject;
             bool result=dialogKind=="won",help=dialogKind=="help",restart=dialogKind=="restart",timeout=dialogKind=="timeout";
             float height=(result?428:help?423:restart?294:timeout?294:346)*s;
             height=Math.Min(height,root.rect.height-48*s);
-            var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,20*s,UiFactory.Paper);
+            var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,20*s,DialogUi.Surface);
             panel.BorderWidth=s;panel.BorderColor=UiFactory.Hex("D9DFD0");
             if(dialogKind=="patterns")
             {
@@ -95,8 +96,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         private void DialogButton(Transform parent,string name,string label,float x,float y,float width,Action action,bool primary)
         {
-            var button=Button(parent,name,x,y,width,46*S,action,11*S,primary?UiFactory.Accent:UiFactory.Hex("E6ECDF"));
-            Label(button.transform,label,8*S,0,width-16*S,46*S,12,primary?UiFactory.Paper:UiFactory.Ink,TextAnchor.MiddleCenter);
+            DialogUi.ActionButton(parent, label, x, y, width, 46 * S, action, primary, Mathf.RoundToInt(12 * S)).name = name;
         }
     }
 }

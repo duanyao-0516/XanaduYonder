@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace XanaduYonder.Runtime
 {
-    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart, Back, Undo, Eraser, Pencil, Bell, Lock }
+    internal enum UiIconKind { Home, Settings, Notebook, Close, Book, Restart, Back, Undo, Eraser, Pencil, Bell, Lock, Chevron }
 
     // Small UI symbols are meshes rather than font glyphs, so their shape and centering
     // do not depend on the bundled CJK font or platform font fallback.
@@ -27,6 +27,10 @@ namespace XanaduYonder.Runtime
             var center = bounds.center;
             switch (kind)
             {
+                case UiIconKind.Chevron:
+                    Stroke(mesh, center, size, new Vector2(-.16f, .29f), new Vector2(.13f, 0));
+                    Stroke(mesh, center, size, new Vector2(.13f, 0), new Vector2(-.16f, -.29f));
+                    break;
                 case UiIconKind.Lock:
                     Path(mesh, center, size, new[] {
                         new Vector2(-.30f, .03f), new Vector2(.30f, .03f),

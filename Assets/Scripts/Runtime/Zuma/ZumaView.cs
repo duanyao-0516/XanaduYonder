@@ -51,24 +51,25 @@ namespace XanaduYonder.Runtime.Zuma
             // Crop the original preview region so its geometry stays unchanged.
             ZumaArt.Image(content,"Map preview",thumbnail,new Rect(0,0,476,305),418,347.5f,476,305);
             ZumaArt.Image(content,"Gauntlet temple",menu,new Rect(1282,1440,1280,720),0,0,1280,720);
-            ZumaArt.Button(content,menu,new Rect(1280,2160,211,84),172,632,211,84,back);
-            ZumaArt.Button(content,menu,new Rect(1924,2260,139,48),426,667,139,48,previous);
-            ZumaArt.Button(content,menu,new Rect(1922,2210,157,49),576,667,157,49,play);
-            ZumaArt.Button(content,menu,new Rect(1922,2161,141,48),745,667,141,48,nextMap);
-            var rects=new[]{new Rect(1608,2336,328,63),new Rect(1538,2399,258,49),new Rect(1485,2448,205,43),new Rect(1439,2491,159,53)};
-            var positions=new[]{new Vector2(470,270),new Vector2(504,196),new Vector2(530,124),new Vector2(554,45)};
-            for(var i=0;i<4;i++)
+            DialogUi.ActionButton(content, "上一关", 426, 663, 139, 52, previous, false, 23);
+            DialogUi.ActionButton(content, "开始", 576, 663, 157, 52, play, true);
+            DialogUi.ActionButton(content, "下一关", 745, 663, 141, 52, nextMap, false, 23);
+            var labels = new[] { "兔子", "雄鹰", "美洲豹", "太阳神" };
+            var positions = new[] { new Vector2(470, 270), new Vector2(504, 196), new Vector2(530, 124), new Vector2(554, 45) };
+            for (int i = 0; i < positions.Length; i++)
             {
-                var index=i;var button=ZumaArt.Button(content,menu,rects[i],positions[i].x,positions[i].y,rects[i].width,rects[i].height,()=>selectDifficulty(index));
-                button.Select(difficulty==ZumaSaveData.DifficultyIds[i]);
+                int index = i;
+                float width = 2 * (640 - positions[i].x);
+                DialogUi.ActionButton(content, labels[i], positions[i].x, positions[i].y, width, 54,
+                    () => selectDifficulty(index), difficulty == ZumaSaveData.DifficultyIds[i], 23);
             }
             ZumaArt.Text(content,assets,"cancun10","BEST SCORE:",924,632,212,40,Color.white);
             ZumaArt.Text(content,assets,"cancun10",record.BestScore.ToString(),1140,632,140,40,ZumaArt.Gold);
             ZumaArt.Text(content,assets,"cancun10","BEST TIME:",924,686,212,40,Color.white);
             ZumaArt.Text(content,assets,"cancun10",FormatTime(record.BestTimeSeconds),1140,686,140,40,ZumaArt.Gold);
-            UiFactory.Button(content,"‹ 返回大厅",24,24,174,56,back);
-            UiFactory.Button(content,"玩法说明",210,24,174,56,help);
-            if(resume!=null) StandardButton(content,"CONTINUE",940,40,276,64,resume);
+            DialogUi.ActionButton(content,"‹ 返回大厅",24,24,174,56,back);
+            DialogUi.ActionButton(content,"玩法说明",210,24,174,56,help);
+            if(resume!=null) DialogUi.ActionButton(content,"继续对局",940,40,276,64,resume,true);
         }
         public void ShowGame(ZumaLevelDefinition definition,ZumaSnapshot snapshot,Action pause,Action swap)
         {
@@ -228,13 +229,15 @@ namespace XanaduYonder.Runtime.Zuma
                 var c=f.Text.color;c.a=Mathf.Clamp01(1.4f-f.Age);f.Text.color=c;
             }
         }
-        public RectTransform Dialog(string title,bool god=false,int columns=5)
+        public RectTransform Dialog(string title, float width = 605)
         {
-            CloseDialog();dialog=ZumaArt.Rect(root,"Dialog input blocker",0,0,1280,720);
-            var dim=dialog.gameObject.AddComponent<Image>();dim.color=new Color(0,0,0,.40f);dim.raycastTarget=true;
-            var panel=ZumaArt.Panel(dialog,assets.Texture("Images/menu"),columns,4,god);
-            ZumaArt.Text(panel,assets,"nativealienextended18",title,20,god?72:32,columns*121-40,60,Color.white,true);
-            warning.transform.SetAsLastSibling();return panel;
+            CloseDialog();
+            dialog = DialogUi.ModalOverlay(root, "Dialog input blocker").rectTransform;
+            var panel = UiFactory.Panel(dialog, "Zuma dialog", (1280 - width) / 2, 118, width, 484, DialogUi.Surface);
+            panel.raycastTarget = true;
+            UiFactory.Label(panel.transform, title, 32, 32, width - 64, 62, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            warning.transform.SetAsLastSibling();
+            return panel.rectTransform;
         }
         public void HideAim()
         { HideRemaining(dots,0);HideRemaining(dotShadows,0); }
@@ -243,7 +246,7 @@ namespace XanaduYonder.Runtime.Zuma
         public void ShowHelp(Action close)
         {
             CloseDialog();
-            dialog=ZumaArt.Rect(root,"Zuma help",0,0,1280,720);
+            dialog = DialogUi.ModalOverlay(root, "Zuma help").rectTransform;
             new ZumaHelpView(dialog,close);
             warning.transform.SetAsLastSibling();
         }
@@ -253,27 +256,30 @@ namespace XanaduYonder.Runtime.Zuma
             ZumaArt.Text(button.transform,assets,"cancun10",title,5,(height-30)/2,width-10,36,ZumaArt.Gold,true);
         }
         public void Chinese(Transform parent,string value,float x,float y,float w,float h,int size=22)
-        { UiFactory.Label(parent,value,x,y,w,h,size,new Color(.95f,.95f,.86f),TextAnchor.MiddleCenter); }
-        public void Toggle(Transform parent,string title,bool enabled,float x,float y,Action action)
+        { UiFactory.Label(parent,value,x,y,w,h,size,UiFactory.Ink,TextAnchor.MiddleCenter); }
+        public void Stats(ZumaSnapshot state, Action acknowledge, Action details)
         {
-            var hit=ZumaArt.Rect(parent,"Toggle "+title,x,y,460,70);
-            var image=hit.gameObject.AddComponent<Image>();image.color=Color.clear;image.raycastTarget=true;
-            var button=hit.gameObject.AddComponent<Button>();button.transition=Selectable.Transition.None;button.onClick.AddListener(()=>action());
-            ZumaArt.Image(hit,"Checkbox",assets.Texture("Images/menu"),new Rect(enabled?0:75,462,75,69),0,0,75,69);
-            ZumaArt.Text(hit,assets,"cancun10",title,100,22,340,36,Color.white);
+            var panel = Dialog(state.Phase == "won" ? "关卡完成" : "本局结束");
+            UiFactory.Label(panel, "本局得分", 32, 109, 541, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            UiFactory.Label(panel, state.Score.ToString(), 32, 152, 541, 88, 50, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            DialogUi.Disclosure(panel, "成绩明细", 65, 270, 475, 66, details);
+            DialogUi.ActionButton(panel, "完成", 65, 362, 475, 72, acknowledge, true);
         }
-        public void Stats(ZumaSnapshot state,Action acknowledge)
+
+        public void StatsDetails(ZumaSnapshot state, Action back)
         {
-            var panel=Dialog(state.Phase=="won"?"STATS":"GAmE OvER",true,6);
-            var names=new[]{"POINTS","COMBOS","COINS","MAX CHAIN","MAX COMBO","YOUR TIME","ACE TIME"};
-            var values=new[]{state.Score.ToString(),state.TotalCombos.ToString(),state.TotalCoins.ToString(),state.MaxChainBonus.ToString(),state.MaxCombo.ToString(),FormatTime(state.PlayTicks/60),FormatTime(state.AceTimeSeconds)};
-            for(var i=0;i<names.Length;i++)
+            var panel = Dialog("成绩明细", 726);
+            var names = new[] { "得分", "连击次数", "金币", "最高连续奖励", "最高连击", "挑战用时", "目标用时" };
+            var values = new[] { state.Score.ToString(), state.TotalCombos.ToString(), state.TotalCoins.ToString(),
+                state.MaxChainBonus.ToString(), state.MaxCombo.ToString(), FormatTime(state.PlayTicks / 60), FormatTime(state.AceTimeSeconds) };
+            for (int i = 0; i < names.Length; i++)
             {
-                var x=i<5?101:395;var y=142+28*(i<5?i:i-5);
-                ZumaArt.Text(panel,assets,"cancun12",names[i],x,y,180,32,Color.white);
-                ZumaArt.Text(panel,assets,"cancun12",values[i],x+185,y,145,32,new Color(1,.6f,1));
+                float x = i < 4 ? 38 : 381;
+                float y = 115 + (i < 4 ? i : i - 4) * 54;
+                UiFactory.Label(panel, names[i], x, y, 178, 46, 24, UiFactory.Muted);
+                UiFactory.Label(panel, values[i], x + 178, y, 128, 46, 25, UiFactory.Ink, TextAnchor.MiddleRight);
             }
-            StandardButton(panel,"OK",66,362,594,72,acknowledge);
+            DialogUi.ActionButton(panel, "返回成绩", 66, 362, 594, 72, back, true);
         }
         private static Color BallTint(int color)
         {

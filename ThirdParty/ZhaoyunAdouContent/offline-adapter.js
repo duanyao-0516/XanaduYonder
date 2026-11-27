@@ -369,10 +369,11 @@
     document.getElementById('xanadu-personal-rank')?.remove();
     const game=I.DataMgr.instance(),player=game.player;
     const prior=I.RankDataMgr.instance().R0(player.lastStar),entry=game.rank.I0.get(prior.rank);
-    const panel=document.createElement('div');panel.id='xanadu-personal-rank';panel.className='xanadu-local-panel';
+    const panel=document.createElement('div');panel.id='xanadu-personal-rank';panel.className='xy-dialog xanadu-local-panel';
+    panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','个人段位');
     const box=document.createElement('section'),title=document.createElement('h2'),description=document.createElement('p'),message=document.createElement('p');
     title.textContent='个人段位';description.textContent='当前段位：'+game.rank.iL.rank+' · '+game.rank.iL.level+'星。对手为本机 AI，进度保存在本机。';
-    const reward=document.createElement('button');reward.type='button';
+    const reward=document.createElement('button');reward.type='button';reward.className='xy-primary';
     function state(){reward.disabled=player.isGetLastRankReward!==0;reward.textContent=reward.disabled?'每日段位奖励已领取':'领取每日段位奖励 · '+entry.reward+'金币';}
     state();reward.addEventListener('click',()=>{
       if(player.isGetLastRankReward!==0)return;
@@ -381,7 +382,7 @@
       if(!result.ok){message.textContent='保存失败，奖励尚未领取：'+result.error;return;}
       message.textContent='已领取'+entry.reward+'金币';const main=I.SceneMgr.instance().co('MainScene');if(main&&main.goldTxt)main.goldTxt.text=player.gold.toString();state();
     });
-    const close=document.createElement('button');close.type='button';close.textContent='返回游戏';close.addEventListener('click',()=>panel.remove());
+    const close=document.createElement('button');close.type='button';close.className='xy-secondary';close.textContent='返回游戏';close.addEventListener('click',()=>panel.remove());
     box.append(title,description,reward,message,close);panel.append(box);document.body.append(panel);
   }
 })();

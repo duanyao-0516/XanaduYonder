@@ -58,7 +58,7 @@ namespace XanaduYonder.Runtime.Feihualing
             startup = UiFactory.Rect(column, "Feihualing startup", 32, 200, BodyWidth, 340);
             startupTitle = IdiomUi.Label(startup, "", 0, 32, BodyWidth, 66, 34, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             startupMessage = IdiomUi.Label(startup, "", 56, 111, 544, 92, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
-            startupAction = IdiomUi.Button(startup, "重试", 128, 246, 400, 68, StartupAction, true);
+            startupAction = IdiomUi.PageButton(startup, "重试", 128, 246, 400, 68, StartupAction, true);
 
             BuildSetup();
             BuildPlay();
@@ -77,16 +77,16 @@ namespace XanaduYonder.Runtime.Feihualing
             IdiomUi.Place(setupContent, 0, 0, BodyWidth, 1022);
 
             Section(setupContent, "人数", 0);
-            playerOptions[0] = IdiomUi.Button(setupContent, "单机", 0, 42, 320, 62,
+            playerOptions[0] = IdiomUi.PageButton(setupContent, "单机", 0, 42, 320, 62,
                 () => Select(PoetryPlayers.Solo, Goal, Rule));
-            playerOptions[1] = IdiomUi.Button(setupContent, "同机双人", 336, 42, 320, 62,
+            playerOptions[1] = IdiomUi.PageButton(setupContent, "同机双人", 336, 42, 320, 62,
                 () => Select(PoetryPlayers.Duo, Goal, Rule));
 
             Section(setupContent, "目标", 126);
             for (var i = 0; i < goalOptions.Length; i++)
             {
                 var goal = (PoetryGoal)i;
-                goalOptions[i] = IdiomUi.Button(setupContent, GoalNames[i], i * 224, 168, 208, 62,
+                goalOptions[i] = IdiomUi.PageButton(setupContent, GoalNames[i], i * 224, 168, 208, 62,
                     () => Select(Players, goal, Rule));
             }
             goalHelp = IdiomUi.Label(setupContent, "", 2, 242, 652, 81, 23, UiFactory.Muted, TextAnchor.UpperLeft);
@@ -97,7 +97,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 var rule = (PoetryRule)i;
                 var x = i % 2 * 336;
                 var y = 378 + i / 2 * 92;
-                var button = IdiomUi.Button(setupContent, "", x, y, 320, 80, () => Select(Players, Goal, rule));
+                var button = IdiomUi.PageButton(setupContent, "", x, y, 320, 80, () => Select(Players, Goal, rule));
                 ruleOptions[i] = button;
                 IdiomUi.Label(button.transform, RuleNames[i], 20, 8, 280, 36, 25, UiFactory.Ink, bold: true);
                 IdiomUi.Label(button.transform, RuleDescriptions[i], 20, 42, 280, 30, 19, UiFactory.Muted);
@@ -108,11 +108,11 @@ namespace XanaduYonder.Runtime.Feihualing
             topicTitle = IdiomUi.Label(topic.transform, "", 22, 47, 302, 66, 42, UiFactory.Accent, bold: true);
             topicCondition = IdiomUi.Label(topic.transform, "", 22, 117, 612, 45, 23);
             topicRecord = IdiomUi.Label(topic.transform, "", 22, 169, 612, 35, 20, UiFactory.Muted);
-            chooseTopic = IdiomUi.Button(topic.transform, "选题", 336, 30, 132, 58, OpenTopicPicker, false, 23);
-            changeTopic = IdiomUi.Button(topic.transform, "换一题", 483, 30, 151, 58, () => ChangeTopic(), false, 23);
+            chooseTopic = IdiomUi.PageButton(topic.transform, "选题", 336, 30, 132, 58, OpenTopicPicker, false, 23);
+            changeTopic = IdiomUi.PageButton(topic.transform, "换一题", 483, 30, 151, 58, () => ChangeTopic(), false, 23);
             IdiomUi.Label(setupContent, AnswerUnit, 2, 819, 652, 42, 20, UiFactory.Muted);
-            continueButton = IdiomUi.Button(setupContent, "继续", 0, 875, 320, 70, ContinueSaved, true, 26);
-            startButton = IdiomUi.Button(setupContent, "开始学习", 336, 875, 320, 70, StartNew, true, 26);
+            continueButton = IdiomUi.PageButton(setupContent, "继续", 0, 875, 320, 70, ContinueSaved, true, 26);
+            startButton = IdiomUi.PageButton(setupContent, "开始学习", 336, 875, 320, 70, StartNew, true, 26);
         }
 
         private void BuildPlay()
@@ -160,15 +160,15 @@ namespace XanaduYonder.Runtime.Feihualing
             pass = IdiomUi.Button(actions, "接不上", 488, 0, 168, 56, ConfirmPass, false, 22);
 
             reviewActions = UiFactory.Rect(play, "Feihualing review actions", 32, 1140, BodyWidth, 70);
-            IdiomUi.Button(reviewActions, "返回开局", 0, 0, 208, 66, () => { if (CanInteract) ReturnToSetup(); }, false, 21);
-            IdiomUi.Button(reviewActions, "换一题", 224, 0, 208, 66, () =>
+            IdiomUi.PageButton(reviewActions, "返回开局", 0, 0, 208, 66, () => { if (CanInteract) ReturnToSetup(); }, false, 21);
+            IdiomUi.PageButton(reviewActions, "换一题", 224, 0, 208, 66, () =>
             {
                 if (!CanInteract || match?.Phase != PoetryPhase.Finished) return;
                 var card = match.Card;
                 ReturnToSetup();
                 ChangeTopic(card);
             }, false, 21);
-            IdiomUi.Button(reviewActions, "再来一局", 448, 0, 208, 66, () =>
+            IdiomUi.PageButton(reviewActions, "再来一局", 448, 0, 208, 66, () =>
             {
                 if (CanInteract && match?.Phase == PoetryPhase.Finished) StartWithCard(match.Card);
             }, true, 21);
@@ -181,12 +181,12 @@ namespace XanaduYonder.Runtime.Feihualing
             gateMode = IdiomUi.Label(gate, "", 28, 33, 600, 66, 21, UiFactory.Accent, TextAnchor.MiddleCenter);
             gateTitle = IdiomUi.Label(gate, "", 28, 104, 600, 74, 40, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             gateBody = IdiomUi.Label(gate, "", 40, 185, 576, 86, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
-            gatePrimary = IdiomUi.Button(gate, "", 48, 293, 560, 70, () => gateMainAction?.Invoke(), true, 27);
-            gateSave = IdiomUi.Button(gate, "保存进度返回", 48, 389, 272, 60, () =>
+            gatePrimary = IdiomUi.PageButton(gate, "", 48, 293, 560, 70, () => gateMainAction?.Invoke(), true, 27);
+            gateSave = IdiomUi.PageButton(gate, "保存进度返回", 48, 389, 272, 60, () =>
             {
                 if (CanInteract) ReturnToSetup();
             }, false, 22);
-            gateAbandon = IdiomUi.Button(gate, "结束竞技", 336, 389, 272, 60, ConfirmAbandon, false, 22);
+            gateAbandon = IdiomUi.PageButton(gate, "结束竞技", 336, 389, 272, 60, ConfirmAbandon, false, 22);
         }
 
         private static void Section(Transform parent, string text, float y) =>

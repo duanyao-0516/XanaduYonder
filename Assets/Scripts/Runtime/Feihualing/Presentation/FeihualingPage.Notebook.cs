@@ -81,7 +81,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 notebookList.SetCount(entries.Count, false);
                 notebookList.SetOffset(scrollOffset);
             }
-            IdiomUi.Button(panel, "关闭", ModalMargin, bottom, ModalWidth, 58, CloseDialog, false, 22);
+            DialogUi.ActionButton(panel, "关闭", ModalMargin, bottom, ModalWidth, 58, CloseDialog, false, 22);
         }
 
         private void BindNotebookRow(IdiomVirtualList.Row row, int index)

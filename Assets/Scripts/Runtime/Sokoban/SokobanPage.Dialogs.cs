@@ -10,10 +10,10 @@ namespace XanaduYonder.Runtime.Sokoban
         {
             CancelInput(); CloseDialog(); feedback.Stop(); session.SetBlocked(true); Save();
             float s=Scale,width=Mathf.Min((picker?320:360)*s,root.rect.width-32*s);
-            var overlay=UiFactory.Panel(root,"Sokoban dialog overlay",0,0,root.rect.width,root.rect.height,new Color(.094f,.208f,.173f,.40f),false);
-            UiFactory.Stretch(overlay.rectTransform); overlay.raycastTarget=true; dialog=overlay.gameObject;
+            var overlay = DialogUi.ModalOverlay(root, "Sokoban dialog overlay");
+            dialog = overlay.gameObject;
             float height=Mathf.Min(cssHeight*s,root.rect.height-64*s);
-            var panel=Shape(overlay.transform,"Sokoban dialog",0,0,width,height,22*s,UiFactory.Paper); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
+            var panel=Shape(overlay.transform,"Sokoban dialog",0,0,width,height,22*s,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
             panel.BorderWidth=s; panel.BorderColor=UiFactory.Hex("D4D8C9");
             float padding=(picker?25:29)*s;
             var headingText=Label(panel.transform,heading,padding,(picker?33:37)*s,width-2*padding,31*s,22,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold); headingText.name="Sokoban dialog title";
@@ -31,21 +31,19 @@ namespace XanaduYonder.Runtime.Sokoban
         {
             var panel=BeginDialog(title,height); float s=Scale,h=panel.rect.height,w=panel.rect.width-58*s;
             float primaryY=h-(secondary==null?73:125)*s-(tertiary==null?0:52*s);
-            var body=Label(panel,message,29*s,88*s,w,Mathf.Max(1,primaryY-100*s),13,UiFactory.Hex("64756B"),TextAnchor.UpperLeft);
-            body.horizontalOverflow=HorizontalWrapMode.Wrap; body.supportRichText=false;
-            var main=ActionButton(panel,"Dialog primary",29*s,primaryY,w,44*s,()=>{ CloseDialog(); primaryAction?.Invoke(); Refresh(); },11*s);
-            main.GetComponent<SokobanGraphic>().color=UiFactory.Accent;
-            Label(main.transform,primary,0,0,w,44*s,13,UiFactory.Hex("FFFDF4"),TextAnchor.MiddleCenter);
-            if(secondary!=null)
+            DialogUi.ScrollText(panel, message, 29 * s, 88 * s, w, Mathf.Max(1, primaryY - 100 * s), Mathf.RoundToInt(13 * s));
+            void ActionRow(string name, string caption, float y, Action action, bool main = false)
             {
-                var second=ActionButton(panel,"Dialog secondary",29*s,primaryY+52*s,w,44*s,()=>{ CloseDialog(); secondaryAction?.Invoke(); Refresh(); },11*s);
-                Label(second.transform,secondary,0,0,w,44*s,13,UiFactory.Ink,TextAnchor.MiddleCenter);
+                DialogUi.ActionButton(panel, caption, 29 * s, y, w, 44 * s, () =>
+                {
+                    CloseDialog();
+                    action?.Invoke();
+                    Refresh();
+                }, main, Mathf.RoundToInt(13 * s)).name = name;
             }
-            if(tertiary!=null)
-            {
-                var third=ActionButton(panel,"Dialog inspection",29*s,primaryY+104*s,w,44*s,()=>{CloseDialog();tertiaryAction?.Invoke();Refresh();},11*s);
-                Label(third.transform,tertiary,0,0,w,44*s,13,UiFactory.Ink,TextAnchor.MiddleCenter);
-            }
+            ActionRow("Dialog primary", primary, primaryY, primaryAction, true);
+            if (secondary != null) ActionRow("Dialog secondary", secondary, primaryY + 52 * s, secondaryAction);
+            if (tertiary != null) ActionRow("Dialog inspection", tertiary, primaryY + 104 * s, tertiaryAction);
             dismissDialog=()=>{ CloseDialog(); secondaryAction?.Invoke(); Refresh(); };
         }
         internal void ShowRules()

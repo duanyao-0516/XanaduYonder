@@ -12,7 +12,7 @@ namespace XanaduYonder.Runtime.BoardGames
     {
         private const float CheckersComputerTurnPause = 1f;
         private enum ScreenKind { Setup, Formation, Match, Tutorial, Replay }
-        private enum PanelKind { None, Rules, Settings, Resume, Replace, Undo, Promote, Result, Record, Leave, Lessons }
+        private enum PanelKind { None, Rules, Settings, Resume, Replace, Undo, Promote, Result, Record, Leave, Lessons, Preferences, Feedback, Manage }
         private RectTransform root, view;
         private Action leave;
         private Func<bool> canUseHost, sound, haptics;
@@ -42,6 +42,7 @@ namespace XanaduYonder.Runtime.BoardGames
         private int xiangqiMotionActor;
         private BoardMove[] promotions = Array.Empty<BoardMove>();
         private bool shown, foreground, paused, handoff, saveFailed, feedbackSaveFailed, aiError, routeIsStep;
+        private bool lastFeedbackWasSound;
         private string warning, notice;
         private Vector2 layoutSize;
         private CancellationTokenSource cancellation;
@@ -97,6 +98,8 @@ namespace XanaduYonder.Runtime.BoardGames
             match = null;
             suggestion = BoardMove.None;
             panel = PanelKind.None;
+            renderedPanel = PanelKind.None;
+            dialogFocus.Clear();
             ClearDraft();
             saveFailed = feedbackSaveFailed = false;
             shown = true;
@@ -570,6 +573,7 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void OpenPanel(PanelKind kind)
         {
+            if (kind != panel) dialogFocus.Remove(kind);
             CancelSearch();
             if (kind == PanelKind.Record)
             {
@@ -586,14 +590,22 @@ namespace XanaduYonder.Runtime.BoardGames
         private void ClosePanel()
         {
             if (panel == PanelKind.Promote) { ClearDraft(); }
-            panel = panel == PanelKind.Record || panel == PanelKind.Resume ? PanelKind.Settings : PanelKind.None;
+            switch (panel)
+            {
+                case PanelKind.Resume: panel = PanelKind.Manage; break;
+                case PanelKind.Record:
+                case PanelKind.Preferences:
+                case PanelKind.Feedback:
+                case PanelKind.Manage: panel = PanelKind.Settings; break;
+                default: panel = PanelKind.None; break;
+            }
             Render();
         }
 
-        private void ToggleFeedback(bool soundSetting)
+        private void SetFeedback(bool soundSetting, bool value)
         {
-            bool current = soundSetting ? sound() : haptics();
-            feedbackSaveFailed = !setFeedback(soundSetting, !current);
+            lastFeedbackWasSound = soundSetting;
+            feedbackSaveFailed = !setFeedback(soundSetting, value);
             Render();
         }
 

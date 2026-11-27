@@ -76,7 +76,7 @@
       console.warn('无法打开存档管理：', error.message || error);
       return false;
     }
-    const screen = element('div', undefined, 'xanadu-save-editor');
+    const screen = element('div', undefined, 'xy-dialog xanadu-save-editor');
     const panel = element('div', undefined, 'save-editor-card');
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
@@ -85,6 +85,7 @@
     const title = element('h2', '存档管理');
     title.id = 'xanadu-save-editor-title';
     const back = button('返回游戏');
+    back.className = 'xy-secondary';
     back.addEventListener('click', close);
     header.append(title, back);
     const nav = element('nav');
@@ -129,7 +130,7 @@
     let lastSubmit = -Infinity;
     function action(page, text, payload, success) {
       const submit = button(text);
-      submit.className = 'save-editor-submit';
+      submit.className = 'xy-primary save-editor-submit';
       page.append(submit);
       submit.addEventListener('click', () => {
         const now = performance.now();
@@ -165,11 +166,15 @@
     const gold = numberInput('金币', settings, catalog.gold);
     const keepSkills = element('input');
     keepSkills.type = 'checkbox';
+    keepSkills.className = 'xy-switch-input';
+    keepSkills.setAttribute('role', 'switch');
     keepSkills.checked = catalog.keepSkills;
     field(settings, '跨天保留技能道具', keepSkills).classList.add('save-editor-check');
     settings.append(element('p', '开启后，次日继续保留已装备的主动、被动道具和等级。'));
     const protectStars = element('input');
     protectStars.type = 'checkbox';
+    protectStars.className = 'xy-switch-input';
+    protectStars.setAttribute('role', 'switch');
     protectStars.checked = catalog.protectStars;
     field(settings, '失败不掉星', protectStars).classList.add('save-editor-check');
     settings.append(element('p', '败局保留当前星数，胜局仍升 1 星。'));
@@ -179,10 +184,11 @@
     }), () => '已保存：金币 ' + catalog.gold + '，跨天保留已' + (catalog.keepSkills ? '开启' : '关闭') +
       '，失败不掉星已' + (catalog.protectStars ? '开启' : '关闭') + '。');
 
-    const rankChoice = window.XanaduPanelSelect.create(settings, '个人段位');
-    const rankStars = numberInput('段内星数', settings, catalog.rankStars);
+    const ranks = section('段位');
+    const rankChoice = window.XanaduPanelSelect.create(ranks, '个人段位');
+    const rankStars = numberInput('段内星数', ranks, catalog.rankStars);
     const rankHint = element('p');
-    settings.append(rankHint);
+    ranks.append(rankHint);
     const selectedRank = () => catalog.ranks.find(rank => String(rank.id) === rankChoice.value);
     function showRankStars() {
       const rank = selectedRank();
@@ -190,7 +196,7 @@
       rankHint.textContent = rank.maxStars ? '这个小段可选 1 至 ' + rank.maxStars + ' 星。' : '大帝连续计星，可以超过 100 星。';
     }
     rankChoice.element.addEventListener('change', () => { showRankStars(); feedback(''); });
-    action(settings, '保存段位', () => {
+    action(ranks, '保存段位', () => {
       const rank = selectedRank();
       return {kind:'rank', id:rank.id, stars:integer(rankStars, 1, rank.maxStars, '段内星数')};
     }, () => '已保存段位：' + selectedRank().name + ' ' + catalog.rankStars + ' 星。');

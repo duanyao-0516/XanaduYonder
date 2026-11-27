@@ -191,7 +191,13 @@ namespace XanaduYonder.Runtime.BoardGames
                 recordScrollOffset = content.anchoredPosition.y;
                 StartReplay();
             });
-            else GameButton(sheet, "返回设置", 26, height - 102, width - 52, 76, ClosePanel);
+            else
+            {
+                float half = (width - 62) * .5f;
+                DialogUi.ActionButton(sheet, "返回设置", 26, height - 102, half, 76, ClosePanel);
+                string caption = game == BoardGameId.Army && !match.Terminal ? "终局后复盘" : "复盘本局";
+                DialogUi.ActionButton(sheet, caption, 36 + half, height - 102, half, 76, StartReplay).interactable = false;
+            }
         }
 
         private RectTransform DrawRecordList(Transform sheet, float width, float height)

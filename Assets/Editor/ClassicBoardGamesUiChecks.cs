@@ -10,6 +10,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using XanaduYonder.Core;
 using XanaduYonder.Core.BoardGames;
 using XanaduYonder.Runtime;
 using XanaduYonder.Runtime.BoardGames;
@@ -70,6 +71,8 @@ namespace XanaduYonder.EditorTools
             UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
             Require(UiFactory.Font != null, "The production Chinese font loads.");
             CheckXiangqiRiverLayer();
+            using (var fixture = new Fixture(new Vector2Int(360, 720)))
+                fixture.CheckModalFocusAndFeedbackRetry();
             Require(BoardTutorial.Create(BoardGameId.Checkers).Length >= 6, "Checkers teaches transit, stopping, and the endgame in addition to opening moves.");
             CheckCompleteTutorials();
             foreach (Vector2Int viewport in new[] { new Vector2Int(360, 720), new Vector2Int(320, 568) })
@@ -103,6 +106,7 @@ namespace XanaduYonder.EditorTools
             {
                 fixture.Enter(BoardGameId.Checkers, "EnterChineseCheckers");
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("对局管理");
                 fixture.Click("新一局");
                 fixture.Click("5 台");
                 fixture.Click("开始对弈");
@@ -208,7 +212,9 @@ namespace XanaduYonder.EditorTools
                 if (game == BoardGameId.Army) fixture.Click("确认布阵");
                 var match = fixture.Page.Match;
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("落子与显示");
                 fixture.Click("显示提示按钮");
+                fixture.Click("返回设置");
                 fixture.Click("完成");
                 fixture.Click("提示 3");
                 float deadline = Time.unscaledTime + 6;
@@ -231,8 +237,8 @@ namespace XanaduYonder.EditorTools
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
                 if (game == BoardGameId.Army)
                 {
-                    Require(!fixture.Button("终局后复盘").interactable, "Live Army cannot enter open-rank replay.");
                     fixture.Click("棋谱");
+                    Require(!fixture.Button("终局后复盘").interactable, "Live Army cannot enter open-rank replay.");
                     var lines = match.DescribeHistory(match.Options.Human);
                     Require(fixture.HasLabel("1.  " + lines[0]) && !lines[0].Contains("暗棋") && fixture.HasLabel("2.  " + lines[1]) && lines[1].Contains("暗棋"),
                         "Live Army history names the viewer's piece and conceals the opponent's rank.");
@@ -276,6 +282,7 @@ namespace XanaduYonder.EditorTools
                 fixture.WriteMatch(sample);
                 fixture.Enter(BoardGameId.Checkers, "EnterChineseCheckers");
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("棋谱");
                 fixture.Click("复盘本局");
                 var replay = (BoardReplay)Field(typeof(BoardGamePage), "replay").GetValue(fixture.Page);
                 int turn = sample.MoveCount;
@@ -326,7 +333,10 @@ namespace XanaduYonder.EditorTools
             {
                 fixture.Enter(BoardGameId.Checkers, "EnterChineseCheckers");
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("落子与显示");
                 fixture.Click("显示提示按钮");
+                fixture.Click("返回设置");
+                fixture.Click("对局管理");
                 fixture.Click("新一局");
                 fixture.Click("本地双人");
                 fixture.Click("开始对弈");
@@ -337,7 +347,9 @@ namespace XanaduYonder.EditorTools
                     if (singleTap)
                     {
                         fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                        fixture.Click("落子与显示");
                         fixture.Click("单击落子");
+                        fixture.Click("返回设置");
                         fixture.Click("完成");
                     }
                     fixture.Click("提示 " + (BoardMatch.HintLimit - use));
@@ -375,6 +387,7 @@ namespace XanaduYonder.EditorTools
                 fixture.WriteMatch(match);
                 fixture.Enter(BoardGameId.Army, "EnterArmyChess");
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("棋谱");
                 fixture.Click("复盘本局");
                 var board = fixture.Surface();
                 Require(Visible(board, ArmyGame.FormationPoint(0, 0)).Kind > 0 && Visible(board, ArmyGame.FormationPoint(1, 0)).Kind > 0,
@@ -391,6 +404,7 @@ namespace XanaduYonder.EditorTools
             {
                 fixture.Enter(BoardGameId.Chess, "EnterChess");
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("对局管理");
                 fixture.Click("新一局");
                 fixture.Click("本地双人");
                 fixture.Click("开始对弈");
@@ -404,11 +418,13 @@ namespace XanaduYonder.EditorTools
                     }
                 fixture.CheckNoMatchFooter();
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("对局管理");
                 fixture.Click("申请和棋");
                 Require(fixture.Page.Match.Terminal, "A legal draw can still be claimed from Settings.");
                 fixture.Click("回看棋盘");
                 fixture.CheckNoMatchFooter();
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("对局管理");
                 fixture.Click("查看结算");
                 Require(fixture.HasLabel("再来一局"), "The completed match reopens its result from Settings.");
             }
@@ -459,18 +475,21 @@ namespace XanaduYonder.EditorTools
             fixture.Click("返回");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
             Require(fixture.HasLabel("对局设置"), game + " Settings opens the game settings dialog.");
-            Require(fixture.HasLabel("显示提示按钮"), game + " exposes the hint option.");
+            Require(!fixture.HasLabel("显示提示按钮") && fixture.HasLabel("对局管理"), "Settings groups detailed preferences below its directory.");
+            fixture.Click("落子与显示");
+            Require(fixture.HasLabel("显示提示按钮") && fixture.HasLabel("单击落子"), game + " exposes hint and move switches.");
             Require(fixture.HasLabel("显示棋盘坐标") && fixture.HasLabel("显示棋子汉字") == (game == BoardGameId.Chess),
                 game + " has its coordinate preference and only chess exposes the piece name switch.");
-            Require(fixture.HasLabel("单击落子") && fixture.HasLabel("声音") && fixture.HasLabel("触感") && !fixture.HasLabel("声音与触感"),
-                game + " includes the three inline switches in the same settings sheet.");
+            fixture.Page.Back(() => false);
+            fixture.Click("声音与触感");
             fixture.Click("声音");
-            Require(fixture.SoundOn && !fixture.HapticsOn && fixture.HasLabel("对局设置"), "Sound updates the common preference without closing Settings.");
+            Require(fixture.SoundOn && !fixture.HapticsOn && fixture.HasLabel("声音与触感"), "Sound updates the common preference in place.");
             fixture.Click("触感");
-            Require(fixture.SoundOn && fixture.HapticsOn && fixture.HasLabel("对局设置"), "Haptics update independently on the same sheet.");
+            Require(fixture.SoundOn && fixture.HapticsOn && fixture.HasLabel("声音与触感"), "Haptics update independently on the same page.");
             fixture.Click("声音");
             fixture.Click("触感");
             Require(!fixture.SoundOn && !fixture.HapticsOn, "Both switches can turn off inline.");
+            fixture.Click("返回设置");
             if (game == BoardGameId.Army) fixture.Capture("army-settings");
             fixture.Click("新手教程");
             Require(fixture.HasLabel("退出教程"), game + " opens the interactive tutorial from Settings.");
@@ -503,6 +522,7 @@ namespace XanaduYonder.EditorTools
             Require(!fixture.Page.gameObject.activeInHierarchy, game + " Home leaves the active game page.");
             fixture.Enter(game, route);
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("对局管理");
             fixture.Click("新一局");
             Require(fixture.HasLabel("开局设置"), game + " Settings reaches the opening setup.");
         }
@@ -537,7 +557,9 @@ namespace XanaduYonder.EditorTools
             if (game == BoardGameId.Chess)
             {
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("落子与显示");
                 fixture.Click("显示棋子汉字");
+                fixture.Click("返回设置");
                 fixture.Click("完成");
                 Require(!fixture.Surface().GetComponentsInChildren<Text>().Any(text => text.name.StartsWith("Chess piece label ", StringComparison.Ordinal)),
                     "Turning off the Chinese names removes every chess caption.");
@@ -562,7 +584,13 @@ namespace XanaduYonder.EditorTools
             fixture.Tap(move.To);
             Require(match.MoveCount == 1 && match.Position.CurrentSide == 1, game + " tapping the same destination again commits exactly one move.");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("对局管理");
             fixture.Click("暂停");
+            fixture.CheckPauseCover();
+            fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            Require(!fixture.HasLabel("对局已暂停") && fixture.HasLabel("对局设置"),
+                "A full-page settings scrim replaces the board-only pause shade.");
+            fixture.Click("完成");
             fixture.CheckPauseCover();
             fixture.Click("继续对局");
             Require(fixture.Surface().raycastTarget && match.MoveCount == 1, game + " resuming from the cover restores play.");
@@ -597,8 +625,10 @@ namespace XanaduYonder.EditorTools
                     "Tapping the same capture destination commits the capture.");
             }
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("落子与显示");
             fixture.Click("单击落子");
             fixture.Capture(BoardCatalog.Id(game) + "-settings");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             match = fixture.Page.Match;
             int before = match.MoveCount;
@@ -611,7 +641,9 @@ namespace XanaduYonder.EditorTools
             fixture.Enter(game, route);
             fixture.CheckPauseCover();
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
-            Require(fixture.NamedRect("单击落子 switch thumb").anchoredPosition.x > 20, game + " remembers direct placement when reopening the saved match.");
+            fixture.Click("落子与显示");
+            Require(fixture.Button("单击落子").GetComponent<DialogSwitch>().Value, game + " remembers direct placement when reopening the saved match.");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             fixture.Click(fixture.Navigation(UiIconKind.Home));
         }
@@ -621,7 +653,9 @@ namespace XanaduYonder.EditorTools
             bool HasAxes() => fixture.Surface().GetComponentsInChildren<Text>().Any(text => text.name.StartsWith("Board rank ", StringComparison.Ordinal));
             Require(!HasAxes(), game + " hides coordinates by default.");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("落子与显示");
             fixture.Click("显示棋盘坐标");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             Require(fixture.InViewport(fixture.Bounds(fixture.NamedRect("Board file " + file))) &&
                 fixture.InViewport(fixture.Bounds(fixture.NamedRect("Board rank " + rank))), game + " draws both coordinate axes within the viewport.");
@@ -629,7 +663,9 @@ namespace XanaduYonder.EditorTools
                 Require(fixture.NamedRect("Board rank 1").GetComponent<Text>().text == "一", "Xiangqi ranks use Chinese numerals.");
             fixture.Capture(BoardCatalog.Id(game) + "-coordinates");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("落子与显示");
             fixture.Click("显示棋盘坐标");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             Require(!HasAxes(), game + " can remove both coordinate axes.");
         }
@@ -770,6 +806,7 @@ namespace XanaduYonder.EditorTools
             Require(match.MoveCount == before + 1 && checkers.CurrentSide == 1 && match.LastMove == chain,
                 "Tapping the same landing again commits the entire route and advances to the first computer seat.");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("对局管理");
             Require(fixture.Button("悔棋").interactable, "Checkers keeps whole-turn undo in Settings.");
             fixture.Click("新一局");
             fixture.Click("本地双人");
@@ -782,7 +819,9 @@ namespace XanaduYonder.EditorTools
             fixture.Tap(step.To);
             Require(twoPlayer.MoveCount == 1 && twoPlayer.LastMove == step, "Tapping the same step destination commits the single step.");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("落子与显示");
             fixture.Click("单击落子");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             BoardMove jump = twoPlayer.Position.LegalMoves().First(candidate => candidate.From >= 0 && candidate.PathLength == 1);
             fixture.Tap(jump.From);
@@ -826,6 +865,7 @@ namespace XanaduYonder.EditorTools
             fixture.Reveal(1);
             Require(Visible(fixture.Surface(), move.To).Kind == -1, "The next player cannot see the just-moved rank.");
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("对局管理");
             fixture.Click("暂停");
             fixture.CheckArmyPause();
             fixture.Capture("army-paused");
@@ -843,7 +883,9 @@ namespace XanaduYonder.EditorTools
             fixture.CheckHandoff(1);
             fixture.Reveal(1);
             fixture.Click(fixture.Navigation(UiIconKind.Settings));
+            fixture.Click("落子与显示");
             fixture.Click("单击落子");
+            fixture.Click("返回设置");
             fixture.Click("完成");
             BoardMove direct = match.Position.LegalMoves().First(candidate => match.Position.PieceAt(candidate.To, 1).Kind == 0);
             fixture.Tap(direct.From);
@@ -888,6 +930,7 @@ namespace XanaduYonder.EditorTools
             {
                 fixture.CheckNoMatchFooter();
                 fixture.Click(fixture.Navigation(UiIconKind.Settings));
+                fixture.Click("对局管理");
             }
             fixture.Click("新一局");
             fixture.Click(army ? "开始布阵" : "开始对弈");
@@ -990,6 +1033,48 @@ namespace XanaduYonder.EditorTools
             }
 
             private void SetHost(string name, object value) => Field(typeof(AppController), name).SetValue(shell, value);
+
+            internal void CheckModalFocusAndFeedbackRetry()
+            {
+                Enter(BoardGameId.Chess, "EnterChess");
+                var settings = Navigation(UiIconKind.Settings);
+                events.SetSelectedGameObject(settings.gameObject);
+                ExecuteEvents.Execute(settings.gameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
+                var home = Navigation(UiIconKind.Home);
+                Require(!home.IsInteractable(), "Opening board settings disables the rebuilt background navigation.");
+                ExecuteEvents.Execute(home.gameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
+                Require(HasLabel("对局设置") && Page.gameObject.activeInHierarchy, "A background Home submit cannot leave the board.");
+
+                var first = Button("落子与显示");
+                events.SetSelectedGameObject(first.gameObject);
+                ExecuteEvents.Execute(first.gameObject, new AxisEventData(events) { moveDir = MoveDirection.Down }, ExecuteEvents.moveHandler);
+                var next = events.currentSelectedGameObject;
+                Require(next != null && next != first.gameObject && next.transform.IsChildOf(NamedRect("Board modal backdrop")),
+                    "Directional navigation moves between visible settings actions inside the modal.");
+                Click("对局管理");
+                Require(!Button("继续其他对局").IsInteractable(), "Continue other match stays disabled when no other match exists.");
+                Page.Back(() => false);
+                Require(events.currentSelectedGameObject == Button("对局管理").gameObject, "Back restores the directory button on the rebuilt settings page.");
+                Click("声音与触感");
+
+                string blockedPath = Path.Combine(directory, "shared-preferences");
+                File.WriteAllText(blockedPath, "occupied");
+                var store = new LocalSaveStore(blockedPath);
+                SetHost("store", store);
+                SetHost("game", new Game2048((IRandomSource)Field(typeof(AppController), "random").GetValue(shell)));
+                Click("触感");
+                Require(HapticsOn && !SoundOn && HasLabel("声音和触感设置暂未保存") && !File.Exists(store.SavePath),
+                    "A filesystem failure leaves the chosen haptics value active and exposes a retry.");
+                File.Delete(blockedPath);
+                Click("重试保存");
+                var saved = store.Load(out var warning);
+                Require(saved != null && saved.HapticsEnabled && !saved.SoundEnabled && warning == null &&
+                    !HasLabel("声音和触感设置暂未保存"), "A single retry writes the same settings without flipping either switch.");
+                Page.Back(() => false);
+                Page.Back(() => false);
+                Require(Navigation(UiIconKind.Home).IsInteractable() && events.currentSelectedGameObject == Navigation(UiIconKind.Settings).gameObject,
+                    "Closing settings unlocks the board and restores the original settings opener.");
+            }
 
             internal void Enter(BoardGameId game, string route)
             {

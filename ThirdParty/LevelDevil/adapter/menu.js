@@ -9,7 +9,7 @@
     const state=runtime&&runtime.status();
     const signature=JSON.stringify([!!(state&&state.menuAvailable),token,sound,haptics,pending,warning,modal]);if(signature===lastRender)return;lastRender=signature;
     dom.tools.hidden=!(state&&state.menuAvailable);
-    for(const [button,on] of [[dom.sound,sound],[dom.haptics,haptics]]){button.setAttribute('aria-checked',String(on));button.disabled=!token||!!pending;button.querySelector('span').textContent=on?'开启':'关闭';}
+    for(const [button,on] of [[dom.sound,sound],[dom.haptics,haptics]]){button.setAttribute('aria-checked',String(on));button.disabled=!token||!!pending;button.querySelector('.switch-value').textContent=on?'开启':'关闭';}
     dom.warning.textContent=pending?'正在保存…':warning;dom.warning.hidden=!dom.warning.textContent;
     dom.retry.hidden=!warning||!!pending;dom.dialog.hidden=!modal;
   }

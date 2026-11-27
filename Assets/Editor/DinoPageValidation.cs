@@ -46,7 +46,15 @@ namespace XanaduYonder.EditorTools
             new GameObject("Dino page validation runner").AddComponent<Runner>().StartCoroutine(AfterFrame());
         }
 
-        private static IEnumerator AfterFrame() { yield return null; Execute(); }
+        private static IEnumerator AfterFrame()
+        {
+            // Play mode's first rendered frame includes editor setup and can exceed the game's
+            // slow-frame suspension threshold. The synchronous cases below all share one delta.
+            double deadline = Time.realtimeSinceStartupAsDouble + 20;
+            do { yield return null; }
+            while (Time.unscaledDeltaTime > .1f && Time.realtimeSinceStartupAsDouble < deadline);
+            Execute();
+        }
 
         private static void Execute()
         {
@@ -189,7 +197,8 @@ namespace XanaduYonder.EditorTools
         private static void PageStep(Fixture f)
         {
             // Exercise the real Update loop, supplying exactly one fixed step despite Editor frame timing.
-            Require(Time.unscaledDeltaTime <= .1f, "Editor frame is within the production delta guard");
+            Require(Time.unscaledDeltaTime <= .1f,
+                "Editor must supply a running frame within 100ms, observed " + Time.unscaledDeltaTime + "s");
             Set(Get<DinoRunClock>(f.Page, "clock"), "accumulated", DinoRules.StepSeconds - Time.unscaledDeltaTime);
             long before = f.Game.Tick;
             Invoke(f.Page, "Update");

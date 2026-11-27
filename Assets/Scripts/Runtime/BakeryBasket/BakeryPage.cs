@@ -77,8 +77,8 @@ namespace XanaduYonder.Runtime.BakeryBasket
             UiFactory.Label(heading, "轻按看轮廓，松手取走。三件同类一起消除。", 34, 77, 654, 38, 22, UiFactory.Muted);
 
             var mode = UiFactory.Band(root, "Basket comparison", 241, 60, .18f);
-            straightButton = UiFactory.Button(mode, "直壁篮", 32, 0, 322, 58, () => StartRound(false));
-            taperedButton = UiFactory.Button(mode, "收底篮", 366, 0, 322, 58, () => StartRound(true));
+            straightButton = DialogUi.ActionButton(mode, "直壁篮", 32, 0, 322, 58, () => StartRound(false));
+            taperedButton = DialogUi.ActionButton(mode, "收底篮", 366, 0, 322, 58, () => StartRound(true));
 
             var table = UiFactory.Band(root, "Bakery play table", 306, BakeryWorld.ViewHeight, .48f);
             var stage = UiFactory.Panel(table, "Bakery board", 32, 0, BakeryWorld.ViewWidth, BakeryWorld.ViewHeight,
@@ -107,7 +107,7 @@ namespace XanaduYonder.Runtime.BakeryBasket
             message = UiFactory.Label(status.transform, "", 12, 0, 508, 42, 23, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
 
             var actions = UiFactory.Band(root, "Bakery actions", 1197, 69, .83f);
-            UiFactory.Button(actions, "重开同一篮", 32, 0, 194, 66, () => StartRound(tapered));
+            DialogUi.ActionButton(actions, "重开同一篮", 32, 0, 194, 66, () => StartRound(tapered));
             moveOutButton = UiFactory.Button(actions, "移出 3 件", 238, 0, 194, 66, () => MoveOut());
             moveOutLabel = moveOutButton.GetComponentInChildren<Text>();
             shakeButton = UiFactory.Button(actions, "颠一下", 444, 0, 244, 66, Shake, true);

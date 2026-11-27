@@ -11,7 +11,8 @@ namespace XanaduYonder.Runtime.Sudoku
     internal sealed partial class SudokuPage
     {
         private RectTransform ShowDialog(string title, string message, string primary, Action primaryAction,
-            string secondary = null, Action secondaryAction = null, bool opaque = false)
+            string secondary = null, Action secondaryAction = null, bool opaque = false,
+            string more = null, Action moreAction = null)
         {
             CloseDialog();
             // Disable navigation as well as pointer input behind the modal.
@@ -19,21 +20,19 @@ namespace XanaduYonder.Runtime.Sudoku
             if (selectionInput == null) selectionInput = selectionRoot.AddComponent<CanvasGroup>();
             selectionInput.interactable = false;
             var overlay = UiFactory.Panel(root, "Sudoku dialog overlay", 0, 0, 720, 1320,
-                opaque ? UiFactory.Paper : new Color(.06f, .14f, .1f, .35f), false);
+                opaque ? UiFactory.Paper : DialogUi.Scrim, false);
             UiFactory.Stretch(overlay.rectTransform); overlay.raycastTarget = true; dialog = overlay.gameObject;
+            DialogBackdrop.CoverCanvas(overlay);
             float height = Mathf.Clamp(300 + (message.Length / 21 + message.Split('\n').Length) * 34, 480, 860);
-            var panel = UiFactory.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, height, UiFactory.Paper).rectTransform;
+            if (more != null) height += 76;
+            float footerHeight = more == null ? 0 : 76;
+            var panel = UiFactory.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, height, DialogUi.Surface).rectTransform;
             UiFactory.Center(panel);
             UiFactory.Label(panel, title, 32, 30, 532, 62, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            var viewport = UiFactory.Rect(panel, "Explanation viewport", 32, 110, 532, height - 300);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var surface = viewport.gameObject.AddComponent<Image>(); surface.color = Color.clear; surface.raycastTarget = true;
-            var body = UiFactory.Label(viewport, message, 0, 0, 532, height - 300, 24, UiFactory.Muted, TextAnchor.UpperLeft);
-            body.rectTransform.sizeDelta = new Vector2(532, Mathf.Max(height - 300, body.preferredHeight + 12));
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>(); scroll.viewport = viewport; scroll.content = body.rectTransform;
-            scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
-            UiFactory.Button(panel, primary, 32, height - 170, 532, 66, () => { CloseDialog(); primaryAction?.Invoke(); }, true);
-            if (secondary != null) UiFactory.Button(panel, secondary, 32, height - 88, 532, 58, () => { CloseDialog(); secondaryAction?.Invoke(); });
+            DialogUi.ScrollText(panel, message, 32, 110, 532, height - 300 - footerHeight, 24);
+            if (more != null) DialogUi.Disclosure(panel, more, 32, height - 246, 532, 60, () => { CloseDialog(); moreAction(); });
+            DialogUi.ActionButton(panel, primary, 32, height - 170, 532, 66, () => { CloseDialog(); primaryAction?.Invoke(); }, true);
+            if (secondary != null) DialogUi.ActionButton(panel, secondary, 32, height - 88, 532, 58, () => { CloseDialog(); secondaryAction?.Invoke(); });
             dismissDialog = () => { CloseDialog(); if (secondaryAction != null) secondaryAction(); else primaryAction?.Invoke(); };
             return panel;
         }
@@ -59,11 +58,10 @@ namespace XanaduYonder.Runtime.Sudoku
         }
         private void ShowPause()
         {
-            var panel = ShowDialog("已暂停", "盘面已被迷雾遮住，计时已停止。\n\n准备好后，点击继续。", "继续", () => {
+            ShowDialog("已暂停", "盘面已被迷雾遮住，计时已停止。\n\n准备好后，点击继续。", "继续", () => {
                 if (!session.Foreground) { ShowPause(); return; }
                 session.Resume(); Refresh(); CheckEndState();
-            }, "返回关卡", ReturnToSelection, true);
-            UiFactory.Button(panel, "重开", 440, 36, 124, 48, ConfirmRestart);
+            }, "返回关卡", ReturnToSelection, true, "重开", ConfirmRestart);
         }
         private void ConfirmRestart()
         {
@@ -100,13 +98,25 @@ namespace XanaduYonder.Runtime.Sudoku
             string message = Difficulties[puzzle.Difficulty] + " · 第 " + puzzle.Level + " 关\n用时 " + FormatTime(session.ElapsedSeconds) +
                 "\n错误 " + session.Game.Errors + "/3  ·  已用提示 " + (3 - session.Game.HintsRemaining) + "/3\n\n" +
                 (won ? "每个数字都找到了自己的位置。" : "已累计三次错误，本局结束。\n重新挑战会重置本局。 ");
-            var panel = ShowDialog(won ? "恭喜通关" : "本局结束", message,
-                won ? puzzle.Level < 500 ? "下一关" : "返回关卡" : "重新挑战", () => {
-                    if (won && puzzle.Level == 500) ReturnToSelection();
-                    else StartLevel(won ? catalog.Get(puzzle.Difficulty, puzzle.Level + 1) : puzzle, true);
-                }, "查看盘面", () => results.Inspect(()=>{resultDismissed=true;CloseDialog();Refresh();}));
-            UiFactory.Button(panel, "关卡", 440, 36, 124, 48, ReturnToSelection);
-            if (won) UiFactory.Button(panel, "重玩", 32, 36, 124, 48, () => StartLevel(puzzle, true));
+            void PresentResult()
+            {
+                string more = won && puzzle.Level < 500 ? "更多操作" : won ? "重玩" : "关卡";
+                void OpenMore()
+                {
+                    if (!won) { ReturnToSelection(); return; }
+                    if (puzzle.Level == 500) { StartLevel(puzzle, true); return; }
+                    ShowDialog("本局操作", Difficulties[puzzle.Difficulty] + " · 第 " + puzzle.Level + " 关",
+                        "重玩", () => StartLevel(puzzle, true), "返回结算", PresentResult, more: "关卡", moreAction: ReturnToSelection);
+                }
+                ShowDialog(won ? "恭喜通关" : "本局结束", message,
+                    won ? puzzle.Level < 500 ? "下一关" : "返回关卡" : "重新挑战", () =>
+                    {
+                        if (won && puzzle.Level == 500) ReturnToSelection();
+                        else StartLevel(won ? catalog.Get(puzzle.Difficulty, puzzle.Level + 1) : puzzle, true);
+                    }, "查看盘面", () => results.Inspect(() => { resultDismissed = true; CloseDialog(); Refresh(); }),
+                    more: more, moreAction: OpenMore);
+            }
+            PresentResult();
         }
 
         private void OpenHint()
@@ -172,11 +182,10 @@ namespace XanaduYonder.Runtime.Sudoku
             Action reveal = () => ShowDialog("显示这一格的答案？", "将显示 " + location + " 的正确数字。\n不会额外消耗提示次数。", "揭晓", () => {
                 session.RevealHint(); Save(); ShowHintCard();
             }, "返回解释", ShowHintCard);
-            var panel = ShowDialog("一步解题提示", text, needReveal ? "直接揭晓这一格" : "填入这一格", () => {
+            ShowDialog("一步解题提示", text, needReveal ? "直接揭晓这一格" : "填入这一格", () => {
                 if (needReveal) reveal();
                 else { inspectionDigit = 0; Move(session.ApplyHint()); }
-            }, "继续思考", () => { Refresh(); });
-            if (!help.Revealed && !needReveal) UiFactory.Button(panel, "揭晓", 440, 36, 124, 48, reveal);
+            }, "继续思考", () => { Refresh(); }, more: !help.Revealed && !needReveal ? "揭晓" : null, moreAction: reveal);
             RenderBoard(help.Evidence);
         }
     }

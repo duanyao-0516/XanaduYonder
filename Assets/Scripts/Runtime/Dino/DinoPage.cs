@@ -228,7 +228,7 @@ namespace XanaduYonder.Runtime.Dino
                 Canvas.ForceUpdateCanvases();
                 scroll.verticalNormalizedPosition = scrollPosition;
             }
-            var start = Button(selectedLandscape ? "横屏开始" : "竖屏开始", 56, h - (tight ? 144 : 240), w - 112, tight ? 80 : 112,
+            var start = DialogUi.ActionButton(content, selectedLandscape ? "横屏开始" : "竖屏开始", 56, h - (tight ? 144 : 240), w - 112, tight ? 80 : 112,
                 () => BeginTurn(selectedLandscape, Destination.Game), true);
             start.name = "Dino start";
             var startLabel = start.GetComponentInChildren<Text>();
@@ -243,7 +243,7 @@ namespace XanaduYonder.Runtime.Dino
         {
             float width = viewport.Width - 112;
             bool selected = selectedLandscape == isLandscape;
-            var button = UiFactory.Button(parent, "", 56, y, width, 224,
+            var button = DialogUi.ActionButton(parent, "", 56, y, width, 224,
                 () => { selectedLandscape = isLandscape; BuildSelection(); });
             button.name = isLandscape ? "Landscape choice" : "Portrait choice";
             button.targetGraphic.color = selected ? UiFactory.Accent : UiFactory.Hex("DDE5DA");
@@ -433,13 +433,21 @@ namespace XanaduYonder.Runtime.Dino
         private void ShowPause() { Suspend(); if(game!=null && !game.IsGameOver) ShowPauseMenu(); }
         private void ShowPauseMenu()
         {
-            var panel=OpenPanel(game!=null && game.IsStarted?"已暂停":"准备出发",480);
+            var panel=OpenPanel(game!=null && game.IsStarted?"已暂停":"准备出发",430);
             PanelButton(panel,"继续游戏",130,Continue,true);
-            PanelButton(panel,"玩法说明",214,ShowHelp);
-            PanelButton(panel,"设置",298,ShowSettings);
-            PanelButton(panel,"结束本局 / 更换方向",382,ConfirmChange);
+            DialogUi.Disclosure(panel, "设置与说明", 32, 216, panel.rect.width - 64, 70, ShowPauseOptions);
+            PanelButton(panel,"结束本局 / 更换方向",310,ConfirmChange);
             overlayBack=RequestExit;
         }
+        private void ShowPauseOptions()
+        {
+            var panel = OpenPanel("设置与说明", 440);
+            DialogUi.Disclosure(panel, "声音与触感", 32, 112, panel.rect.width - 64, 70, () => ShowSettingsWithReturn(ShowPauseOptions));
+            DialogUi.Disclosure(panel, "玩法说明", 32, 198, panel.rect.width - 64, 70, () => ShowHelpWithReturn(ShowPauseOptions));
+            PanelButton(panel, "返回暂停菜单", 322, ShowPauseMenu, true);
+            overlayBack = ShowPauseMenu;
+        }
+
         private void Continue()
         {
             if (windowBlocked || !CanKeepCurrentWindow()) { ShowWindowChanged(); return; }
@@ -449,15 +457,17 @@ namespace XanaduYonder.Runtime.Dino
             if(!game.IsStarted) {phase=Phase.Ready;stateLabel.text="按下跳跃，开始奔跑";return;}
             phase=Phase.Countdown;clock.BeginCountdown();stateLabel.fontSize=37;stateLabel.fontStyle=FontStyle.Bold;stateLabel.text="3";
         }
-        private void ShowSettings()
+        private void ShowSettings() { ShowSettingsWithReturn(ReturnFromInfo); }
+
+        private void ShowSettingsWithReturn(Action back)
         {
             Suspend();
-            var panel=OpenPanel("简单一点，刚刚好",488);
+            var panel=OpenPanel("声音与触感",488);
             PanelLabel(panel,"设置在所有游戏中共用",104,42,23);
-            PanelButton(panel,"声音 · "+(soundEnabled()?"开启":"关闭"),185,()=>{toggleSound();sound.Stop();ShowSettings();});
-            PanelButton(panel,"触感 · "+(hapticsEnabled()?"开启":"关闭"),273,()=>{toggleHaptics();ShowSettings();});
-            PanelButton(panel,"完成",370,ReturnFromInfo,true);
-            overlayBack=ReturnFromInfo;
+            DialogUi.SwitchRow(panel, "声音", 32, 176, panel.rect.width - 64, 70, soundEnabled(), value => { toggleSound(); sound.Stop(); });
+            DialogUi.SwitchRow(panel, "触感", 32, 264, panel.rect.width - 64, 70, hapticsEnabled(), value => toggleHaptics());
+            PanelButton(panel,"完成",370,back,true);
+            overlayBack=back;
         }
         private void ReturnFromInfo()
         {
@@ -465,16 +475,18 @@ namespace XanaduYonder.Runtime.Dino
             if(game!=null && game.IsGameOver) ShowResult();
             else if(game!=null && game.IsStarted) ShowPauseMenu();
         }
-        private void ShowHelp()
+        private void ShowHelp() { ShowHelpWithReturn(ReturnFromInfo); }
+
+        private void ShowHelpWithReturn(Action back)
         {
             Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
             float doneY = panel.rect.height - 32 - 74;
             float licenseY = doneY - 14 - 74;
             PanelLabel(panel,"轻按短跳；按住长跳，落地继续跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
-            PanelButton(panel,"素材与许可",licenseY,ShowLicense);
-            PanelButton(panel,"知道了",doneY,ReturnFromInfo,true);overlayBack=ReturnFromInfo;
+            PanelButton(panel,"素材与许可",licenseY,()=>ShowLicenseWithReturn(()=>ShowHelpWithReturn(back)));
+            PanelButton(panel,"知道了",doneY,back,true);overlayBack=back;
         }
-        private void ShowLicense()
+        private void ShowLicenseWithReturn(Action back)
         {
             var panel=OpenPanel("Chromium 许可",Mathf.Min(840,viewport.Height-40));
             float panelW=panel.rect.width, panelH=panel.rect.height;
@@ -489,7 +501,7 @@ namespace XanaduYonder.Runtime.Dino
             label.supportRichText=false;Canvas.ForceUpdateCanvases();
             body.sizeDelta=new Vector2(body.rect.width,Mathf.Max(area.rect.height,label.preferredHeight+16));
             label.rectTransform.sizeDelta=body.sizeDelta;scroll.content=body;
-            PanelButton(panel,"返回玩法",panelH-90,ShowHelp,true);overlayBack=ShowHelp;
+            PanelButton(panel,"返回玩法",panelH-90,back,true);overlayBack=back;
         }
         private void ConfirmChange()
         {
@@ -619,10 +631,9 @@ namespace XanaduYonder.Runtime.Dino
         private RectTransform OpenPanel(string title,float requestedHeight)
         {
             CloseOverlay();ClearPhysicalInputs();
-            overlay=UiFactory.Rect(root,"Dino modal overlay",0,0,viewport.Width,viewport.Height);
-            var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.06f,.14f,.1f,.48f);dim.raycastTarget=true;
+            overlay = DialogUi.ModalOverlay(root, "Dino modal overlay").rectTransform;
             float w=Mathf.Min(596,viewport.Width-64),h=Mathf.Min(requestedHeight,viewport.Height-32);
-            var panel=UiFactory.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h,UiFactory.Paper);
+            var panel=UiFactory.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h,DialogUi.Surface);
             panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,36,w-64,62,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;
@@ -630,7 +641,7 @@ namespace XanaduYonder.Runtime.Dino
         private void PanelLabel(RectTransform panel,string message,float y,float h,int size)
         {UiFactory.Label(panel,message,32,y,panel.rect.width-64,h,size,UiFactory.Muted,TextAnchor.MiddleCenter).supportRichText=false;}
         private void PanelButton(RectTransform panel,string title,float y,Action action,bool primary=false)
-        {UiFactory.Button(panel,title,32,y,panel.rect.width-64,74,action,primary);}
+        {DialogUi.ActionButton(panel,title,32,y,panel.rect.width-64,74,action,primary);}
         private void CloseOverlay(){if(overlay!=null){overlay.gameObject.SetActive(false);Destroy(overlay.gameObject);overlay=null;}overlayBack=null;}
         private void OnDisable(){if(sound!=null)sound.Stop();ClearPhysicalInputs();clock.Reset();}
         private void OnDestroy(){Save();if(active)requestOrientation?.Invoke(false);}

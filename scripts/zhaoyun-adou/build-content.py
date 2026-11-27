@@ -78,6 +78,8 @@ def main():
         scene.write_text(old.replace(missing, 'resources/img/mainUI/bag1.png'), encoding='utf-8')
         local_scripts = ['offline-adapter.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
                          'battle-aid.js','battle-aid-ui.js','battle-speed.js']
+        shared_dialogs = ROOT / 'ThirdParty/WebGameUI/dialogs.css'
+        shutil.copyfile(shared_dialogs, staging/'dialogs.css')
         for name in ['index.html','offline.css',*local_scripts]:
             shutil.copyfile(VENDOR/name, staging/name)
         for name in ['js/bundle.js',*local_scripts]:
@@ -88,7 +90,7 @@ def main():
                 data=file.read_bytes();files.append({'path':file.relative_to(staging).as_posix(),'bytes':len(data),'sha256':sha(data)})
         digest=sha(json.dumps(files,sort_keys=True,separators=(',',':')).encode())
         report={'passed':True,'schemaVersion':1,'sourceBundleSha256':BUNDLE_SHA,'inputFiles':len(lock['files']),
-                'files':files,'contentDigest':digest,'excluded':sorted(EXCLUDE),'sourceFiles':[{'path':p.relative_to(ROOT).as_posix(),'sha256':sha(p.read_bytes())} for p in sorted([x for x in VENDOR.rglob('*') if x.is_file()]+[Path(__file__).resolve()])],'transforms':[
+                'files':files,'contentDigest':digest,'excluded':sorted(EXCLUDE),'sourceFiles':[{'path':p.relative_to(ROOT).as_posix(),'sha256':sha(p.read_bytes())} for p in sorted([x for x in VENDOR.rglob('*') if x.is_file()]+[shared_dialogs,Path(__file__).resolve()])],'transforms':[
                     'one game-IIFE export insertion and one BattleMgr.R9 clock substitution; all other original bundle bytes retained',
                     'local entry and business offline adapter; no platform SDK',
                     'remove unused shader registrations','replace victory bag with bundled bag1 frame']}

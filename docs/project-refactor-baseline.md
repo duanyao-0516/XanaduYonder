@@ -4,6 +4,8 @@
 
 ## 公共导航和页面切换
 
+后续接入方法、现有调用方及回归命令见[共用组件手册](shared-components.md)。
+
 大厅的三种布局共用一份[游戏目录](../Assets/Scripts/Runtime/Lobby/AppController.Lobby.cs)。在这里维护游戏顺序、稳定 ID、卡片样式和进入回调。新增入口时要用同一 ID 检查双列、目录和单列，并实际从卡片进入游戏和返回。普通页面的大厅、2048 棋盘显隐和活动页面标识由[宿主导航](../Assets/Scripts/Runtime/App/AppController.Navigation.cs)同步更新。
 
 普通顶栏使用 [UiFactory](../Assets/Scripts/Runtime/UiFactory.cs) 提供的返回、说明和设置按钮。左侧图标由回到大厅或上一级的实际动作决定。飞花令开局与对局有不同的返回目标，成语从设置进入规则后需要回到设置。横屏、独立画布和四个网页容器各自处理暂停、方向和退出确认。共用按钮的触控范围可以单独验收，数独翻页仍可点原有矩形范围的角落。

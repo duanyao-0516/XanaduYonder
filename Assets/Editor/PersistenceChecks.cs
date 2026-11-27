@@ -34,6 +34,7 @@ namespace XanaduYonder.EditorTools
             Check("Encode rejects invalid state", RejectInvalidState, ref passed, ref failed);
             Check("Missing save starts without warning", MissingSave, ref passed, ref failed);
             Check("Two writes preserve a recoverable backup", BackupRecovery, ref passed, ref failed);
+            Check("Concurrent stores leave two complete committed snapshots", ConcurrentStores, ref passed, ref failed);
             Check("Corrupt files safely return no saved game", CorruptFiles, ref passed, ref failed);
             Check("Write failures are returned to the caller", WriteFailure, ref passed, ref failed);
             Check("Unplayable empty and single-tile saves are rejected", RejectImpossibleBoards, ref passed, ref failed);
@@ -151,6 +152,25 @@ namespace XanaduYonder.EditorTools
                 var backup=new LocalSaveStore(directory).Load(out warning);
                 Assert(backup!=null&&backup.WebGameFeedbackRevision==first&&backup.SoundEnabled&&!backup.HapticsEnabled&&!string.IsNullOrEmpty(warning),
                     "Backup restores its corresponding settings and import identity together.");
+            });
+        }
+
+        private static void ConcurrentStores()
+        {
+            WithDirectory(directory =>
+            {
+                System.Threading.Tasks.Parallel.For(0, 12, i =>
+                {
+                    var value = Example();
+                    value.BestScore = 100 + i;
+                    Assert(new LocalSaveStore(directory).TrySave(value, out var writeError), writeError);
+                });
+                var store = new LocalSaveStore(directory);
+                var current = store.Load(out var warning);
+                Assert(current != null && warning == null, "Expected a valid primary.");
+                Assert(JsonSaveCodec.TryDecode(File.ReadAllText(store.SavePath + ".bak"), out var previous, out var error), error);
+                Assert(current.BestScore >= 100 && current.BestScore < 112 && previous.BestScore >= 100 &&
+                    previous.BestScore < 112 && current.BestScore != previous.BestScore, "Expected two different commits.");
             });
         }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using XanaduYonder.Core.BoardGames;
 
@@ -15,32 +16,44 @@ namespace XanaduYonder.Runtime.BoardGames
         private float Height => layoutSize.y;
         private const float Margin = 24;
         private float ContentWidth => Width - 2 * Margin;
+        private PanelKind renderedPanel;
+        private readonly Dictionary<PanelKind, string> dialogFocus = new Dictionary<PanelKind, string>();
 
         private void Render()
         {
             if (!shown) return;
             layoutSize = root.rect.size;
             if (Width < 40 || Height < 80) return;
+            bool changingDialog = panel != PanelKind.None || renderedPanel != PanelKind.None;
+            var events = EventSystem.current;
+            var selected = events != null ? events.currentSelectedGameObject : null;
+            if (changingDialog && view != null && selected != null && selected.transform.IsChildOf(view))
+                dialogFocus[renderedPanel] = selected.name;
             DestroyView();
             view = UiFactory.Rect(root, "Board game content", 0, 0, Width, Height);
             UiFactory.Stretch(view);
             UiFactory.Panel(view, "Board game paper", 0, 0, Width, Height, UiFactory.Paper, false);
-            if (handoff)
+            if (handoff) DrawHandoff();
+            else
             {
-                DrawHandoff();
-                if (panel != PanelKind.None) DrawPanel();
-                return;
+                Navigation();
+                switch (screen)
+                {
+                    case ScreenKind.Setup: DrawSetup(); break;
+                    case ScreenKind.Formation: DrawFormation(); break;
+                    case ScreenKind.Match: DrawMatch(); break;
+                    case ScreenKind.Tutorial: DrawTutorial(); break;
+                    case ScreenKind.Replay: DrawReplay(); break;
+                }
             }
-            Navigation();
-            switch (screen)
-            {
-                case ScreenKind.Setup: DrawSetup(); break;
-                case ScreenKind.Formation: DrawFormation(); break;
-                case ScreenKind.Match: DrawMatch(); break;
-                case ScreenKind.Tutorial: DrawTutorial(); break;
-                case ScreenKind.Replay: DrawReplay(); break;
-            }
+            renderedPanel = panel;
             if (panel != PanelKind.None) DrawPanel();
+            // Views are rebuilt on every change. Recover the corresponding live control after a switch or return.
+            if (changingDialog && events != null && !events.alreadySelecting && dialogFocus.TryGetValue(panel, out var name))
+            {
+                var button = view.GetComponentsInChildren<Button>().FirstOrDefault(item => item.name == name && item.IsInteractable());
+                if (button != null) events.SetSelectedGameObject(button.gameObject);
+            }
         }
 
         private void DestroyView()
@@ -204,9 +217,9 @@ namespace XanaduYonder.Runtime.BoardGames
                 DrawOpponentSeat(board, board.y - 47, 1 - orientation);
                 DrawOpponentSeat(board, board.yMax + 4, orientation);
             }
-            if (paused && !match.Terminal)
+            if (panel == PanelKind.None && paused && !match.Terminal)
                 DrawBoardOverlay(board, "Paused chessboard", "对局已暂停", "继续对局", Continue);
-            else if (aiError)
+            else if (panel == PanelKind.None && aiError)
                 DrawBoardOverlay(board, "Board action overlay", "电脑暂时无法落子", "重试电脑落子", Continue);
             else if (canPass)
                 DrawBoardOverlay(board, "Board action overlay", "当前没有可走的棋子", "跳过本手", () => Commit(BoardMove.Pass));
@@ -215,7 +228,7 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DrawBoardOverlay(Rect board, string name, string title, string button, Action action)
         {
-            var dim = UiFactory.Panel(view, name, board.x, board.y, board.width, board.height, new Color(.08f, .18f, .14f, .44f));
+            var dim = UiFactory.Panel(view, name, board.x, board.y, board.width, board.height, DialogUi.Scrim);
             dim.raycastTarget = true;
             float width = Mathf.Min(392, board.width - 42);
             var card = UiFactory.Panel(dim.transform, "Pause controls", (board.width - width) / 2, (board.height - 188) / 2, width, 188, UiFactory.Paper);

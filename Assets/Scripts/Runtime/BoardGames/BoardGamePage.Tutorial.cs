@@ -96,7 +96,7 @@ namespace XanaduYonder.Runtime.BoardGames
             scroll.scrollSensitivity = 44;
             scroll.verticalNormalizedPosition = contentHeight > listHeight
                 ? 1 - Mathf.Clamp01(lessonIndex * rowHeight / (contentHeight - listHeight)) : 1;
-            GameButton(sheet, "返回练习", margin, height - 88, listWidth, 66, ClosePanel, true);
+            DialogUi.ActionButton(sheet, "返回练习", margin, height - 88, listWidth, 66, ClosePanel, true);
         }
     }
 }

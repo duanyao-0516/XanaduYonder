@@ -51,7 +51,7 @@ fs.mkdirSync(output,{recursive:true});
     const screenshot=async name=>page.screenshot({path:path.join(output,(diagnostic?'diagnostic-':'')+name+'.png')});
     const flashTap=async(x,y)=>{const b=await page.locator('#bombit-player').boundingBox();await page.touchscreen.tap(b.x+x*b.width/550,b.y+y*b.height/400);await page.waitForTimeout(350);};
     async function chooseStyle(style){
-      await page.locator('#settings').tap();await page.locator('[data-input-style="'+style+'"]').tap();
+      await page.locator('#settings').tap();await page.locator('#control-preferences').tap();await page.locator('[data-input-style="'+style+'"]').tap();
       assert.equal(await page.evaluate(()=>document.body.dataset.input),style);
       assert.equal(await page.evaluate(()=>localStorage.getItem('xanaduyonder.bomb-it.controls.v1')),style);
       if(style==='dpad')await screenshot('settings');

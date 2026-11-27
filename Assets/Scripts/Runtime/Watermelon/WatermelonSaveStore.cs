@@ -6,12 +6,10 @@ namespace XanaduYonder.Runtime.Watermelon
 {
     public sealed class WatermelonSaveStore
     {
-        private readonly string directory;
         public string SavePath { get; private set; }
         public WatermelonSaveStore(string directory)
         {
             if (string.IsNullOrWhiteSpace(directory)) throw new ArgumentException("Save directory is missing.", nameof(directory));
-            this.directory = directory;
             SavePath = Path.Combine(directory, "watermelon-v1.json");
         }
 
@@ -35,20 +33,7 @@ namespace XanaduYonder.Runtime.Watermelon
             {
                 // Reject invalid state before touching the last committed primary or backup.
                 var bytes = new UTF8Encoding(false).GetBytes(WatermelonSaveCodec.Encode(data));
-                Directory.CreateDirectory(directory);
-                var temporary = SavePath + ".tmp";
-                using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush(true);
-                }
-                if (File.Exists(SavePath))
-                {
-                    var previousIsValid = TryRead(SavePath, out var previous, out var readError);
-                    // After backup recovery, never promote a corrupt primary into the valid backup.
-                    File.Replace(temporary, SavePath, previousIsValid ? SavePath + ".bak" : null);
-                }
-                else File.Move(temporary, SavePath);
+                AtomicSaveFile.Write(SavePath, bytes, path => TryRead(path, out _, out _));
                 return true;
             }
             catch (Exception exception) when (IsStorageFailure(exception) || exception is ArgumentException)

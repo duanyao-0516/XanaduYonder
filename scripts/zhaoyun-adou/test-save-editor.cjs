@@ -250,6 +250,7 @@ async function editLegacyRank(page) {
   const cat=await catalog(page);
   assert.deepEqual(cat.ranks.map(({id,name})=>({id,name})),ranks);
   await checkRank(page,50,103);
+  await button(panel,'段位').tap();
   const stars=field(panel,'段内星数');
   const combo=panel.getByRole('combobox',{name:'个人段位',exact:true});
   assert((await combo.innerText()).includes(ranks[50].name));assert.equal(await stars.inputValue(),'103');
@@ -273,8 +274,10 @@ async function editLegacyRank(page) {
       season:data._seasonId,finalRanks:data._seasonFinalRanks};
   };
   // Leave unsaved settings in the form. The rank button commits only the rank command.
+  await button(panel,'设置').tap();
   await field(panel,'金币').fill('99999');
   await field(panel,'跨天保留技能道具').tap();
+  await button(panel,'段位').tap();
   for (const [id,level] of [[7,4],[7,2],[50,101]]) {
     await choose(panel,'个人段位',String(id),51);
     await stars.fill(String(level));await submit(page,panel,'保存段位');
@@ -604,6 +607,7 @@ async function fresh(browser) {
   try {
     await checkCoinGestures(page);
     let panel = await openEditor(page);
+    assert.equal(await page.locator('.xanadu-save-editor').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0.4)');
     await closeEditor(panel);
     note('fresh 320×568 opens and closes the menu editor by touch');
     panel = await openEditor(page);
@@ -611,6 +615,7 @@ async function fresh(browser) {
     assert.equal(initial.keepSkills,true);
     assert.equal(initial.protectStars,false);
     assert(!await field(panel,'失败不掉星').isChecked());
+    await button(panel,'段位').tap();
     const saveRank=button(panel,'保存段位');
     assert(await saveRank.isVisible());assert.equal(await field(panel,'段内星数').inputValue(),'1');
     if (await saveRank.isEnabled()) await submit(page,panel,'保存段位');
@@ -620,6 +625,15 @@ async function fresh(browser) {
     await saveRank.scrollIntoViewIfNeeded();
     fs.mkdirSync(evidence,{recursive:true});
     await page.screenshot({path:path.join(evidence,'save-rank-320.png')});
+    await page.setViewportSize({width:568,height:320});
+    await saveRank.scrollIntoViewIfNeeded();
+    const scroller=panel.locator('.save-editor-body');
+    assert(await scroller.evaluate(e=>e.scrollTop>0 && e.scrollHeight>e.clientHeight),'short landscape rank page scrolls independently');
+    const backBounds = await button(panel,'返回游戏').boundingBox();
+    assert(backBounds && backBounds.y >= 0 && backBounds.y + backBounds.height <= 320);
+    await page.screenshot({path:path.join(evidence,'save-rank-568x320.png')});
+    await page.setViewportSize({width:320,height:568});
+    await button(panel,'设置').tap();
     await field(panel,'金币').fill('718');
     await submit(page,panel,'保存设置');
     assert.equal((await disk(page))._gold,718);
@@ -824,6 +838,12 @@ async function battleAid(browser) {
     const before = await rackState(page), originalSave = await disk(page);
     assert(before.player.every(x=>!x)); assert(before.personalRank<50);
     let panel = await aidFailureBoundaries(page);
+    await page.evaluate(()=>{XanaduZhaoyun.setActive(false);XanaduZhaoyun.setActive(true);});
+    const resume = page.getByRole('dialog',{name:'对局已暂停'});
+    assert(await resume.isVisible());
+    assert(await panel.isHidden(),'host pause hides the open aid panel and its scrim');
+    await button(resume,'继续游戏').tap();
+    assert(await panel.isVisible(),'continuing restores the open aid panel');
     const paused = await rackState(page);
     await button(panel,'发放姓名字').tap();
     await panel.waitFor({state:'hidden'});

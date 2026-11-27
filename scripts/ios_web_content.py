@@ -61,7 +61,7 @@ def cached_files(root, game):
         entries = report['sourceFiles']
         fingerprints = {x['path']: x['sha256'] for x in entries}
         required = {p.relative_to(root).as_posix() for p in (root / 'ThirdParty/ZhaoyunAdouContent').rglob('*') if p.is_file()}
-        required.add('scripts/zhaoyun-adou/build-content.py')
+        required.update({'scripts/zhaoyun-adou/build-content.py', 'ThirdParty/WebGameUI/dialogs.css'})
         if len(entries) != len(fingerprints) or not required <= fingerprints.keys():
             raise ValueError('Zhaoyun source fingerprint inventory mismatch')
         return validate_report(root, base / 'content', report, fingerprints)

@@ -304,7 +304,7 @@ namespace XanaduYonder.Runtime.Feihualing
             if (match?.Phase != PoetryPhase.Finished && previous != null && previous.Phase != PoetryPhase.Finished)
             {
                 Confirm("开始新局？", "这组玩法还有进度。开始新局后，会替换该组的旧进度。", "开始新局",
-                    () => StartWithCard(card));
+                    () => StartWithCard(card), destructive: true);
             }
             else StartWithCard(card);
         }

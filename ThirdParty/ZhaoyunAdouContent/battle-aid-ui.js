@@ -31,7 +31,7 @@
       owner = battle;
       let freeSlots = snapshot.freeSlots;
       const generals = snapshot.generals;
-      panel = node('div', undefined, 'xanadu-save-editor xanadu-battle-aid');
+      panel = node('div', undefined, 'xy-dialog xanadu-save-editor xanadu-battle-aid');
       const card = node('div', undefined, 'save-editor-card');
       card.setAttribute('role', 'dialog');
       card.setAttribute('aria-modal', 'true');
@@ -39,7 +39,7 @@
       const header = node('header');
       const title = node('h2', '战斗援将');
       title.id = 'xanadu-battle-aid-title';
-      const back = node('button', '返回战斗');
+      const back = node('button', '返回战斗', 'xy-secondary');
       back.type = 'button';
       back.addEventListener('click', close);
       header.append(title, back);
@@ -48,7 +48,7 @@
       select.setOptions(generals);
       const slots = node('p');
       const example = node('p', '例如孙尚香会发入“孙、尚、香”三个字。把字拖上棋盘即可按原规则合成。');
-      const send = node('button', '发放姓名字', 'save-editor-submit');
+      const send = node('button', '发放姓名字', 'xy-primary save-editor-submit');
       send.type = 'button';
       const message = node('p', undefined, 'save-editor-message');
       message.setAttribute('role', 'status');

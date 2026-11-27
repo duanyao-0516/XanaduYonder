@@ -146,7 +146,9 @@
   }
 
   function removeOverlay() {
-    if (overlay) overlay.remove();
+    if (!overlay) return;
+    overlay.remove();
+    document.body.classList.remove("xanadu-host-resuming");
     overlay = null;
   }
 
@@ -179,24 +181,22 @@
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-label", "对局已暂停");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(15,20,29,.82);color:#fff;font-family:system-ui,sans-serif;";
-    const panel = document.createElement("div");
-    panel.style.cssText = "padding:28px;text-align:center;max-width:320px;";
-    const title = document.createElement("p");
+    overlay.className = "xy-dialog xanadu-local-panel xanadu-resume";
+    const panel = document.createElement("section");
+    const title = document.createElement("h2");
     title.textContent = "对局已暂停";
-    title.style.cssText = "font-size:24px;font-weight:700;margin:0 0 12px;";
     const detail = document.createElement("p");
     detail.textContent = "点击继续，回到当前对局。";
-    detail.style.cssText = "font-size:16px;margin:0 0 24px;line-height:1.5;";
     const button = document.createElement("button");
     button.type = "button";
+    button.className = "xy-primary";
     button.textContent = "继续游戏";
-    button.style.cssText = "font:inherit;font-weight:700;padding:12px 28px;border:0;border-radius:12px;background:#f0c46b;color:#282116;cursor:pointer;";
     button.addEventListener("click", continueBattle);
     panel.appendChild(title);
     panel.appendChild(detail);
     panel.appendChild(button);
     overlay.appendChild(panel);
+    document.body.classList.add("xanadu-host-resuming");
     document.body.appendChild(overlay);
     button.focus();
   }

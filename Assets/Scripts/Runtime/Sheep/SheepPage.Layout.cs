@@ -16,7 +16,7 @@ namespace XanaduYonder.Runtime.Sheep
             UiFactory.NavigationButton(nav, UiIconKind.Settings, OpenSettings);
             var heading = UiFactory.Band(root, "Sheep heading", 100, 84, 0);
             UiFactory.Label(heading, "旸了个旸", 56, 0, 430, 80, 56, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            UiFactory.Button(heading, "切换模式", 520, 20, 144, 48, () => { if (AcceptsInput) ShowModes(); });
+            DialogUi.ActionButton(heading, "切换模式", 520, 20, 144, 48, () => { if (AcceptsInput) ShowModes(); });
             var body = UiFactory.Rect(root, "Sheep play area", 0, 0, 720, 1320);
             UiFactory.Stretch(body); playArea = body.gameObject;
             var stats = UiFactory.Band(body, "Sheep progress", 184, 34, 0);
@@ -44,10 +44,10 @@ namespace XanaduYonder.Runtime.Sheep
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true; resultPanel = panel.gameObject;
             resultTitle = UiFactory.Label(panel.transform, "", 24, 20, 496, 64, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             resultMessage = UiFactory.Label(panel.transform, "", 32, 92, 480, 106, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
-            resultPrimary = UiFactory.Button(panel.transform, "", 32, 210, 480, 68, ResultAction, true);
+            resultPrimary = DialogUi.ActionButton(panel.transform, "", 32, 210, 480, 68, ResultAction, true);
             resultPrimaryLabel = resultPrimary.GetComponentInChildren<Text>();
-            UiFactory.Button(panel.transform, "重新开始", 32, 300, 232, 60, ConfirmRestart);
-            UiFactory.Button(panel.transform, "返回大厅", 280, 300, 232, 60, returnLobby);
+            DialogUi.ActionButton(panel.transform, "重新开始", 32, 300, 232, 60, ConfirmRestart);
+            DialogUi.ActionButton(panel.transform, "返回大厅", 280, 300, 232, 60, returnLobby);
         }
     }
 }

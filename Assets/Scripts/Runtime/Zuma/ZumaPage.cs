@@ -136,26 +136,26 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void ShowLoadError()
         {
-            var panel=view.Dialog("SAVE DATA");
+            var panel=view.Dialog("存档读取失败");
             view.Chinese(panel,loadWarning??"无法读取Zuma进度，现有文件已保留。",55,118,495,140);
-            view.StandardButton(panel,"BACK",65,362,475,72,Exit);
+            DialogUi.ActionButton(panel,"返回",65,362,475,72,Exit);
             if(loadStatus==ZumaLoadStatus.Corrupt)
-                view.StandardButton(panel,"RESET",65,274,475,64,ConfirmReset);
+                DialogUi.ActionButton(panel,"重建存档",65,274,475,64,ConfirmReset);
             else if(loadStatus==ZumaLoadStatus.IoError)
-                view.StandardButton(panel,"RETRY",65,274,475,64,()=>{LoadData();if(data==null)ShowLoadError();else ShowLoadedPage();});
+                DialogUi.ActionButton(panel,"重新读取",65,274,475,64,()=>{LoadData();if(data==null)ShowLoadError();else ShowLoadedPage();});
             dialogBack=Exit;ShowWarnings();
         }
         private void ConfirmReset()
         {
-            var panel=view.Dialog("RESET?");
+            var panel=view.Dialog("重建存档？");
             view.Chinese(panel,"将归档损坏的Zuma存档并重新开始。\n其他游戏和公共设置不受影响。",55,126,495,120);
-            view.StandardButton(panel,"RESET",65,274,475,64,()=>
+            DialogUi.ActionButton(panel,"重建存档",65,274,475,64,()=>
             {
                 var result=store.ResetCorrupt();
                 if(!result.Success){loadWarning="保留恢复副本失败，原文件未重置。";ShowLoadError();return;}
                 data=ZumaSaveData.CreateNew();game=null;profileRevision++;dirty=true;loadWarning=null;Save();ShowSelection();
-            });
-            view.StandardButton(panel,"CANCEL",65,362,475,72,ShowLoadError);dialogBack=ShowLoadError;
+            }, destructive: true);
+            DialogUi.ActionButton(panel,"取消",65,362,475,72,ShowLoadError);dialogBack=ShowLoadError;
         }
         private void ShowSelection()
         {
@@ -206,10 +206,10 @@ namespace XanaduYonder.Runtime.Zuma
         {
             if(data.Session==null)return;
             if(IsTerminal(data.Session)){RestoreSession(false);return;}
-            var panel=view.Dialog("CONTINUE?");
+            var panel=view.Dialog("继续上次的对局？");
             view.Chinese(panel,"已有一局尚未结束。\n继续时会从上次保存的位置恢复。",55,122,495,118);
-            view.StandardButton(panel,"CONTINUE",65,274,475,64,()=>RestoreSession(true));
-            view.StandardButton(panel,"SELECT LEVEL",65,362,475,72,ShowSelection);
+            DialogUi.ActionButton(panel,"继续对局",65,274,475,64,()=>RestoreSession(true),true);
+            DialogUi.ActionButton(panel,"选择关卡",65,362,475,72,ShowSelection);
             dialogBack=ShowSelection;
         }
         private void StartSelected()
@@ -217,10 +217,10 @@ namespace XanaduYonder.Runtime.Zuma
             if(!AcceptsSelectionInput)return;
             if(data.Session!=null&&!data.Session.ResultAcknowledged)
             {
-                var panel=view.Dialog("NEW GAME?");
+                var panel=view.Dialog("开始新的一局？");
                 view.Chinese(panel,"开始新游戏将替换当前Zuma进度。\n已有最高成绩会保留。",55,122,495,118);
-                view.StandardButton(panel,"PLAY",65,274,475,64,StartNew);
-                view.StandardButton(panel,"CANCEL",65,362,475,72,ShowSelection);dialogBack=ShowSelection;return;
+                DialogUi.ActionButton(panel,"开始新局",65,274,475,64,StartNew,destructive:true);
+                DialogUi.ActionButton(panel,"取消",65,362,475,72,ShowSelection);dialogBack=ShowSelection;return;
             }
             StartNew();
         }
@@ -289,19 +289,27 @@ namespace XanaduYonder.Runtime.Zuma
             if(game==null||transition)return;
             Suspend();
             if(IsTerminal(game.Snapshot())){ShowResult();return;}
-            var panel=view.Dialog("mENU");
-            view.Toggle(panel,"SOUND",sound(),66,104,()=>ToggleSetting(true));
-            view.Toggle(panel,"HAPTICS",haptics(),66,183,()=>ToggleSetting(false));
-            view.StandardButton(panel,"RETURN TO LEVEL SELECT",65,290,475,64,()=>{Save();ShowSelection();});
-            view.StandardButton(panel,"BACK TO GAME",65,368,475,64,Resume);
-            dialogBack=Resume;ShowWarnings();
+            var panel = view.Dialog("已暂停");
+            DialogUi.ActionButton(panel, "继续游戏", 65, 118, 475, 72, Resume, true);
+            DialogUi.Disclosure(panel, "声音与触感", 65, 225, 475, 66, ShowFeedbackSettings);
+            DialogUi.ActionButton(panel, "返回选关", 65, 334, 475, 66, () => { Save(); ShowSelection(); });
+            dialogBack = Resume;
+            ShowWarnings();
         }
-        private void ToggleSetting(bool soundSetting)
+        private void ShowFeedbackSettings()
         {
-            var enabled=soundSetting?!sound():!haptics();
-            var success=setSetting(soundSetting,enabled);
-            settingsError=success?null:"设置未保存，请检查设备存储空间。";
-            ShowPause();
+            var panel = view.Dialog("声音与触感");
+            DialogUi.SwitchRow(panel, "声音", 65, 116, 475, 70, sound(), value => UpdateSetting(true, value));
+            DialogUi.SwitchRow(panel, "触感", 65, 208, 475, 70, haptics(), value => UpdateSetting(false, value));
+            DialogUi.ActionButton(panel, "返回暂停菜单", 65, 362, 475, 72, ShowPause, true);
+            dialogBack = ShowPause;
+            ShowWarnings();
+        }
+        private void UpdateSetting(bool soundSetting, bool enabled)
+        {
+            bool success = setSetting(soundSetting, enabled);
+            settingsError = success ? null : "设置未保存，请检查设备存储空间。";
+            ShowWarnings();
         }
         public void CommonSettingsSaved(bool success)
         { if(success)settingsError=null;else settingsError="设置未保存，请检查设备存储空间。";ShowWarnings(); }
@@ -315,7 +323,18 @@ namespace XanaduYonder.Runtime.Zuma
         {
             CancelAim();running=false;Save();
             var snapshot=game.Snapshot();audioPlayer.Suspend(false);audioPlayer.SelectMusic(snapshot.Phase=="won"?"win":"game_over");
-            view.Stats(snapshot,AcknowledgeResult);dialogBack=AcknowledgeResult;ShowWarnings();
+            ShowScore();
+
+            void ShowScore()
+            {
+                view.Stats(snapshot, AcknowledgeResult, () =>
+                {
+                    view.StatsDetails(snapshot, ShowScore);
+                    dialogBack = ShowScore;
+                });
+                dialogBack = AcknowledgeResult;
+                ShowWarnings();
+            }
         }
         private void AcknowledgeResult()
         {

@@ -54,7 +54,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             var pauseContent=UiFactory.Rect(cover.transform,"Pause content",0,0,480,220); UiFactory.Center(pauseContent);
             pauseText=UiFactory.Label(pauseContent,"已暂停",0,0,480,70,38,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             UiFactory.Label(pauseContent,"盘面已遮挡，放心休息一下。",0,76,480,46,23,UiFactory.Muted,TextAnchor.MiddleCenter);
-            resumeButton=UiFactory.Button(pauseContent,"继续游戏",90,142,300,76,Resume,true); resumeButton.name="Resume";
+            resumeButton=DialogUi.ActionButton(pauseContent,"继续游戏",90,142,300,76,Resume,true); resumeButton.name="Resume";
             toolbar=UiFactory.Rect(page,"Minesweeper toolbar",36,1134,648,82);
             enterFullscreen=LocalButton(toolbar,"Enter fullscreen",MinesweeperIconKind.Expand,"全屏",0,0,88,88,ToggleFullscreen);
             exitFullscreen=LocalButton(toolbar,"Exit fullscreen",MinesweeperIconKind.Collapse,"退出",0,0,88,88,ToggleFullscreen);
@@ -94,17 +94,17 @@ namespace XanaduYonder.Runtime.Minesweeper
                 int index=d; var spec=MinesweeperRules.Get(d);
                 var band=UiFactory.Band(page,"Difficulty card band "+d,274+d*286,266,.2f+d*.23f);
                 var card=UiFactory.Panel(band,"Difficulty card "+d,36,0,648,266,UiFactory.Hex("E7EDE4"));
-                difficulties[d]=UiFactory.Button(card.transform,spec.Name,24,14,160,58,()=>{profile.SelectedDifficulty=index;Save();RefreshSelection();});
+                difficulties[d]=DialogUi.ActionButton(card.transform,spec.Name,24,14,160,58,()=>{profile.SelectedDifficulty=index;Save();RefreshSelection();});
                 difficulties[d].name="Difficulty "+d;
                 UiFactory.Label(card.transform,spec.Width+" × "+spec.Height+"  ·  "+spec.MineCount+" 雷",222,16,400,54,24,UiFactory.Ink,TextAnchor.MiddleRight);
                 selectionRecords[d]=UiFactory.Label(card.transform,"",24,80,600,42,22,UiFactory.Accent); Fit(selectionRecords[d],17,22);
                 selectionStates[d]=UiFactory.Label(card.transform,"",24,123,600,34,21,UiFactory.Muted);
-                starts[d]=UiFactory.Button(card.transform,"开始新局",24,178,360,70,()=>{
+                starts[d]=DialogUi.ActionButton(card.transform,"开始新局",24,178,360,70,()=>{
                     var slot=profile.GetSlot(index); bool ended=slot!=null&&(slot.Board.State==MinesweeperState.Won||slot.Board.State==MinesweeperState.Lost);
                     StartGame(index,slot==null||ended);
                 },true); starts[d].name="Start "+d;
-                newGames[d]=UiFactory.Button(card.transform,"新开一局",400,178,224,70,()=>RequestNew(index)); newGames[d].name="New "+d;
-                views[d]=UiFactory.Button(card.transform,"查看上局",400,178,224,70,()=>StartGame(index,false)); views[d].name="View "+d;
+                newGames[d]=DialogUi.ActionButton(card.transform,"新开一局",400,178,224,70,()=>RequestNew(index)); newGames[d].name="New "+d;
+                views[d]=DialogUi.ActionButton(card.transform,"查看上局",400,178,224,70,()=>StartGame(index,false)); views[d].name="View "+d;
             }
             var footer=UiFactory.Band(page,"Selection footer",1194,58,1);
             UiFactory.Label(footer,"首击安全，不保证全盘无猜 · 三档各自保存",36,0,648,58,21,UiFactory.Muted,TextAnchor.MiddleCenter);

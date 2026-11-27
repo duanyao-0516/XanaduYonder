@@ -99,7 +99,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         {
             NewView("bg-mode-select", GoldMinerMode.Solo);
             var safe = layout.Safe;
-            TextButton(view, "‹ 大厅", safe.x + 24, safe.y + 16, 132, 58, lobby);
+            DialogUi.ActionButton(view, "‹ 大厅", safe.x + 24, safe.y + 16, 132, 58, lobby);
             TextLabel(view, "XANADU", safe.xMax - 154, safe.y + 20, 130, 36, 17, Forest, TextAnchor.MiddleRight, true);
             GoldMinerSceneView.Picture(view, "黄金矿工", art.Get("ui/gold-miner-wordmark-v2"),
                 safe.center.x - 280, safe.y + safe.height * .048f, 560, 170);
@@ -146,10 +146,10 @@ namespace XanaduYonder.Runtime.GoldMiner
             {
                 TextLabel(panel, "第 " + run.Current.LevelIndex + " 关 · 资金 " + run.Current.Cash, textX, 150,
                     width - textX - 22, Mathf.Max(26, bottom - 150), 17, Forest);
-                TextButton(panel, oldRun ? "开始原版矿场" : "重新开始", 24, height - 49, textX - 45, 32,
-                    () => Confirm("开始新的挑战？", "将从原版矿场第 1 关开始，替换当前模式的进度。历史纪录会保留。", "开始新挑战", () => ChooseMode(mode, true), BuildSelection), 17);
+                DialogUi.ActionButton(panel, oldRun ? "开始原版矿场" : "重新开始", 24, height - 49, textX - 45, 32,
+                    () => Confirm("开始新的挑战？", "将从原版矿场第 1 关开始，替换当前模式的进度。历史纪录会保留。", "开始新挑战", () => ChooseMode(mode, true), BuildSelection), false, 17);
             }
-            ActionButton(panel, hasRun ? oldRun ? "继续原有挑战" : "继续游戏" : "开始原版矿场", textX, bottom, width - textX - 24, 58,
+            DialogUi.ActionButton(panel, hasRun ? oldRun ? "继续原有挑战" : "继续游戏" : "开始原版矿场", textX, bottom, width - textX - 24, 58,
                 () => ChooseMode(mode, !hasRun), true);
         }
 
@@ -323,15 +323,15 @@ namespace XanaduYonder.Runtime.GoldMiner
                 for (int i = 0; i < 5; i++) ShopCard(run, i, safe.x + 84 + i * (width + gap), top, width, height);
                 TextLabel(view, run.Current.Source != null ? "增益和炸药由两人共享" : "增益对两人共同生效", safe.x + 240, safe.yMax - 119, safe.width - 480, 33, 21,
                     UiFactory.Hex("845023"), TextAnchor.MiddleCenter, true);
-                ActionButton(view, "‹  模式选择", safe.x + 28, safe.yMax - 86, 250, 62, () => ConfirmExit(ShowSelection), false);
-                ActionButton(view, "一起进入下一关  ›", safe.xMax - 388, safe.yMax - 95, 360, 70, NextLevel, true);
+                DialogUi.ActionButton(view, "‹  模式选择", safe.x + 28, safe.yMax - 86, 250, 62, () => ConfirmExit(ShowSelection), false);
+                DialogUi.ActionButton(view, "一起进入下一关  ›", safe.xMax - 388, safe.yMax - 95, 360, 70, NextLevel, true);
             }
             else
             {
                 float headerY = safe.y + safe.height * .078f;
                 var header = ArtPanel(view, "Shop title", safe.x + 116, headerY, safe.width - 232, 94);
                 header.GetComponent<Image>().pixelsPerUnitMultiplier = 2.8f;
-                var back = ActionButton(header, "‹", 18, 19, 56, 56, () => ConfirmExit(ShowSelection), true);
+                var back = DialogUi.ActionButton(header, "‹", 18, 19, 56, 56, () => ConfirmExit(ShowSelection), true);
                 TextLabel(header, "矿工商店", 94, 9, 170, 46, 31, Forest, TextAnchor.MiddleLeft, true);
                 TextLabel(header, "下一关目标 " + nextTarget, 94, 52, 186, 30, 17, UiFactory.Hex("817459"));
                 Divider(header, header.rect.width * .62f, 20, 1, 54);
@@ -344,7 +344,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 for (int i = 0; i < 4; i++)
                     ShopCard(run, i, safe.x + 40 + (i % 2) * (cardWidth + 24), top + (i / 2) * (rowHeight + 15), cardWidth, rowHeight);
                 ShopCard(run, 4, safe.x + 130, top + (rowHeight + 15) * 2, safe.width - 260, (gridHeight - 30) * .25f);
-                ActionButton(view, "进入下一关", safe.x + 56, safe.yMax - 132, safe.width - 112, 84, NextLevel, true);
+                DialogUi.ActionButton(view, "进入下一关", safe.x + 56, safe.yMax - 132, safe.width - 112, 84, NextLevel, true);
                 TextLabel(view, run.Current.Source != null ? "可以赊购 · 欠款从后续收入抵扣" : "购买会扣除当前资金", safe.x + 48, safe.yMax - 49, safe.width - 96, 24, 17, Cream, TextAnchor.MiddleCenter);
             }
             Notice(safe.yMax - 22);
@@ -405,8 +405,8 @@ namespace XanaduYonder.Runtime.GoldMiner
                 for (int playerIndex = 0; playerIndex < 2; playerIndex++)
                 {
                     int player = playerIndex;
-                    var button = ActionButton(panel, "给 P" + (player + 1), 12 + player * (bw + 8), buttonY, bw, buttonHeight,
-                        () => Purchase(offer.ItemId, player), true, player == 0 ? "button-p1-amber" : "button-p2-teal");
+                    var button = DialogUi.ActionButton(panel, "给 P" + (player + 1), 12 + player * (bw + 8), buttonY, bw, buttonHeight,
+                        () => Purchase(offer.ItemId, player), false);
                     button.interactable = affordable && run.Current.Players[player].Bombs < GoldMinerRules.MaxBombs;
                 }
             }
@@ -415,7 +415,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 bool full = !source && index == 0 && run.Current.Players[0].Bombs >= GoldMinerRules.MaxBombs;
                 string label = unavailable ? "本店未售" : offer.Remaining == 0 ? "已购买" : full ? "库存已满"
                     : affordable ? source && run.Mode == GoldMinerMode.Solo && run.Current.Cash < offer.Price ? "赊购" : "购买" : "资金不足";
-                var button = ActionButton(panel, label, 16, buttonY, width - 32, buttonHeight, () => Purchase(offer.ItemId, 0), true);
+                var button = DialogUi.ActionButton(panel, label, 16, buttonY, width - 32, buttonHeight, () => Purchase(offer.ItemId, 0), true);
                 button.interactable = affordable && !full;
             }
         }
@@ -515,38 +515,6 @@ namespace XanaduYonder.Runtime.GoldMiner
             button.colors = colors;
             button.onClick.AddListener(() => action());
             image.gameObject.AddComponent<GoldMinerButtonFeedback>();
-            return button;
-        }
-
-        private Button TextButton(Transform parent, string title, float x, float y, float width, float height, Action action, int size = 24)
-        {
-            var image = UiFactory.Panel(parent, title + " button", x, y, width, height, Color.clear, false);
-            var button = ConfigureButton(image, action);
-            TextLabel(image.transform, title, 0, 0, width, height, size, Forest, TextAnchor.MiddleCenter, true);
-            return button;
-        }
-
-        private Button ActionButton(Transform parent, string title, float x, float y, float width, float height,
-            Action action, bool primary, string texture = "button-primary-green")
-        {
-            Image image;
-            if (primary)
-            {
-                image = GoldMinerSceneView.Picture(parent, title + " button", art.Get("ui/" + texture), x, y, width, height, false);
-                image.type = Image.Type.Sliced;
-                image.pixelsPerUnitMultiplier = 437f / height;
-            }
-            else image = BorderedPanel(parent, title + " button", x, y, width, height,
-                UiFactory.Hex("FFF6DF"), UiFactory.Hex("A2834B"), height * .48f, 3);
-            var button = ConfigureButton(image, action);
-            var textColor = primary ? Cream : Forest;
-            var label = TextLabel(image.transform, title, 10, 0, width - 20, height, height >= 76 ? 33 : 25, textColor, TextAnchor.MiddleCenter, true);
-            if (primary)
-            {
-                var outline = label.gameObject.AddComponent<Outline>();
-                outline.effectColor = texture == "button-primary-green" ? UiFactory.Hex("143B30") : UiFactory.Hex("76511B");
-                outline.effectDistance = new Vector2(1, -1);
-            }
             return button;
         }
 

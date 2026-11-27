@@ -16,9 +16,9 @@ namespace XanaduYonder.Runtime.FlappyBird
         private RectTransform BeginDialog(DialogKind kind,float height)
         {
             pointer?.Cancel(); CloseDialog();
-            var overlay=FlappyScene.Shape(layout,"Flappy dialog overlay",0,0,388,layout.rect.height,0,new Color(.09f,.239f,.208f,.28f));
-            UiFactory.Stretch(overlay.rectTransform); overlay.raycastTarget=true; dialog=overlay.gameObject; dialogKind=kind;
-            var panel=FlappyScene.Shape(overlay.transform,"Flappy dialog "+kind,0,0,300,height,19,UiFactory.Paper);
+            var overlay = DialogUi.ModalOverlay(layout, "Flappy dialog overlay");
+            dialog=overlay.gameObject; dialogKind=kind;
+            var panel=FlappyScene.Shape(overlay.transform,"Flappy dialog "+kind,0,0,300,height,19,DialogUi.Surface);
             panel.raycastTarget=true; dialogPanel=panel.rectTransform; UiFactory.Center(dialogPanel); FitDialog();
             return dialogPanel;
         }
@@ -35,18 +35,14 @@ namespace XanaduYonder.Runtime.FlappyBird
         }
         private Button DialogButton(RectTransform panel,string title,float y,Action action,bool primary=true,bool quiet=false)
         {
-            var button=ActionButton(panel,title,24,y,252,44,action,10,quiet,primary);
-            Label(button.transform,title,4,0,244,44,quiet?11:13,quiet?UiFactory.Muted:primary?UiFactory.Paper:UiFactory.Ink,TextAnchor.MiddleCenter);
-            return button;
+            return DialogUi.ActionButton(panel, title, 24, y, 252, 44, action, primary, quiet ? 13 : 15);
         }
         private void DialogHeading(RectTransform panel,string title,float y)
         { Label(panel,title,24,y,252,38,24,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold); }
         private void ShowPause()
         {
             var panel=BeginDialog(DialogKind.Pause,308);
-            Label(panel,"TAKE A LITTLE BREAK",24,27,252,15,9,UiFactory.Muted,TextAnchor.MiddleCenter);
-            DialogHeading(panel,"歇一小会儿",51);
-            Label(panel,"天空在这里，等你继续。",24,98,252,28,12,UiFactory.Muted,TextAnchor.MiddleCenter);
+            DialogHeading(panel,"已暂停",51);
             DialogButton(panel,session.Phase==XanaduYonder.Core.FlappyBird.FlappyPhase.Ready?"返回准备":"继续飞行",139,Continue);
             DialogButton(panel,"重新开始",193,Restart,false);
             DialogButton(panel,"返回大厅",242,RequestHome,false,true);
@@ -57,7 +53,6 @@ namespace XanaduYonder.Runtime.FlappyBird
             var panel=BeginDialog(DialogKind.Result,unsaved?392:366);
             FlappyScene.SpriteImage(panel,"Result bird",scene.BirdSprite,127,28,46,42);
             DialogHeading(panel,"飞得不错",82);
-            Label(panel,"下一次，也许再远一点。",24,125,252,28,12,UiFactory.Muted,TextAnchor.MiddleCenter);
             Label(panel,"本局分数",24,170,126,20,10,UiFactory.Muted,TextAnchor.MiddleCenter);
             Label(panel,"最高纪录",150,170,126,20,10,UiFactory.Muted,TextAnchor.MiddleCenter);
             ResultNumber(panel,session.Game.Score.ToString(),24,UiFactory.Ink);

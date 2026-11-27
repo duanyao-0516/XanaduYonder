@@ -118,7 +118,7 @@ namespace XanaduYonder.Runtime.BoardGames
                 scroll.verticalScrollbar = DrawRulesScrollbar(scrollArea, textWidth + 13, areaHeight);
             scroll.verticalNormalizedPosition = 1;
 
-            GameButton(sheet, "返回", 26, height - 105, width - 52, 79, ClosePanel);
+            DialogUi.ActionButton(sheet, "返回", 26, height - 105, width - 52, 79, ClosePanel);
         }
 
         private static RulesSection[] RulesFor(BoardGameId game)

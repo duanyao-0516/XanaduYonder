@@ -19,7 +19,7 @@ namespace XanaduYonder.Runtime.Snake
             UiFactory.NavigationButton(nav, UiIconKind.Settings, ShowSettings);
             var heading=UiFactory.Band(surface,"Snake heading",108,64,.03f);
             UiFactory.Label(heading,"贪吃蛇",36,0,290,64,52,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
-            modeButton=UiFactory.Button(heading,"经典无限",474,5,210,54,ChooseMode);modeButton.name="Mode";
+            modeButton=DialogUi.ActionButton(heading,"经典无限",474,5,210,54,ChooseMode);modeButton.name="Mode";
             modeText=modeButton.GetComponentInChildren<Text>();modeText.color=UiFactory.Ink;modeText.fontSize=23;
             modeText.rectTransform.sizeDelta=new Vector2(158,54);
             SnakeIconGraphic.Add(modeButton.transform,SnakeIconKind.Down,174,15,24,UiFactory.Ink);
@@ -54,12 +54,12 @@ namespace XanaduYonder.Runtime.Snake
             }
             controls=UiFactory.Band(surface,"Snake controls",1032,256,.80f);
             var tools=UiFactory.Rect(controls,"Snake left tools",36,48,320,208);
-            pauseButton=UiFactory.Button(tools,"暂停",0,0,152,96,()=>{if(Available)ShowPause();});pauseButton.name="Pause";
+            pauseButton=DialogUi.ActionButton(tools,"暂停",0,0,152,96,()=>{if(Available)ShowPause();});pauseButton.name="Pause";
             AddToolIcon(pauseButton,SnakeIconKind.Pause);
-            var restart=UiFactory.Button(tools,"重来",168,0,152,96,ConfirmRestart);restart.name="Restart";
+            var restart=DialogUi.ActionButton(tools,"重来",168,0,152,96,ConfirmRestart);restart.name="Restart";
             var restartIcon=UiFactory.Rect(restart.transform,"Restart icon",20,30,36,36).gameObject.AddComponent<UiIconGraphic>();restartIcon.Kind=UiIconKind.Restart;restartIcon.color=UiFactory.Ink;restartIcon.raycastTarget=false;
             PositionToolText(restart);
-            boundaryButton=UiFactory.Button(tools,"四边相通",0,112,320,96,ConfirmBoundary);boundaryButton.name="Boundary";
+            boundaryButton=DialogUi.ActionButton(tools,"四边相通",0,112,320,96,ConfirmBoundary);boundaryButton.name="Boundary";
             var boundaryText=boundaryButton.GetComponentInChildren<Text>();boundaryText.alignment=TextAnchor.MiddleLeft;
             boundaryText.rectTransform.anchoredPosition=new Vector2(56,0);boundaryText.rectTransform.sizeDelta=new Vector2(160,96);boundaryText.fontSize=24;
             SnakeIconGraphic.Add(boundaryButton.transform,SnakeIconKind.Wrap,18,32,30,UiFactory.Accent);

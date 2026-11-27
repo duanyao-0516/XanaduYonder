@@ -35,9 +35,9 @@ namespace XanaduYonder.Runtime.AircraftFire
             var title = titleArtwork.gameObject.AddComponent<RawImage>();
             title.texture = Resources.Load<Texture2D>("AircraftFire/Title"); title.raycastTarget = false;
             entryMenu = UiFactory.Rect(entry, "Aircraft original mode menu", 170, 0, 300, 260);
-            OriginalButton(entryMenu, "经典模式", 0, 0, 300, 70, () => StartRun(AircraftMode.Classic, selectedCrazy));
-            OriginalButton(entryMenu, "关卡模式", 0, 95, 300, 70, () => StartRun(AircraftMode.Level, false));
-            OriginalButton(entryMenu, "历史成绩", 0, 190, 300, 70, ShowRecords);
+            DialogUi.ActionButton(entryMenu, "经典模式", 0, 0, 300, 70, () => StartRun(AircraftMode.Classic, selectedCrazy), true, 30);
+            DialogUi.ActionButton(entryMenu, "关卡模式", 0, 95, 300, 70, () => StartRun(AircraftMode.Level, false), false, 30);
+            DialogUi.Disclosure(entryMenu, "历史成绩", 0, 190, 300, 70, ShowRecords);
             warningLabel = UiFactory.Label(entry, "", 16, 1090, 608, 32, 16, UiFactory.Hex("853D36"), TextAnchor.MiddleCenter);
             warningLabel.name = "Aircraft save warning";
 
@@ -72,12 +72,7 @@ namespace XanaduYonder.Runtime.AircraftFire
             }
             return button;
         }
-        private static Button OriginalButton(Transform parent, string text, float x, float y, float width, float height, Action action, int fontSize = 35)
-        {
-            var button = ArtworkButton(parent, text, "button_normal", "button_highlight", x, y, width, height, action, true);
-            UiFactory.Label(button.transform, text, 10, 0, width - 20, height, fontSize, OriginalInk, TextAnchor.MiddleCenter);
-            return button;
-        }
+
 
         internal void LayoutNow()
         {

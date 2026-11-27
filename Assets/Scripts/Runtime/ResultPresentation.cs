@@ -102,7 +102,7 @@ namespace XanaduYonder.Runtime
                 throw new InvalidOperationException("The page must reserve a result review slot before inspection.");
             if (visible && reopen == null)
             {
-                reopen = UiFactory.Button(slot, "查看结算", 0, 0, slot.rect.width, slot.rect.height, Reopen, true);
+                reopen = DialogUi.ActionButton(slot, "查看结算", 0, 0, slot.rect.width, slot.rect.height, Reopen, true);
                 reopen.name = "Reopen result";
                 UiFactory.Stretch(reopen.GetComponent<RectTransform>());
             }

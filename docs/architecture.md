@@ -6,12 +6,14 @@ Android 与 iOS 共用 Unity 工程。源码版本为 **0.9.8 / build 17**，大
 
 ## 源码与构建目录
 
+接入大厅、菜单、反馈、存档或网页宿主可参照[共用组件与接入示例](shared-components.md)。每个入口附有现有调用方和对应回归命令。
+
 | 目录 | 职责 |
 | --- | --- |
 | `Assets/Scripts/Core/` | 平台无关规则、状态与存档契约 |
 | [Runtime/AppController.cs](../Assets/Scripts/Runtime/AppController.cs)、[Runtime/App](../Assets/Scripts/Runtime/App/) | Unity 主组件、游戏接入与[共享页面显隐](../Assets/Scripts/Runtime/App/AppController.Navigation.cs)。各玩法的页面和生命周期位于对应的 Runtime 模块 |
 | [Runtime/Lobby](../Assets/Scripts/Runtime/Lobby/) | [大厅入口和顺序](../Assets/Scripts/Runtime/Lobby/AppController.Lobby.cs)、卡片预览、视图和展示偏好 |
-| [Runtime/Navigation](../Assets/Scripts/Runtime/Navigation/) | 小游戏顶栏的按钮尺寸和位置，由各页面决定按钮动作和可用时机 |
+| [Runtime/Navigation](../Assets/Scripts/Runtime/Navigation/) | 小游戏顶栏的按钮尺寸和位置，以及[菜单按钮、开关和弹窗样式](dialogs.md)。按钮动作和可用时机由各页面决定 |
 | [Runtime/Platform](../Assets/Scripts/Runtime/Platform/) | [平台触感派发](../Assets/Scripts/Runtime/Platform/PlatformHaptics.cs)与平台专属桥接 |
 | `Assets/Scripts/Runtime/Platform/iOS/` | iOS 托管触感桥与首次启动音频输出恢复 |
 | `Assets/Plugins/iOS/` | iOS 原生音频／触感接口，仅 iOS 导入 |

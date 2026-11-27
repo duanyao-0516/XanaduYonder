@@ -6,13 +6,11 @@ namespace XanaduYonder.Runtime.Jump
 {
     public sealed class JumpSaveStore
     {
-        private readonly string directory;
         public string SavePath { get; private set; }
 
         public JumpSaveStore(string directory)
         {
             if (string.IsNullOrWhiteSpace(directory)) throw new ArgumentException("Save directory is missing.", nameof(directory));
-            this.directory = directory;
             SavePath = Path.Combine(directory, "jump-v1.json");
         }
 
@@ -32,23 +30,10 @@ namespace XanaduYonder.Runtime.Jump
         public bool TrySave(JumpSaveData data, out string error)
         {
             error = null;
-            var temporary = SavePath + ".tmp";
             try
             {
                 var bytes = new UTF8Encoding(false).GetBytes(JumpSaveCodec.Encode(data));
-                Directory.CreateDirectory(directory);
-                using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush(true);
-                }
-                if (File.Exists(SavePath))
-                {
-                    var previousIsValid = TryRead(SavePath, out var previous, out var readError);
-                    // A corrupt primary must never overwrite the last good backup.
-                    File.Replace(temporary, SavePath, previousIsValid ? SavePath + ".bak" : null);
-                }
-                else File.Move(temporary, SavePath);
+                AtomicSaveFile.Write(SavePath, bytes, path => TryRead(path, out _, out _));
                 return true;
             }
             catch (Exception exception) when (IsStorageFailure(exception) || exception is ArgumentException)

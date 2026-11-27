@@ -477,7 +477,11 @@ namespace XanaduYonder.EditorTools
             f.Click(disc,new Vector2(0,68));p.Advance(.2f);
             Require(p.Session.Game.Direction==SnakeDirection.Up,"Real disc pointer reaches the existing snake direction queue");
             f.Click(Icon(Find(p.Root,"Snake navigation"),UiIconKind.Settings).GetComponent<RectTransform>());
-            f.Capture("settings-controls");p.ClickDialog("控制方式");
+            var coveredHome=Icon(Find(p.Root,"Snake navigation"),UiIconKind.Home).GetComponent<Button>();
+            ExecuteEvents.Execute(coveredHome.gameObject,new BaseEventData(EventSystem.current),ExecuteEvents.submitHandler);
+            Require(!coveredHome.IsInteractable() && p.LobbyRequests==0 && Get<GameObject>(p.Page,"dialog")!=null,
+                "Opening Snake settings immediately blocks background Home submission before the next game update");
+            f.Capture("settings-controls");p.ClickDialog("十字方向键");
             Require(profile.ControlStyle==SnakeControlStyle.Cross&&cross.gameObject.activeSelf&&!disc.gameObject.activeSelf,
                 "Settings swaps only the direction control subtree");
             var catalog=Get<SnakeCatalog>(p.Page,"catalog");
@@ -510,9 +514,9 @@ namespace XanaduYonder.EditorTools
             contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"ShowPause");
             RequireDiscColors(f,disc,null);p.ClickDialog("继续");p.CompleteCountdown();
             contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"ShowSettings");
-            RequireDiscColors(f,disc,null);p.ClickDialog("控制方式");
+            RequireDiscColors(f,disc,null);p.ClickDialog("十字方向键");
             Require(!rect.gameObject.activeSelf,"Switching to cross controls retires the pressed disc");
-            p.ClickDialog("控制方式");RequireDiscColors(f,disc,null);p.CloseSettings();p.CompleteCountdown();
+            p.ClickDialog("圆盘四方向");RequireDiscColors(f,disc,null);p.CloseSettings();p.CompleteCountdown();
             contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"SetForeground",false);
             RequireDiscColors(f,disc,null);Invoke(p.Page,"SetForeground",true);p.ResumeForChecks();
             contact=f.Press(rect,new Vector2(0,68));Invoke(p.Page,"Leave");

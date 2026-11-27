@@ -30,8 +30,8 @@ namespace XanaduYonder.Runtime.Idiom
             bookButton = UiFactory.NavigationButton(gameRoot, UiIconKind.Notebook, () => { if (CanNavigate) OpenNotebook(false); });
             UiFactory.NavigationButton(gameRoot, UiIconKind.Book, () => { if (CanNavigate) ShowHelp(null); });
             UiFactory.NavigationButton(gameRoot, UiIconKind.Settings, () => { if (CanNavigate) ShowMenu(); });
-            computerMatch = IdiomUi.Button(gameRoot, "人机对战", 32, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Computer));
-            localMatch = IdiomUi.Button(gameRoot, "双人本地对战", 368, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Local));
+            computerMatch = IdiomUi.PageButton(gameRoot, "人机对战", 32, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Computer));
+            localMatch = IdiomUi.PageButton(gameRoot, "双人本地对战", 368, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Local));
             countText = IdiomUi.Label(gameRoot, "", 210, 184, 300, 52, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
             countText.name = "Idiom centered count";
             ruleSwitch = IdiomRuleSwitch.Create(gameRoot, 552, 184, () =>
@@ -77,27 +77,27 @@ namespace XanaduYonder.Runtime.Idiom
             ((IdiomInputField)input).SendButton = send;
             composerRule = IdiomUi.Label(footer, "", 0, 122, 656, 30, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             endedRow = UiFactory.Rect(footer, "Finished composer", 0, 38, 656, 76);
-            IdiomUi.Button(endedRow, "本轮小结", 0, 0, 320, 72, () => { if (AcceptsInput) ShowSummary(); });
-            IdiomUi.Button(endedRow, "再来一局", 336, 0, 320, 72, () => { if (AcceptsInput) Restart(); }, true);
+            IdiomUi.PageButton(endedRow, "本轮小结", 0, 0, 320, 72, () => { if (AcceptsInput) ShowSummary(); });
+            IdiomUi.PageButton(endedRow, "再来一局", 336, 0, 320, 72, () => { if (AcceptsInput) Restart(); }, true);
 
             starter = UiFactory.Rect(gameRoot, "Choose who starts", 32, 330, 656, 300);
             IdiomUi.Label(starter, "谁来开个头？", 0, 0, 656, 70, 40, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             starterDescription = IdiomUi.Label(starter, "", 0, 88, 656, 50, 26, UiFactory.Muted, TextAnchor.MiddleCenter);
-            leftStart = IdiomUi.Button(starter, "机器开局", 0, 172, 320, 80, () => StartGame(IdiomActor.Left), true, 28);
-            rightStart = IdiomUi.Button(starter, "人先开始", 336, 172, 320, 80, () => StartGame(IdiomActor.Right), false, 28);
+            leftStart = IdiomUi.PageButton(starter, "机器开局", 0, 172, 320, 80, () => StartGame(IdiomActor.Left), true, 28);
+            rightStart = IdiomUi.PageButton(starter, "人先开始", 336, 172, 320, 80, () => StartGame(IdiomActor.Right), false, 28);
             starterRule = IdiomUi.Label(starter, "", 0, 270, 656, 38, 21, UiFactory.Muted, TextAnchor.MiddleCenter);
 
             messagePanel = UiFactory.Rect(gameRoot, "Idiom loading or recovery", 32, 340, 656, 330);
             messageTitle = IdiomUi.Label(messagePanel, "", 0, 0, 656, 70, 34, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             messageBody = IdiomUi.Label(messagePanel, "", 20, 88, 616, 132, 24, UiFactory.Muted, TextAnchor.UpperCenter);
-            messageAction = IdiomUi.Button(messagePanel, "重试", 128, 238, 400, 72, () =>
+            messageAction = IdiomUi.PageButton(messagePanel, "重试", 128, 238, 400, 72, () =>
             {
                 if (!CanNavigate) return;
                 if (store != null && store.NeedsRecovery && loaded) ConfirmGameRecovery();
                 else BeginLoad();
             }, true);
 
-            IdiomUi.Button(bookRoot, "‹ 返回", 56, 34, 130, 58, () => { if (CanNavigate) ReturnFromNotebook(); });
+            IdiomUi.PageButton(bookRoot, "‹ 返回", 56, 34, 130, 58, () => { if (CanNavigate) ReturnFromNotebook(); });
             IdiomUi.Label(bookRoot, "生词本", 210, 30, 300, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             bookCount = IdiomUi.Label(bookRoot, "", 500, 40, 188, 50, 22, UiFactory.Accent, TextAnchor.MiddleRight);
             IdiomUi.Label(bookRoot, "适时复习 · 点开后可标记“我记住了”", 32, 108, 656, 50, 23, UiFactory.Muted);
@@ -107,7 +107,7 @@ namespace XanaduYonder.Runtime.Idiom
                     ShowDefinition(notebookItems[index].Id, null, notebookItems[index]);
             });
             bookEmpty = IdiomUi.Label(bookRoot, "", 60, 300, 600, 170, 28, UiFactory.Muted, TextAnchor.MiddleCenter);
-            notebookRecovery = IdiomUi.Button(bookRoot, "保留旧档，重新创建", 160, 510, 400, 70,
+            notebookRecovery = IdiomUi.PageButton(bookRoot, "保留旧档，重新创建", 160, 510, 400, 70,
                 () => { if (CanNavigate) ConfirmNotebookRecovery(null); }, true);
             pageNotice = IdiomUi.Label(gameRoot, "", 32, 1272, 656, 40, 18, UiFactory.Muted, TextAnchor.MiddleCenter);
             notebookNotice = IdiomUi.Label(bookRoot, "", 32, 1272, 656, 40, 18, UiFactory.Muted, TextAnchor.MiddleCenter);

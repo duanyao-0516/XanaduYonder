@@ -36,15 +36,16 @@ namespace XanaduYonder.Runtime.HappyBall
             UiFactory.Stretch(stageRect); stageRect.offsetMin = Vector2.zero; stageRect.offsetMax = new Vector2(0, -180);
             stageImage = stageRect.gameObject.AddComponent<RawImage>(); stageImage.color = Color.white; stageImage.raycastTarget = true;
 
-            var cover = UiFactory.Panel(stageRect, "Session cover", 0, 0, 720, 1140, new Color(.965f, .957f, .925f, .88f), false);
+            var cover = UiFactory.Panel(stageRect, "Session cover", 0, 0, 720, 1140, DialogUi.Scrim, false);
             UiFactory.Stretch(cover.rectTransform); cover.raycastTarget = true; pauseOverlay = cover.gameObject;
-            var content = UiFactory.Rect(cover.transform, "Session controls", 0, 0, 480, 300); UiFactory.Center(content);
-            overlayTitle = UiFactory.Label(content, "", 0, 0, 480, 66, 40, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            overlayDetail = UiFactory.Label(content, "", 0, 70, 480, 44, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
-            var resume = UiFactory.Button(content, "开始游戏", 90, 132, 300, 72,
+            var content = UiFactory.Panel(cover.transform, "Session controls", 0, 0, 480, 340, DialogUi.Surface).rectTransform;
+            UiFactory.Center(content);
+            overlayTitle = UiFactory.Label(content, "", 0, 20, 480, 66, 40, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            overlayDetail = UiFactory.Label(content, "", 0, 90, 480, 44, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var resume = DialogUi.ActionButton(content, "开始游戏", 90, 152, 300, 72,
                 () => { if (game.GameOver) Restart(); else Resume(); }, true);
             resumeText = resume.GetComponentInChildren<Text>();
-            UiFactory.Button(content, "返回大厅", 90, 224, 300, 62, returnLobby);
+            DialogUi.ActionButton(content, "返回大厅", 90, 244, 300, 62, returnLobby);
 
             var warning = UiFactory.Panel(root, "Save warning", 20, 0, 680, 50, UiFactory.Hex("FFF0CF"));
             warning.rectTransform.anchorMin = warning.rectTransform.anchorMax = new Vector2(.5f, 0);

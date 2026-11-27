@@ -244,6 +244,10 @@ namespace XanaduYonder.EditorTools
             }
             f.Click(SharedIcon(g.Root, UiIconKind.Book));
             Require(g.Dialog != null && HasText(g.Dialog, "从下到上 1–15"), "Shared Book opens the full coordinate rules");
+            var coveredHome = SharedIcon(g.Root, UiIconKind.Home).GetComponent<Button>();
+            ExecuteEvents.Execute(coveredHome.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+            Require(!coveredHome.IsInteractable() && g.LobbyRequests == 0 && g.Dialog != null,
+                "Submitting the covered Home control cannot leave Gomoku rules.");
             f.Capture("rules"); g.Click("知道了");
             f.Click(SharedIcon(g.Root, UiIconKind.Settings));
             Require(g.SettingsOpened == 1 && g.Session.Paused && !Get<GomokuBoardView>(g.Page, "board").Interactable,
@@ -511,7 +515,8 @@ namespace XanaduYonder.EditorTools
                 if (mode == GomokuMode.Local)
                 {
                     var choice = Find(g.Dialog.transform, "玩家 2 执黑").GetComponent<Image>();
-                    Require(choice.color == UiFactory.Accent, "Local rematch defaults to exchanging black and white");
+                    Require(choice.color == Color.white && choice.GetComponentInChildren<Text>().fontStyle == FontStyle.Bold,
+                        "Local rematch selects the exchanged black and white seats in the choice group.");
                 }
                 g.Click("取消");
                 Require(g.Session.Game.MoveCount == count && g.Session.Game.State != GomokuState.Playing, "Canceling rematch preserves the completed game");

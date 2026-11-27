@@ -153,7 +153,7 @@ namespace XanaduYonder.EditorTools
                     "An answer aided by a clue counts as assisted for its player");
                 CheckSpeed(root, page, profile, () => modal);
                 CheckSoloGoals(root, page, catalog, notebookStore, () => modal);
-                CheckDuoCompetition(root, page, () => modal);
+                CheckDuoCompetition(root, page, () => modal, store);
                 Require(answers == 6, "Shared answer feedback fires for accepted player submissions only");
                 Require(lobbyVisits == 0 && page.HandleBack() && lobbyVisits == 1, "Only Back from setup opens the lobby");
                 page.Leave();
@@ -211,6 +211,8 @@ namespace XanaduYonder.EditorTools
             Find<InputField>(root, "Poetry input").text = "明月";
             TapComputerLine(history);
             RequireFullPoem(root);
+            Require(!Buttons(root, "继续").Single().IsInteractable(),
+                "Full-screen poem reading blocks the paused match action behind it");
             Require(session.Phase == PoetryPhase.Paused && page.HandleBack(), "Opening an original pauses Speed and Back returns");
             Click(root, "继续");
             Require(Find<InputField>(root, "Poetry input").text == "明月", "Returning from the original preserves the Speed draft");
@@ -458,7 +460,8 @@ namespace XanaduYonder.EditorTools
             ReleaseComputerLine(button, PressComputerLine(button));
         }
 
-        private static void CheckDuoCompetition(Transform root, FeihualingPage page, Func<RectTransform> modal)
+        private static void CheckDuoCompetition(Transform root, FeihualingPage page, Func<RectTransform> modal,
+            FeihualingSaveStore store)
         {
             Click(root, "同机双人");
             Click(root, "开始竞技");
@@ -476,12 +479,28 @@ namespace XanaduYonder.EditorTools
             Find<Button>(root, "Back button").onClick.Invoke();
             Require(Find<Button>(root, "Home button") != null && Buttons(root, "继续上次").Length == 1,
                 "The header arrow preserves the same unfinished slot");
+            string before = System.IO.File.ReadAllText(store.SavePath);
+            Click(root, "开始新局");
+            Require(modal() != null && Buttons(modal(), "开始新局").Single().targetGraphic.color == DialogUi.Destructive,
+                "Replacing an unfinished poetry slot requires an explicit destructive confirmation");
+            Click(modal(), "取消");
+            Require(modal() == null && System.IO.File.ReadAllText(store.SavePath) == before,
+                "Canceling replacement leaves the persisted poetry profile intact");
             Click(root, "继续上次");
             Click(root, "提示 1/3");
             var session = (PoetrySession)page.GetType().GetField("match", Private).GetValue(page);
             Require(session.CompetitionHintsRemaining == 1, "The shared allowance and current clue survive a return to setup");
             Click(modal(), "关闭");
             Require(page.HandleBack(), "Duo Competition returns to setup");
+            Click(root, "开始新局");
+            Click(modal(), "开始新局");
+            var saved = store.Load(out _);
+            var fresh = saved.Matches[saved.SelectedSlot];
+            Require(modal() == null && fresh.Phase == PoetryPhase.Handoff &&
+                fresh.History.Length == 0 && fresh.CompetitionHintLines.Length == 0 &&
+                saved.Matches.Count(match => match != null) > 1,
+                "Confirmed new game starts a clean handoff, persists the slot, and keeps the other matches");
+            Require(page.HandleBack(), "The replacement match returns to setup");
         }
 
         private static void CheckRules(Transform root, Func<RectTransform> currentModal)

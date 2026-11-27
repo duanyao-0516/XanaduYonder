@@ -26,6 +26,15 @@ namespace XanaduYonder.Runtime.Idiom
             return button;
         }
 
+        public static Button PageButton(Transform parent, string title, float x, float y, float width, float height,
+            Action action, bool primary = false, int size = 24)
+        {
+            // The underlying conversation page leaves keyboard selection with the composer.
+            var button = DialogUi.ActionButton(parent, title, x, y, width, height, action, primary, size);
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+            return button;
+        }
+
         public static void Place(RectTransform rect, float x, float y, float width, float height)
         {
             rect.anchorMin = rect.anchorMax = new Vector2(0, 1);

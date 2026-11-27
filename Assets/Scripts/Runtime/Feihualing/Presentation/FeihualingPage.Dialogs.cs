@@ -98,20 +98,20 @@ namespace XanaduYonder.Runtime.Feihualing
                 "点开历史里的任意答句即可阅读完整原诗并收藏。单机竞技也可长按电脑答句直接收藏。已收藏的诗词在答句末尾标有黄星，右上角可打开收藏。\n\n" +
                 "竞速中打开说明或原诗会暂停，返回后点「继续」再计时。",
                 ModalMargin, 116, ModalWidth, panel.rect.height - 218);
-            IdiomUi.Button(panel, "知道了", ModalMargin, panel.rect.height - 84, ModalWidth, 62, CloseDialog, true);
+            DialogUi.ActionButton(panel, "知道了", ModalMargin, panel.rect.height - 84, ModalWidth, 62, CloseDialog, true);
         }
 
-        private void Confirm(string title, string description, string caption, Action confirm)
+        private void Confirm(string title, string description, string caption, Action confirm, bool destructive = false)
         {
             var panel = OpenDialog(title, 452);
             IdiomUi.Label(panel, description, ModalMargin, 112, ModalWidth, 121, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
-            IdiomUi.Button(panel, caption, ModalMargin, 259, ModalWidth, 70, () =>
+            DialogUi.ActionButton(panel, caption, ModalMargin, 259, ModalWidth, 70, () =>
             {
                 if (!modalOpen) return;
                 CloseDialog();
                 if (CanInteract) confirm();
-            }, true, 25);
-            IdiomUi.Button(panel, "取消", ModalMargin, 347, ModalWidth, 63, CloseDialog, false, 23);
+            }, true, 25, destructive);
+            DialogUi.ActionButton(panel, "取消", ModalMargin, 347, ModalWidth, 63, CloseDialog, false, 23);
         }
 
         private void StartupAction()
@@ -173,7 +173,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 var x = index % 2 * 274;
                 var y = index / 2 * 72;
                 var caption = card.Rule == PoetryRule.Position ? card.Title + " · " + (card.Width == 5 ? "五言" : "七言") : card.Title;
-                IdiomUi.Button(content, caption, x, y, 258, 60, () =>
+                DialogUi.ActionButton(content, caption, x, y, 258, 60, () =>
                 {
                     CloseDialog();
                     SelectTopic(card);
@@ -185,7 +185,7 @@ namespace XanaduYonder.Runtime.Feihualing
             var height = Mathf.Max(viewport.rect.height, ((index + 1) / 2) * 72);
             content.sizeDelta = new Vector2(ModalWidth, height);
             content.anchoredPosition = new Vector2(0, Mathf.Min(content.anchoredPosition.y, height - viewport.rect.height));
-            IdiomUi.Button(panel, "关闭", ModalMargin, bottom, ModalWidth, 58, CloseDialog, false, 22);
+            DialogUi.ActionButton(panel, "关闭", ModalMargin, bottom, ModalWidth, 58, CloseDialog, false, 22);
         }
 
         private const string HintInstruction = "从相邻或相关诗句回想要接的那一句。";
@@ -206,8 +206,8 @@ namespace XanaduYonder.Runtime.Feihualing
             hintScroll = IdiomUi.Scroll(panel, "Scrollable Hint Accordion", out hintViewport, out hintContent);
             var bottom = panel.rect.height - 82;
             IdiomUi.Place(hintViewport, ModalMargin, 159, ModalWidth, bottom - 171);
-            hintRefresh = IdiomUi.Button(panel, Competition ? "换一条" : "换一批", ModalMargin, bottom, 258, 58, RefreshHints, false, 22);
-            IdiomUi.Button(panel, "关闭", ModalMargin + 274, bottom, 258, 58, CloseDialog, false, 22);
+            hintRefresh = DialogUi.ActionButton(panel, Competition ? "换一条" : "换一批", ModalMargin, bottom, 258, 58, RefreshHints, false, 22);
+            DialogUi.ActionButton(panel, "关闭", ModalMargin + 274, bottom, 258, 58, CloseDialog, false, 22);
             var restoreAnchor = match == anchoredHintMatch && match.History.Count == anchoredHintTurn;
             if (restoreAnchor) expandedLine = anchoredHintLine;
             RenderHints(offset: restoreAnchor ? anchoredHintOffset : (float?)null);
@@ -285,7 +285,7 @@ namespace XanaduYonder.Runtime.Feihualing
                 if (context.Count == 0)
                     clueY = AddOriginalText(card.transform, "可展开原诗查看上下文。", clueY, 492, 23, UiFactory.Muted);
                 var expanded = lineId == expandedLine;
-                IdiomUi.Button(card.transform, expanded ? "收起原诗" : "展开原诗", 16, clueY + 8, 220, 49,
+                DialogUi.ActionButton(card.transform, expanded ? "收起原诗" : "展开原诗", 16, clueY + 8, 220, 49,
                     () => ToggleOriginal(lineId), false, 21);
                 IdiomUi.Place(card.rectTransform, 0, y, ModalWidth - 4, clueY + 69);
                 y += clueY + 73;
@@ -344,6 +344,7 @@ namespace XanaduYonder.Runtime.Feihualing
             var paper = UiFactory.Panel(root, "Feihualing full poem", 0, 0, 720, 1320, UiFactory.Paper, false);
             paper.raycastTarget = true;
             poemScreen = paper.rectTransform;
+            poemScreen.gameObject.AddComponent<DialogFocusScope>().BlockBackground(root);
             UiFactory.Stretch(poemScreen);
             modalOpen = true;
             modalBack = back;
@@ -369,7 +370,7 @@ namespace XanaduYonder.Runtime.Feihualing
             AnchorPoemFooter(feedback.rectTransform, 32, 96);
             var currentScreen = poemScreen;
             Button collect = null;
-            collect = IdiomUi.Button(panel, "", 32, 0, BodyWidth, 68, () =>
+            collect = DialogUi.ActionButton(panel, "", 32, 0, BodyWidth, 68, () =>
             {
                 if (!modalOpen || poemScreen != currentScreen) return;
                 var result = CollectPoem(work, out var message);

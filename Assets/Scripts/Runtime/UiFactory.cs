@@ -158,7 +158,7 @@ namespace XanaduYonder.Runtime
             colors.pressedColor = new Color(.78f, .85f, .78f);
             colors.selectedColor = Color.white;
             button.colors = colors;
-            button.onClick.AddListener(() => action());
+            if (action != null) button.onClick.AddListener(action.Invoke);
             return button;
         }
 

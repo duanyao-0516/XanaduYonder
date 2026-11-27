@@ -111,16 +111,16 @@ namespace XanaduYonder.Runtime.Tetris
             // These siblings come after Hold and Next so the whole arena is dimmed.
             countdown = new BoardCountdownView(ArenaRect, "Tetris countdown");
             var pauseDim = UiFactory.Panel(ArenaRect, "Tetris arena pause", 0, 0, 1, 1,
-                new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, .44f), false);
+                DialogUi.Scrim, false);
             PauseRoot = pauseDim.rectTransform; UiFactory.Stretch(PauseRoot); pauseDim.raycastTarget = true;
             pauseTitle = Label(PauseRoot, "Tetris pause title", "已暂停", 28, Color.white, TextAnchor.MiddleCenter);
             pauseTitle.fontStyle = FontStyle.Bold;
-            continueControl = MakeControl(PauseRoot, "Tetris continue", "继续游戏", null, true, 14);
-            restartControl = MakeControl(PauseRoot, "Tetris restart", "重新开始", null, false, 14);
+            continueControl = MakeDialogControl(PauseRoot, "Tetris continue", "继续游戏", true);
+            restartControl = MakeDialogControl(PauseRoot, "Tetris restart", "重新开始", false);
             PauseRoot.gameObject.SetActive(false);
 
             var resultDim = UiFactory.Panel(ArenaRect, "Tetris arena result", 0, 0, 1, 1,
-                new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, .44f), false);
+                DialogUi.Scrim, false);
             ResultRoot = resultDim.rectTransform; UiFactory.Stretch(ResultRoot); resultDim.raycastTarget = true;
             resultTitle = Label(ResultRoot, "Tetris result title", "本局结束", 22, Color.white, TextAnchor.MiddleCenter);
             resultScoreCaption = Label(ResultRoot, "Tetris result score caption", "本局得分", 11, new Color(1, 1, 1, .8f), TextAnchor.MiddleCenter);
@@ -128,8 +128,8 @@ namespace XanaduYonder.Runtime.Tetris
             resultScore.fontStyle = FontStyle.Bold;
             resultLines = Label(ResultRoot, "Tetris result lines", "消除 0 行", 13, new Color(1, 1, 1, .86f), TextAnchor.MiddleCenter);
             resultBest = Label(ResultRoot, "Tetris result best", "最高纪录暂不可读", 12, new Color(1, 1, 1, .8f), TextAnchor.MiddleCenter);
-            resultRestartControl = MakeControl(ResultRoot, "Tetris result restart", "再来一局", null, true, 14);
-            resultInspectControl = MakeControl(ResultRoot, "Tetris result inspect", "查看棋盘", null, false, 14);
+            resultRestartControl = MakeDialogControl(ResultRoot, "Tetris result restart", "再来一局", true);
+            resultInspectControl = MakeDialogControl(ResultRoot, "Tetris result inspect", "查看棋盘", false);
             ResultRoot.gameObject.SetActive(false);
 
             operations = UiFactory.Rect(root, "Tetris operations", 0, 0, 1, 1);
@@ -145,17 +145,18 @@ namespace XanaduYonder.Runtime.Tetris
             warningBand.gameObject.SetActive(false);
 
             var dim = UiFactory.Panel(root, "Tetris overlay", 0, 0, 1, 1,
-                new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, .37f), false);
+                DialogUi.Scrim, false);
             OverlayRoot = dim.rectTransform; UiFactory.Stretch(OverlayRoot); dim.raycastTarget = true;
-            dialog = Shape(OverlayRoot, "Tetris dialog", TetrisGraphicKind.Round, UiFactory.Paper).rectTransform;
+            DialogBackdrop.CoverCanvas(dim);
+            dialog = Shape(OverlayRoot, "Tetris dialog", TetrisGraphicKind.Round, DialogUi.Surface).rectTransform;
             overlayTitle = Label(dialog, "Tetris overlay title", "", 23, UiFactory.Ink);
             overlayDetail = Label(dialog, "Tetris overlay detail", "", 13, UiFactory.Muted);
             overlayDetail.horizontalOverflow = HorizontalWrapMode.Wrap;
             overlayDetail.verticalOverflow = VerticalWrapMode.Truncate;
             overlayBest = Label(dialog, "Tetris best score", "最高纪录 0", 12, UiFactory.Muted);
-            primaryControl = MakeControl(dialog, "Tetris overlay primary", "", null, true, 14);
-            secondaryControl = MakeControl(dialog, "Tetris overlay secondary", "", null, false, 14);
-            inspectControl = MakeControl(dialog, "Tetris inspect result", "", null, false, 14);
+            primaryControl = MakeDialogControl(dialog, "Tetris overlay primary", "", true);
+            secondaryControl = MakeDialogControl(dialog, "Tetris overlay secondary", "", false);
+            inspectControl = MakeDialogControl(dialog, "Tetris inspect result", "", false);
             inspectControl.Target.gameObject.SetActive(false);
             OverlayRoot.gameObject.SetActive(false);
             // Preparation/error cards retain their existing full-page blocker.
@@ -242,6 +243,7 @@ namespace XanaduYonder.Runtime.Tetris
             ConfigureOverlayControl(inspectControl, inspect == null ? null : "查看最终局面", inspect);
             overlayVisible = visible;
             OverlayRoot.gameObject.SetActive(visible);
+            pauseControl.Button.interactable = !visible;
             ApplyControlStates();
             if (Layout != null) LayoutOverlay();
         }
@@ -375,8 +377,6 @@ namespace XanaduYonder.Runtime.Tetris
             {
                 Control control = buttons[i];
                 Place(control.Target, left + i * 140 * s, top + 60 * s, 128 * s, 44 * s);
-                Place(control.Background.rectTransform, 0, 0, 128 * s, 44 * s);
-                control.Background.Radius = 10 * s;
                 Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
             }
         }
@@ -384,8 +384,6 @@ namespace XanaduYonder.Runtime.Tetris
         private static void LayoutDialogControl(Control control, float width, float top, float s)
         {
             Place(control.Target, 22 * s, top, width, 48 * s);
-            Place(control.Background.rectTransform, 0, 0, width, 48 * s);
-            control.Background.Radius = 10 * s;
             Place(control.Label.rectTransform, 8 * s, 0, width - 16 * s, 48 * s);
         }
 
@@ -410,8 +408,6 @@ namespace XanaduYonder.Runtime.Tetris
             {
                 Control control = buttons[i];
                 Place(control.Target, left + i * 140 * s, top + 198 * s, 128 * s, 44 * s);
-                Place(control.Background.rectTransform, 0, 0, 128 * s, 44 * s);
-                control.Background.Radius = 10 * s;
                 Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
             }
         }
@@ -468,6 +464,24 @@ namespace XanaduYonder.Runtime.Tetris
             Place(control.Background.rectTransform, 8 * s, 8 * s, 32 * s, 32 * s);
             control.Background.Radius = 10 * s;
             Place((RectTransform)control.Target.Find("Navigation icon"), 14 * s, 14 * s, 20 * s, 20 * s);
+        }
+
+        private Control MakeDialogControl(Transform parent, string name, string title, bool primary)
+        {
+            var button = DialogUi.ActionButton(parent, title, 0, 0, 128, 44, null, primary, 14);
+            button.name = name;
+            var text = button.GetComponentInChildren<Text>();
+            text.name = "Button label";
+            text.resizeTextForBestFit = false;
+            labels.Add(text);
+            fontSizes.Add(14);
+            return new Control
+            {
+                Target = (RectTransform)button.transform,
+                Button = button,
+                Group = button.gameObject.AddComponent<CanvasGroup>(),
+                Label = text
+            };
         }
 
         private Control MakeControl(Transform parent, string name, string label, Action action, bool primary, float fontSize)

@@ -41,15 +41,7 @@ namespace XanaduYonder.Runtime.Zuma
             button.Initialize(texture,source,action,threeSlice);
             return button;
         }
-        public static RectTransform Panel(Transform parent,Texture menu,int columns,int rows,bool godHead)
-        {
-            var w=columns*121; var h=rows*121;
-            var panel=Rect(parent,"Original stone dialog",(1280-w)/2f,(720-h)/2f,w,h);
-            for(var row=0;row<rows;row++) for(var col=0;col<columns;col++)
-                Image(panel,"Stone tile",menu,new Rect(col==0?0:col==columns-1?242:121,row==0?0:row==rows-1?242:121,121,121),col*121,row*121,121,121);
-            if(godHead) Image(panel,"God head",menu,new Rect(363,0,234,210),w/2f-117,-112,234,210);
-            return panel;
-        }
+
     }
 
     // Original three atlas states, including repeated center tiles for wide buttons.

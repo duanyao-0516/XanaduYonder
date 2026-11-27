@@ -115,6 +115,7 @@ def build():
     files['index.html'] = (SOURCE / 'adapter/index.html').read_bytes()
     files['entry.js'] = (SOURCE / 'adapter/entry.js').read_bytes()
     files['style.css'] = (SOURCE / 'adapter/style.css').read_bytes()
+    files['dialogs.css'] = (ROOT / 'ThirdParty/WebGameUI/dialogs.css').read_bytes()
     types = {'.html':'text/html','.js':'application/javascript','.css':'text/css','.mp3':'audio/mpeg','.pak':'application/octet-stream','.png':'image/png'}
     content_manifest = {'files':[{'path':name,'sha256':sha(data),'bytes':len(data),'mime':types[Path(name).suffix]} for name,data in sorted(files.items())]}
     files['manifest.json'] = (json.dumps(content_manifest,ensure_ascii=False,indent=2)+'\n').encode()

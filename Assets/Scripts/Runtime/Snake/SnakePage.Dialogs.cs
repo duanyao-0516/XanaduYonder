@@ -9,24 +9,33 @@ namespace XanaduYonder.Runtime.Snake
     internal sealed partial class SnakePage
     {
         private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,
-            string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=620,bool primaryEnabled=true)
+            string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=620,bool primaryEnabled=true,bool reading=false)
+        {
+            var panel = OpenDialog(title, height);
+            float actions=tertiary!=null?270:secondary!=null?182:94;
+            var body = reading ? DialogUi.ScrollText(panel, message, 32, 116, 532, height - actions - 132, 26) :
+                UiFactory.Label(panel, message, 32, 116, 532, height - actions - 132, 26, UiFactory.Muted, TextAnchor.MiddleCenter);
+            body.name="Dialog message";body.supportRichText=false;
+            float top=height-actions-8;
+            var primaryButton=DialogUi.ActionButton(panel.transform,primary,32,top,532,78,()=>{CloseDialog();primaryAction?.Invoke();},true);
+            primaryButton.interactable=primaryEnabled;
+            if(secondary!=null)DialogUi.ActionButton(panel.transform,secondary,32,top+90,532,72,()=>{CloseDialog();secondaryAction?.Invoke();});
+            if(tertiary!=null)DialogUi.ActionButton(panel.transform,tertiary,32,top+174,532,72,()=>{CloseDialog();tertiaryAction?.Invoke();});
+            dismissDialog=()=>{CloseDialog();if(secondaryAction!=null)secondaryAction();else ShowPause();};
+            return panel;
+        }
+
+        private RectTransform OpenDialog(string title, float height)
         {
             input.Cancel();session.Pause();board.FinishAnimation();levelDropdown.Hide();countdown.SetActive(false);CloseDialog();Save();
-            var overlay=UiFactory.Panel(root,"Snake dialog overlay",0,0,720,1320,new Color(.09f,.24f,.2f,.4f),false);
-            UiFactory.Stretch(overlay.rectTransform);overlay.raycastTarget=true;dialog=overlay.gameObject;
-            var panel=UiFactory.Panel(overlay.transform,"Snake dialog",0,0,596,height,UiFactory.Paper);
+            var overlay = DialogUi.ModalOverlay(root, "Snake dialog overlay");
+            dialog = overlay.gameObject;
+            var panel=UiFactory.Panel(overlay.transform,"Snake dialog",0,0,596,height,DialogUi.Surface);
             UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,30,532,72,36,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
-            float actions=tertiary!=null?270:secondary!=null?182:94;
-            var body=UiFactory.Label(panel.transform,message,32,116,532,height-actions-132,26,UiFactory.Muted,TextAnchor.MiddleCenter);body.name="Dialog message";body.supportRichText=false;
-            float top=height-actions-8;
-            var primaryButton=UiFactory.Button(panel.transform,primary,32,top,532,78,()=>{CloseDialog();primaryAction?.Invoke();},true);
-            primaryButton.interactable=primaryEnabled;
-            if(secondary!=null)UiFactory.Button(panel.transform,secondary,32,top+90,532,72,()=>{CloseDialog();secondaryAction?.Invoke();});
-            if(tertiary!=null)UiFactory.Button(panel.transform,tertiary,32,top+174,532,72,()=>{CloseDialog();tertiaryAction?.Invoke();});
-            dismissDialog=()=>{CloseDialog();if(secondaryAction!=null)secondaryAction();else ShowPause();};
             return panel.rectTransform;
         }
+
         private void CloseDialog()
         { if(dialog!=null){dialog.SetActive(false);Destroy(dialog);dialog=null;}dismissDialog=null;dialogBackReturnsToLobby=false; }
         private string RulesLabel()
@@ -138,34 +147,41 @@ namespace XanaduYonder.Runtime.Snake
         }
         private void OpenSnakeSettings(Action after)
         {
-            if(!Available)return;
-            var panel=ShowDialog("贪吃蛇设置","方向控制可在圆盘与十字键之间切换。\n吃食物停顿期间仍可转向。",
-                "吃食物停一帧 · "+(profile.PauseOnFood?"开启":"关闭"),()=>
+            if (!Available) return;
+            var panel = OpenDialog("贪吃蛇设置", 594);
+            UiFactory.Label(panel, "方向控制", 32, 110, 532, 44, 24, UiFactory.Ink);
+            DialogChoices.Create(panel, "方向控制选项", 32, 162, 532, 74, new[] { "圆盘四方向", "十字方向键" },
+                profile.ControlStyle == SnakeControlStyle.Disc ? 0 : 1, index =>
                 {
-                    profile.PauseOnFood=!profile.PauseOnFood;
-                    session.PauseOnFood=profile.PauseOnFood;Save();OpenSnakeSettings(after);
-                },"声音与触感",()=>
-                {
-                    int epoch=interactionEpoch;string sessionId=session.SessionId;
-                    openSettings(()=>
-                    {
-                        if(Available&&epoch==interactionEpoch&&session.SessionId==sessionId)OpenSnakeSettings(after);
-                    });
-                },"完成",after,600);
-            var body=panel.Find("Dialog message").GetComponent<Text>();
-            body.rectTransform.sizeDelta=new Vector2(532,90);
-            UiFactory.Button(panel,"控制方式 · "+(profile.ControlStyle==SnakeControlStyle.Disc?"圆盘四方向":"十字方向键"),32,232,532,78,()=>
+                    profile.ControlStyle = index == 0 ? SnakeControlStyle.Disc : SnakeControlStyle.Cross;
+                    RefreshControlStyle();
+                    Save();
+                });
+            DialogUi.SwitchRow(panel, "吃食物停一帧", 32, 250, 532, 72, profile.PauseOnFood, value =>
             {
-                profile.ControlStyle=profile.ControlStyle==SnakeControlStyle.Disc?SnakeControlStyle.Cross:SnakeControlStyle.Disc;
-                RefreshControlStyle();Save();OpenSnakeSettings(after);
+                profile.PauseOnFood = value;
+                session.PauseOnFood = value;
+                Save();
             });
-            dismissDialog=()=>{CloseDialog();after();};
+            UiFactory.Label(panel, "停顿期间仍可转向。", 44, 325, 510, 44, 21, UiFactory.Muted);
+            DialogUi.Disclosure(panel, "声音与触感", 32, 386, 532, 70, () =>
+            {
+                int epoch = interactionEpoch;
+                string sessionId = session.SessionId;
+                CloseDialog();
+                openSettings(() =>
+                {
+                    if (Available && epoch == interactionEpoch && session.SessionId == sessionId) OpenSnakeSettings(after);
+                });
+            });
+            dismissDialog = () => { CloseDialog(); after(); };
+            DialogUi.ActionButton(panel, "完成", 32, 492, 532, 72, dismissDialog, true);
         }
         private void ShowRules()
         {
             if(!Available)return;
             var after=CaptureOverlayReturn();
-            ShowDialog("贪吃蛇玩法","用右侧方向键或在棋盘上滑动转向。\n收集果实，每个得 10 分，蛇身增长一格。\n\n四边相通时，会从对侧边缘回来。\n围墙模式越界结束；撞到蛇身或障碍也结束。\n\n经典挑战逐渐加速，填满可行走格即通关。\n障碍关卡达到果实目标即可进入下一关。\n\n暂停、返回和后台都会保留进度。\n继续前有 3 秒倒计时。","知道了",after,null,null,null,null,870);
+            ShowDialog("贪吃蛇玩法","用右侧方向键或在棋盘上滑动转向。\n收集果实，每个得 10 分，蛇身增长一格。\n\n四边相通时，会从对侧边缘回来。\n围墙模式越界结束；撞到蛇身或障碍也结束。\n\n经典挑战逐渐加速，填满可行走格即通关。\n障碍关卡达到果实目标即可进入下一关。\n\n暂停、返回和后台都会保留进度。\n继续前有 3 秒倒计时。","知道了",after,null,null,null,null,870,reading:true);
             dismissDialog=()=>{CloseDialog();after();};
         }
         private void ShowResult()

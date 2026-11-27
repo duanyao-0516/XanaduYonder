@@ -1,7 +1,9 @@
 package com.xanaduyonder.zhaoyunadou;
 
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
@@ -437,26 +439,44 @@ public final class ZhaoyunAdouActivity extends Activity {
         clearFailure();
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Color.rgb(247, 244, 230));
+        scroll.setBackgroundColor(Color.argb(102, 0, 0, 0));
+        scroll.setClickable(true);
+        LinearLayout gutter = new LinearLayout(this);
+        gutter.setGravity(Gravity.CENTER);
+        gutter.setPadding(dp(16), dp(16), dp(16), dp(16));
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setGravity(Gravity.CENTER);
-        int pad = (int) (24 * getResources().getDisplayMetrics().density + .5f);
-        content.setPadding(pad, pad, pad, pad);
-        TextView heading = new TextView(this); heading.setText(title); heading.setTextSize(22); heading.setTextColor(Color.BLACK); heading.setGravity(Gravity.CENTER);
+        content.setPadding(dp(20), dp(18), dp(20), dp(14));
+        GradientDrawable surface = new GradientDrawable();
+        surface.setColor(Color.rgb(248, 247, 241));
+        surface.setCornerRadius(dp(18));
+        content.setBackground(surface);
+        gutter.addView(content, new LinearLayout.LayoutParams(-1, -2));
+        gutter.addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {
+            int width = Math.min(dp(432), r - l - gutter.getPaddingLeft() - gutter.getPaddingRight());
+            if (width > 0 && content.getLayoutParams().width != width) {
+                ViewGroup.LayoutParams params = content.getLayoutParams();
+                params.width = width;
+                content.setLayoutParams(params);
+            }
+        });
+        TextView heading = new TextView(this);
+        heading.setText(title); heading.setTextSize(22); heading.setTextColor(Color.rgb(23, 61, 53));
         content.addView(heading, new LinearLayout.LayoutParams(-1, -2));
-        TextView detail = new TextView(this); detail.setText(message); detail.setTextSize(16); detail.setTextColor(Color.DKGRAY); detail.setPadding(0, pad, 0, pad);
+        TextView detail = new TextView(this);
+        detail.setText(message); detail.setTextSize(16); detail.setTextColor(Color.rgb(65, 85, 74));
+        detail.setPadding(0, dp(8), 0, dp(14));
         content.addView(detail, new LinearLayout.LayoutParams(-1, -2));
-        addButton(content, "重试", retry);
-        if (mayStay && web != null) addButton(content, "留在游戏", this::retrySaveAndResume);
-        if (mayReturnWithoutSave) addButton(content, "返回大厅（未确认本次保存）", () -> {
+        addButton(content, "重试", true, retry);
+        if (mayStay && web != null) addButton(content, "留在游戏", false, this::retrySaveAndResume);
+        if (mayReturnWithoutSave) addButton(content, "返回大厅（未确认本次保存）", false, () -> {
             // The visible error and explicit button already disclose the unconfirmed save.
             // Preserve the diagnostic without making the hall mislabel this choice as a launch failure.
             Log.e("ZhaoyunAdou", "User returned without confirmed save: " + lastFailure);
             destroyWebView();
             finish();
         });
-        scroll.addView(content, new ScrollView.LayoutParams(-1, -1));
+        scroll.addView(gutter, new ScrollView.LayoutParams(-1, -2));
         failurePanel = scroll;
         root.addView(scroll, new FrameLayout.LayoutParams(-1, -1));
         updateStartupWatchdog();
@@ -475,8 +495,14 @@ public final class ZhaoyunAdouActivity extends Activity {
         }
         // The original page is retained on save failure; never report successful exit or silently finish.
     }
-    private void addButton(LinearLayout parent, String text, Runnable action) {
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+    private void addButton(LinearLayout parent, String text, boolean primary, Runnable action) {
         Button button = new Button(this); button.setText(text); button.setAllCaps(false);
+        button.setMinHeight(dp(48));
+        button.setTextColor(primary ? Color.WHITE : Color.rgb(23, 61, 53));
+        button.setBackgroundTintList(ColorStateList.valueOf(primary ? Color.rgb(39, 102, 83) : Color.rgb(231, 237, 229)));
         button.setOnClickListener(view -> action.run());
         parent.addView(button, new LinearLayout.LayoutParams(-1, -2));
     }

@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="../../Assets/Scripts/Runtime/AtomicSaveFile.cs" Link="Runtime/AtomicSaveFile.cs" />
     <Compile Include="../../Assets/Scripts/Core/HappyBall/**/*.cs" />
     <Compile Include="../../Assets/Scripts/Runtime/HappyBall/HappyBallSave*.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />

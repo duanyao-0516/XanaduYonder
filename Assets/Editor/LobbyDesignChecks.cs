@@ -394,9 +394,11 @@ namespace XanaduYonder.EditorTools
             Require(!launcher.TryOpen(true), "Unsupported editor host reports launch failure");
             Invoke(f.Host, "SetCutTheRopeLobbyInput", false);
             Invoke(f.Host, "OnCutTheRopeReturned", CutTheRopeLauncher.OpenFailureMessage);
-            Require(FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable() && Property(f.Host, "modal") != null,
-                "Launch failure restores hall input and explains the failed launch");
+            Require(!FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable() && Property(f.Host, "modal") != null,
+                "The native launch error takes input while it explains the failed launch");
             Invoke(f.Host, "CloseModal");
+            Require(FindCard(f.View.transform, "CutTheRope").GetComponent<Button>().IsInteractable(),
+                "Dismissing the launch error restores hall input");
             Invoke(f.Host, "ReleaseCutTheRopeLauncher");
             Require(returned.GetValue(launcher) == null, "Host teardown removes native return callbacks");
             Invoke(f.Host, "ReleaseCutTheRopeLauncher");

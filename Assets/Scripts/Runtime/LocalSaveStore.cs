@@ -6,13 +6,11 @@ namespace XanaduYonder.Runtime
 {
     public sealed class LocalSaveStore
     {
-        private readonly string directory;
         public string SavePath { get; private set; }
 
         public LocalSaveStore(string directory)
         {
             if (string.IsNullOrWhiteSpace(directory)) throw new ArgumentException("Save directory is missing.", nameof(directory));
-            this.directory = directory;
             SavePath = Path.Combine(directory, "xanaduyonder-v1.json");
         }
 
@@ -35,25 +33,10 @@ namespace XanaduYonder.Runtime
         public bool TrySave(SaveData data, out string error)
         {
             error = null;
-            var temporary = SavePath + ".tmp";
             try
             {
                 var bytes = new UTF8Encoding(false).GetBytes(JsonSaveCodec.Encode(data));
-                Directory.CreateDirectory(directory);
-                using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush(true);
-                }
-                if (File.Exists(SavePath))
-                {
-                    SaveData previous;
-                    string readError;
-                    var previousIsValid = TryRead(SavePath, out previous, out readError);
-                    // Never replace the last good backup with a corrupt primary file.
-                    File.Replace(temporary, SavePath, previousIsValid ? SavePath + ".bak" : null);
-                }
-                else File.Move(temporary, SavePath);
+                AtomicSaveFile.Write(SavePath, bytes, path => TryRead(path, out _, out _));
                 return true;
             }
             catch (Exception exception) when (IsStorageFailure(exception) || exception is ArgumentException)

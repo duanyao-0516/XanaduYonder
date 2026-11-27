@@ -27,6 +27,7 @@ namespace XanaduYonder.Runtime.Tetris
         public bool HasActiveGame => session != null && session.HasStarted && !session.Snapshot.GameOver;
         public event Action Changed;
         public TetrisSession Session => session;
+        public bool CanChangeSwapControls => loaded != null && loaded.CanWrite;
         public bool SwapControls => data != null && data.SwapControls;
         internal const string ControlsHelp = "左右移动，旋转键顺时针转动。\n下键轻按软降；长按0.5秒或同一块三连击直落。\n多指操作不直落；设置可交换两组按键。\n暂存每块一次；描边为落点，侧边预览3块。";
         internal TetrisView View => view;
@@ -81,7 +82,7 @@ namespace XanaduYonder.Runtime.Tetris
         public void SetForeground(bool value) { foreground = value; if (!value) Suspend(); }
         public void SetSwapControls(bool value)
         {
-            if (loaded == null || !loaded.CanWrite || data.SwapControls == value) return;
+            if (!CanChangeSwapControls || data.SwapControls == value) return;
             Suspend();
             data.SwapControls = value; dirty = true;
             view.SetSwapControls(value); view.RefreshLayout();
@@ -167,6 +168,11 @@ namespace XanaduYonder.Runtime.Tetris
             if (!foreground || !accepts())
             {
                 if (session.Phase == TetrisSessionPhase.Running || session.Phase == TetrisSessionPhase.Countdown) Suspend();
+                // The host owns the visible scrim while showing settings or a confirmation over this page.
+                view.HidePause();
+                view.HideResult();
+                view.HideCountdown();
+                view.SetOverlay(null, null, null, null, null, null, false);
                 return;
             }
             view.TickVisuals(Time.unscaledDeltaTime);

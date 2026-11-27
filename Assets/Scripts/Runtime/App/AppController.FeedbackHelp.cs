@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace XanaduYonder.Runtime
 {
@@ -8,27 +7,13 @@ namespace XanaduYonder.Runtime
     {
         private void ShowFeedbackHelp(Action after)
         {
-            var panel = CreateModal("声音与触感说明", 900);
+            var panel = CreateSheet("声音与触感说明", 900);
             float height = panel.rect.height;
-            var viewport = UiFactory.Rect(panel, "Feedback help viewport", 32, 114, 532, height - 236);
-            var background = viewport.gameObject.AddComponent<Image>();
-            background.color = Color.clear;
-            background.raycastTarget = true;
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport, "Feedback help content", 0, 0, 532, 0);
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport;
-            scroll.content = content;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 28;
-
-            string message = "声音和触感开关在各游戏间共用，可以分别开启或关闭。\n\n" +
+            string message = "所有游戏共用声音与触感设置，可分别开关。\n\n" +
                 "声音\n打开应用内的“声音”，并调高系统媒体音量。\n\n" +
                 "触感\n触感是短促的震动反馈，不是持续震动，也不是每次点击都会触发。" +
-                "例如：2048 合并、跳一跳落地或落空、扫雷插旗或拔旗。" +
-                "Flappy Bird 在得分或碰撞时反馈，拍翼时没有触感。部分玩法没有触感事件。" +
+                "例如 2048 合并、跳一跳落地或落空、扫雷插旗或拔旗时会有触感。" +
+                "\nFlappy Bird 在得分或碰撞时反馈。部分玩法没有触感事件。" +
                 "设备也需要支持触觉反馈。\n\n";
 #if UNITY_IOS
             message += "iPhone 系统设置\n应用内开启触感后，还需开启以下系统选项：\n\n" +
@@ -45,15 +30,11 @@ namespace XanaduYonder.Runtime
 #else
             message += "系统与设备\n应用内触感开关仍受设备能力和系统触感设置影响。";
 #endif
-            var label = UiFactory.Label(content, message, 0, 0, 532, 1, 24, UiFactory.Muted, TextAnchor.UpperLeft);
-            label.name = "Feedback help text";
-            label.supportRichText = false;
-            float contentHeight = Mathf.Ceil(label.preferredHeight);
-            label.rectTransform.sizeDelta = new Vector2(532, contentHeight);
-            content.sizeDelta = new Vector2(532, contentHeight);
+            float width = panel.rect.width - 64;
+            DialogUi.ScrollText(panel, message, 32, 112, width, height - 254, 24);
 
             Action back = () => { CloseModal(); OpenSettings(after); };
-            UiFactory.Button(panel, "返回设置", 32, height - 100, 532, 74, back, true);
+            DialogUi.ActionButton(panel, "返回设置", 32, height - 116, width, 88, back, true);
             dismissModal = back;
         }
     }

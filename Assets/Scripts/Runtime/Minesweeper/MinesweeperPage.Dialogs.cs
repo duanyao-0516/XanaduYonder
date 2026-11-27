@@ -6,23 +6,24 @@ namespace XanaduYonder.Runtime.Minesweeper
 {
     internal sealed partial class MinesweeperPage
     {
-        private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=660)
+        private RectTransform ShowDialog(string title,string message,string primary,Action primaryAction,string secondary=null,Action secondaryAction=null,string tertiary=null,Action tertiaryAction=null,float height=660,bool reading=false)
         {
             CancelInput(); ExitOverview(); CloseDialog(); feedback.Stop();
             if(!choosing) session?.SetBlocked(true);
             Save(); Refresh();
-            var overlay=UiFactory.Panel(root,"Minesweeper dialog overlay",0,0,720,1320,new Color(.06f,.14f,.1f,.48f),false);
-            UiFactory.Stretch(overlay.rectTransform); overlay.raycastTarget=true; dialog=overlay.gameObject;
-            var panel=UiFactory.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height,UiFactory.Paper); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
+            var overlay = DialogUi.ModalOverlay(root, "Minesweeper dialog overlay");
+            dialog = overlay.gameObject;
+            var panel=UiFactory.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,28,532,70,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             float actions=tertiary!=null?260:secondary!=null?172:90;
-            var body=UiFactory.Label(panel.transform,message,32,116,532,height-actions-140,24,UiFactory.Muted,TextAnchor.MiddleCenter);
+            var body = reading ? DialogUi.ScrollText(panel.transform, message, 32, 116, 532, height - actions - 140, 24) :
+                UiFactory.Label(panel.transform, message, 32, 116, 532, height - actions - 140, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
             body.name="Dialog message";
             body.supportRichText=false;
             float top=height-actions-12;
-            UiFactory.Button(panel.transform,primary,32,top,532,74,()=>{CloseDialog();primaryAction();Refresh();},true);
-            if(secondary!=null) UiFactory.Button(panel.transform,secondary,32,top+88,532,66,()=>{CloseDialog();secondaryAction?.Invoke();Refresh();});
-            if(tertiary!=null) UiFactory.Button(panel.transform,tertiary,32,top+168,532,66,()=>{CloseDialog();tertiaryAction?.Invoke();Refresh();});
+            DialogUi.ActionButton(panel.transform,primary,32,top,532,74,()=>{CloseDialog();primaryAction();Refresh();},true);
+            if(secondary!=null) DialogUi.ActionButton(panel.transform,secondary,32,top+88,532,66,()=>{CloseDialog();secondaryAction?.Invoke();Refresh();});
+            if(tertiary!=null) DialogUi.ActionButton(panel.transform,tertiary,32,top+168,532,66,()=>{CloseDialog();tertiaryAction?.Invoke();Refresh();});
             dismissDialog=()=>{ CloseDialog(); secondaryAction?.Invoke(); Refresh(); };
             return panel.rectTransform;
         }
@@ -51,7 +52,7 @@ namespace XanaduYonder.Runtime.Minesweeper
         }
         private void ShowRules()
         {
-            ShowDialog("扫雷玩法", "翻开所有安全格即获胜，触雷立即结束。\n数字 1～8 表示周围八格的地雷总数。\n空白区域会自动展开，旗帜阻挡展开。\n\n翻开模式：点击翻格，长按 0.4 秒即插旗。\n插旗模式：点击插旗或拔旗。\n已开数字周围旗数匹配时，点击快速展开。\n旗插错也可能触雷；剩余标记允许为负。\n\n单指拖动，双指同时缩放和平移。\n缩放 50%～200%，点击倍率恢复 100%。\n总览只观察与定位，进行中仍继续计时。\n中高级可全屏 / 总览，初级禁用这两项。\n\n暂停会遮盘停时，返回进行局需明确继续。\n三档独立存档；放弃不计败，不提供悔棋。\n首格及周围一圈安全，不保证全盘无猜。\n\n触感开启时，插旗、拔旗、胜负结算会短震。\n声音与触感说明见大厅设置。", "知道了",()=>{},null,null,null,null,1100);
+            ShowDialog("扫雷玩法", "翻开所有安全格即获胜，触雷立即结束。\n数字 1～8 表示周围八格的地雷总数。\n空白区域会自动展开，旗帜阻挡展开。\n\n翻开模式：点击翻格，长按 0.4 秒即插旗。\n插旗模式：点击插旗或拔旗。\n已开数字周围旗数匹配时，点击快速展开。\n旗插错也可能触雷；剩余标记允许为负。\n\n单指拖动，双指同时缩放和平移。\n缩放 50%～200%，点击倍率恢复 100%。\n总览只观察与定位，进行中仍继续计时。\n中高级可全屏 / 总览，初级禁用这两项。\n\n暂停会遮盘停时，返回进行局需明确继续。\n三档独立存档；放弃不计败，不提供悔棋。\n首格及周围一圈安全，不保证全盘无猜。\n\n触感开启时，插旗、拔旗、胜负结算会短震。\n声音与触感说明见大厅设置。", "知道了",()=>{},null,null,null,null,1100,reading:true);
         }
     }
 }

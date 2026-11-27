@@ -134,6 +134,7 @@ namespace XanaduYonder.EditorTools
             var inert = new GameObject("Inert shell"); inert.SetActive(false);
             var shell = inert.AddComponent<AppController>();
             Set(shell, "frame", f.Root);
+            Set(shell, "canvasRoot", f.Root);
             Invoke(shell, "BuildLobby");
             LobbyDesignChecks.SetModeForCheck(shell, 2);
             var lobby = Get<GameObject>(shell, "lobbyPage");
@@ -185,6 +186,7 @@ namespace XanaduYonder.EditorTools
                     "Link Match preview retains the approved strawberry pair, banana and grapes");
                 CheckLobbyPreviews(f, content);
                 content.anchoredPosition = Vector2.zero; f.Capture("lobby-top");
+                CheckLobbySettings(f, shell, content);
                 f.ShowLobbyCard(content, LobbyDesignChecks.FindCard(content, "Watermelon")); f.Capture("lobby-watermelon");
                 var status = Get<Text>(shell, "lobbyStatus");
                 Require(status.transform.parent == content, "Lobby status belongs to scrolling content");
@@ -633,6 +635,108 @@ namespace XanaduYonder.EditorTools
                 board.Render(new SheepGame(level, 123));
                 f.Capture("sheep-level-" + level);
                 Object.DestroyImmediate(root.gameObject);
+            }
+
+            var directory = Path.Combine(Path.GetTempPath(), "xanadu-sheep-settings-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            var pageRoot = f.Page("Sheep settings fixture");
+            var page = pageRoot.gameObject.AddComponent<SheepPage>();
+            var store = new SheepSaveStore(directory);
+            var session = new SheepSession(new SheepSaveData());
+            RectTransform panel = null;
+            void Close()
+            {
+                if (panel != null) Object.DestroyImmediate(panel.gameObject);
+                panel = null;
+            }
+            RectTransform Open(string title, float height, Action back)
+            {
+                // Defer destruction during a pointer dispatch just like the real host.
+                if (panel != null) { panel.gameObject.SetActive(false); Object.Destroy(panel.gameObject); }
+                panel = UiFactory.Panel(pageRoot, title, 0, 0, 596, height, DialogUi.Surface).rectTransform;
+                UiFactory.Center(panel);
+                return panel;
+            }
+            void Click(string caption) { f.Click((RectTransform)FindCaption(panel, caption).transform); }
+            try
+            {
+                Set(page, "store", store);
+                Set(page, "session", session);
+                Set(page, "setStatus", (Action<string>)(_ => { }));
+                Set(page, "shellAcceptsInput", (Func<bool>)(() => true));
+                Set(page, "showDialog", (Action<string, string, string, Action, string, Action>)((title, body, yes, confirm, no, cancel) =>
+                {
+                    var confirmation = Open(title, 440, cancel);
+                    DialogUi.ActionButton(confirmation, yes, 32, 216, 532, 64, confirm, true);
+                    DialogUi.ActionButton(confirmation, no, 32, 304, 532, 64, cancel);
+                }));
+                Set(page, "openModal", (Func<string, float, Action, RectTransform>)Open);
+                Set(page, "closeModal", (Action)(() => { if (panel != null) panel.gameObject.SetActive(false); }));
+                Invoke(page, "ShowModes");
+                Click("玩法设置");
+                Click("第二关难度 · 正常");
+                Click("困难");
+                Click("直接使用默认难度");
+                Click("返回设置");
+                Click("新局道具次数");
+                Click("+");
+                Click("返回设置");
+                Require(session.Data.Preferences.DefaultDifficulty == SheepDifficulty.Normal && session.Data.Preferences.RemoveLimit == 2,
+                    "Child pages edit a shared draft before committing");
+                Click("取消");
+                Click("玩法设置");
+                Click("第二关难度 · 正常");
+                Click("困难");
+                Click("直接使用默认难度");
+                Click("返回设置");
+                Click("新局道具次数");
+                Click("+");
+                Click("返回设置");
+                Click("保存设置");
+                var saved = store.Load(out _).Preferences;
+                Require(saved.DefaultDifficulty == SheepDifficulty.Hard && saved.SkipDifficultyPrompt &&
+                    saved.RemoveLimit == 3 && saved.UndoLimit == 3 && saved.ShuffleLimit == 1,
+                    "Returning from two settings pages preserves the draft and save persists it");
+                Click("玩法设置");
+                Click("恢复默认");
+                Click("保存设置");
+                saved = store.Load(out _).Preferences;
+                Require(saved.DefaultDifficulty == SheepDifficulty.Normal && !saved.SkipDifficultyPrompt && saved.IsStandardTools,
+                    "Reset restores the difficulty, prompt and all three tool defaults");
+
+                Invoke(page, "BuildLayout", pageRoot);
+                session.Start(SheepMode.Challenge, SheepDifficulty.Hard, 123);
+                session.Start(SheepMode.Endless, SheepDifficulty.Normal, 456);
+                uint challengeState = session.Data.Challenge.RandomState;
+                uint endlessState = session.Data.Endless.RandomState;
+                Invoke(page, "ShowModes");
+                Require(panel.GetComponentsInChildren<Button>().Length == 5, "Both saved slots share one row per mode");
+                Click("第二关挑战");
+                Click("另开新局");
+                Click("取消");
+                Require(session.Data.Challenge.RandomState == challengeState && session.Data.Endless.RandomState == endlessState,
+                    "Cancelling replacement retains both saved slots");
+                Click("继续第二关");
+                Require(session.Game.GetSnapshot().Difficulty == SheepDifficulty.Hard &&
+                    session.Game.GetSnapshot().RandomState == challengeState, "Continue restores the original challenge");
+                Invoke(page, "ShowModes");
+                Click("第二关挑战");
+                Click("另开新局");
+                Click("开始新局");
+                Click("开始挑战");
+                var restarted = store.Load(out _);
+                Require(restarted.Challenge.Difficulty == SheepDifficulty.Normal && restarted.Endless.RandomState == endlessState,
+                    "A confirmed replacement affects only its chosen slot");
+                Invoke(page, "ShowModes");
+                Click("无尽模式");
+                Click("继续无尽");
+                Require(session.Game.GetSnapshot().RandomState == endlessState, "The other saved mode still resumes");
+            }
+            finally
+            {
+                Close();
+                Object.DestroyImmediate(pageRoot.gameObject);
+                Directory.Delete(directory, true);
             }
         }
 

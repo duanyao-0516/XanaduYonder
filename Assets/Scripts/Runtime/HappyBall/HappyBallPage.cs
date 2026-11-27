@@ -118,6 +118,7 @@ namespace XanaduYonder.Runtime.HappyBall
         private void LateUpdate()
         {
             if (!visible) return;
+            RefreshCoverVisibility();
             if (deathFeedbackRemaining > 0)
             {
                 if (!foreground || !acceptsInput()) Suspend();
@@ -253,12 +254,18 @@ namespace XanaduYonder.Runtime.HappyBall
         {
             if (pauseOverlay == null || data == null) return;
             bool over = game.GameOver;
-            pauseOverlay.SetActive(deathFeedbackRemaining <= 0 && (manuallyPaused || over));
+            RefreshCoverVisibility();
             overlayTitle.text = over ? "本局 " + game.Score : data.HasStarted ? "已暂停" : "准备好了";
             overlayDetail.text = over ? "最高纪录 " + data.BestScore : "";
             resumeText.text = over ? "再来一局" : data.HasStarted ? "继续游戏" : "开始游戏";
             pauseText.text = IsRunning ? "暂停" : "继续";
             pauseButton.interactable = !over;
+        }
+
+        private void RefreshCoverVisibility()
+        {
+            bool show = deathFeedbackRemaining <= 0 && (manuallyPaused || game.GameOver) && acceptsInput();
+            if (pauseOverlay.activeSelf != show) pauseOverlay.SetActive(show);
         }
 
         private void RefreshError()

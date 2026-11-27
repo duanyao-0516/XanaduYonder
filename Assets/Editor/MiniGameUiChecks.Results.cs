@@ -15,6 +15,42 @@ namespace XanaduYonder.EditorTools
 {
     public static partial class MiniGameUiChecks
     {
+        private static void CheckLobbySettings(Fixture fixture, AppController host, RectTransform content)
+        {
+            var opener = content.Find("Lobby header/Lobby settings").GetComponent<Button>();
+            fixture.Click((RectTransform)opener.transform);
+            var settings = Get<GameObject>(host, "modal");
+            Require(settings != null, "The lobby settings button opens its bottom sheet");
+            Require(settings.GetComponent<Image>().color == new Color(0f, 0f, 0f, .4f) && settings.GetComponent<Image>().raycastTarget,
+                "The settings sheet dims the lobby with a 40% black pointer-blocking scrim");
+            Require(!opener.IsInteractable(), "The covered lobby button rejects keyboard and gamepad submission");
+            opener.OnSubmit(new UnityEngine.EventSystems.BaseEventData(UnityEngine.EventSystems.EventSystem.current));
+            Require(Get<GameObject>(host, "modal") == settings, "Submitting the background cannot replace the settings sheet");
+            var sound = FindCaption(settings.transform, "声音").GetComponent<DialogSwitch>();
+            var haptics = FindCaption(settings.transform, "触感").GetComponent<DialogSwitch>();
+            Require(sound != null && haptics != null && sound != haptics, "Both feedback preferences have independent switches");
+            var initial = haptics.Value;
+            fixture.Click((RectTransform)haptics.transform);
+            Require(haptics.Value != initial && Get<SaveData>(host, "data").HapticsEnabled == haptics.Value,
+                "Tapping the preference row immediately changes the real setting");
+            fixture.Capture("dialog-lobby-settings");
+            fixture.Click((RectTransform)FindCaption(settings.transform, "声音与触感说明").transform);
+            var detail = Get<GameObject>(host, "modal");
+            Require(detail != settings && FindCaption(detail.transform, "返回设置") != null,
+                "Feedback help has a dedicated detail view and return action");
+            Require(detail.transform.parent.GetComponentsInChildren<DialogFocusScope>().Length == 1 &&
+                detail.GetComponent<Image>().color == DialogUi.Scrim, "The detail replaces the previous scrim without stacking");
+            fixture.Capture("dialog-feedback-details");
+            Invoke(host, "HandleBack");
+            var reopened = Get<GameObject>(host, "modal");
+            Require(FindCaption(reopened.transform, "触感").GetComponent<DialogSwitch>().Value != initial,
+                "System Back restores settings with the current value");
+            fixture.Click((RectTransform)FindCaption(reopened.transform, "完成").transform);
+            Require(Get<GameObject>(host, "modal") == null && opener.IsInteractable(), "Done restores the underlying lobby");
+            Require(UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject == opener.gameObject,
+                "Closing the last sheet restores focus to the lobby settings button");
+        }
+
         // Edit mode allows a real AppController move without Awake opening player saves.
         public static void CheckHostSaveIsolation()
         {
@@ -75,8 +111,9 @@ namespace XanaduYonder.EditorTools
                 var settings = Get<GameObject>(shell, "modal");
                 var toggle = Array.Find(settings.GetComponentsInChildren<Button>(), button => button.name.StartsWith("触感", StringComparison.Ordinal));
                 toggle.onClick.Invoke();
-                Require(!store.Load(out _).HapticsEnabled && toggle.GetComponentInChildren<Text>().text.Contains("关闭"),
-                    "The settings button persists its new value and updates its caption");
+                Require(!store.Load(out _).HapticsEnabled && !toggle.GetComponent<DialogSwitch>().Value &&
+                    toggle.GetComponentInChildren<Text>().text == "触感",
+                    "The switch persists the new value and keeps its stable caption");
                 Require(Get<GameObject>(shell, "modal") == settings && !File.Exists(jumpStore.SavePath + ".bak"),
                     "The settings sheet remains open and no unrelated save is written");
                 Invoke(shell, "OnApplicationQuit");

@@ -150,11 +150,17 @@ namespace XanaduYonder.EditorTools
                 fixture.CheckModalControlGeometry("pause");
                 if (coop) yield return fixture.CheckLongScreenPause();
                 yield return fixture.CheckExitConfirmation(prefix);
+                yield return fixture.Click(fixture.Button("更多选项"));
+                // The click installed a new hierarchy. Let UGUI generate its live text meshes.
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                fixture.CheckModalControlGeometry("pause options");
                 yield return fixture.Click(fixture.Button("玩法说明"));
                 Require(Get<RectTransform>(page, "modal") != null && session.IsSuspended, prefix + " help stays paused");
                 fixture.Capture(prefix + "-help");
                 fixture.CheckHelpBackdrop(mode);
                 yield return fixture.Click(fixture.Button("知道了"));
+                yield return fixture.Click(fixture.Button("返回暂停菜单"));
                 yield return fixture.Click(fixture.Button("继续游戏"));
                 Require(!session.IsSuspended, prefix + " continue resumes");
                 page.SetForeground(false, false);
@@ -197,6 +203,10 @@ namespace XanaduYonder.EditorTools
                 yield return fixture.CheckResponsiveHeaderArtwork(mode, "result");
                 yield return fixture.Click(fixture.Button("进入商店"));
                 Require(session.GetStateSnapshot().Phase == GoldMinerPhase.Shop, prefix + " result enters shop");
+                Require(page.HandleBack(), prefix + " shop opens its mode-exit confirmation");
+                yield return fixture.Click(fixture.Button("返回商店"));
+                Require(Get<RectTransform>(page, "modal") == null && session.GetStateSnapshot().Phase == GoldMinerPhase.Shop,
+                    prefix + " canceling shop exit returns to the same shop");
                 fixture.CheckShopStock();
                 fixture.Capture(prefix + "-shop");
                 fixture.CheckReleasedView("GoldMiner/backgrounds/" + (coop ? "bg-coop" : "bg-solo"));
@@ -868,6 +878,10 @@ namespace XanaduYonder.EditorTools
                 var modal = Get<RectTransform>(Page, "modal");
                 var panel = modal.Find("Dialog panel") as RectTransform;
                 Require(panel != null, context + " has a real dialog panel");
+                Require(modal.GetComponent<Image>().color == DialogUi.Scrim && panel.GetComponent<Image>().color == DialogUi.Surface,
+                    context + " uses the shared management dialog colors");
+                Require(Get<RectTransform>(Page, "view").GetComponentsInChildren<DialogFocusScope>().Length == 1,
+                    context + " replaces the previous modal layer");
                 var buttons = panel.GetComponentsInChildren<Button>();
                 for (int i = 0; i < buttons.Length; i++)
                 for (int j = i + 1; j < buttons.Length; j++)
@@ -909,17 +923,36 @@ namespace XanaduYonder.EditorTools
 
             public IEnumerator CheckExitConfirmation(string prefix)
             {
-                Invoke(Page, "ConfirmExit", Get<Action>(Page, "lobby"));
+                var session = Get<GoldMinerSession>(Page, "session");
+                int pausedTick = session.GetStateSnapshot().SimulationTick;
+                yield return Click(Button("更多选项"));
+                var hud = Get<RectTransform>(Page, "view").Find("Mine HUD");
+                var pause = hud.Find("Pause button").GetComponent<Button>();
+                Require(!pause.IsInteractable(), prefix + " more options blocks the previously focused HUD button");
+                ExecuteEvents.Execute(pause.gameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
+                Require(Button("玩法说明", Get<RectTransform>(Page, "modal")) != null,
+                    prefix + " submitting the HUD cannot replace more options with the pause menu");
+                yield return Click(Button("返回大厅"));
                 for (int frame = 0; frame < 2; frame++) yield return null;
                 Capture(prefix + "-confirm-exit");
                 CheckButtonsInsideSafeArea();
+                Require(Page.HandleBack() && Button("玩法说明", Get<RectTransform>(Page, "modal")) != null &&
+                    session.IsSuspended && session.GetStateSnapshot().SimulationTick == pausedTick,
+                    prefix + " system Back returns to more options and preserves the paused tick");
+                yield return Click(Button("返回大厅"));
                 yield return Click(Button("继续游戏"));
-                Require(Get<GoldMinerSession>(Page, "session").IsSuspended, "Cancel exit restores the paused game without advancing time");
+                Require(!session.IsSuspended && Get<RectTransform>(Page, "modal") == null,
+                    prefix + " continue from exit confirmation resumes the mine");
+                Require(pause.IsInteractable(), prefix + " continuing restores HUD focus eligibility");
+                yield return Click(pause);
             }
 
             public void CheckHelpBackdrop(GoldMinerMode mode)
             {
                 var view = Get<RectTransform>(Page, "view");
+                Require(Get<RectTransform>(Page, "modal").GetComponent<Image>().color == DialogUi.TutorialScrim &&
+                    view.GetComponentsInChildren<DialogFocusScope>().Length == 1,
+                    "Teaching keeps the actual mine visible under one light scrim");
                 Require(!view.Find("Mine HUD").gameObject.activeSelf, "Help heading replaces the HUD instead of overlapping it");
                 if (mode == GoldMinerMode.Solo)
                 {
@@ -932,6 +965,8 @@ namespace XanaduYonder.EditorTools
             public void CheckReadyArtwork(GoldMinerMode mode)
             {
                 var view = Get<RectTransform>(Page, "view");
+                Require(Get<RectTransform>(Page, "modal").GetComponent<Image>().color == DialogUi.Scrim,
+                    "Illustrated ready screen uses the same scrim as the result and pause pages");
                 Require(!view.Find("Mine HUD").gameObject.activeSelf && !view.Find("Mine world").gameObject.activeSelf,
                     "Ready artwork is shown over the empty mine backdrop without a duplicate miner or HUD");
                 if (mode == GoldMinerMode.Solo)

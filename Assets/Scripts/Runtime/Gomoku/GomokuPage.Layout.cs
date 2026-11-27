@@ -24,8 +24,8 @@ namespace XanaduYonder.Runtime.Gomoku
             UiFactory.Label(heading, "五子棋", 56, 0, 300, 78, 48, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "一黑一白，落子有声。", 346, 20, 318, 50, 22, UiFactory.Muted, TextAnchor.MiddleRight);
             var modes = UiFactory.Band(root, "Gomoku modes", 194, 58, .12f);
-            aiMode = UiFactory.Button(modes, "人机对战", 56, 0, 296, 58, () => SwitchMode(GomokuMode.HumanVsAi));
-            localMode = UiFactory.Button(modes, "本地双人", 368, 0, 296, 58, () => SwitchMode(GomokuMode.Local));
+            aiMode = DialogUi.ActionButton(modes, "人机对战", 56, 0, 296, 58, () => SwitchMode(GomokuMode.HumanVsAi));
+            localMode = DialogUi.ActionButton(modes, "本地双人", 368, 0, 296, 58, () => SwitchMode(GomokuMode.Local));
             var meta = UiFactory.Band(root, "Gomoku options", 260, 44, .18f);
             modeInfo = UiFactory.Label(meta, "", 56, 0, 608, 44, 21, UiFactory.Muted);
             var players = UiFactory.Band(root, "Gomoku players", 312, 80, .24f);
@@ -53,10 +53,10 @@ namespace XanaduYonder.Runtime.Gomoku
             clearButton.GetComponentInChildren<Text>().fontSize = 22;
             var actions = UiFactory.Band(root, "Gomoku actions", 1202, 62, 1);
             undoButton = UiFactory.Button(actions, "悔棋", 56, 0, 192, 62, RequestUndo);
-            pauseButton = UiFactory.Button(actions, "暂停", 264, 0, 192, 62, Pause);
-            UiFactory.Button(actions, "新一局", 472, 0, 192, 62, () => { if (Allowed) ShowSetup(false); });
+            pauseButton = DialogUi.ActionButton(actions, "暂停", 264, 0, 192, 62, Pause);
+            DialogUi.ActionButton(actions, "新一局", 472, 0, 192, 62, () => { if (Allowed) ShowSetup(false); });
             // Storage failures remain actionable without placing a second modal over the game.
-            retryButton = UiFactory.Button(meta, "重试保存", 510, 0, 154, 44, RetrySave);
+            retryButton = DialogUi.ActionButton(meta, "重试保存", 510, 0, 154, 44, RetrySave);
             retryButton.GetComponentInChildren<Text>().fontSize = 19;
             Refresh();
         }

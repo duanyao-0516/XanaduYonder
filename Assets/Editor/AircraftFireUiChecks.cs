@@ -65,11 +65,16 @@ namespace XanaduYonder.EditorTools
                 f.Capture("entry");
                 f.Click("Aircraft help");
                 Require(page.HasDialog && page.Game == null, "Entry help opens without starting gameplay");
+                var behind = f.Find("经典模式").GetComponent<Button>();
+                Require(!behind.IsInteractable(), "Entry actions reject keyboard navigation while help is open");
+                ExecuteEvents.Execute(behind.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+                Require(page.HasDialog && page.Game == null, "Submitting a previously selected mode cannot start a game behind help");
                 foreach (var text in f.Root.GetComponentsInChildren<Text>())
                     if (text.text.Length > 100) Require(text.preferredHeight <= 468, "Help body fits above its close button");
                 page.Advance(.1f);
                 Require(page.Game == null && !page.Pointer.HasOwner, "Help keeps the entry idle and releases pointer");
                 f.Capture("help"); f.Click("知道了");
+                Require(behind.IsInteractable(), "Closing help releases the entry actions");
                 f.Click("Aircraft settings");
                 Require(closeSettings != null && page.Game == null, "Entry settings uses shared callback without starting gameplay");
                 allowed = true; closeSettings();
@@ -100,7 +105,9 @@ namespace XanaduYonder.EditorTools
                 f.Capture("paused"); f.Click("主菜单"); f.Click("关卡模式");
                 Require(page.Game.Mode == AircraftMode.Level && page.Game.Stage == 1 && page.Game.Phase == AircraftPhase.Running, "Level menu action starts seven-stage game");
                 f.Click("Aircraft pause"); f.Click("主菜单"); f.Click("经典模式");
-                f.Click("Aircraft pause"); f.Click("疯狂进攻");
+                f.Click("Aircraft pause"); f.Click("重开选项"); page.Back();
+                Require(page.HasDialog && page.Game.Phase == AircraftPhase.Paused, "Backing from restart options keeps the same game paused");
+                f.Click("重开选项"); f.Click("疯狂进攻");
                 Require(page.Game.Mode == AircraftMode.Classic && page.Game.Crazy, "Pause choice starts crazy classic difficulty");
                 // Set up the final life, then use the real collision path. The page
                 // must finish the original death frames before offering actions.

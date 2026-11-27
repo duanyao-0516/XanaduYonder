@@ -251,15 +251,16 @@ namespace XanaduYonder.Runtime
             scrollEnabledBeforeOptions = Scroll.enabled;
             Scroll.enabled = false;
             var overlay = UiFactory.Panel(logicalFrame, "Display options overlay", 0, 0, LogicalWidth, 715,
-                new Color(23 / 255f, 61 / 255f, 53 / 255f, .30f), false);
+                DialogUi.Scrim, false);
             UiFactory.Stretch(overlay.rectTransform);
+            DialogBackdrop.CoverCanvas(overlay);
             displayOptions = overlay.gameObject;
             UiFactory.ConfigureButton(overlay, CloseDisplayOptions);
-            var sheet = RoundedPanel(overlay.transform, "Display options sheet", 20, 0, 350, 391,
-                UiFactory.Paper, 22);
-            sheet.rectTransform.anchorMin = sheet.rectTransform.anchorMax = new Vector2(.5f, .5f);
-            sheet.rectTransform.pivot = new Vector2(.5f, .5f);
-            sheet.rectTransform.anchoredPosition = Vector2.zero;
+            var sheet = RoundedPanel(overlay.transform, "Display options sheet", 20, 0, 350, 334,
+                DialogUi.Surface, 22);
+            sheet.rectTransform.anchorMin = sheet.rectTransform.anchorMax = new Vector2(.5f, 0);
+            sheet.rectTransform.pivot = new Vector2(.5f, 0);
+            sheet.rectTransform.anchoredPosition = new Vector2(0, 16);
             sheet.raycastTarget = true;
             sheet.gameObject.AddComponent<LobbyModalSurface>();
             Label(sheet.transform, "Display options title", "展示方式", 20, 20, 240, 40,
@@ -272,7 +273,7 @@ namespace XanaduYonder.Runtime
                 var mode = (LobbyDisplayMode)i;
                 bool selected = Mode == mode;
                 var option = RoundedPanel(sheet.transform, "Display mode " + mode, 20, 84 + i * 81, 310, 65,
-                    selected ? UiFactory.Accent : ControlColor, 14);
+                    selected ? UiFactory.Accent : DialogUi.Row, 14);
                 if (selected)
                     RoundedPanel(option.transform, "Selected option fill", 1, 1, 308, 63, UiFactory.Hex("DFE8DE"), 13);
                 UiFactory.ConfigureButton(option, () => ChooseMode(mode));
@@ -281,9 +282,6 @@ namespace XanaduYonder.Runtime
                     11, SecondaryText);
                 if (selected) Icon(option.transform, "Selected mode check", "check", 276, 22.5f, 20);
             }
-            var done = RoundedPanel(sheet.transform, "Done display options", 20, 329, 310, 42, UiFactory.Accent, 12);
-            UiFactory.ConfigureButton(done, CloseDisplayOptions);
-            Label(done.transform, "Done label", "完成", 0, 0, 310, 42, 14, Color.white, TextAnchor.MiddleCenter);
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(closeButton.gameObject);
         }
 
