@@ -12,6 +12,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             if(!choosing) session?.SetBlocked(true);
             Save(); Refresh();
             var overlay = DialogUi.ModalOverlay(root, "Minesweeper dialog overlay");
+            DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             dialog = overlay.gameObject;
             var panel=DialogCorners.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,28,532,70,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
@@ -34,11 +35,20 @@ namespace XanaduYonder.Runtime.Minesweeper
         }
         private void ShowTutorial()
         {
-            Action finish=()=>{profile.TutorialSeen=true;Save();};
-            var panel=ShowDialog("从数字开始", "数字表示周围八格中的雷数。\n\n点击翻开；长按 0.4 秒即插旗。\n切换「插旗」模式可连续标记。\n\n单指拖动，双指缩放并平移。\n中高级可全屏，总览只观察和定位。\n\n首击安全，不保证全盘无猜。", "开始探索", finish,"跳过",finish,null,null,960);
-            var message=(RectTransform)panel.Find("Dialog message");
-            message.anchoredPosition=new Vector2(32,-294); message.sizeDelta=new Vector2(532,450);
-            var diagram=UiFactory.Rect(panel,"Tutorial diagram",226,118,144,144);
+            void Finish() { profile.TutorialSeen = true; Save(); }
+            const string tips = "数字表示周围八格的雷数，首次点击安全。\n轻点翻开，长按 0.4 秒插旗。\n连续标记时，可切换到「插旗」模式。\n单指拖动，双指缩放和平移。\n中高级可全屏，总览只供观察和定位，计时照常。";
+            var panel = ShowDialog("从数字开始", tips, "知道了", Finish, height: 550);
+            dismissDialog = () => { CloseDialog(); Finish(); Refresh(); };
+            var diagram = UiFactory.Rect(panel, "Tutorial diagram", 226, 108, 144, 144);
+            var message = panel.Find("Dialog message").GetComponent<Text>();
+            message.alignment = TextAnchor.UpperLeft;
+            message.rectTransform.anchoredPosition = new Vector2(32, -276);
+            float textHeight = Mathf.Ceil(message.preferredHeight);
+            message.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, textHeight);
+            var action = panel.GetComponentInChildren<Button>().GetComponent<RectTransform>();
+            float actionTop = 276 + textHeight + 24;
+            action.anchoredPosition = new Vector2(32, -actionTop);
+            panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, actionTop + action.rect.height + 28);
             for(int i=0;i<9;i++)
             {
                 var tile=UiFactory.Panel(diagram,"Tutorial cell "+i,i%3*48,i/3*48,44,44,UiFactory.Hex("E7EDE4"));

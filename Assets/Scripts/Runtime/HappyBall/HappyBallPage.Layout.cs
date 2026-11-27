@@ -40,6 +40,8 @@ namespace XanaduYonder.Runtime.HappyBall
             UiFactory.Stretch(cover.rectTransform); cover.raycastTarget = true; pauseOverlay = cover.gameObject;
             var content = DialogCorners.Panel(cover.transform, "Session controls", 0, 0, 480, 340, DialogUi.Surface, DialogCorners.Surface).rectTransform;
             UiFactory.Center(content);
+            DialogOutsideTap.Protect(content);
+            DialogOutsideTap.Bind(cover, () => { coverDismissed = true; RefreshOverlay(); });
             overlayTitle = UiFactory.Label(content, "", 0, 20, 480, 66, 40, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             overlayDetail = UiFactory.Label(content, "", 0, 90, 480, 44, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
             var resume = DialogUi.ActionButton(content, "开始游戏", 90, 152, 300, 72,

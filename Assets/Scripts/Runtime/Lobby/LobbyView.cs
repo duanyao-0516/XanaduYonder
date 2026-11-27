@@ -119,7 +119,7 @@ namespace XanaduYonder.Runtime
             Label(header, "Lobby brand", "XANADU / YONDER", 0, 0, 300, 40, 14,
                 UiFactory.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
             var settings = RoundedPanel(header, "Lobby settings", PageContentWidth - 40, 0, 40, 40, ControlColor, 12);
-            UiFactory.ConfigureButton(settings, openSettings);
+            DialogUi.MenuButton(settings, openSettings);
             Icon(settings.transform, "Settings icon", "settings", 10, 10, 20);
             Label(header, "Lobby title", "小小一局，慢慢向前。", 0, 60, PageContentWidth, 32.2f, 23,
                 UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
@@ -130,7 +130,7 @@ namespace XanaduYonder.Runtime
             Label(toolbar, "Lobby game count", "全部游戏 · " + entries.Count + " 款", 0, 0, 210, 36,
                 12, SecondaryText);
             var selector = RoundedPanel(toolbar, "Display options button", PageContentWidth - 88, 0, 88, 36, ControlColor, 9);
-            displayButton = UiFactory.ConfigureButton(selector, OpenDisplayOptions);
+            displayButton = DialogUi.MenuButton(selector, OpenDisplayOptions);
             Icon(selector.transform, "Display mode icon", "sliders-horizontal", 9, 10, 16);
             modeLabel = Label(selector.transform, "Display mode label", ModeTitles[(int)Mode], 31, 0, 48, 36,
                 12, UiFactory.Accent);
@@ -203,7 +203,7 @@ namespace XanaduYonder.Runtime
             var card = RoundedPanel(parent, entry.ObjectName + " game card", x, y, width, height, color,
                 Mode == LobbyDisplayMode.Directory ? 12 : 14);
             // Native UGUI hands card drags to the ancestor ScrollRect and cancels the pending click.
-            UiFactory.ConfigureButton(card, entry.Enter);
+            DialogUi.MenuButton(card, entry.Enter);
             if (Mode == LobbyDisplayMode.Single)
             {
                 Label(card.transform, "Game caption", entry.Number + " / " + entry.Category + " / " + entry.Tagline,
@@ -255,7 +255,7 @@ namespace XanaduYonder.Runtime
             UiFactory.Stretch(overlay.rectTransform);
             DialogBackdrop.CoverCanvas(overlay);
             displayOptions = overlay.gameObject;
-            UiFactory.ConfigureButton(overlay, CloseDisplayOptions);
+            DialogOutsideTap.Bind(overlay, CloseDisplayOptions);
             const float height = 334, inset = 18;
             const float rowWidth = LogicalWidth - 2 * inset;
             const float units = LogicalWidth / 720f;
@@ -263,14 +263,13 @@ namespace XanaduYonder.Runtime
                 DialogUi.Surface, false);
             DialogCorners.ApplyTop(sheet, DialogCorners.Sheet * units);
             sheet.raycastTarget = true;
-            sheet.gameObject.AddComponent<LobbyModalSurface>();
             var content = UiFactory.Rect(sheet.transform, "Sheet content", 0, 0, LogicalWidth, height);
             DialogSheetLayout.Attach(sheet.rectTransform, content, LogicalWidth, height);
             Label(content, "Display options title", "展示方式", inset, 20, 240, 40,
                 20, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             var close = DialogCorners.Panel(content, "Close display options", LogicalWidth - inset - 48, 14,
                 48, 48, ControlColor, DialogCorners.Action * units);
-            var closeButton = UiFactory.ConfigureButton(close, CloseDisplayOptions);
+            var closeButton = DialogUi.MenuButton(close, CloseDisplayOptions);
             Icon(close.transform, "Close icon", "x", 14, 14, 20);
             for (int i = 0; i < ModeTitles.Length; i++)
             {
@@ -281,7 +280,7 @@ namespace XanaduYonder.Runtime
                 if (selected)
                     DialogCorners.Panel(option.transform, "Selected option fill", 1, 1, rowWidth - 2, 63,
                         UiFactory.Hex("DFE8DE"), DialogCorners.Row * units - 1);
-                UiFactory.ConfigureButton(option, () => ChooseMode(mode));
+                DialogUi.MenuButton(option, () => ChooseMode(mode));
                 Label(option.transform, "Display mode name", ModeTitles[i], 14, 10, rowWidth - 56, 23, 16, UiFactory.Ink);
                 Label(option.transform, "Display mode description", ModeNotes[i], 14, 37, rowWidth - 56, 16,
                     11, SecondaryText);
@@ -299,6 +298,11 @@ namespace XanaduYonder.Runtime
         }
 
         public void CloseDisplayOptions()
+        {
+            DialogSheetLayout.Dismiss(displayOptions, CloseDisplayOptionsImmediately);
+        }
+
+        internal void CloseDisplayOptionsImmediately()
         {
             if (displayOptions == null) return;
             displayOptions.SetActive(false);
@@ -319,7 +323,7 @@ namespace XanaduYonder.Runtime
 
         private void OnDisable()
         {
-            CloseDisplayOptions();
+            CloseDisplayOptionsImmediately();
             if (Scroll != null) Scroll.StopMovement();
         }
 
@@ -408,10 +412,4 @@ namespace XanaduYonder.Runtime
         }
     }
 
-    // Consume sheet whitespace so a click cannot bubble to the dismissing backdrop.
-    internal sealed class LobbyModalSurface : MonoBehaviour, IPointerClickHandler, ISubmitHandler
-    {
-        public void OnPointerClick(PointerEventData eventData) { }
-        public void OnSubmit(BaseEventData eventData) { }
-    }
 }

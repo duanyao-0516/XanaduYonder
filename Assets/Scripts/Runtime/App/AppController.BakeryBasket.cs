@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using XanaduYonder.Runtime.BakeryBasket;
 
 namespace XanaduYonder.Runtime
@@ -52,73 +53,61 @@ namespace XanaduYonder.Runtime
         private void OpenBakerySettings()
         {
             bakeryPage.Suspend();
-            var panel = CreateSheet(BakeryPage.DisplayName + " · 设置", 480, CloseModal);
-            float width = panel.rect.width - 64;
-            DialogUi.Disclosure(panel, "数量显示", 32, 108, width, 70, OpenBakeryCounters);
-            DialogUi.Disclosure(panel, "3D 主题 · " + BakeryThemeCatalog.Get(bakeryPage.ActiveTheme).Title,
-                32, 190, width, 70, ChooseBakeryTheme);
-            DialogUi.Disclosure(panel, "声音与触感", 32, 272, width, 70, () => OpenSettings(OpenBakerySettings));
-            DialogUi.ActionButton(panel, "完成", 32, 380, width, 72, CloseModal, true);
-            SetModalBack(CloseModal);
-        }
-
-        private void OpenBakeryCounters()
-        {
-            var panel = CreateSheet("数量显示", 408, OpenBakerySettings);
-            float width = panel.rect.width - 64;
-            DialogUi.SwitchRow(panel, "篮底小件数量", 32, 108, width, 72, bakeryPreferences.ShowBottom, value =>
+            var panel = CreateSheet(BakeryPage.DisplayName + " · 设置", 600);
+            var sections = new DialogSheetSections(panel);
+            sections.Heading("数量显示");
+            sections.Switch("篮底小件数量", bakeryPreferences.ShowBottom, value =>
             {
                 bakeryPreferences.ShowBottom = value;
                 SaveBakeryDisplay();
             });
-            DialogUi.SwitchRow(panel, "篮中剩余数量", 32, 190, width, 72, bakeryPreferences.ShowRemaining, value =>
+            sections.Switch("篮中剩余数量", bakeryPreferences.ShowRemaining, value =>
             {
                 bakeryPreferences.ShowRemaining = value;
                 SaveBakeryDisplay();
             });
-            DialogUi.ActionButton(panel, "返回设置", 32, 308, width, 72, OpenBakerySettings, true);
-            SetModalBack(OpenBakerySettings);
+            sections.Heading("3D 主题");
+            sections.Switch("进入时随机主题", bakeryPreferences.RandomOnEntry, value =>
+            {
+                bakeryPreferences.RandomOnEntry = value;
+                SaveBakeryDisplay();
+            });
+            sections.Body("切换主题会重开当前篮。");
+            var themes = BakeryThemeCatalog.All;
+            var buttons = new Button[themes.Count];
+            void PaintThemes()
+            {
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    bool selected = themes[i].Theme == bakeryPage.ActiveTheme;
+                    buttons[i].GetComponent<Image>().color = selected ? UiFactory.Accent : DialogUi.Secondary;
+                    buttons[i].GetComponentInChildren<Text>().color = selected ? Color.white : UiFactory.Ink;
+                }
+            }
+            float column = (sections.Width - 12) / 2;
+            float top = 0;
+            for (int i = 0; i < themes.Count; i++)
+            {
+                var option = themes[i];
+                if (i % 2 == 0) top = sections.Reserve(88);
+                buttons[i] = DialogUi.ActionButton(panel, option.Title, sections.Inset + i % 2 * (column + 12), top, column, 88, () =>
+                {
+                    bakeryPreferences.Theme = option.Theme;
+                    bakeryPreferences.Save();
+                    if (bakeryPage.ActiveTheme != option.Theme) bakeryPage.ChangeTheme(option.Theme);
+                    PaintThemes();
+                });
+            }
+            PaintThemes();
+            AddFeedbackControls(panel, sections);
+            sections.Action("完成", dismissModal, true);
+            sections.Finish();
         }
 
         private void SaveBakeryDisplay()
         {
             bakeryPreferences.Save();
             bakeryPage.ApplyDisplay();
-        }
-
-        private void ChooseBakeryTheme()
-        {
-            int rows = (BakeryThemeCatalog.All.Count + 1) / 2;
-            var panel = CreateSheet("3D 主题", 424 + rows * 80, OpenBakerySettings);
-            float width = panel.rect.width - 64;
-            DialogUi.SwitchRow(panel, "进入时随机主题", 32, 108, width, 70, bakeryPreferences.RandomOnEntry, value =>
-            {
-                bakeryPreferences.RandomOnEntry = value;
-                SaveBakeryDisplay();
-            });
-            UiFactory.Label(panel, "切换主题会重开当前篮。", 32, 200, width, 52, 24, UiFactory.Muted);
-            float column = (width - 16) / 2;
-            for (int i = 0; i < BakeryThemeCatalog.All.Count; i++)
-            {
-                var option = BakeryThemeCatalog.All[i];
-                DialogUi.ActionButton(panel, option.Title, 32 + i % 2 * (column + 16), 260 + i / 2 * 80, column, 68,
-                    () => SelectBakeryTheme(option.Theme), bakeryPage.ActiveTheme == option.Theme);
-            }
-            DialogUi.ActionButton(panel, "返回设置", 32, panel.rect.height - 100, width, 72, OpenBakerySettings);
-            SetModalBack(OpenBakerySettings);
-        }
-
-        private void SelectBakeryTheme(BakeryTheme theme)
-        {
-            bakeryPreferences.Theme = theme;
-            bakeryPreferences.Save();
-            if (bakeryPage.ActiveTheme == theme)
-            {
-                OpenBakerySettings();
-                return;
-            }
-            CloseModal();
-            bakeryPage.ChangeTheme(theme);
         }
     }
 }

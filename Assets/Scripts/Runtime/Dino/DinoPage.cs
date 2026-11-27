@@ -438,15 +438,9 @@ namespace XanaduYonder.Runtime.Dino
             DialogUi.Disclosure(panel, "设置与说明", 32, 216, panel.rect.width - 64, 70, ShowPauseOptions);
             PanelButton(panel,"结束本局 / 更换方向",310,ConfirmChange);
             overlayBack=RequestExit;
+            DialogOutsideTap.Bind(overlay.GetComponent<Image>(), Continue);
         }
-        private void ShowPauseOptions()
-        {
-            var panel = OpenPanel("设置与说明", 440);
-            DialogUi.Disclosure(panel, "声音与触感", 32, 112, panel.rect.width - 64, 70, () => ShowSettingsWithReturn(ShowPauseOptions));
-            DialogUi.Disclosure(panel, "玩法说明", 32, 198, panel.rect.width - 64, 70, () => ShowHelpWithReturn(ShowPauseOptions));
-            PanelButton(panel, "返回暂停菜单", 322, ShowPauseMenu, true);
-            overlayBack = ShowPauseMenu;
-        }
+        private void ShowPauseOptions() { ShowSettingsWithReturn(ShowPauseMenu); }
 
         private void Continue()
         {
@@ -462,19 +456,27 @@ namespace XanaduYonder.Runtime.Dino
         private void ShowSettingsWithReturn(Action back)
         {
             Suspend();
-            var panel=OpenPanel("声音与触感",386);
-            PanelLabel(panel,"设置在所有游戏中共用",104,42,23);
-            DialogUi.FeedbackSwitches(panel, 32, 166, panel.rect.width - 64, 70, 14, soundEnabled(), hapticsEnabled(),
-                value => { toggleSound(); sound.Stop(); }, value => toggleHaptics());
-            PanelButton(panel,"完成",266,back,true);
-            overlayBack=back;
+            var panel = OpenPanel("设置与说明", 430, back);
+            var sections = new DialogSheetSections(panel, 92, 34, 72, 12);
+            sections.Heading("声音与触感");
+            DialogUi.FeedbackSwitches(panel, sections.Inset, sections.Reserve(72), sections.Width, 72, 14,
+                soundEnabled(), hapticsEnabled(), value => { toggleSound(); sound.Stop(); }, value => toggleHaptics());
+            sections.Body("设置在所有游戏中共用。");
+            sections.Heading("玩法说明");
+            sections.Body(Rules);
+            sections.Heading("素材与许可");
+            sections.Body(License(), 19);
+            sections.Action("完成", overlayBack, true);
+            sections.Finish();
         }
+
         private void ReturnFromInfo()
         {
             CloseOverlay();
             if(game!=null && game.IsGameOver) ShowResult();
             else if(game!=null && game.IsStarted) ShowPauseMenu();
         }
+        private const string Rules = "轻按短跳；按住长跳，落地继续跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。";
         private void ShowHelp() { ShowHelpWithReturn(ReturnFromInfo); }
 
         private void ShowHelpWithReturn(Action back)
@@ -482,7 +484,7 @@ namespace XanaduYonder.Runtime.Dino
             Suspend();var panel=OpenPanel("Dino · 找到奔跑的节奏",586);
             float doneY = panel.rect.height - 32 - 74;
             float licenseY = doneY - 14 - 74;
-            PanelLabel(panel,"轻按短跳；按住长跳，落地继续跳。\n按住下蹲；空中按住可快速落地。\n跳过仙人掌与低空翼龙，高空翼龙可直行。\n跑得越远分越高，横竖屏分别计纪录。\n返回前台先暂停，继续前倒数三秒。\n退出本局后重新开始，最高纪录保留。",110,licenseY-128,24);
+            PanelLabel(panel,Rules,110,licenseY-128,24);
             PanelButton(panel,"素材与许可",licenseY,()=>ShowLicenseWithReturn(()=>ShowHelpWithReturn(back)));
             PanelButton(panel,"知道了",doneY,back,true);overlayBack=back;
         }
@@ -495,13 +497,17 @@ namespace XanaduYonder.Runtime.Dino
             area.gameObject.AddComponent<RectMask2D>();
             var scroll=area.gameObject.AddComponent<ScrollRect>();scroll.viewport=area;scroll.horizontal=false;
             var body=UiFactory.Rect(area,"License body",0,0,area.rect.width,1000);
-            var asset=Resources.Load<TextAsset>("Dino/LICENSE");
-            string text="像素、音效与部分游戏规则来源：Chromium\n素材版本 64574fa0f2daa1b48f2703a072687272000178ce\n规则版本 3df8d372a3f9d5c38a89d0bc496cc44c85af1feb\n本项目不代表 Google 官方产品。\n\n"+(asset==null?"许可证未能加载。":asset.text);
+            string text=License();
             var label=UiFactory.Label(body,text,0,0,body.rect.width,1000,19,UiFactory.Ink,TextAnchor.UpperLeft);
             label.supportRichText=false;Canvas.ForceUpdateCanvases();
             body.sizeDelta=new Vector2(body.rect.width,Mathf.Max(area.rect.height,label.preferredHeight+16));
             label.rectTransform.sizeDelta=body.sizeDelta;scroll.content=body;
             PanelButton(panel,"返回玩法",panelH-90,back,true);overlayBack=back;
+        }
+        private static string License()
+        {
+            var asset=Resources.Load<TextAsset>("Dino/LICENSE");
+            return "像素、音效与部分游戏规则来源：Chromium\n素材版本 64574fa0f2daa1b48f2703a072687272000178ce\n规则版本 3df8d372a3f9d5c38a89d0bc496cc44c85af1feb\n本项目不代表 Google 官方产品。\n\n"+(asset==null?"许可证未能加载。":asset.text);
         }
         private void ConfirmChange()
         {
@@ -580,6 +586,7 @@ namespace XanaduYonder.Runtime.Dino
             PanelButton(panel,"再来一局",250,()=>{CloseOverlay();StartNewGame();},true);
             PanelButton(panel,"更换方向",334,()=>BeginTurn(false,Destination.Selection));
             PanelButton(panel,"查看最终局面",418,()=>results.Inspect(CloseOverlay));
+            DialogOutsideTap.Bind(overlay.GetComponent<Image>(), () => results.Inspect(CloseOverlay));
             overlayBack=()=>BeginTurn(false,Destination.Selection);
         }
         private void UpdateRecord()
@@ -628,10 +635,18 @@ namespace XanaduYonder.Runtime.Dino
         }
         private void AddTouch(GameObject target,Action<int> down,Action<int> up)
         {var input=target.AddComponent<DinoTouchControl>();input.Initialize(down,up);touches.Add(input);}
-        private RectTransform OpenPanel(string title,float requestedHeight)
+        private RectTransform OpenPanel(string title,float requestedHeight, Action sheetBack = null)
         {
             CloseOverlay();ClearPhysicalInputs();
             overlay = DialogUi.ModalOverlay(root, "Dino modal overlay").rectTransform;
+            DialogOutsideTap.Bind(overlay.GetComponent<Image>(), () => overlayBack?.Invoke());
+            if (sheetBack != null)
+            {
+                var body = DialogSheetLayout.Create(overlay.GetComponent<Image>(), "Dino settings sheet", 596, requestedHeight, sheetBack);
+                overlayBack = DialogSheetLayout.AfterClose(body, sheetBack);
+                UiFactory.Label(body, title, 32, 20, 532, 62, 33, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                return body;
+            }
             float w=Mathf.Min(596,viewport.Width-64),h=Mathf.Min(requestedHeight,viewport.Height-32);
             var panel=DialogCorners.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h, DialogUi.Surface, DialogCorners.Surface);
             panel.raycastTarget=true;

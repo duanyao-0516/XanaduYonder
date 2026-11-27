@@ -11,6 +11,7 @@ namespace XanaduYonder.Runtime.Gomoku
         private readonly Image[] playerCards = new Image[2];
         private Button aiMode, localMode, confirmButton, clearButton, undoButton, pauseButton, retryButton;
         private GameObject pauseCover;
+        private bool pauseCoverCollapsed;
 
         private void Build()
         {
@@ -39,9 +40,17 @@ namespace XanaduYonder.Runtime.Gomoku
             surface.raycastTarget = true;
             board = new GomokuBoardView(surface.rectTransform); board.Selected += Select;
             var cover = UiFactory.Panel(surface.transform, "Paused board", 0, 0, 648, 648, UiFactory.Paper);
-            cover.raycastTarget = true; pauseCover = cover.gameObject;
-            UiFactory.Label(cover.transform, "对局已暂停", 48, 210, 552, 72, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            UiFactory.Label(cover.transform, "准备好后，点击下方继续对局。", 40, 294, 568, 64, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
+            pauseCover = cover.gameObject;
+            DialogOutsideTap.Bind(cover, () =>
+            {
+                if (!Allowed || session == null || !session.Paused) return;
+                pauseCoverCollapsed = true;
+                Refresh();
+            });
+            var pauseContent = UiFactory.Rect(cover.transform, "Pause message", 40, 210, 568, 148);
+            DialogOutsideTap.Protect(pauseContent);
+            UiFactory.Label(pauseContent, "对局已暂停", 8, 0, 552, 72, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            UiFactory.Label(pauseContent, "准备好后，点击下方继续对局。", 0, 84, 568, 64, 24, UiFactory.Muted, TextAnchor.MiddleCenter);
             var state = UiFactory.Band(root, "Gomoku state", 1052, 56, .66f);
             turnText = UiFactory.Label(state, "", 56, 0, 408, 32, 23, UiFactory.Ink);
             moveText = UiFactory.Label(state, "", 460, 0, 204, 32, 20, UiFactory.Muted, TextAnchor.MiddleRight);
@@ -101,7 +110,8 @@ namespace XanaduYonder.Runtime.Gomoku
             }
             board.Render(game, session == null ? null : session.SelectedIndex);
             board.Interactable = Allowed && session != null && session.CanSelect;
-            pauseCover.SetActive(pausedGame);
+            if (!pausedGame) pauseCoverCollapsed = false;
+            pauseCover.SetActive(pausedGame && !pauseCoverCollapsed);
             moveText.text = "共 " + game.MoveCount + " 手";
             hintText.text = game.LastMove < 0 ? "点击交叉点预览，再确认落子。" : "上一手 " + GomokuCoordinates.Format(game.LastMove) + " · 小圆点标记最后落子";
             if (session == null) turnText.text = "选择模式，开始一局";

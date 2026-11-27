@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
@@ -66,9 +67,11 @@ namespace XanaduYonder.EditorTools
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Require(UiFactory.Font != null, "Bundled font loads");
                 DialogSheetGeometryChecks.Run();
+                DialogTypographyChecks.Run();
                 foreach (int height in new[] { 1320, 1582 })
                 using (var fixture = new Fixture(height))
                 {
+                    CheckOutsideTap(fixture);
                     CheckLobby(fixture);
                     CheckZumaHostInput(fixture);
                     CheckJump(fixture);
@@ -187,6 +190,7 @@ namespace XanaduYonder.EditorTools
                     "Link Match preview retains the approved strawberry pair, banana and grapes");
                 CheckLobbyPreviews(f, content);
                 content.anchoredPosition = Vector2.zero; f.Capture("lobby-top");
+                CheckLobbyConfirmations(f, shell, content);
                 CheckLobbySettings(f, shell, content);
                 f.ShowLobbyCard(content, LobbyDesignChecks.FindCard(content, "Watermelon")); f.Capture("lobby-watermelon");
                 var status = Get<Text>(shell, "lobbyStatus");
@@ -338,8 +342,32 @@ namespace XanaduYonder.EditorTools
             var page = root.gameObject.AddComponent<JumpPage>();
             var feedback = root.gameObject.AddComponent<GameFeedback>();
             string dialog = null;
-            page.Initialize(root, () => { }, () => { }, () => true, () => false, () => false, feedback, _ => { },
-                (title, message, primary, action, secondary, cancel) => dialog = title);
+            Action onOutside = null;
+            var host = new GameObject("Jump dialog host");
+            host.SetActive(false);
+            host.transform.SetParent(root, false);
+            var shell = host.AddComponent<AppController>();
+            Set(shell, "frame", root);
+            Set(shell, "canvasRoot", root);
+            Set(shell, "data", new SaveData());
+            void CloseHost() => Invoke(shell, "CloseModal");
+            page.Initialize(root, () => { }, () =>
+                typeof(AppController).GetMethod("OpenSettings", Private, null, new[] { typeof(Action) }, null)
+                    .Invoke(shell, new object[] { (Action)(() => { }) }),
+                () => Get<GameObject>(shell, "modal") == null, () => false, () => false, feedback, _ => { },
+                (title, message, primary, action, secondary, cancel, outside) =>
+                {
+                    dialog = title;
+                    Invoke(shell, "ShowMessageDialog", title, message, primary, action, secondary, cancel, false, outside);
+                    var owner = Get<GameObject>(shell, "modal");
+                    onOutside = outside == null ? null : (Action)(() =>
+                    {
+                        var graphic = owner.GetComponentInChildren<DialogBackdrop>();
+                        var hit = new RaycastResult { gameObject = graphic == null ? owner : graphic.gameObject };
+                        owner.GetComponent<DialogOutsideTap>().OnPointerClick(new PointerEventData(EventSystem.current)
+                            { pointerPressRaycast = hit, pointerCurrentRaycast = hit });
+                    });
+                });
             Set(page, "store", null);
             Set(page, "game", new JumpGame(123));
             Set(page, "data", new JumpSaveData { Game = new JumpGame(123).GetSnapshot() });
@@ -351,11 +379,31 @@ namespace XanaduYonder.EditorTools
                 var book = Icon(nav, UiIconKind.Book);
                 f.Click((RectTransform)restart.transform);
                 Require(dialog == "重新开始这一局？", "Jump restart icon opens existing confirmation");
+                CloseHost();
                 f.Click((RectTransform)book.transform);
                 Require(dialog == "找到跳跃的节奏", "Jump book icon opens existing rules");
+                CloseHost();
+                f.Click((RectTransform)Icon(nav, UiIconKind.Settings).transform);
+                Require(Get<GameObject>(shell, "modal").GetComponentInChildren<DialogSheetLayout>() != null,
+                    "Jump's settings entry uses the production bottom sheet.");
+                CloseHost();
                 var scene = Get<JumpSceneView>(page, "scene");
                 Get<Camera>(scene, "sceneCamera").Render();
                 f.Capture("jump");
+                var missed = new JumpGame(123).GetSnapshot();
+                missed.PlayerX = -2;
+                missed.IsGameOver = true;
+                var terminal = new JumpGame(missed);
+                Set(page, "game", terminal);
+                page.CheckEndState();
+                Require(onOutside != null, "A terminal jump has a separate outside action");
+                onOutside();
+                dialog = null;
+                page.CheckEndState();
+                Require(dialog == null && ReferenceEquals(Get<JumpGame>(page, "game"), terminal),
+                    "Dismissing a jump result keeps the same completed run available for inspection");
+                f.Click((RectTransform)Get<Button>(page, "reviewResult").transform);
+                Require(dialog == "下一次，再远一点。", "The score can be reopened from the completed jump");
             }
             finally
             {
@@ -468,10 +516,13 @@ namespace XanaduYonder.EditorTools
                 session.Tick(5);
                 Require(session.Paused && session.ElapsedSeconds == seconds, "Rules pause game time");
                 var restart = Icon(game.transform, UiIconKind.Restart);
-                f.Click((RectTransform)restart.transform);
-                Require(Get<GameObject>(page, "dialog") == overlay, "Modal raycast blocks underlying restart");
                 Require(!Get<CanvasGroup>(page, "gameInput").interactable, "Modal disables underlying keyboard navigation");
                 f.Capture("sudoku-help");
+                f.Click((RectTransform)restart.transform);
+                Require(Get<GameObject>(page, "dialog") == null && Get<SudokuSession>(page, "session") == session &&
+                    session.CanPlay && session.ElapsedSeconds == seconds, "Outside tap resumes the original puzzle without activating restart");
+                f.Click((RectTransform)rules.transform);
+                overlay = Get<GameObject>(page, "dialog");
                 Button close = null;
                 foreach (var button in overlay.GetComponentsInChildren<Button>())
                     if (button.GetComponentInChildren<Text>()?.text == "返回对局") close = button;
@@ -481,6 +532,7 @@ namespace XanaduYonder.EditorTools
                 session.Tick(1);
                 Require(session.ElapsedSeconds == seconds + 1, "Timer advances after rules close");
                 CheckSudokuQuickInput(f, page, puzzle);
+                CheckSudokuDialogBranches(f, page, puzzle);
                 Require(Get<SudokuProfileStore>(page, "store") == null, "Sudoku fixture never accesses player saves");
             }
             finally { Object.DestroyImmediate(root.gameObject); }
@@ -510,6 +562,7 @@ namespace XanaduYonder.EditorTools
                 f.Click(quick);
                 var overlay = Get<GameObject>(page, "dialog");
                 Require(overlay != null, "First quick-mode use opens help");
+                f.Capture("sudoku-dialog-quick-input-help");
                 Button enable = null;
                 foreach (var button in overlay.GetComponentsInChildren<Button>())
                     if (button.GetComponentInChildren<Text>().text == "开启") enable = button;
@@ -587,6 +640,13 @@ namespace XanaduYonder.EditorTools
                 f.Capture(name + "-waiting");
                 results.Advance(0); results.Advance(.81f);
                 f.Capture(name + "-result");
+                if (won && level == 1 && difficulty == 0)
+                {
+                    f.Click((RectTransform)FindCaption(root, "更多操作").transform);
+                    Require(FindCaption(root, "重玩") != null, "A completed ordinary level exposes its own actions");
+                    f.Capture("sudoku-dialog-result-actions");
+                    f.Click((RectTransform)FindCaption(root, "返回结算").transform);
+                }
                 f.Click((RectTransform)FindCaption(root, "查看盘面").transform);
                 f.Capture(name + "-inspect");
                 f.CheckReviewLayout(root);
@@ -644,23 +704,44 @@ namespace XanaduYonder.EditorTools
             var page = pageRoot.gameObject.AddComponent<SheepPage>();
             var store = new SheepSaveStore(directory);
             var session = new SheepSession(new SheepSaveData());
+            var inert = new GameObject("Sheep modal host");
+            inert.transform.SetParent(pageRoot, false);
+            inert.SetActive(false);
+            var shell = inert.AddComponent<AppController>();
+            Set(shell, "canvasRoot", pageRoot);
             RectTransform panel = null;
+            GameObject layer = null;
             void Close()
             {
-                if (panel != null) Object.DestroyImmediate(panel.gameObject);
-                panel = null;
+                Invoke(shell, "CloseModal");
+                layer = null; panel = null;
             }
             RectTransform Open(string title, float height, Action back)
             {
-                // Defer destruction during a pointer dispatch just like the real host.
-                if (panel != null) { panel.gameObject.SetActive(false); Object.Destroy(panel.gameObject); }
-                panel = UiFactory.Panel(pageRoot, title, 0, 0, 596, height, DialogUi.Surface).rectTransform;
-                UiFactory.Center(panel);
+                panel = (RectTransform)Invoke(shell, "OpenSheepModal", title, height, back);
+                layer = Get<GameObject>(shell, "modal");
                 return panel;
             }
-            void Click(string caption) { f.Click((RectTransform)FindCaption(panel, caption).transform); }
+            RectTransform OpenSheet(string title, float height, Action back)
+            {
+                panel = (RectTransform)Invoke(shell, "CreateSheet", title, height, back);
+                layer = Get<GameObject>(shell, "modal");
+                return panel;
+            }
+            void Click(string caption)
+            {
+                var control = (RectTransform)FindCaption(panel, caption).transform;
+                control.GetComponentInParent<DialogSheetLayout>()?.Reveal(control);
+                f.Click(control);
+                if (layer == null) return;
+                var sheet = layer.GetComponentInChildren<DialogSheetLayout>();
+                if (sheet != null && sheet.IsDismissing) sheet.AdvanceDismissal(1f);
+            }
             try
             {
+                Set(shell, "data", new SaveData());
+                Set(page, "commonSettings", (Action<RectTransform, DialogSheetSections>)((body, sections) =>
+                    Invoke(shell, "AddFeedbackControls", body, sections)));
                 Set(page, "store", store);
                 Set(page, "session", session);
                 Set(page, "setStatus", (Action<string>)(_ => { }));
@@ -672,35 +753,33 @@ namespace XanaduYonder.EditorTools
                     DialogUi.ActionButton(confirmation, no, 32, 304, 532, 64, cancel);
                 }));
                 Set(page, "openModal", (Func<string, float, Action, RectTransform>)Open);
-                Set(page, "closeModal", (Action)(() => { if (panel != null) panel.gameObject.SetActive(false); }));
+                Set(page, "openSheet", (Func<string, float, Action, RectTransform>)OpenSheet);
+                Set(page, "closeModal", (Action)Close);
                 Invoke(page, "ShowModes");
                 Click("玩法设置");
-                Click("第二关难度 · 正常");
+                f.Capture("sheep-settings");
+                f.Capture("sheep-settings-difficulty");
                 Click("困难");
                 Click("直接使用默认难度");
-                Click("返回设置");
-                Click("新局道具次数");
+                var settingsOwner = layer;
+                panel.GetComponentInParent<DialogSheetLayout>().Reveal((RectTransform)FindCaption(panel, "+").transform);
+                f.Capture("sheep-settings-tools");
                 Click("+");
-                Click("返回设置");
-                Require(session.Data.Preferences.DefaultDifficulty == SheepDifficulty.Normal && session.Data.Preferences.RemoveLimit == 2,
-                    "Child pages edit a shared draft before committing");
-                Click("取消");
+                Require(layer == settingsOwner && session.Data.Preferences.DefaultDifficulty == SheepDifficulty.Normal && session.Data.Preferences.RemoveLimit == 2,
+                    "All groups edit the same unsaved draft in place");
+                Click("取消修改");
                 Click("玩法设置");
-                Click("第二关难度 · 正常");
                 Click("困难");
                 Click("直接使用默认难度");
-                Click("返回设置");
-                Click("新局道具次数");
                 Click("+");
-                Click("返回设置");
-                Click("保存设置");
+                Click("保存玩法设置");
                 var saved = store.Load(out _).Preferences;
                 Require(saved.DefaultDifficulty == SheepDifficulty.Hard && saved.SkipDifficultyPrompt &&
                     saved.RemoveLimit == 3 && saved.UndoLimit == 3 && saved.ShuffleLimit == 1,
-                    "Returning from two settings pages preserves the draft and save persists it");
+                    "Saving persists values edited in both sections of one sheet");
                 Click("玩法设置");
-                Click("恢复默认");
-                Click("保存设置");
+                Click("恢复玩法默认值");
+                Click("保存玩法设置");
                 saved = store.Load(out _).Preferences;
                 Require(saved.DefaultDifficulty == SheepDifficulty.Normal && !saved.SkipDifficultyPrompt && saved.IsStandardTools,
                     "Reset restores the difficulty, prompt and all three tool defaults");
@@ -732,6 +811,32 @@ namespace XanaduYonder.EditorTools
                 Click("无尽模式");
                 Click("继续无尽");
                 Require(session.Game.GetSnapshot().RandomState == endlessState, "The other saved mode still resumes");
+                Set(page, "visible", true);
+                Invoke(page, "ShowHelp");
+                Require(panel != null && FindCaption(panel, "知道了") != null, "Sheep opens the rules above the current round.");
+                DialogScreenshotAudit.CaptureCurrent(panel);
+                Click("知道了");
+                foreach (var mode in new[] { SheepMode.Tutorial, SheepMode.Challenge })
+                {
+                    int previous = mode == SheepMode.Challenge ? session.Data.Challenge.LayoutId : -1;
+                    var generated = SheepLevelGenerator.Generate(mode, SheepDifficulty.Normal, 19, previousLayoutId: previous);
+                    session.Start(mode, SheepDifficulty.Normal, 19);
+                    foreach (int id in generated.SolutionIds) Require(session.Game.Pick(id).Changed, "The production layout solution remains playable.");
+                    Require(session.Game.Phase == SheepPhase.Won, "Completing the deal reaches its real result.");
+                    Invoke(page, "Refresh");
+                    f.Capture("sheep-terminal-" + mode);
+                }
+                session.Start(SheepMode.Endless, SheepDifficulty.Normal, 1);
+                while (session.Game.Phase == SheepPhase.Playing)
+                {
+                    var snapshot = session.Game.GetSnapshot();
+                    var pick = Enumerable.Range(0, snapshot.Kinds.Length).Where(session.Game.CanPick)
+                        .OrderBy(id => snapshot.Tray.Count(slot => snapshot.Kinds[slot] == snapshot.Kinds[id])).First();
+                    session.Game.Pick(pick);
+                }
+                Require(session.Game.Phase == SheepPhase.Lost, "A full tray reaches the recoverable loss panel.");
+                Invoke(page, "Refresh");
+                f.Capture("sheep-terminal-full-tray");
             }
             finally
             {

@@ -11,7 +11,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
         private static readonly Color Secondary = UiFactory.Hex("65786D"), Locked = UiFactory.Hex("A2AAA3");
         private RectTransform page, content, boardRect;
         private Text timeText, movesText, footer;
-        private Button undoButton;
+        private Button undoButton, reviewButton;
         private float Scale { get { return Mathf.Min(root.rect.width / ReferenceWidth, root.rect.height / ReferenceHeight); } }
         private void Build()
         {
@@ -40,7 +40,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
         {
             if (content != null) { content.gameObject.SetActive(false); Destroy(content.gameObject); }
             content = UiFactory.Rect(page,"SlidingPuzzle state",0,0,ReferenceWidth*Scale,root.rect.height);
-            board = null; pointer = null; timeText = movesText = null; undoButton = null;
+            board = null; pointer = null; timeText = movesText = null; undoButton = reviewButton = null;
             var modes = Panel(content,"Mode selector",28,183.05f,334,46,UiFactory.Hex("E7EDE4"),10);
             var free = Button(modes.transform,"Free mode","自由拼图",4,4,161,38,()=>SelectMode(0),profile.SelectedMode==0,14);
             var campaign = Button(modes.transform,"Campaign mode","解锁闯关",169,4,161,38,()=>SelectMode(1),profile.SelectedMode==1,14);
@@ -78,6 +78,8 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             pointer=tray.gameObject.AddComponent<SlidingPuzzlePointer>(); pointer.Initialize(boardRect,board,()=>Session.Game,()=>CanMove,Move,Scale);
             undoButton=Button(content,"Undo","撤回",28,735.35f,163,42,Undo,false,13);
             Button(content,"Restart",free?"重新开始":"重玩本关",199,735.35f,163,42,ConfirmRestart,false,13);
+            reviewButton = DialogUi.ActionButton(content, "查看结算", 28 * Scale, 735.35f * Scale, 163 * Scale, 42 * Scale,
+                () => { resultDismissed = false; CheckEndState(); }, false, Mathf.RoundToInt(13 * Scale), unitScale: .5f * Scale);
             RefreshCounts();
         }
         private static readonly string[] ChapterTitles={"从一格空白开始","进阶篇 · 4×4","挑战篇 · 5×5"};
@@ -129,7 +131,11 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             var label=movesText.transform.parent.Find("Moves label")?.GetComponent<Text>();
             if(label!=null)label.text=Session.Game.Assisted?"步数 · 练习":"步数";
             if(undoButton!=null)
-            { undoButton.interactable=Session.Game.CanUndo;undoButton.GetComponent<CanvasGroup>().alpha=undoButton.interactable?1:.48f; }
+            {
+                undoButton.gameObject.SetActive(!Session.Game.Won);
+                reviewButton.gameObject.SetActive(Session.Game.Won);
+                undoButton.interactable=Session.Game.CanUndo;undoButton.GetComponent<CanvasGroup>().alpha=undoButton.interactable?1:.48f;
+            }
         }
         private void RefreshFooter()
         {

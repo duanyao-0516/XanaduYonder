@@ -378,6 +378,7 @@ namespace XanaduYonder.EditorTools
                     Get<bool>(g.Page, "settingsOpen") && !Get<GomokuBoardView>(g.Page, "board").Interactable,
                     "Real host CreateModal/StopAnimation suspends the selected game before showing shared settings");
                 f.Capture("host-settings"); f.Click(Find(modal.transform, "完成"));
+                DialogSheetGeometryChecks.CompleteDismissal(modal.transform);
                 Require(g.SettingsCompleted == 1 && Get<GameObject>(host.Shell, "modal") == null &&
                     !Get<bool>(g.Page, "settingsOpen") && !g.Session.Paused && g.Session.CanSelect,
                     "Actual shared Done callback restores the previously active Gomoku turn");
@@ -397,6 +398,10 @@ namespace XanaduYonder.EditorTools
                 Require(g.Session.CanSelect, "A real Continue button resumes after the host focus lifecycle");
 
                 f.Click(SharedIcon(g.Root, UiIconKind.Settings));
+                var replacement = Get<GameObject>(host.Shell, "modal");
+                oldFocusFinish();
+                Require(!replacement.GetComponentInChildren<DialogSheetLayout>().IsDismissing &&
+                    Get<GameObject>(host.Shell, "modal") == replacement, "A stale close cannot dismiss a newly opened sheet");
                 var oldPauseFinish = Get<Action>(host.Shell, "dismissModal");
                 int completed = g.SettingsCompleted;
                 Invoke(host.Shell, "OnApplicationPause", true); Invoke(host.Shell, "OnApplicationFocus", false);
@@ -836,7 +841,12 @@ namespace XanaduYonder.EditorTools
             }
 
             public void Click(RectTransform rect)
-            { Up(Down(rect, new Vector2(rect.rect.width / 2, rect.rect.height / 2), true)); }
+            {
+                Up(Down(rect, new Vector2(rect.rect.width / 2, rect.rect.height / 2), true));
+                var setup = root.GetComponentInChildren<DialogSheetLayout>();
+                if (setup != null && setup.IsDismissing && setup.name == "Gomoku setup sheet")
+                    setup.AdvanceDismissal(1f);
+            }
 
             public void Capture(string name)
             {

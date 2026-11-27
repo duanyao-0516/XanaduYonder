@@ -658,6 +658,8 @@ namespace XanaduYonder.EditorTools
                 Require(!overlay.GetComponentsInChildren<Text>().Any(t => t.text.Contains("排序")), "Display options contain no sorting capability");
                 f.Capture("display-options");
                 f.Tap(Named(overlay, "Close display options").GetComponent<Button>());
+                Require(!first.IsInteractable(), "Display options keep the lobby blocked while the sheet slides away");
+                DialogSheetGeometryChecks.CompleteDismissal(overlay);
                 Require(!(bool)Property(f.View, "HasDisplayOptions") && first.IsInteractable(), "Close restores the underlying lobby input");
                 f.Tap(first); Require(clicks == 1, "First fresh card tap works immediately after closing options");
             }
@@ -666,6 +668,7 @@ namespace XanaduYonder.EditorTools
             {
                 f.Scroll.content.anchoredPosition = Vector2.zero; f.Flush(); f.Tap(trigger);
                 f.Tap(Named(f.View.transform, "Display mode " + name).GetComponent<Button>());
+                DialogSheetGeometryChecks.CompleteDismissal(Named(f.View.transform, "Display options overlay"));
                 int expected = name == "Double" ? 0 : name == "Directory" ? 1 : 2;
                 Require(Convert.ToInt32(Property(f.View, "Mode")) == expected && !(bool)Property(f.View, "HasDisplayOptions"), "Actual option tap switches to " + name + " and closes the sheet");
                 Require(PlayerPrefs.GetInt(PreferenceKey, -1) == expected, "User choice persists independently for " + name);
@@ -674,10 +677,12 @@ namespace XanaduYonder.EditorTools
             }
             f.Scroll.content.anchoredPosition = Vector2.zero; f.Flush(); f.Tap(trigger);
             Invoke(f.Host, "HandleBack");
+            DialogSheetGeometryChecks.CompleteDismissal(Named(f.View.transform, "Display options overlay"));
             Require(!(bool)Property(f.View, "HasDisplayOptions"), "Host Back closes display options before opening exit confirmation");
             f.Tap(trigger); f.View.gameObject.SetActive(false); f.View.gameObject.SetActive(true); f.Flush();
             Require(!(bool)Property(f.View, "HasDisplayOptions"), "Disabling the lobby clears options and restores modal input ownership");
             f.Tap(trigger); Invoke(f.View, "CloseDisplayOptions"); Invoke(f.View, "CloseDisplayOptions");
+            DialogSheetGeometryChecks.CompleteDismissal(Named(f.View.transform, "Display options overlay"));
             Require(!(bool)Property(f.View, "HasDisplayOptions"), "Repeated display close is safe");
         }
 

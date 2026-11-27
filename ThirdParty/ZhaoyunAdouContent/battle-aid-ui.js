@@ -42,6 +42,7 @@
       const back = node('button', '返回战斗', 'xy-secondary');
       back.type = 'button';
       back.addEventListener('click', close);
+      XanaduDialogs.bindBackdrop(panel, close);
       header.append(title, back);
       const body = node('div', undefined, 'save-editor-body');
       const select = window.XanaduPanelSelect.create(body, '选择武将');

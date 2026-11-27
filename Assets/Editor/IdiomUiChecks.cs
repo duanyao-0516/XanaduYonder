@@ -128,7 +128,7 @@ namespace XanaduYonder.EditorTools
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 var lobbyVisits = 0;
                 page.Initialize(pageRoot, () => lobbyVisits++, () => true, _ => { },
-                    (title, height, back) => { throw new InvalidOperationException("Unexpected modal in layout fixture: " + title); }, () => { });
+                    (title, height, back) => { throw new InvalidOperationException("Unexpected modal in layout fixture: " + title); }, () => { }, null);
                 var lexicon = TestLexicon();
                 Set(page, "lexicon", lexicon);
                 var save = (IdiomSaveData)Invoke(page, "NewSave");
@@ -152,7 +152,7 @@ namespace XanaduYonder.EditorTools
                 Require(title.GetComponent<Text>().alignment == TextAnchor.MiddleCenter, label + " centered title alignment");
                 var ruleSwitch = Get<IdiomRuleSwitch>(page, "ruleSwitch");
                 Require(WorldRect(count.rectTransform).xMax < WorldRect((RectTransform)ruleSwitch.transform).xMin,
-                    label + " count does not overlap rule switch");
+                    label + " count does not overlap rule");
                 Require(count.preferredWidth <= count.rectTransform.rect.width + .5f, label + " rendered count fits");
                 var normalCount = count.text;
                 count.text = "本轮完成 42851 个";
@@ -401,7 +401,7 @@ namespace XanaduYonder.EditorTools
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
                     (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back),
-                    () => DestroyModal(shell));
+                    () => DestroyModal(shell), (title, height, back) => (RectTransform)Invoke(shell, "CreateSheet", title, height, back));
                 var lexicon = TestLexicon(); Set(page, "lexicon", lexicon);
                 var data = (IdiomSaveData)Invoke(page, "NewSave");
                 Set(page, "data", data); Set(page, "notebook", data.Notebook);
@@ -423,11 +423,13 @@ namespace XanaduYonder.EditorTools
                 Require(Get<GameObject>(shell, "modal") == null, "Closing rules opened from the game returns to the conversation");
                 Require(settings.IsInteractable(), "Closing rules restores the conversation settings button");
                 fixture.Click(Center((RectTransform)settings.transform));
-                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "玩法说明").transform));
-                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "知道了").transform));
-                var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
-                var close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
-                var fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧 switch");
+                var settingsOwner = Get<GameObject>(shell, "modal");
+                var settingsSheet = settingsOwner.GetComponentInChildren<DialogSheetLayout>();
+                Require(settingsSheet.Content.Find("Section 玩法说明") != null && settingsSheet.Content.Find("Section 对局管理") != null,
+                    "Rules, management, and preferences share one scrollable settings surface");
+                var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音");
+                var close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘");
+                var fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧");
                 Require(data.FixedLocalActionSides, "Action sides default to fixed");
                 Require(!WorldRect((RectTransform)fixedSides.transform).Overlaps(WorldRect((RectTransform)close.transform)) &&
                     !WorldRect((RectTransform)fixedSides.transform).Overlaps(WorldRect((RectTransform)show.transform)), "Fixed-side switch has its own target");
@@ -450,23 +452,25 @@ namespace XanaduYonder.EditorTools
                     Require(row.Word.alignment == (right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft) &&
                         row.Pinyin.alignment == row.Word.alignment, "Word and pinyin retain their side alignment");
                 }
-                close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
+                close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘");
                 fixture.Click(Center((RectTransform)close.transform));
                 Require(!data.CloseKeyboardAfterSend, "Real settings switch keeps keyboard after sending");
-                fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧 switch");
+                fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧");
                 fixture.Click(Center((RectTransform)fixedSides.transform));
                 Require(!data.FixedLocalActionSides, "Real switch enables alternating sides");
                 var persisted = new IdiomSaveStore(directory, lexicon).Load(out warning);
                 Require(persisted != null && persisted.ShowPinyin && !persisted.CloseKeyboardAfterSend && !persisted.FixedLocalActionSides,
                     "All three real settings clicks persist through a fresh disk read");
-                show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
+                show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音");
                 fixture.Click(Center((RectTransform)show.transform));
                 Require(!data.ShowPinyin, "Pinyin can be switched off again");
                 CheckTranscript(page, game, "pinyin disabled again");
                 Near(firstRow.Root.rect.height, compactHeight, "Disabling pinyin restores compact row height");
                 Require(game.History.Count == historyCount && !game.IsEnded, "Settings toggles preserve the live game");
-                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "对局管理").transform));
-                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "结束本轮").transform));
+                var finishRound = (RectTransform)FindNamedButton(settingsOwner, "结束本轮").transform;
+                settingsSheet.Reveal(finishRound);
+                fixture.Click(Center(finishRound));
+                Require(Get<GameObject>(shell, "modal") == settingsOwner, "Confirmation stays inside the same sheet");
                 var confirm = FindNamedButton(Get<GameObject>(shell, "modal"), "回顾本轮");
                 var cancel = FindNamedButton(Get<GameObject>(shell, "modal"), "取消");
                 events.SetSelectedGameObject(confirm.gameObject);
@@ -474,9 +478,8 @@ namespace XanaduYonder.EditorTools
                 Require(events.currentSelectedGameObject == cancel.gameObject, "Left moves from the confirmation to its cancel action");
                 fixture.Click(Center((RectTransform)cancel.transform));
                 Require(!game.IsEnded && game.History.Count == historyCount, "Cancelling an end-of-round confirmation preserves play");
-                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "返回设置").transform));
-                Require(FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch") != null,
-                    "Management returns to the preference page");
+                Require(Get<GameObject>(shell, "modal") == settingsOwner && finishRound.gameObject.activeInHierarchy,
+                    "Cancelling restores the action in place");
                 Invoke(page, "ReturnFromDialog");
                 data.ActiveMatchKind = IdiomMatchKind.Local;
                 var local = Get<IdiomGame>(page, "localCharacterGame");
@@ -492,6 +495,23 @@ namespace XanaduYonder.EditorTools
                     data.FixedLocalActionSides = fixedValue; Invoke(page, "Refresh", true);
                     CheckComposer(fixture, page, local, "Local right fixed=" + fixedValue);
                 }
+                Invoke(page, "Restart");
+                var restart = Get<GameObject>(shell, "modal");
+                Require(restart != null && Array.Exists(restart.GetComponentsInChildren<Text>(), label => label.text == "开始新的一局？"), "An active local match confirms before replacing its progress.");
+                DialogScreenshotAudit.CaptureCurrent(restart.transform);
+                fixture.Click(Center((RectTransform)FindNamedButton(restart, "取消").transform));
+                var damagedDirectory = Path.Combine(directory, "protected");
+                Directory.CreateDirectory(damagedDirectory);
+                var damaged = new IdiomSaveStore(damagedDirectory, lexicon);
+                File.WriteAllText(damaged.SavePath, "unreadable-history");
+                damaged.Load(out _);
+                Require(damaged.NeedsRecovery, "A damaged learning history is protected.");
+                Set(page, "store", damaged);
+                Invoke(page, "ConfirmGameRecovery");
+                var dialog = Get<GameObject>(shell, "modal");
+                DialogScreenshotAudit.CaptureCurrent(dialog.transform);
+                fixture.Click(Center((RectTransform)FindNamedButton(dialog, "取消").transform));
+                Require(File.ReadAllText(damaged.SavePath) == "unreadable-history", "Cancelling leaves the protected history untouched.");
             }
             finally
             {
@@ -550,7 +570,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = root.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(root, () => { }, () => true, _ => { },
-                    (title, height, back) => { throw new InvalidOperationException("Unexpected focus-check modal: " + title); }, () => { });
+                    (title, height, back) => { throw new InvalidOperationException("Unexpected focus-check modal: " + title); }, () => { }, null);
                 Set(page, "lexicon", TestLexicon());
                 var data = (IdiomSaveData)Invoke(page, "NewSave"); data.ActiveMatchKind = match; data.CloseKeyboardAfterSend = closeAfterSend;
                 Set(page, "data", data); Set(page, "notebook", data.Notebook); Invoke(page, "RestoreGames");
@@ -651,15 +671,15 @@ namespace XanaduYonder.EditorTools
                 Require(!image.IsRaycastLocationValid(cornerScreen, fixture.Camera), "Circle image rejects corner");
             }
             finally { DestroyModal(shell); }
-            // Shared confirmations retain their original modal semantics.
+            // An unconfigured host dialog must still have a safe dismissal.
             Invoke(shell, "CreateModal", "普通确认", 488f, null);
             try
             {
                 fixture.Flush();
                 var modal = Get<GameObject>(shell, "modal");
-                Require(modal.transform.Find("Dismiss outside dialog") == null, "Generic dialog has no outside dismiss handler");
+                Require(modal.GetComponent<DialogOutsideTap>() != null, "Generic dialog binds its scrim");
                 fixture.Click(fixture.Root.TransformPoint(new Vector2(fixture.Root.rect.xMin + 10, fixture.Root.rect.yMin + 10)));
-                Require(backCount == 1, "Generic outside click cannot trigger previous idiom back action");
+                Require(Get<GameObject>(shell, "modal") == null && backCount == 1, "Generic outside click closes its own dialog without invoking a previous callback");
             }
             finally { DestroyModal(shell); }
 
@@ -671,7 +691,7 @@ namespace XanaduYonder.EditorTools
                 var page = actualPageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(actualPageRoot, () => { }, () => true, _ => { },
                     (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back),
-                    () => DestroyModal(shell));
+                    () => DestroyModal(shell), (title, height, back) => (RectTransform)Invoke(shell, "CreateSheet", title, height, back));
                 Set(page, "visible", true);
                 var returned = 0;
                 var actualPanel = (RectTransform)Invoke(page, "Dialog", "真实成语弹窗", 560f, (Action)(() => returned++));
@@ -821,7 +841,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell));
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell), (title, height, back) => (RectTransform)Invoke(shell, "CreateSheet", title, height, back));
                 var entries = new List<IdiomEntry>();
                 var middles = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉";
                 for (var i = 0; i < middles.Length; i++)
@@ -864,6 +884,7 @@ namespace XanaduYonder.EditorTools
                 fixture.Click(Center((RectTransform)surrender.transform));
                 Require(game.IsEnded && game.EndReason == IdiomEndReason.Surrendered, "Only the explicit surrender click ends this playable game");
                 var summary = Get<GameObject>(shell, "modal");
+                DialogScreenshotAudit.CaptureCurrent(summary.transform);
                 Require(summary != null && FindButton(summary, "再来一局") != null, "Surrender opens a round summary");
                 var explained = false;
                 foreach (var text in summary.GetComponentsInChildren<Text>()) if (text.text.Contains("选择认输")) explained = true;
@@ -922,7 +943,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell));
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell), (title, height, back) => (RectTransform)Invoke(shell, "CreateSheet", title, height, back));
                 var lexicon = TestLexicon();
                 Set(page, "lexicon", lexicon);
                 var data = (IdiomSaveData)Invoke(page, "NewSave");
@@ -1193,6 +1214,8 @@ namespace XanaduYonder.EditorTools
             public void Click(Vector2 worldPosition)
             {
                 Release(Press(worldPosition));
+                foreach (var sheet in Root.GetComponentsInChildren<DialogSheetLayout>())
+                    if (sheet.IsDismissing) sheet.AdvanceDismissal(1f);
             }
 
             public PointerEventData Press(Vector2 worldPosition)

@@ -113,6 +113,7 @@ namespace XanaduYonder.Runtime.Tetris
             var pauseDim = UiFactory.Panel(ArenaRect, "Tetris arena pause", 0, 0, 1, 1,
                 DialogUi.Scrim, false);
             PauseRoot = pauseDim.rectTransform; UiFactory.Stretch(PauseRoot); pauseDim.raycastTarget = true;
+            DialogOutsideTap.Bind(pauseDim, () => lastContinueAction?.Invoke());
             pauseTitle = Label(PauseRoot, "Tetris pause title", "已暂停", 28, Color.white, TextAnchor.MiddleCenter);
             pauseTitle.fontStyle = FontStyle.Bold;
             continueControl = MakeDialogControl(PauseRoot, "Tetris continue", "继续游戏", true);
@@ -122,6 +123,7 @@ namespace XanaduYonder.Runtime.Tetris
             var resultDim = UiFactory.Panel(ArenaRect, "Tetris arena result", 0, 0, 1, 1,
                 DialogUi.Scrim, false);
             ResultRoot = resultDim.rectTransform; UiFactory.Stretch(ResultRoot); resultDim.raycastTarget = true;
+            DialogOutsideTap.Bind(resultDim, () => lastResultInspectAction?.Invoke());
             resultTitle = Label(ResultRoot, "Tetris result title", "本局结束", 22, Color.white, TextAnchor.MiddleCenter);
             resultScoreCaption = Label(ResultRoot, "Tetris result score caption", "本局得分", 11, new Color(1, 1, 1, .8f), TextAnchor.MiddleCenter);
             resultScore = Label(ResultRoot, "Tetris result score", "0", 42, Color.white, TextAnchor.MiddleCenter);
@@ -149,6 +151,8 @@ namespace XanaduYonder.Runtime.Tetris
             OverlayRoot = dim.rectTransform; UiFactory.Stretch(OverlayRoot); dim.raycastTarget = true;
             DialogBackdrop.CoverCanvas(dim);
             dialog = Shape(OverlayRoot, "Tetris dialog", TetrisGraphicKind.Round, DialogUi.Surface).rectTransform;
+            dialog.GetComponent<TetrisGraphic>().raycastTarget = true;
+            DialogOutsideTap.Bind(dim, home);
             overlayTitle = Label(dialog, "Tetris overlay title", "", 23, UiFactory.Ink);
             overlayDetail = Label(dialog, "Tetris overlay detail", "", 13, UiFactory.Muted);
             overlayDetail.horizontalOverflow = HorizontalWrapMode.Wrap;

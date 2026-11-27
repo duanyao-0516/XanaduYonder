@@ -94,6 +94,7 @@ namespace XanaduYonder.Runtime.Zuma
     }
 
     // One mesh per label, using the source bitmap glyphs, advances, offsets and kerning.
+    [RequireComponent(typeof(CanvasRenderer))]
     internal sealed class ZumaBitmapText : MaskableGraphic
     {
         private ZumaBitmapFont font;

@@ -12,13 +12,22 @@ namespace XanaduYonder.Runtime.Gomoku
         private bool dialogResume;
         private bool dialogBackLeavesGame;
 
-        private RectTransform Overlay(string title, float height)
+        private RectTransform Overlay(string title, float height, Action setupCancel = null)
         {
             CloseDialog();
             dialogResume = session != null && !session.Paused;
             CancelSearch(); board.CancelInput(); session?.SetBlocked(true);
             var overlay = DialogUi.ModalOverlay(root, "Gomoku dialog overlay");
             dialog = overlay.gameObject;
+            if (setupCancel != null)
+            {
+                var body = DialogSheetLayout.Create(overlay, "Gomoku setup sheet", 596, height, setupCancel);
+                dismissDialog = DialogSheetLayout.AfterClose(body, setupCancel);
+                UiFactory.Label(body, title, 32, 18, 532, 64, 33, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                Refresh();
+                return body;
+            }
+            DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             var panel = DialogCorners.Panel(overlay.transform, "Gomoku dialog", 0, 0, 596, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 32, 24, 532, 70, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
@@ -55,7 +64,8 @@ namespace XanaduYonder.Runtime.Gomoku
             var human = session == null ? data.PreferredHumanStone : session.HumanStone;
             int blackPlayer = session == null ? data.PreferredBlackPlayer : session.BlackPlayer;
             if (rematch && !ai) blackPlayer = 3 - blackPlayer;
-            var panel = Overlay(ai ? "开始人机对战" : "开始本地双人", ai ? 850 : 760);
+            void CancelSetup() { CloseDialog(); Refresh(); EnsureSearch(); }
+            var panel = Overlay(ai ? "开始人机对战" : "开始本地双人", ai ? 726 : 646, CancelSetup);
             string explanation = invalidSave ? "旧存档无法恢复。确认后创建新存档。" : session != null && session.Game.MoveCount > 0 ? "确认后替换本模式对局，另一模式保留。" : "15 路棋盘 · 黑棋先手 · 连成五子获胜";
             UiFactory.Label(panel, explanation, 32, 108, 532, 78, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
             float sideY;
@@ -80,11 +90,10 @@ namespace XanaduYonder.Runtime.Gomoku
                 if (ai) human = index == 0 ? GomokuStone.Black : GomokuStone.White;
                 else blackPlayer = index + 1;
             });
-            if (!ai) UiFactory.Label(panel, "两位玩家轮流使用同一台设备。\n悔棋需另一位玩家确认；再来一局默认换边。\n玩家身份保持不变，黑白执子随新局调整。", 32, 362, 532, 142, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
-            float startY = ai ? 648 : 554;
-            DialogUi.ActionButton(panel, "确认开始", 32, startY, 532, 72, () => StartGame(mode, difficulty, human, blackPlayer), true);
-            Action cancel = () => { CloseDialog(); Refresh(); EnsureSearch(); };
-            DialogUi.ActionButton(panel, "取消", 32, startY + 88, 532, 62, cancel); dismissDialog = cancel;
+            if (!ai) UiFactory.Label(panel, "两位玩家轮流使用同一台设备。\n悔棋需另一位玩家确认；再来一局默认换边。\n玩家身份保持不变，黑白执子随新局调整。", 32, 362, 532, 106, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            float startY = ai ? 560 : 480;
+            DialogUi.ActionButton(panel, "确认开始", 32, startY, 532, 72, DialogSheetLayout.AfterClose(panel, () => StartGame(mode, difficulty, human, blackPlayer)), true);
+            DialogUi.ActionButton(panel, "取消", 32, startY + 84, 532, 62, dismissDialog);
         }
         private string ResultTitle()
         {

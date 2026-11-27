@@ -28,7 +28,7 @@ namespace XanaduYonder.Runtime.Snake
         private GameObject[] exits;
         private Action returnLobby, dismissDialog, returnFromDropdown;
         private int interactionEpoch;
-        private Action<Action> openSettings;
+        private Func<bool, bool, bool> setFeedback;
         private Func<bool> acceptsInput, soundEnabled, hapticsEnabled;
         private Action<string> setStatus;
         private GameFeedback feedback;
@@ -48,10 +48,10 @@ namespace XanaduYonder.Runtime.Snake
         }
         private bool Available { get { return visible && foreground && acceptsInput != null && acceptsInput(); } }
         private bool Interactive { get { return Available && dialog == null && !levelDropdown.IsExpanded && !input.IsQuarantined && session != null && session.CanPlay; } }
-        public void Initialize(RectTransform parent, Action lobby, Action<Action> settings, Func<bool> canInput,
+        public void Initialize(RectTransform parent, Action lobby, Func<bool, bool, bool> updateFeedback, Func<bool> canInput,
             Func<bool> sound, Func<bool> haptics, GameFeedback commonFeedback, Action<string> status, string saveDirectory = null)
         {
-            root=parent; returnLobby=lobby; openSettings=settings; acceptsInput=canInput;
+            root=parent; returnLobby=lobby; setFeedback=updateFeedback; acceptsInput=canInput;
             soundEnabled=sound; hapticsEnabled=haptics; feedback=commonFeedback; setStatus=status;
             var resource=Resources.Load<TextAsset>("Snake/levels");
             if(resource==null)throw new InvalidOperationException("The offline Snake levels are missing.");

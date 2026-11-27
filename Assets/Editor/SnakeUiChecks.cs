@@ -576,8 +576,8 @@ namespace XanaduYonder.EditorTools
             Require(p.Session.CountdownSeconds > 0, "Resume starts a fresh countdown");
             p.CompleteCountdown();
             f.Click(Icon(Find(p.Root, "Snake navigation"), UiIconKind.Settings).GetComponent<RectTransform>());
-            p.ClickDialog("声音与触感");
-            Require(p.SettingsOpened == 1 && p.Session.Paused, "Settings host callback receives a paused game");
+            p.ClickDialog("声音");
+            Require(p.FeedbackWrites == 1 && p.Session.Paused, "Inline sound updates the host setting while the game stays paused");
             p.AcceptInput = false;
             p.CloseSettings();
             Require(p.Session.Paused && !p.Session.CanPlay, "Settings close never implicitly resumes movement");
@@ -1002,20 +1002,20 @@ namespace XanaduYonder.EditorTools
             {
                 p.CompleteCountdown();
                 f.Click(Icon(Find(p.Root, "Snake navigation"), UiIconKind.Settings).GetComponent<RectTransform>());
-                p.ClickDialog("声音与触感");
+                p.ClickDialog("声音");
                 Invoke(p.Page, "SetForeground", false); Invoke(p.Page, "SetForeground", true);
                 p.CloseSettings();
                 Require(p.Session.Paused && p.Session.CountdownSeconds == 0 && Get<GameObject>(p.Page, "dialog") != null,
                     "A settings callback invalidated by backgrounding cannot resume the game");
                 p.ResumeForChecks();
                 f.Click(Icon(Find(p.Root, "Snake navigation"), UiIconKind.Settings).GetComponent<RectTransform>());
-                p.ClickDialog("声音与触感");
+                p.ClickDialog("声音");
                 Invoke(p.Page, "Leave"); p.CloseSettings();
                 Require(p.Session.Paused && p.Session.CountdownSeconds == 0 && !p.Root.gameObject.activeSelf,
                     "A late settings callback after Leave cannot start a hidden session");
                 Invoke(p.Page, "Enter"); p.CompleteCountdown();
                 f.Click(Icon(Find(p.Root, "Snake navigation"), UiIconKind.Settings).GetComponent<RectTransform>());
-                p.ClickDialog("声音与触感");
+                p.ClickDialog("声音");
                 Invoke(p.Page, "Leave"); Invoke(p.Page, "Enter");
                 p.Advance(.25f);
                 double countdown = p.Session.CountdownSeconds;
@@ -1215,9 +1215,8 @@ namespace XanaduYonder.EditorTools
             public readonly Component Page;
             public readonly string SaveDirectory;
             public bool AcceptInput = true;
-            public int LobbyRequests, SettingsOpened;
+            public int LobbyRequests, FeedbackWrites;
             private readonly Fixture fixture;
-            private Action settingsClosed;
             public SnakeSession Session { get { return Get<SnakeSession>(Page, "session"); } }
 
             public PageFixture(Fixture f, Type type, Action<string> prepareSave = null)
@@ -1232,7 +1231,7 @@ namespace XanaduYonder.EditorTools
                 // no session to pause. Enter may intentionally start a countdown.
                 ((Behaviour)Page).enabled = false;
                 var feedback = Root.gameObject.AddComponent<GameFeedback>();
-                Invoke(Page, "Initialize", Root, (Action)(() => LobbyRequests++), (Action<Action>)(closed => { SettingsOpened++; settingsClosed = closed; }),
+                Invoke(Page, "Initialize", Root, (Action)(() => LobbyRequests++), (Func<bool,bool,bool>)((sound, value) => { FeedbackWrites++; return true; }),
                     (Func<bool>)(() => AcceptInput), (Func<bool>)(() => false), (Func<bool>)(() => false), feedback, (Action<string>)(_ => { }), SaveDirectory);
                 Invoke(Page, "Enter");
                 // Keep all game timing explicit while child UGUI components run their
@@ -1241,7 +1240,6 @@ namespace XanaduYonder.EditorTools
 
             public void CloseSettings()
             {
-                var closed=settingsClosed;settingsClosed=null;closed?.Invoke();
                 var dialog=Get<GameObject>(Page,"dialog");
                 if(dialog!=null&&dialog.GetComponentsInChildren<Text>().Any(text=>text.text=="完成"))ClickDialog("完成");
             }
@@ -1256,7 +1254,10 @@ namespace XanaduYonder.EditorTools
                 {
                     var text = button.GetComponentInChildren<Text>();
                     if (text == null || !text.text.Contains(label)) continue;
+                    button.GetComponentInParent<DialogSheetLayout>()?.Reveal(button.GetComponent<RectTransform>());
                     fixture.Click(button.GetComponent<RectTransform>());
+                    var sheet = dialog.GetComponentInChildren<DialogSheetLayout>();
+                    if (sheet != null && sheet.IsDismissing) sheet.AdvanceDismissal(1f);
                     return;
                 }
                 throw new InvalidOperationException("Missing dialog action: " + string.Join("/", labels));

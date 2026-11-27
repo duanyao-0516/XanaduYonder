@@ -35,6 +35,7 @@ namespace XanaduYonder.Runtime.Gomoku
 
         public void Enter()
         {
+            pauseCoverCollapsed = false;
             visible = true; gameObject.SetActive(true);
             RestoreSelected(); Refresh();
             if (invalidSave) ShowInvalidSave();
@@ -145,6 +146,7 @@ namespace XanaduYonder.Runtime.Gomoku
         }
         public void SetForeground(bool value)
         {
+            if (!value) pauseCoverCollapsed = false;
             foreground = value;
             if (!value)
             {

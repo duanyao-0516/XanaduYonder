@@ -17,28 +17,28 @@ namespace XanaduYonder.Runtime.Sheep
         private Func<bool> shellAcceptsInput, soundEnabled, hapticsEnabled;
         private Action<string> setStatus;
         private Action<string, string, string, Action, string, Action> showDialog;
-        private Func<string, float, Action, RectTransform> openModal;
+        private Func<string, float, Action, RectTransform> openModal, openSheet;
         private Action closeModal, returnLobby;
-        private Action<Action> commonSettings;
+        private Action<RectTransform, DialogSheetSections> commonSettings;
         private Text levelText, progress, hint, resultTitle, resultMessage;
-        private Button removeButton, undoButton, shuffleButton, resultPrimary;
+        private Button removeButton, undoButton, shuffleButton, resultPrimary, reviewResult;
         private Text removeLabel, undoLabel, shuffleLabel, resultPrimaryLabel;
         private GameObject resultPanel, playArea;
-        private bool visible, saveFailed, animating;
+        private bool visible, saveFailed, animating, reviewingResult;
         private string warning;
         public event Action Changed;
         public long CompletedRuns => session == null ? 0 : data.CompletedRuns;
         public long EndlessBest => session == null ? 0 : data.EndlessBest;
         public string SaveError => saveFailed ? warning : null;
 
-        public void Initialize(RectTransform root, Action lobby, Action<Action> settings, Func<bool> acceptsInput,
+        public void Initialize(RectTransform root, Action lobby, Action<RectTransform, DialogSheetSections> settings, Func<bool> acceptsInput,
             Func<bool> sound, Func<bool> haptics, GameFeedback commonFeedback, Action<string> status,
             Action<string, string, string, Action, string, Action> dialog,
-            Func<string, float, Action, RectTransform> modal, Action dismiss)
+            Func<string, float, Action, RectTransform> modal, Action dismiss, Func<string, float, Action, RectTransform> sheet)
         {
             returnLobby = lobby; commonSettings = settings; shellAcceptsInput = acceptsInput;
             soundEnabled = sound; hapticsEnabled = haptics; feedback = commonFeedback;
-            setStatus = status; showDialog = dialog; openModal = modal; closeModal = dismiss;
+            setStatus = status; showDialog = dialog; openModal = modal; closeModal = dismiss; openSheet = sheet;
             store = new SheepSaveStore(Application.persistentDataPath);
             session = new SheepSession(store.Load(out warning) ?? new SheepSaveData());
             BuildLayout(root);
@@ -54,6 +54,7 @@ namespace XanaduYonder.Runtime.Sheep
 
         public void Enter()
         {
+            reviewingResult = false;
             visible = true; gameObject.SetActive(true);
             Refresh(); ShowModes();
             setStatus(warning ?? "选择第二关挑战，或按消除数量计分的无尽模式。");
@@ -141,9 +142,12 @@ namespace XanaduYonder.Runtime.Sheep
             var snapshot = game.GetSnapshot();
             var won = game.Phase == SheepPhase.Won;
             var show = visible && !animating && game.Phase != SheepPhase.Playing && !(won && snapshot.Mode == SheepMode.Endless);
-            resultPanel.SetActive(show);
-            if (show) resultPanel.transform.SetAsLastSibling();
+            if (game.Phase == SheepPhase.Playing) reviewingResult = false;
+            reviewResult.gameObject.SetActive(show && reviewingResult);
+            resultPanel.SetActive(show && !reviewingResult);
             if (!show) return;
+            if (reviewingResult) { reviewResult.transform.SetAsLastSibling(); return; }
+            resultPanel.transform.SetAsLastSibling();
             resultTitle.text = won ? (snapshot.Mode == SheepMode.Tutorial ? "热身完成！" : "旸了个旸，过关！") : "卡槽满了，再想一想";
             resultMessage.text = won ? (snapshot.Mode == SheepMode.Tutorial ? "接下来，进入第二关挑战。" : "这一轮的牌已经全部消除。\n累计通关 " + data.CompletedRuns + " 次")
                 : (snapshot.Mode == SheepMode.Endless ? "本局已消除 " + snapshot.Score + " 个\n" : "")
@@ -178,12 +182,14 @@ namespace XanaduYonder.Runtime.Sheep
 
         private void Begin(SheepMode mode, SheepDifficulty difficulty)
         {
+            reviewingResult = false;
             closeModal(); Suspend(); session.Start(mode, difficulty, NewSeed());
             Save(); Refresh(); setStatus(warning ?? (mode == SheepMode.Endless ? "消除一个计 1 分，道具与复活次数整局共用。" : "先观察叠层，再安排卡槽。"));
         }
 
         private void Resume(SheepMode mode)
         {
+            reviewingResult = false;
             closeModal(); Suspend();
             if (!session.Resume(mode)) return;
             Save(); Refresh(); CheckEndState();

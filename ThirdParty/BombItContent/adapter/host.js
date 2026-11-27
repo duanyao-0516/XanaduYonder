@@ -156,25 +156,26 @@
     slider.setAttribute('aria-valuetext',diameter+'%');
     document.getElementById('direction-diameter-value').textContent=diameter+'%';
   }
-  function closeModal(){modalKind=null;document.getElementById('modal').hidden=true;apply();if(!blocked())focus();}
+  function closeModal(){
+    const modal=document.getElementById('modal');
+    XanaduDialogs.finishSheet(modal,()=>{modalKind=null;modal.hidden=true;apply();if(!blocked())focus();});
+  }
   function showModal(kind,target){
     if(exited || exitRequest)return;
     releaseInput();modalKind=kind;apply();
     const modal=document.getElementById('modal'),title=document.getElementById('modal-title'),copy=document.getElementById('modal-copy');
     const confirm=document.getElementById('modal-confirm'),cancel=document.getElementById('modal-cancel');
     const modeName=target==='duo'?'双人':'单人';
+    XanaduDialogs.reset(modal);
+    modal.classList.toggle('xy-sheet',kind==='settings');
     modal.dataset.kind=kind;
     // Help's action follows the text and scrolls with it. Confirmations and
     // settings keep their actions visible even if their content must scroll.
     modal.querySelector(kind==='help'?'.sheet-scroll':'.sheet').append(modal.querySelector('.sheet-actions'));
-    title.textContent=kind==='exit'?'返回大厅？':kind==='settings'?'设置':kind==='controls'?'操作设置':kind==='mode'?'切换为'+modeName+'并重新开始？':kind==='continue'?'继续闯关':kind==='save-error'?'进度尚未保存':'玩法说明';
+    title.textContent=kind==='exit'?'返回大厅？':kind==='settings'?'设置':kind==='mode'?'切换为'+modeName+'并重新开始？':kind==='continue'?'继续闯关':kind==='save-error'?'进度尚未保存':'玩法说明';
     copy.replaceChildren();
     document.getElementById('settings-content').hidden=kind!=='settings';
-    document.getElementById('control-settings-content').hidden=kind!=='controls';
-    const headerAction=document.getElementById('modal-close');
-    headerAction.textContent=kind==='controls'?'‹':'×';
-    headerAction.setAttribute('aria-label',kind==='controls'?'返回设置':'关闭弹窗');
-    headerAction.onclick=kind==='controls'?()=>showModal('settings'):closeModal;
+    document.getElementById('modal-close').onclick=closeModal;
     updateInputSettings();
     const info=game&&game.continueInfo,difficulty=info&&difficultyNames[info.difficulty];
     const paragraphs=kind==='exit'?['返回大厅前会保存闯关进度。下次从本关开局继续，地图重新生成；本关中途的位置和道具不保留。']:
@@ -186,7 +187,7 @@
     for(const text of paragraphs){const p=document.createElement('p');p.textContent=text;copy.append(p);}
     if(kind==='help')window.renderBombItGuide(copy);
     cancel.hidden=!['exit','mode','continue'].includes(kind);cancel.textContent='取消';cancel.onclick=closeModal;
-    confirm.textContent=kind==='exit'?'保存并返回':kind==='mode'?'切换并重开':kind==='continue'?'从本关开局继续':(kind==='settings'||kind==='controls')?'完成':'知道了';
+    confirm.textContent=kind==='exit'?'保存并返回':kind==='mode'?'切换并重开':kind==='continue'?'从本关开局继续':(kind==='settings')?'完成':'知道了';
     confirm.onclick=()=>{
       if(kind==='mode'){modalKind=null;modal.hidden=true;startPlayer(target);}
       else if(kind==='continue'){
@@ -315,8 +316,7 @@
     document.getElementById('shell').append(resumeHit);
     document.getElementById('hall').onclick=()=>showModal('exit');document.getElementById('help').onclick=()=>showModal('help');
     document.getElementById('settings').onclick=()=>showModal('settings');
-    document.getElementById('control-preferences').onclick=()=>showModal('controls');
-    document.getElementById('modal').onclick=event=>{if(event.target===event.currentTarget)closeModal();};
+    XanaduDialogs.bindBackdrop(document.getElementById('modal'),closeModal);
     document.getElementById('continue-run').onclick=()=>showModal('continue');
     document.getElementById('save-warning').onclick=()=>{try{invoke('xanaduFlushSave');apply();}catch(cause){showModal('save-error');}};
     for(const button of document.querySelectorAll('[data-input-style]'))button.onclick=()=>{if(controls)controls.setStyle(button.dataset.inputStyle);updateInputSettings();};

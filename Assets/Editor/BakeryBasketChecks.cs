@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using XanaduYonder.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -152,6 +154,7 @@ namespace XanaduYonder.EditorTools
             CheckReserve(page, canvas, cam, eventSystem);
             page.StartRound(false);
             Capture(cam, "straight.png");
+            CheckMenus(page, preferences, canvas);
             CheckContactShadows(page.World, "pastry");
             var view = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Single(item => item.targetTexture == page.World.Texture);
             Require(!view.orthographic && view.depthTextureMode == DepthTextureMode.None && view.commandBufferCount == 0,
@@ -215,6 +218,48 @@ namespace XanaduYonder.EditorTools
             Object.Destroy(cam.gameObject);
             Object.Destroy(canvas.gameObject);
             Object.Destroy(eventSystem.gameObject);
+        }
+
+        private static void CheckMenus(BakeryPage page, BakeryPreferences preferences, Canvas canvas)
+        {
+            const BindingFlags members = BindingFlags.Instance | BindingFlags.NonPublic;
+            var host = new GameObject("Bakery dialog host");
+            host.SetActive(false);
+            var shell = host.AddComponent<AppController>();
+            var type = typeof(AppController);
+            void Set(string field, object value) => type.GetField(field, members).SetValue(shell, value);
+            void Call(string method) => type.GetMethod(method, members).Invoke(shell, null);
+            Set("canvasRoot", (RectTransform)canvas.transform);
+            Set("bakeryPage", page);
+            Set("bakeryPreferences", preferences);
+            Set("data", new SaveData());
+            try
+            {
+                foreach (var method in new[] { "ShowBakeryHelp", "OpenBakerySettings" })
+                {
+                    Call(method);
+                    var modal = (GameObject)type.GetField("modal", members).GetValue(shell);
+                    foreach (var child in modal.GetComponentsInChildren<Transform>()) child.gameObject.layer = canvas.gameObject.layer;
+                    Require(modal.GetComponentsInChildren<Button>().Length > 0 &&
+                        (modal.GetComponentInChildren<DialogSheetLayout>() != null) == (method != "ShowBakeryHelp"),
+                        "Bakery routes use their shared dialog or bottom sheet.");
+                    if (method == "OpenBakerySettings")
+                    {
+                        var layout = modal.GetComponentInChildren<DialogSheetLayout>();
+                        Require(layout.Content.Find("Section 数量显示") && layout.Content.Find("Section 3D 主题") &&
+                            layout.Content.Find("Section 声音与触感"), "All basket settings are exposed in one sheet");
+                        var selection = layout.Content.Find(BakeryThemeCatalog.Get(page.ActiveTheme).Title).GetComponent<Button>();
+                        layout.Reveal((RectTransform)selection.transform);
+                        selection.onClick.Invoke();
+                        Require((GameObject)type.GetField("modal", members).GetValue(shell) == modal,
+                            "Selecting the current basket theme keeps the same settings sheet");
+                    }
+                    DialogScreenshotAudit.CaptureCurrent(modal.transform);
+                    Call("CloseModal");
+                    Object.DestroyImmediate(modal);
+                }
+            }
+            finally { Object.DestroyImmediate(host); }
         }
 
         private static void CheckEntrance(BakeryPage page, Camera camera)

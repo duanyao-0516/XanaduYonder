@@ -12,16 +12,26 @@ namespace XanaduYonder.Runtime.FlappyBird
         private DialogKind dialogKind;
         private Button resultRestart;
         private GameObject resultRetry;
+        private bool reviewingResult;
 
         private RectTransform BeginDialog(DialogKind kind,float height)
         {
             pointer?.Cancel(); CloseDialog();
             var overlay = DialogUi.ModalOverlay(layout, "Flappy dialog overlay");
+            DialogOutsideTap.Bind(overlay, DismissOutside);
             dialog=overlay.gameObject; dialogKind=kind;
             var panel=FlappyScene.Shape(overlay.transform,"Flappy dialog "+kind,0,0,300,height,DialogCorners.Surface * .5f,DialogUi.Surface);
             panel.raycastTarget=true; dialogPanel=panel.rectTransform; UiFactory.Center(dialogPanel); FitDialog();
             return dialogPanel;
         }
+        private void DismissOutside()
+        {
+            if (dialogKind == DialogKind.Pause) { Continue(); return; }
+            if (dialogKind == DialogKind.Result) reviewingResult = true;
+            CloseDialog();
+            Refresh();
+        }
+
         private void FitDialog()
         {
             if(dialogPanel==null) return;

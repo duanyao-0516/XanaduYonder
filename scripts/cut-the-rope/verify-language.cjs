@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/bytedance/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const root=path.resolve(__dirname,'../..'),out=path.join(root,'artifacts/cut-the-rope/language');
+const root=path.resolve(__dirname,'../..'),out=process.env.CTR_DIALOG_OUTPUT||path.join(root,'artifacts/cut-the-rope/language');
 const base=process.env.CTR_URL||'http://127.0.0.1:8767/offline/';
 const source=fs.readFileSync(path.join(root,'artifacts/cut-the-rope/offline/ctr.js'),'utf8');
 function savedProgress(){

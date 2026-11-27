@@ -20,10 +20,11 @@
     const requestId=pending;timer=setTimeout(()=>{if(pending===requestId){pending=null;warning='设置保存尚未确认，请重试。';render();}},5000);
     runtime.send('feedback-settings',{token,requestId,...desired});
   }
-  function close(){modal=null;if(runtime)runtime.modal(false);render();}
+  function closeNow(){if(dom)XanaduDialogs.reset(dom.dialog);modal=null;if(runtime)runtime.modal(false);render();}
+  function close(){if(modal)XanaduDialogs.finishSheet(dom.dialog,closeNow);}
   function open(kind){
     if(!runtime||!runtime.status().menuAvailable)return;
-    modal=kind;dom.dialog.dataset.kind=kind;runtime.modal(true);dom.title.textContent=kind==='settings'?'设置':'玩法说明';
+    modal=kind;XanaduDialogs.reset(dom.dialog);dom.dialog.classList.toggle('xy-sheet',kind==='settings');dom.dialog.dataset.kind=kind;runtime.modal(true);dom.title.textContent=kind==='settings'?'设置':'玩法说明';
     dom.settings.hidden=kind!=='settings';dom.guide.hidden=kind!=='help';render();
   }
   window.__levelDevilMenu=Object.freeze({
@@ -38,7 +39,7 @@
       clearTimeout(timer);pending=null;sound=value.soundEnabled;haptics=value.hapticsEnabled;
       warning=value.ok?'':'设置保存尚未确认，请重试。';if(value.ok)desired=null;sync(true);render();
     },
-    refresh:render,engineReady(){sync();render();},close,
+    refresh:render,engineReady(){sync();render();},close:closeNow,
     originalSound(){request(!sound,haptics);},
     haptic(){if(runtime&&token&&haptics&&runtime.status().active&&runtime.status().gameplayActive)runtime.send('haptic',{token,kind:'jump-press',pressId:++pressId});},
     soundEnabled:()=>sound
@@ -49,9 +50,7 @@
     document.getElementById('level-menu-close').onclick=close;document.getElementById('level-menu-done').onclick=close;
     dom.sound.onclick=()=>request(!sound,haptics);dom.haptics.onclick=()=>request(sound,!haptics);
     dom.retry.onclick=()=>{if(desired)request(desired.soundEnabled,desired.hapticsEnabled,true);};
-    let backdropDown=false;
-    dom.dialog.addEventListener('pointerdown',e=>{backdropDown=e.target===dom.dialog;});
-    dom.dialog.addEventListener('click',e=>{if(backdropDown&&e.target===dom.dialog)close();backdropDown=false;});
+    XanaduDialogs.bindBackdrop(dom.dialog,close);
     // This layer sits outside OpenFL. None of its interactions reach the engine
     // mouse/touch listeners, including the release that closes the modal.
     for(const type of ['keydown','keyup','mousedown','mouseup','mousemove','touchstart','touchmove','touchend','touchcancel','pointerdown','pointerup','click'])document.getElementById('level-menu-ui').addEventListener(type,e=>e.stopPropagation());

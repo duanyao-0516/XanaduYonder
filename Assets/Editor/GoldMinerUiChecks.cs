@@ -108,6 +108,7 @@ namespace XanaduYonder.EditorTools
             fixture.Capture("01-selection");
             fixture.CheckButtonsInsideSafeArea();
             Require(Get<RectTransform>(page, "view").Find("黄金矿工").GetComponent<Image>().sprite.name == "gold-miner-wordmark-v2", "Mode selection uses the approved gold wordmark artwork");
+            yield return fixture.CheckUnreadableProgress();
 
             foreach (GoldMinerMode mode in new[] { GoldMinerMode.Solo, GoldMinerMode.Coop })
             {
@@ -155,11 +156,9 @@ namespace XanaduYonder.EditorTools
                 yield return null;
                 Canvas.ForceUpdateCanvases();
                 fixture.CheckModalControlGeometry("pause options");
-                yield return fixture.Click(fixture.Button("玩法说明"));
-                Require(Get<RectTransform>(page, "modal") != null && session.IsSuspended, prefix + " help stays paused");
+                fixture.CheckInlineHelp(mode);
+                Require(Get<RectTransform>(page, "modal") != null && session.IsSuspended, prefix + " illustrated inline help stays paused");
                 fixture.Capture(prefix + "-help");
-                fixture.CheckHelpBackdrop(mode);
-                yield return fixture.Click(fixture.Button("知道了"));
                 yield return fixture.Click(fixture.Button("返回暂停菜单"));
                 yield return fixture.Click(fixture.Button("继续游戏"));
                 Require(!session.IsSuspended, prefix + " continue resumes");
@@ -244,6 +243,7 @@ namespace XanaduYonder.EditorTools
                 for (int i = 0; i < 10; i++) yield return null;
                 Require(Get<bool>(page, "selecting") && !Get<GoldMinerOrientationScope>(page, "orientation").IsPending, prefix + " mode selection returns to portrait");
                 Require(Get<GoldMinerSession>(page, "session").GetSnapshot().GetRun(mode).Current.LevelIndex == 2, prefix + " selection retains mode progress");
+                if (!coop) yield return fixture.CheckReplaceChallenge(mode);
                 Report.AppendLine("PASS " + prefix + ": real fixed ticks, ready/pause/help/lifecycle, down routing, disk restore, retry, witness win, shop, next-level, failure and portrait return.");
             }
             yield return fixture.CheckSourceCampaigns();
@@ -257,6 +257,7 @@ namespace XanaduYonder.EditorTools
             page.Save();
             Require(File.GetLastWriteTimeUtc(fixture.Store.SavePath) == savedAt, "Unchanged inactive Gold Miner is not rewritten by shared shell saves");
             fixture.CheckStoreIsolation();
+            yield return fixture.CheckSelectionOrientationFailure();
             yield return Resources.UnloadUnusedAssets();
             GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
             long beforeBytes = Profiler.GetTotalAllocatedMemoryLong();
@@ -553,6 +554,69 @@ namespace XanaduYonder.EditorTools
                 using (var driver = new LobbyInputTestDriver(events)) driver.Tap(point);
             }
 
+            public IEnumerator CheckSelectionOrientationFailure()
+            {
+                Invoke(shell, "EnterGoldMiner");
+                for (int i = 0; i < 5; i++) yield return null;
+                Invoke(Page, "ShowSelection");
+                var scope = Get<GoldMinerOrientationScope>(Page, "orientation");
+                Invoke(scope, "Complete", false);
+                long failedGeneration = scope.Generation;
+                yield return Click(Button("重试"));
+                Require(scope.IsPending && scope.Generation == failedGeneration + 1,
+                    "Retry explicitly requests the portrait layout again");
+                Invoke(scope, "Complete", false);
+                yield return null;
+                yield return null;
+                Require(Button("返回大厅").isActiveAndEnabled, "The failure offers a route independent of rotation");
+                using (var driver = new LobbyInputTestDriver(events)) driver.Tap(new Vector2(8, 8));
+                Require(!Get<bool>(Page, "visible") && Frame.gameObject.activeSelf && Lobby.activeSelf &&
+                    scope.Generation == failedGeneration + 1,
+                    "Tapping the orientation error shade returns to the lobby without requesting rotation again");
+            }
+
+            public IEnumerator CheckUnreadableProgress()
+            {
+                string damagedDirectory = Path.Combine(directory, "recovery-fixture");
+                Directory.CreateDirectory(damagedDirectory);
+                var damagedStore = new GoldMinerSaveStore(damagedDirectory);
+                File.WriteAllText(damagedStore.SavePath, "unreadable test save");
+                File.WriteAllText(damagedStore.SavePath + ".bak", "unreadable backup");
+                Require(damagedStore.Load(out _) == null && damagedStore.RequiresRecovery, "Corrupt primary and backup enter recovery");
+                Set(Page, "store", damagedStore);
+                try
+                {
+                    var solo = Get<RectTransform>(Page, "view").Find("Mode Solo");
+                    yield return Click(Button("开始原版矿场", solo));
+                    Require(Button("归档并重建") != null, "Trying to play with both files unreadable offers explicit archive and rebuild");
+                    Capture("save-recovery");
+                    yield return Click(Button("取消"));
+                    Require(Get<RectTransform>(Page, "modal") == null && damagedStore.RequiresRecovery &&
+                        File.ReadAllText(damagedStore.SavePath) == "unreadable test save" &&
+                        File.ReadAllText(damagedStore.SavePath + ".bak") == "unreadable backup",
+                        "Cancelling recovery returns to the mode selector and preserves both files");
+                }
+                finally
+                {
+                    Set(Page, "store", Store);
+                    Directory.Delete(damagedDirectory, true);
+                }
+            }
+
+            public IEnumerator CheckReplaceChallenge(GoldMinerMode mode)
+            {
+                var session = Get<GoldMinerSession>(Page, "session");
+                var run = session.GetSnapshot().GetRun(mode);
+                var card = Get<RectTransform>(Page, "view").Find("Mode " + mode);
+                yield return Click(Button(run.BalanceProfile == GoldMinerBalanceProfile.Source ? "重新开始" : "开始原版矿场", card));
+                Require(Button("开始新挑战") != null, "Starting over opens the mode confirmation");
+                Capture("confirm-new-challenge");
+                yield return Click(Button("取消"));
+                var retained = session.GetSnapshot().GetRun(mode);
+                Require(Get<RectTransform>(Page, "modal") == null && retained.RunId == run.RunId &&
+                    retained.Current.LevelIndex == run.Current.LevelIndex, "Cancelling a new challenge retains its original run and level");
+            }
+
             public void Size(int width, int height) { sizes.Set(width, height); }
 
             public Button Button(string title, Transform scope = null)
@@ -576,6 +640,7 @@ namespace XanaduYonder.EditorTools
                 yield return null;
                 yield return null;
                 Require(button.interactable, "Button is enabled: " + button.name);
+                button.GetComponentInParent<DialogSheetLayout>()?.Reveal(button.GetComponent<RectTransform>());
                 Canvas.ForceUpdateCanvases();
                 var point = RectTransformUtility.WorldToScreenPoint(null, ((RectTransform)button.transform).TransformPoint(((RectTransform)button.transform).rect.center));
                 var data = Down(point, -1);
@@ -584,7 +649,14 @@ namespace XanaduYonder.EditorTools
                 var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(data.pointerCurrentRaycast.gameObject);
                 Require(clicked == button.gameObject, "Top production raycast resolves intended button: " + button.name +
                     "; actualHit=" + data.pointerCurrentRaycast.gameObject.name + "; clickTarget=" + (clicked == null ? "null" : clicked.name) + "; point=" + point);
+                var sheet = button.GetComponentInParent<DialogSheetLayout>();
                 ExecuteEvents.Execute(clicked, data, ExecuteEvents.pointerClickHandler);
+                if (sheet != null && sheet.IsDismissing)
+                {
+                    double deadline = Time.realtimeSinceStartupAsDouble + 2;
+                    while (sheet != null && sheet.isActiveAndEnabled && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                    Require(sheet == null || !sheet.isActiveAndEnabled, "Settings exit finishes with unscaled frame time.");
+                }
             }
 
             private PointerEventData Down(Vector2 point, int id)
@@ -837,7 +909,9 @@ namespace XanaduYonder.EditorTools
                 Canvas.ForceUpdateCanvases();
                 foreach (var button in Page.GetComponentsInChildren<Button>())
                 {
-                    var corners = new Vector3[4]; ((RectTransform)button.transform).GetWorldCorners(corners);
+                    var rect = (RectTransform)button.transform;
+                    rect.GetComponentInParent<DialogSheetLayout>()?.Reveal(rect);
+                    var corners = new Vector3[4]; rect.GetWorldCorners(corners);
                     foreach (var corner in corners)
                     {
                         var p = RectTransformUtility.WorldToScreenPoint(null, corner);
@@ -876,7 +950,8 @@ namespace XanaduYonder.EditorTools
             public void CheckModalControlGeometry(string context)
             {
                 var modal = Get<RectTransform>(Page, "modal");
-                var panel = modal.Find("Dialog panel") as RectTransform;
+                var sheet = modal.GetComponentInChildren<DialogSheetLayout>();
+                var panel = sheet != null ? (RectTransform)sheet.transform : modal.Find("Dialog panel") as RectTransform;
                 Require(panel != null, context + " has a real dialog panel");
                 Require(modal.GetComponent<Image>().color == DialogUi.Scrim && panel.GetComponent<Image>().color == DialogUi.Surface,
                     context + " uses the shared management dialog colors");
@@ -930,13 +1005,13 @@ namespace XanaduYonder.EditorTools
                 var pause = hud.Find("Pause button").GetComponent<Button>();
                 Require(!pause.IsInteractable(), prefix + " more options blocks the previously focused HUD button");
                 ExecuteEvents.Execute(pause.gameObject, new BaseEventData(events), ExecuteEvents.submitHandler);
-                Require(Button("玩法说明", Get<RectTransform>(Page, "modal")) != null,
+                Require(Button("返回暂停菜单", Get<RectTransform>(Page, "modal")) != null,
                     prefix + " submitting the HUD cannot replace more options with the pause menu");
                 yield return Click(Button("返回大厅"));
                 for (int frame = 0; frame < 2; frame++) yield return null;
                 Capture(prefix + "-confirm-exit");
                 CheckButtonsInsideSafeArea();
-                Require(Page.HandleBack() && Button("玩法说明", Get<RectTransform>(Page, "modal")) != null &&
+                Require(Page.HandleBack() && Button("返回暂停菜单", Get<RectTransform>(Page, "modal")) != null &&
                     session.IsSuspended && session.GetStateSnapshot().SimulationTick == pausedTick,
                     prefix + " system Back returns to more options and preserves the paused tick");
                 yield return Click(Button("返回大厅"));
@@ -947,19 +1022,18 @@ namespace XanaduYonder.EditorTools
                 yield return Click(pause);
             }
 
-            public void CheckHelpBackdrop(GoldMinerMode mode)
+            public void CheckInlineHelp(GoldMinerMode mode)
             {
-                var view = Get<RectTransform>(Page, "view");
-                Require(Get<RectTransform>(Page, "modal").GetComponent<Image>().color == DialogUi.TutorialScrim &&
-                    view.GetComponentsInChildren<DialogFocusScope>().Length == 1,
-                    "Teaching keeps the actual mine visible under one light scrim");
-                Require(!view.Find("Mine HUD").gameObject.activeSelf, "Help heading replaces the HUD instead of overlapping it");
-                if (mode == GoldMinerMode.Solo)
-                {
-                    Require(!view.Find("Dynamite P1").gameObject.activeSelf, "Portrait help CTA has a clear bottom control band");
-                    Require(!view.Find("Mine touch hint").gameObject.activeSelf, "Portrait help does not cover underlying hint text");
-                }
-                CheckButtonsInsideSafeArea();
+                var owner = Get<RectTransform>(Page, "modal");
+                var layout = owner.GetComponentInChildren<DialogSheetLayout>();
+                var title = Array.Find(owner.GetComponentsInChildren<Text>(), label => label.text ==
+                    (mode == GoldMinerMode.Coop ? "双人合作 · 玩法说明" : "单人闯关 · 玩法说明"));
+                Require(layout != null && title != null, "The mode-specific illustrated instructions share the settings window.");
+                layout.Reveal(title.rectTransform);
+                Canvas.ForceUpdateCanvases();
+                DialogScreenshotAudit.CaptureSection(owner, title.text);
+                Require(Get<RectTransform>(Page, "modal") == owner && layout.GetComponentsInChildren<ScrollRect>().Length <= 1,
+                    "Reading the mine controls retains a single modal and one scroll region.");
             }
 
             public void CheckReadyArtwork(GoldMinerMode mode)
@@ -970,15 +1044,26 @@ namespace XanaduYonder.EditorTools
                 Require(!view.Find("Mine HUD").gameObject.activeSelf && !view.Find("Mine world").gameObject.activeSelf,
                     "Ready artwork is shown over the empty mine backdrop without a duplicate miner or HUD");
                 if (mode == GoldMinerMode.Solo)
-                    Require(Get<RectTransform>(Page, "modal").Find("Dialog panel/Ready miner").GetComponent<Image>().sprite.name == "ready-thumbsup-miner-v2",
-                        "Portrait Ready uses the approved thumbs-up miner artwork");
+                {
+                    var modal = Get<RectTransform>(Page, "modal");
+                    var panel = (RectTransform)modal.Find("Dialog panel");
+                    var art = panel.Find("Ready miner").GetComponent<Image>();
+                    Require(art.sprite.name == "ready-thumbsup-miner-v2" && art.raycastTarget,
+                        "Portrait Ready uses and protects the thumbs-up miner artwork");
+                    Rect visible = CheckArtworkInsideSafeArea(art);
+                    float panelTop = ScreenRect(panel).yMax;
+                    Require(visible.yMax > panelTop, "The illustrated miner extends above the card");
+                    var point = new Vector2(visible.center.x, (panelTop + visible.yMax) * .5f);
+                    using (var driver = new LobbyInputTestDriver(events)) driver.Tap(point);
+                    Require(Get<RectTransform>(Page, "modal") == modal, "Tapping the miner above the panel leaves Ready open");
+                }
             }
 
             public void CheckFailureArtGeometry()
             {
                 var panel = Get<RectTransform>(Page, "modal").Find("Dialog panel");
                 var miner = panel.Find("Retry miner").GetComponent<Image>();
-                Require(miner.sprite.name == "result-failed-miner-sign-v2", "Failure uses the approved miner and blank wooden sign artwork");
+                Require(miner.sprite.name == "result-failed-miner-sign-v2" && miner.raycastTarget, "Failure uses the approved miner and blank wooden sign artwork");
                 var heading = panel.Find("Result heading") as RectTransform;
                 Rect imageRect = FittedImageRect(miner);
                 Rect visible = CheckArtworkInsideSafeArea(miner);
@@ -1007,6 +1092,7 @@ namespace XanaduYonder.EditorTools
                 else
                 {
                     var image = panel.Find("Victory badge").GetComponent<Image>();
+                    Require(image.raycastTarget, "The protruding victory badge belongs to the result card");
                     Rect visible = CheckArtworkInsideSafeArea(image);
                     RequireNoOverlap(visible, ScreenRect(panel.Find("Result heading") as RectTransform),
                         "Victory visible artwork versus heading");

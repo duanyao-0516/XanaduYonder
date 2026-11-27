@@ -21,6 +21,7 @@ namespace XanaduYonder.EditorTools
             fixture.Click((RectTransform)opener.transform);
             var settings = Get<GameObject>(host, "modal");
             Require(settings != null, "The lobby settings button opens its bottom sheet");
+            DialogTypographyChecks.CheckProductionSheet(FindCaption(settings.transform, "完成"), "设置", true);
             Require(settings.GetComponent<Image>().color == new Color(0f, 0f, 0f, .4f) && settings.GetComponent<Image>().raycastTarget,
                 "The settings sheet dims the lobby with a 40% black pointer-blocking scrim");
             Require(!opener.IsInteractable(), "The covered lobby button rejects keyboard and gamepad submission");
@@ -29,6 +30,7 @@ namespace XanaduYonder.EditorTools
             var sound = FindCaption(settings.transform, "声音").GetComponent<DialogSwitch>();
             var haptics = FindCaption(settings.transform, "触感").GetComponent<DialogSwitch>();
             Require(sound != null && haptics != null && sound != haptics, "Both feedback preferences have independent switches");
+            CheckMenuFocus(sound.GetComponent<Button>(), haptics.GetComponent<Button>());
             var soundRect = (RectTransform)sound.transform;
             var hapticsRect = (RectTransform)haptics.transform;
             Require(Mathf.Approximately(soundRect.anchoredPosition.y, hapticsRect.anchoredPosition.y) &&
@@ -43,22 +45,43 @@ namespace XanaduYonder.EditorTools
             Require(haptics.Value != initial && Get<SaveData>(host, "data").HapticsEnabled == haptics.Value,
                 "Tapping the preference row immediately changes the real setting");
             fixture.Capture("dialog-lobby-settings");
-            fixture.Click((RectTransform)FindCaption(settings.transform, "声音与触感说明").transform);
-            var detail = Get<GameObject>(host, "modal");
-            Require(detail != settings && FindCaption(detail.transform, "返回设置") != null,
-                "Feedback help has a dedicated detail view and return action");
-            Require(detail.transform.parent.GetComponentsInChildren<DialogFocusScope>().Length == 1 &&
-                detail.GetComponent<Image>().color == DialogUi.Surface && detail.GetComponentInChildren<ScrollRect>() != null,
-                "Long feedback help opens as one opaque, scrollable page");
-            fixture.Capture("dialog-feedback-details");
-            Invoke(host, "HandleBack");
-            var reopened = Get<GameObject>(host, "modal");
-            Require(FindCaption(reopened.transform, "触感").GetComponent<DialogSwitch>().Value != initial,
-                "System Back restores settings with the current value");
-            fixture.Click((RectTransform)FindCaption(reopened.transform, "完成").transform);
+            var layout = settings.GetComponentInChildren<DialogSheetLayout>();
+            Require(layout.Content.Find("Section 声音与触感说明") != null &&
+                Array.Exists(layout.Content.GetComponentsInChildren<Text>(), text => text.text.Contains("系统媒体音量")),
+                "System guidance appears inside the current feedback sheet");
+            var done = (RectTransform)FindCaption(settings.transform, "完成").transform;
+            layout.Reveal(done);
+            Require(Get<GameObject>(host, "modal") == settings && haptics.Value != initial,
+                "Reading the inline guidance keeps the current sheet and preference value");
+            fixture.Click(done);
+            DialogSheetGeometryChecks.CompleteDismissal(settings.transform);
             Require(Get<GameObject>(host, "modal") == null && opener.IsInteractable(), "Done restores the underlying lobby");
             Require(UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject == opener.gameObject,
                 "Closing the last sheet restores focus to the lobby settings button");
+
+            fixture.Click((RectTransform)opener.transform);
+            var outside = Get<GameObject>(host, "modal");
+            var sheet = outside.GetComponentInChildren<DialogSheetLayout>();
+            var title = Array.Find(sheet.GetComponentsInChildren<Text>(), text => text.text == "设置");
+            fixture.Click(title.rectTransform);
+            Require(!sheet.IsDismissing, "Sheet whitespace keeps settings open");
+            // The original trigger is behind the dimmer. Tap its screen position to dismiss.
+            fixture.Click((RectTransform)opener.transform);
+            var gate = outside.GetComponent<CanvasGroup>();
+            Require(sheet.IsDismissing && gate != null && !gate.interactable && gate.blocksRaycasts &&
+                !opener.IsInteractable(), "The backdrop closes the sheet, locks controls, and still owns pointer rays");
+            float startY = sheet.transform.position.y;
+            sheet.AdvanceDismissal(.10f);
+            float alpha = outside.GetComponent<Image>().color.a;
+            Require(sheet.transform.position.y < startY && alpha > 0 && alpha < DialogUi.Scrim.a,
+                "Halfway through dismissal the sheet has moved down and the scrim is partially transparent");
+            fixture.Click((RectTransform)opener.transform);
+            Invoke(host, "HandleBack");
+            Require(Get<GameObject>(host, "modal") == outside && !opener.IsInteractable(),
+                "Repeated taps and Back during dismissal cannot reopen settings or confirm app exit");
+            DialogSheetGeometryChecks.CompleteDismissal(outside.transform);
+            Require(Get<GameObject>(host, "modal") == null && opener.IsInteractable(),
+                "Dismissing through the scrim returns to the same lobby");
         }
 
         // Edit mode allows a real AppController move without Awake opening player saves.
@@ -173,7 +196,12 @@ namespace XanaduYonder.EditorTools
                 try
                 {
                     if (outcome == "won")
+                    {
+                        Invoke(shell, "ConfirmRestart");
+                        fixture.Capture("2048-restart-confirmation");
+                        Invoke(shell, "CloseModal");
                         CheckRulesNavigation(fixture, shell, pageRoot.Find("2048 page/Game navigation"), "让相同的数字相遇");
+                    }
                     Invoke(shell, "CheckEndState");
                     CaptureHostTerminal(fixture, shell, shell, pageRoot, "terminal-2048-" + outcome);
                     if (outcome == "won-and-blocked")
@@ -224,7 +252,29 @@ namespace XanaduYonder.EditorTools
                 try
                 {
                     if (theme == 0 && won)
+                    {
+                        var playing = new WatermelonGame(snapshot);
+                        Set(page, "game", playing);
+                        Invoke(page, "Render", playing.GetSnapshot());
+                        fixture.Click((RectTransform)FindCaption(root.Find("Watermelon actions"), "暂停").transform);
+                        var shade = Get<GameObject>(page, "pauseOverlay");
+                        Require(shade.activeInHierarchy, "Watermelon pause covers the live board");
+                        fixture.Capture("watermelon-pause");
+                        int count = playing.BallCount;
+                        var outside = UiFactory.Rect(shade.transform, "Pause scrim touch point", 8, 8, 8, 8);
+                        fixture.Click(outside);
+                        Require(!shade.activeSelf && playing.BallCount == count, "Tapping the pause scrim resumes without dropping a fruit");
+                        fixture.Click((RectTransform)FindCaption(root.Find("Watermelon actions"), "重新开始").transform);
+                        var confirmRestart = Get<GameObject>(shell, "modal");
+                        Require(confirmRestart != null, "Watermelon restart requests confirmation");
+                        DialogScreenshotAudit.CaptureCurrent(confirmRestart.transform);
+                        fixture.Click(UiFactory.Rect(confirmRestart.transform, "Cancel on scrim", 6, 6, 8, 8));
+                        Require(Get<GameObject>(shell, "modal") == null && playing.BallCount == count,
+                            "Cancelling the restart preserves the fruit and score");
+                        Set(page, "game", game);
+                        Invoke(page, "Render", game.GetSnapshot());
                         CheckRulesNavigation(fixture, shell, root.Find("Watermelon navigation"), "合成图鉴 · " + WatermelonArtwork.ThemeNames[theme]);
+                    }
                     page.CheckEndState();
                     CaptureHostTerminal(fixture, shell, page, root, "terminal-watermelon-theme-" + theme + (won ? "-goal" : "-lost"));
                     Require(!Get<bool>(page, "manuallyPaused"), "Terminal inspection did not substitute a paused-board cover");

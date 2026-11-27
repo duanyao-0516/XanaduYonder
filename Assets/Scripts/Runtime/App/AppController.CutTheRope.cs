@@ -32,7 +32,7 @@ namespace XanaduYonder.Runtime
         private void EnterCutTheRope()
         {
             if (activePage != Page.Lobby || paused || !focused || IsExternalGameRunning) return;
-            lobbyView?.CloseDisplayOptions();
+            lobbyView?.CloseDisplayOptionsImmediately();
             CloseModal();
             Save();
             feedback?.Stop();

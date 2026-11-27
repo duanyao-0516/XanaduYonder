@@ -15,6 +15,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
         {
             CancelInput();CloseDialog();
             var overlay = DialogUi.ModalOverlay(root, "SlidingPuzzle dialog overlay");
+            DialogOutsideTap.Bind(overlay, DismissDialog);
             dialog = overlay.gameObject;
             var panel=Panel(overlay.transform,"SlidingPuzzle dialog",0,0,342,height,DialogUi.Surface,DialogCorners.Surface * .5f);UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             Label(panel.transform,"Dialog title",title,21,25,300,40,26,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);

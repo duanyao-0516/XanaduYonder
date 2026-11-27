@@ -26,7 +26,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         private LinkMatchPath shownPath;
         private double lastClock,checkpoint;
         private float effectRemaining,toastRemaining;
-        private bool removalFeedback,needsRecovery;
+        private bool removalFeedback,needsRecovery,reviewingResult;
         private uint seedCounter;
         public event Action Changed;
         internal Action RetryHostSave { get; set; }
@@ -99,7 +99,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             }
             TickClock();CancelTransient();CloseDialog();if(session!=null) {session.Leave();profile.Capture(session);}
             seedCounter=unchecked(seedCounter*1664525u+1013904223u);
-            needsRecovery=false;session=profile.Start(mode,levelId,seedCounter,fresh);profile.SelectedMode=mode;profile.SelectedLevelId=levelId;
+            reviewingResult=false;needsRecovery=false;session=profile.Start(mode,levelId,seedCounter,fresh);profile.SelectedMode=mode;profile.SelectedLevelId=levelId;
             session.SetForeground(foreground);session.SetBlocked(true);session.EnsureMove();isEntry=false;settingsBlocked=false;LayoutNow();
             session.Enter();session.SetBlocked(false);lastClock=Time.realtimeSinceStartupAsDouble;checkpoint=lastClock;Save();RefreshCounts();
             if(!foreground) ShowPause();else CheckEndState();
@@ -148,7 +148,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         public void CheckEndState()
         {
-            if(!visible||isEntry||session==null||!session.IsTerminal||settingsBlocked) return;
+            if(!visible||isEntry||session==null||!session.IsTerminal||settingsBlocked||reviewingResult) return;
             string kind=session.Outcome==LinkMatchOutcome.Won?"won":"timeout";
             if(dialogKind==kind) return;
             // The model and save are already terminal; only the short path presentation waits.

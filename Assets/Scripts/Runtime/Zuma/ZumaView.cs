@@ -22,6 +22,8 @@ namespace XanaduYonder.Runtime.Zuma
         private readonly List<Floating> floats=new List<Floating>();
         private RawImage coin;
         private readonly Text warning;
+        private Text sheetWarning;
+        internal Action DismissOutside;
         public ZumaTouchInput Touch { get; private set; }
         public bool HasDialog { get { return dialog!=null; } }
         private sealed class Floating { public ZumaBitmapText Text;public float X,Y,Age; }
@@ -32,13 +34,19 @@ namespace XanaduYonder.Runtime.Zuma
             warning=UiFactory.Label(root,"",170,677,940,36,19,new Color(1,.9f,.55f),TextAnchor.MiddleCenter);
         }
         public void Warning(string message)
-        { warning.text=message??"";warning.transform.SetAsLastSibling(); }
+        {
+            warning.text = message ?? "";
+            if (sheetWarning != null) sheetWarning.text = warning.text;
+            else warning.transform.SetAsLastSibling();
+        }
         private void Clear()
         {
             CloseDialog();
             if(content!=null){content.gameObject.SetActive(false);UnityEngine.Object.Destroy(content.gameObject);}
             if(loadedMap!=null){assets.ReleaseLevelResources(loadedMap);loadedMap=null;}
             content=ZumaArt.Rect(root,"Zuma scene",0,0,1280,720);
+            // Crop gameplay to the 16:9 picture while the modal and scrim reach the physical canvas edges.
+            content.gameObject.AddComponent<RectMask2D>();
             balls.Clear();shadows.Clear();bullets.Clear();particles.Clear();dots.Clear();dotShadows.Clear();floats.Clear();Touch=null;
             warning.transform.SetAsLastSibling();
         }
@@ -229,10 +237,20 @@ namespace XanaduYonder.Runtime.Zuma
                 var c=f.Text.color;c.a=Mathf.Clamp01(1.4f-f.Age);f.Text.color=c;
             }
         }
-        public RectTransform Dialog(string title, float width = 605, float height = 484)
+        public RectTransform Dialog(string title, float width = 605, float height = 484, Action sheetBack = null, Action outside = null)
         {
             CloseDialog();
             dialog = DialogUi.ModalOverlay(root, "Dialog input blocker").rectTransform;
+            DialogOutsideTap.Bind(dialog.GetComponent<Image>(), outside ?? DismissOutside);
+            if (sheetBack != null)
+            {
+                var body = DialogSheetLayout.Create(dialog.GetComponent<Image>(), "Zuma settings sheet", width, height, sheetBack);
+                UiFactory.Label(body, title, 32, 20, width - 64, 62, 34, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                sheetWarning = UiFactory.Label(body, warning.text, 32, 76, width - 64, 50, 19,
+                    DialogUi.Destructive, TextAnchor.MiddleLeft);
+                warning.enabled = false;
+                return body;
+            }
             var panel = DialogCorners.Panel(dialog, "Zuma dialog", (1280 - width) / 2, (720 - height) / 2, width, height, DialogUi.Surface, DialogCorners.Surface);
             panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 32, 32, width - 64, 62, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
@@ -242,11 +260,19 @@ namespace XanaduYonder.Runtime.Zuma
         public void HideAim()
         { HideRemaining(dots,0);HideRemaining(dotShadows,0); }
         public void CloseDialog()
-        { if(dialog==null)return;dialog.gameObject.SetActive(false);UnityEngine.Object.Destroy(dialog.gameObject);dialog=null; }
+        {
+            if (dialog == null) return;
+            sheetWarning = null;
+            warning.enabled = true;
+            dialog.gameObject.SetActive(false);
+            UnityEngine.Object.Destroy(dialog.gameObject);
+            dialog = null;
+        }
         public void ShowHelp(Action close)
         {
             CloseDialog();
             dialog = DialogUi.ModalOverlay(root, "Zuma help").rectTransform;
+            DialogOutsideTap.Bind(dialog.GetComponent<Image>(), close);
             new ZumaHelpView(dialog,close);
             warning.transform.SetAsLastSibling();
         }
@@ -257,9 +283,9 @@ namespace XanaduYonder.Runtime.Zuma
         }
         public void Chinese(Transform parent,string value,float x,float y,float w,float h,int size=22)
         { UiFactory.Label(parent,value,x,y,w,h,size,UiFactory.Ink,TextAnchor.MiddleCenter); }
-        public void Stats(ZumaSnapshot state, Action acknowledge, Action details)
+        public void Stats(ZumaSnapshot state, Action acknowledge, Action details, Action inspect)
         {
-            var panel = Dialog(state.Phase == "won" ? "关卡完成" : "本局结束");
+            var panel = Dialog(state.Phase == "won" ? "关卡完成" : "本局结束", outside: inspect);
             UiFactory.Label(panel, "本局得分", 32, 109, 541, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
             UiFactory.Label(panel, state.Score.ToString(), 32, 152, 541, 88, 50, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             DialogUi.Disclosure(panel, "成绩明细", 65, 270, 475, 66, details);

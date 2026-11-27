@@ -17,7 +17,7 @@ namespace XanaduYonder.Runtime.BoardGames
         private float nextReplayTime;
         private readonly List<int> replayLandings = new List<int>();
         private IReadOnlyList<string> recordLines = Array.Empty<string>();
-        private float recordScrollOffset;
+        private int recordStart;
 
         private void RequestHint()
         {
@@ -56,8 +56,7 @@ namespace XanaduYonder.Runtime.BoardGames
         {
             profile.HintsEnabled = !profile.HintsEnabled;
             if (!profile.HintsEnabled) suggestion = BoardMove.None;
-            Save();
-            Render();
+            SaveSettings();
         }
 
         private void StartReplay()
@@ -181,83 +180,31 @@ namespace XanaduYonder.Runtime.BoardGames
             Label(description, Margin, board.yMax + 14, ContentWidth, 80, 23, UiFactory.Ink, TextAnchor.UpperLeft);
         }
 
-        private void DrawRecord(Transform sheet, float width, float height)
+        private void DrawInlineRecord(DialogSheetSections rows, RectTransform sheet)
         {
-            DialogTitle(sheet, width, "本局棋谱");
-            if (recordLines.Count == 0) DialogText(sheet, width, 108, 80, "还没有已提交的走棋");
-            var content = recordLines.Count > 0 ? DrawRecordList(sheet, width, height) : null;
-            if (CanReplay) DialogPair(sheet, width, height, "返回设置", ClosePanel, "复盘本局", () =>
+            const int batch = 8;
+            rows.Heading("本局棋谱");
+            if (recordLines.Count == 0)
             {
-                recordScrollOffset = content.anchoredPosition.y;
-                StartReplay();
-            });
-            else
-            {
-                float half = (width - 62) * .5f;
-                DialogUi.ActionButton(sheet, "返回设置", 26, height - 102, half, 76, ClosePanel);
-                string caption = game == BoardGameId.Army && !match.Terminal ? "终局后复盘" : "复盘本局";
-                DialogUi.ActionButton(sheet, caption, 36 + half, height - 102, half, 76, StartReplay).interactable = false;
+                rows.Body("还没有已提交的走棋", 19);
+                return;
             }
-        }
-
-        private RectTransform DrawRecordList(Transform sheet, float width, float height)
-        {
-            const float top = 103;
-            const float side = 26;
-            const float rowHeight = 72;
-            float listHeight = height - top - 118;
-            float listWidth = width - 2 * side;
-            float rowsHeight = recordLines.Count * rowHeight;
-            float maxOffset = Mathf.Max(0, rowsHeight - listHeight);
-            float viewportWidth = listWidth - (maxOffset > 0 ? 24 : 0);
-            var area = UiFactory.Rect(sheet, "Board record scroll", side, top, listWidth, listHeight);
-            var viewport = UiFactory.Panel(area, "Board record viewport", 0, 0, viewportWidth, listHeight, Color.clear, false);
-            viewport.raycastTarget = true;
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var content = UiFactory.Rect(viewport.transform, "Board record content", 0, 0, viewportWidth, Mathf.Max(listHeight, rowsHeight));
-            var scroll = area.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport.rectTransform;
-            scroll.content = content;
-            scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = rowHeight;
-            if (maxOffset > 0)
+            int end = Mathf.Min(recordStart + batch, recordLines.Count);
+            for (int index = recordStart; index < end; index++)
+                rows.Body((index + 1) + ".  " + recordLines[index], 20);
+            if (recordLines.Count <= batch) return;
+            rows.Body("第 " + (recordStart + 1) + "–" + end + " 手，共 " + recordLines.Count + " 手", 19);
+            float y = rows.Reserve(66), half = (rows.Width - 8) * .5f;
+            DialogUi.ActionButton(sheet, "前一段棋谱", rows.Inset, y, half, 66, () =>
             {
-                var scrollbar = DrawRulesScrollbar(area, viewportWidth + 13, listHeight);
-                scrollbar.name = "Board record scrollbar";
-                scroll.verticalScrollbar = scrollbar;
-            }
-
-            var lines = recordLines;
-            var rows = new Text[Mathf.Min(lines.Count, Mathf.CeilToInt(listHeight / rowHeight) + 1)];
-            for (int i = 0; i < rows.Length; i++)
+                recordStart = Mathf.Max(0, recordStart - batch);
+                DrawSettings();
+            }).interactable = recordStart > 0;
+            DialogUi.ActionButton(sheet, "后一段棋谱", rows.Inset + half + 8, y, half, 66, () =>
             {
-                rows[i] = UiFactory.Label(content, "", 2, 0, viewportWidth - 4, rowHeight, 23, UiFactory.Ink);
-                rows[i].name = "Board record row";
-            }
-
-            int firstVisible = -1;
-            void BindVisibleRows()
-            {
-                recordScrollOffset = Mathf.Clamp(content.anchoredPosition.y, 0, maxOffset);
-                int first = Mathf.FloorToInt(recordScrollOffset / rowHeight);
-                if (first == firstVisible) return;
-                firstVisible = first;
-                for (int i = 0; i < rows.Length; i++)
-                {
-                    int index = first + i;
-                    var row = rows[i];
-                    row.gameObject.SetActive(index < lines.Count);
-                    if (index >= lines.Count) continue;
-                    row.rectTransform.anchoredPosition = new Vector2(2, -index * rowHeight);
-                    row.text = (index + 1) + ".  " + lines[index];
-                }
-            }
-
-            content.anchoredPosition = new Vector2(0, Mathf.Clamp(recordScrollOffset, 0, maxOffset));
-            scroll.onValueChanged.AddListener(_ => BindVisibleRows());
-            BindVisibleRows();
-            return content;
+                recordStart += batch;
+                DrawSettings();
+            }).interactable = end < recordLines.Count;
         }
     }
 }

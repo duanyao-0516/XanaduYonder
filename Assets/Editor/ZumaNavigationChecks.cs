@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using XanaduYonder.Core.Zuma;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
@@ -48,6 +50,7 @@ namespace XanaduYonder.EditorTools
                 Check("stale exit cannot release a newer presentation", StaleExit);
                 Check("unfinished canvas cannot cover the host", HiddenConstruction);
                 Check("entry publishes only a complete selection", ReadySelection);
+                Check("pause settings reach the physical edge and return without resuming", PauseSettings);
                 Check("real corrupt-save error is presented before host hides", ReadySaveError);
                 Check("Back cancels entry once without publishing a stale page", CancelEntry);
                 Check("inactive Zuma cannot rotate another active game on resume", InactiveOrientation);
@@ -142,7 +145,80 @@ namespace XanaduYonder.EditorTools
             var routine = (IEnumerator)Invoke(f.Page, "EnterRoutine", 7);
             Require(routine.MoveNext(), "Error fixture waits for orientation"); CompleteDirection(routine, true);
             Require(!routine.MoveNext() && notifications == 1, "A completed error page is published once");
+            var canvas = Get<GameObject>(f.Page, "canvasObject").GetComponent<Canvas>();
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            Invoke(f.Page, "ConfirmReset");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
             Require(File.ReadAllText(Path.Combine(f.Directory, "zuma-v1.json")) == "{bad-json", "Showing the error never overwrites the invalid save");
+        }
+
+        private static void PauseSettings(Fixture f)
+        {
+            Set(f.Page, "store", new ZumaSaveStore(f.Directory,
+                id => (XanaduYonder.Core.Zuma.ZumaLevelDefinition)Invoke(f.Page, "ResolveLevel", id)));
+            Set(f.Page, "data", ZumaSaveData.CreateNew());
+            var routine = (IEnumerator)Invoke(f.Page, "EnterRoutine", 7);
+            Require(routine.MoveNext(), "Settings fixture enters the real Zuma presentation.");
+            CompleteDirection(routine, true);
+            Require(!routine.MoveNext(), "The map selection is ready.");
+            var canvas = Get<GameObject>(f.Page, "canvasObject").GetComponent<Canvas>();
+            foreach (var label in canvas.GetComponentsInChildren<ZumaBitmapText>())
+                Require(label.GetComponent<CanvasRenderer>() != null, "Selection bitmap text owns its renderer before a menu opens.");
+            Invoke(f.Page, "ShowHelp");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            f.Page.HandleBack();
+            Invoke(f.Page, "StartSelected");
+            Invoke(f.Page, "ShowPause");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            Invoke(f.Page, "ShowFeedbackSettings");
+            var sheet = canvas.GetComponentInChildren<DialogSheetLayout>();
+            Require(sheet != null && sheet.GetComponentInParent<RectMask2D>() == null,
+                "The settings surface is outside the letterboxed gameplay mask.");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            var scope = sheet.GetComponentInParent<DialogFocusScope>();
+            var tap = scope.GetComponent<DialogOutsideTap>();
+            var outside = scope.GetComponentInChildren<DialogBackdrop>().gameObject;
+            var hit = new UnityEngine.EventSystems.RaycastResult { gameObject = outside };
+            var pointer = new UnityEngine.EventSystems.PointerEventData(null) { pointerPressRaycast = hit, pointerCurrentRaycast = hit };
+            tap.OnPointerClick(pointer);
+            f.Page.HandleBack();
+            Require(sheet.IsDismissing && !Get<bool>(f.Page, "running"), "Backdrop and repeat Back preserve the suspended run.");
+            sheet.AdvanceDismissal(1f);
+            Require(canvas.GetComponentInChildren<DialogSheetLayout>() == null && Get<ZumaView>(f.Page, "view").HasDialog &&
+                !Get<bool>(f.Page, "running"), "The pause menu returns exactly once.");
+            var game = Get<ZumaGame>(f.Page, "game");
+            var snapshot = game.Snapshot();
+            var level = (ZumaLevelDefinition)Invoke(f.Page, "ResolveLevel", snapshot.MapId);
+            Invoke(f.Page, "ShowSelection");
+            Invoke(f.Page, "ShowContinuePrompt");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            f.Page.HandleBack();
+            Invoke(f.Page, "StartSelected");
+            DialogScreenshotAudit.CaptureOverlay(canvas);
+            f.Page.HandleBack();
+            // Exercise both terminal presentations with snapshots accepted by the production restore validator.
+            for (int batch = 0; batch < 150 && game.Snapshot().Phase != "lost"; batch++)
+                for (int tick = 0; tick < 200; tick++) game.Tick();
+            snapshot = game.Snapshot();
+            Require(snapshot.Phase == "lost", "An unattended real run reaches the loss condition.");
+            foreach (bool won in new[] {false, true})
+            {
+                if (won)
+                {
+                    snapshot.SessionId = Guid.NewGuid().ToString("N");
+                    snapshot.ResultCommitted = false; snapshot.ResultAcknowledged = false;
+                    snapshot.Phase = "won"; snapshot.EndReached = false; snapshot.Generating = false;
+                    snapshot.OutroInitialized = true; snapshot.OutroPosition = level.PathLength;
+                    snapshot.Score = ZumaDifficulty.Get(snapshot.DifficultyId).GaugeScore + 100;
+                }
+                var restored = ZumaGame.Restore(level, snapshot);
+                Invoke(f.Page, "ShowRun", level, restored, false);
+                Invoke(f.Page, "ShowResult");
+                DialogScreenshotAudit.CaptureOverlay(canvas);
+                canvas.GetComponentsInChildren<Button>().Single(b => b.name == "成绩明细").onClick.Invoke();
+                DialogScreenshotAudit.CaptureOverlay(canvas);
+                f.Page.HandleBack();
+            }
         }
 
         private static void CancelEntry(Fixture f)

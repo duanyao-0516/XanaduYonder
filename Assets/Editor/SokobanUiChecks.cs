@@ -80,6 +80,11 @@ namespace XanaduYonder.EditorTools
                 page.Initialize(f.Root, () => { }, done => done(), () => true, () => false, () => false,
                     f.Root.gameObject.AddComponent<GameFeedback>(), _ => { }, initialCatalog: catalog, initialProfile: new SokobanProfile(catalog));
                 page.Enter(); page.StartLevel(id, true); page.LayoutNow();
+                page.ConfirmRestart();
+                Require(page.HasDialog, "Restart offers to clear the current attempt.");
+                DialogScreenshotAudit.CaptureCurrent(f.Root);
+                page.Back();
+                Require(!page.HasDialog, "Cancelling restart preserves the current attempt.");
                 // Replay the shipped solution through the page and finish each real board animation.
                 foreach (char step in catalog.Get(id).Solution)
                 { page.Move(SokobanGame.FromChar(step)); Get<SokobanBoardView>(page, "board").Tick(.11f); }
@@ -308,6 +313,7 @@ namespace XanaduYonder.EditorTools
                     Set(host, "saveFailed", false); Set(host, "saveWarning", null); page.Save();
                     Require(!Array.Exists(f.Root.GetComponentsInChildren<Text>(), t => t.text.Contains("公共设置尚未保存")), "Shared save recovery removes compact warning");
                     f.Click(f.Find("Settings")); Get<Action>(host, "dismissModal")();
+                    yield return new WaitForSecondsRealtime(.30f);
                     Require(Get<GameObject>(host, "modal") == null && !page.Session.Blocked, "Host Android-back settings callback resumes the page");
                     page.Leave(); Invoke(host, "SetStatus", "Other page status"); page.Save();
                     Require(status.text == "Other page status", "Inactive page save preserves current host status");

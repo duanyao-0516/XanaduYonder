@@ -55,11 +55,28 @@ namespace XanaduYonder.EditorTools
             {
                 var page = (FeihualingPage)rootObject.AddComponent(pageType);
                 var lobbyVisits = 0;
+                var host = new GameObject("Feihualing modal host");
+                host.transform.SetParent(root, false);
+                host.SetActive(false);
+                var shell = host.AddComponent<AppController>();
+                Set(shell, "canvasRoot", root);
+                var createModal = typeof(AppController).GetMethod("CreateModal", Private);
                 Func<string, float, Action, RectTransform> open = (title, height, back) =>
-                    modal = UiFactory.Rect(root, title, 0, 0, 596, height);
+                {
+                    modal = (RectTransform)createModal.Invoke(shell, new object[] {title, height, back});
+                    modal.name = title;
+                    return modal;
+                };
                 Action close = () =>
                 {
-                    if (modal != null) { modal.gameObject.SetActive(false); Object.DestroyImmediate(modal.gameObject); }
+                    if (modal != null)
+                    {
+                        DialogScreenshotAudit.CaptureCurrent(modal);
+                        var shade = modal.GetComponentInParent<DialogFocusScope>().gameObject;
+                        shade.SetActive(false);
+                        Object.DestroyImmediate(shade);
+                        Set(shell, "modal", null);
+                    }
                     modal = null;
                 };
                 var settingsRequests = 0;
@@ -123,6 +140,9 @@ namespace XanaduYonder.EditorTools
                 Require(modal == null && Find<InputField>(root, "Poetry input") == null,
                     "Closing rules during handoff still needs the next player to confirm");
                 Click(root, "准备好了");
+                pageType.GetMethod("EndLearning", Private).Invoke(page, null);
+                Require(modal != null && modal.name == "结束这局学习？", "Learning can be ended or retained.");
+                Click(modal, "取消");
                 Click(root, "提示");
                 Require(modal != null, "Learning prompts mount one modal");
                 var hintModal = modal;
@@ -155,6 +175,18 @@ namespace XanaduYonder.EditorTools
                 CheckSoloGoals(root, page, catalog, notebookStore, () => modal);
                 CheckDuoCompetition(root, page, () => modal, store);
                 Require(answers == 6, "Shared answer feedback fires for accepted player submissions only");
+                var damagedDirectory = System.IO.Path.Combine(workingDirectory, "protected");
+                System.IO.Directory.CreateDirectory(damagedDirectory);
+                var damaged = new FeihualingSaveStore(damagedDirectory, catalog);
+                System.IO.File.WriteAllText(damaged.SavePath, "unreadable-history");
+                damaged.Load(out _);
+                Require(damaged.NeedsRecovery, "An unreadable poetry save enters protected recovery.");
+                Set(page, "store", damaged);
+                pageType.GetMethod("StartupAction", Private).Invoke(page, null);
+                Require(modal != null && modal.name == "处理本地进度？", "The recovery confirmation presents the protected history.");
+                Click(modal, "取消");
+                Require(System.IO.File.ReadAllText(damaged.SavePath) == "unreadable-history", "Cancelling retains the original poetry file.");
+                Set(page, "store", store);
                 Require(lobbyVisits == 0 && page.HandleBack() && lobbyVisits == 1, "Only Back from setup opens the lobby");
                 page.Leave();
             }
@@ -404,6 +436,7 @@ namespace XanaduYonder.EditorTools
         private static RectTransform RequireFullPoem(Transform root)
         {
             var full = Find<RectTransform>(root, "Feihualing full poem");
+            DialogScreenshotAudit.CaptureCurrent(full);
             Require(full != null && (Vector2.Distance(full.rect.size, ((RectTransform)root).rect.size) < .5f),
                 "Poem detail covers the entire safe-area frame");
             Require(Find<ScrollRect>(full, "Scrollable poem") != null, "The full original scrolls independently");

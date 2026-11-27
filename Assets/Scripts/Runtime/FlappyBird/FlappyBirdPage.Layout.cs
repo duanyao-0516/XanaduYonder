@@ -13,6 +13,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         private RectTransform navigation;
         private Button homeNavigation, rulesNavigation, settingsNavigation;
         private Button pauseButton,retryButton;
+        private Text pauseCaption;
         private GameObject readyHint,countdownHint;
         private float scale=1;
 
@@ -38,7 +39,7 @@ namespace XanaduYonder.Runtime.FlappyBird
             ConfigureNumber(scoreText); ConfigureNumber(bestText);
             pauseButton=ActionButton(information,"Pause",289,0,60,36,TogglePause,0,true);
             var icon=FlappyScene.Shape(pauseButton.transform,"Pause symbol",19,11,10,14,0,UiFactory.Ink); icon.Kind=FlappyGraphicKind.Pause;
-            Label(pauseButton.transform,"暂停",35,0,25,36,11,UiFactory.Ink,TextAnchor.MiddleRight);
+            pauseCaption = Label(pauseButton.transform,"暂停",35,0,25,36,11,UiFactory.Ink,TextAnchor.MiddleRight);
             retryButton=ActionButton(information,"Retry save",205,2,78,32,RetrySave,5);
             retryButton.GetComponent<FlappyGraphic>().color=UiFactory.Hex("EFE4CA");
             Label(retryButton.transform,"未保存 · 重试",3,0,72,32,10,UiFactory.Hex("906B27"),TextAnchor.MiddleCenter);

@@ -6,7 +6,7 @@ namespace XanaduYonder.Runtime.LinkMatch
 {
     internal sealed partial class LinkMatchPage
     {
-        private Text remainingText,timeText,hintText,shuffleText,warningText,toastText;
+        private Text remainingText,timeText,hintText,shuffleText,warningText,toastText,pauseCaption;
         private RectTransform warningPanel,toastPanel;
         private Button hintButton,shuffleButton;
         private bool warningShown;
@@ -70,7 +70,8 @@ namespace XanaduYonder.Runtime.LinkMatch
         {
             var button=Button(parent,name,x,0,width,height,action,12*S,UiFactory.Hex("E7EDE4"));float block=(name=="Pause"?50:63)*S,start=(width-block)/2;
             Symbol(button.transform,name+" icon",kind,start,(height-19*S)/2,19*S,19*S);
-            Label(button.transform,text,start+26*S,0,27*S,height,layout.Compact?11:12,UiFactory.Ink,TextAnchor.MiddleCenter);
+            var caption = Label(button.transform,text,start+26*S,0,27*S,height,layout.Compact?11:12,UiFactory.Ink,TextAnchor.MiddleCenter);
+            if (name == "Pause") pauseCaption = caption;
             count=Label(button.transform,"",start+54*S,0,14*S,height,10,UiFactory.Muted,TextAnchor.MiddleCenter);return button;
         }
         private void BuildWarning(Transform parent,float x,float y,float width)
@@ -95,6 +96,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         private void RefreshCounts()
         {
             if(isEntry||session==null||timeText==null)return;
+            pauseCaption.text = session.IsTerminal ? "结算" : "暂停";
             int font=Mathf.RoundToInt((layout.CssWidth<=370?12:13)*S);
             remainingText.text="剩余 <color=#173D35><size="+font+">"+session.Game.Remaining+"</size></color> 张";
             bool timed=session.Mode==LinkMatchMode.Challenge;

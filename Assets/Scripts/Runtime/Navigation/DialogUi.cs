@@ -21,6 +21,7 @@ namespace XanaduYonder.Runtime
             overlay.raycastTarget = true;
             if (!parent.TryGetComponent<Canvas>(out _)) DialogBackdrop.CoverCanvas(overlay);
             overlay.gameObject.AddComponent<DialogFocusScope>().BlockBackground(parent);
+            DialogTypography.Attach(overlay);
             return overlay;
         }
 
@@ -99,9 +100,9 @@ namespace XanaduYonder.Runtime
             return button;
         }
 
-        private static Button MenuButton(Image surface, Action action)
+        internal static Button MenuButton(Image surface, Action action)
         {
-            var button = UiFactory.ConfigureButton(surface, action);
+            var button = UiFactory.ConfigureButton<DialogMenuButton>(surface, action);
             var colors = button.colors;
             colors.selectedColor = UiFactory.Hex("BED8CC");
             button.colors = colors;
@@ -109,33 +110,23 @@ namespace XanaduYonder.Runtime
         }
 
         public static Text ScrollText(Transform parent, string message, float x, float y, float w,
-            float h, int fontSize)
+            float h, int fontSize, bool fitHeight = false)
         {
             var viewport = UiFactory.Rect(parent, "Reading area", x, y, w, h);
+            if (parent.GetComponentInParent<DialogTypography>() != null)
+                fontSize = DialogTypography.FitSize(viewport, fontSize, DialogTypography.Body);
             var label = UiFactory.Label(viewport, message, 0, 0, w, h, fontSize, UiFactory.Ink,
                 TextAnchor.MiddleLeft);
             label.supportRichText = false;
-            float measured = Mathf.Ceil(label.preferredHeight);
-            if (measured <= h) return label;
-
-            var touchSurface = viewport.gameObject.AddComponent<Image>();
-            touchSurface.color = Color.clear;
-            viewport.gameObject.AddComponent<RectMask2D>();
-            label.alignment = TextAnchor.UpperLeft;
-            label.rectTransform.sizeDelta = new Vector2(w, measured);
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport;
-            scroll.content = label.rectTransform;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = fontSize;
+            viewport.gameObject.AddComponent<DialogReadingArea>().Initialize(viewport, label, h, fitHeight);
             return label;
         }
 
         private static Text Caption(Transform parent, string title, float x, float w, float h,
             int size, Color color, TextAnchor alignment)
         {
+            if (parent.GetComponentInParent<DialogTypography>() != null)
+                size = DialogTypography.FitSize(parent, size, DialogTypography.Action);
             var text = UiFactory.Label(parent, title, x, 0, Mathf.Max(1, w), h, size, color, alignment);
             text.supportRichText = false;
             text.resizeTextForBestFit = true;

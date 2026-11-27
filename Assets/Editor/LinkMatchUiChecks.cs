@@ -101,6 +101,7 @@ namespace XanaduYonder.EditorTools
                 page.ShowEntry();profile.SelectedCategories=16;page.ContinueGame();yield return null;
                 Require(page.Session.AttemptId==attempt && page.Session.PatternIds.SequenceEqual(mapping),"Continuation keeps prior visual identities");
                 page.StartLevel(LinkMatchMode.Relaxed,"level-05");yield return null;
+                DialogScreenshotAudit.CaptureCurrent(f.Root);
                 Require(page.IsEntry && page.HasDialog && HasText(f,"再选一些图案"),"Insufficient category pool explains requirement without starting or replacing a run");
                 Require(profile.GetSlot(LinkMatchMode.Relaxed,"level-01").AttemptId==attempt,"Insufficient selection preserves existing attempt");
             }
@@ -141,8 +142,8 @@ namespace XanaduYonder.EditorTools
                 Require(page.Session.Game.Remaining == remaining, "Raw root resize cancels release before the page Update can rebuild");
                 f.Root.sizeDelta = originalSize; page.ShowPause(); page.ResumeGame(); page.LayoutNow();
                 pressed = f.PressTile(page, match.First); page.ShowPause(); f.Release(pressed); RequireConcealed(f, page, "popup during press");
-                f.ClickBackdrop(); Require(page.HasDialog && page.BoardConcealed, "Clicking the actual dialog backdrop cannot resume play");
-                page.ResumeGame(); f.ClickTile(page, match.Second);
+                f.ClickBackdrop(); Require(!page.HasDialog && page.IsEntry && !page.Session.CanInteract, "Dismissing the pause shade preserves the attempt and returns to the level list");
+                page.ContinueGame(); f.ClickTile(page, match.Second);
                 Require(page.Session.Game.Remaining == remaining, "Popup cancellation cannot select a stale held tile after resume"); f.ClickTile(page, match.Second);
                 f.ClickTile(page, match.First); Require(page.Session.Game.Remaining == remaining, "First tile selects without removing a pair");
                 f.ClickTile(page, match.First); f.ClickTile(page, match.Second);
@@ -320,7 +321,12 @@ namespace XanaduYonder.EditorTools
                 page.LayoutNow(); page.CheckEndState(); yield return new WaitForSecondsRealtime(.5f);
                 Require(page.HasDialog && page.BoardConcealed, "Actual terminal result is displayed and conceals the board");
                 if (!timeout) Require(!HasText(f, "下一关"), "Final-level result has no next-level action");
-                f.Capture(timeout ? "timeout" : "last-level-completed"); page.Save(); page.Save(); page.CheckEndState();
+                f.Capture(timeout ? "timeout" : "last-level-completed");
+                f.ClickBackdrop(); page.CheckEndState();
+                Require(!page.IsEntry && !page.HasDialog && !page.BoardConcealed && page.Session.IsTerminal,
+                    "Outside tap exposes the same terminal board without triggering the next level or retry");
+                f.Click(f.Find("Pause")); Require(page.HasDialog, "The result is available again from the controls");
+                page.Save(); page.Save(); page.CheckEndState();
                 var record = page.Profile.GetRecord(LinkMatchMode.Challenge, level.Id);
                 Require(timeout ? record.Losses == 1 : record.Wins == 1, "Repeated terminal saves never recount the result");
                 Report.AppendLine("PASS real " + (timeout ? "deadline timeout" : "last-pair completion") + ": terminal-before-presentation save and idempotent record");
@@ -385,6 +391,7 @@ namespace XanaduYonder.EditorTools
                     Invoke(host, "OnApplicationPause", false); RequireConcealed(f, page, "host resume"); page.ResumeGame();
                     Require(page.Session.CanInteract, "Host resume permits play after explicit continuation");
                     f.Click(f.Find("Settings")); Get<Action>(host, "dismissModal")();
+                    yield return new WaitForSecondsRealtime(.30f);
                     Require(Get<GameObject>(host, "modal") == null, "Host Android-back callback closes shared settings"); RequireConcealed(f, page, "host settings Back"); page.ResumeGame();
                     Invoke(host, "OnApplicationFocus", false); Invoke(host, "OnApplicationFocus", true);
                     RequireConcealed(f, page, "host focus return"); page.ResumeGame();

@@ -76,10 +76,11 @@ def main():
         missing = 'res://5bf43f39-5425-4fb0-bffd-b4d58ddcac67'
         assert old.count(missing) == 1, 'Expected one missing victory-bag reference'
         scene.write_text(old.replace(missing, 'resources/img/mainUI/bag1.png'), encoding='utf-8')
-        local_scripts = ['offline-adapter.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
+        local_scripts = ['offline-adapter.js','settings-ui.js','host-bridge.js','panel-select.js','save-editor-data.js','save-editor-ui.js',
                          'battle-aid.js','battle-aid-ui.js','battle-speed.js']
-        shared_dialogs = ROOT / 'ThirdParty/WebGameUI/dialogs.css'
-        shutil.copyfile(shared_dialogs, staging/'dialogs.css')
+        shared_dialogs = [ROOT / 'ThirdParty/WebGameUI' / name for name in ('dialogs.js', 'dialogs.css')]
+        for shared in shared_dialogs:
+            shutil.copyfile(shared, staging/shared.name)
         for name in ['index.html','offline.css',*local_scripts]:
             shutil.copyfile(VENDOR/name, staging/name)
         for name in ['js/bundle.js',*local_scripts]:
@@ -90,7 +91,7 @@ def main():
                 data=file.read_bytes();files.append({'path':file.relative_to(staging).as_posix(),'bytes':len(data),'sha256':sha(data)})
         digest=sha(json.dumps(files,sort_keys=True,separators=(',',':')).encode())
         report={'passed':True,'schemaVersion':1,'sourceBundleSha256':BUNDLE_SHA,'inputFiles':len(lock['files']),
-                'files':files,'contentDigest':digest,'excluded':sorted(EXCLUDE),'sourceFiles':[{'path':p.relative_to(ROOT).as_posix(),'sha256':sha(p.read_bytes())} for p in sorted([x for x in VENDOR.rglob('*') if x.is_file()]+[shared_dialogs,Path(__file__).resolve()])],'transforms':[
+                'files':files,'contentDigest':digest,'excluded':sorted(EXCLUDE),'sourceFiles':[{'path':p.relative_to(ROOT).as_posix(),'sha256':sha(p.read_bytes())} for p in sorted([x for x in VENDOR.rglob('*') if x.is_file()]+shared_dialogs+[Path(__file__).resolve()])],'transforms':[
                     'one game-IIFE export insertion and one BattleMgr.R9 clock substitution; all other original bundle bytes retained',
                     'local entry and business offline adapter; no platform SDK',
                     'remove unused shader registrations','replace victory bag with bundled bag1 frame']}

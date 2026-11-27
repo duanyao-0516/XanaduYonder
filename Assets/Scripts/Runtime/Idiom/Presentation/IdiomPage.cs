@@ -13,7 +13,7 @@ namespace XanaduYonder.Runtime.Idiom
         private Action goLobby, closeModal;
         private Action<string> setStatus;
         private Func<bool> canInteract;
-        private Func<string, float, Action, RectTransform> openModal;
+        private Func<string, float, Action, RectTransform> openModal, openSheet;
         private IdiomKeyboardViewport keyboard;
         private IdiomCatalogLoader loader;
         private IdiomLexicon lexicon;
@@ -54,10 +54,10 @@ namespace XanaduYonder.Runtime.Idiom
         private bool CanNavigate => visible && !modalOpen && canInteract();
 
         public void Initialize(RectTransform pageRoot, Action lobby, Func<bool> acceptsInput, Action<string> status,
-            Func<string, float, Action, RectTransform> modal, Action dismiss)
+            Func<string, float, Action, RectTransform> modal, Action dismiss, Func<string, float, Action, RectTransform> sheet)
         {
             root = pageRoot; goLobby = lobby; canInteract = acceptsInput; setStatus = status;
-            openModal = modal; closeModal = dismiss;
+            openModal = modal; closeModal = dismiss; openSheet = sheet;
             loader = new IdiomCatalogLoader();
             keyboard = gameObject.AddComponent<IdiomKeyboardViewport>();
             keyboard.Initialize(root);

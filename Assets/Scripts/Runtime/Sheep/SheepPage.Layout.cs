@@ -40,8 +40,18 @@ namespace XanaduYonder.Runtime.Sheep
             undoLabel = undoButton.GetComponentInChildren<Text>();
             shuffleLabel = shuffleButton.GetComponentInChildren<Text>();
             // Only the board is covered: reserve and tools remain available after a full tray.
-            var panel = DialogCorners.Panel(stage, "Round result", 0, 0, 544, 390, UiFactory.Paper, DialogCorners.Surface);
-            UiFactory.Center(panel.rectTransform); panel.raycastTarget = true; resultPanel = panel.gameObject;
+            reviewResult = DialogUi.ActionButton(stage, "查看结算", 16, 14, 172, 64, () =>
+            {
+                reviewingResult = false;
+                RenderResult();
+            });
+            reviewResult.gameObject.SetActive(false);
+            var shade = UiFactory.Panel(stage, "Round result backdrop", 0, 0, 0, 0, DialogUi.Scrim, false);
+            UiFactory.Stretch(shade.rectTransform);
+            DialogOutsideTap.Bind(shade, () => { reviewingResult = true; RenderResult(); });
+            resultPanel = shade.gameObject;
+            var panel = DialogCorners.Panel(shade.transform, "Round result", 0, 0, 544, 390, UiFactory.Paper, DialogCorners.Surface);
+            UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
             resultTitle = UiFactory.Label(panel.transform, "", 24, 20, 496, 64, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             resultMessage = UiFactory.Label(panel.transform, "", 32, 92, 480, 106, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
             resultPrimary = DialogUi.ActionButton(panel.transform, "", 32, 210, 480, 68, ResultAction, true);

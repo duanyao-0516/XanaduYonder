@@ -226,6 +226,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             bool won=session.Game.State==MinesweeperState.Won;
             ShowDialog(won?"排雷成功":"触雷了",MinesweeperRules.Get(session.Game.GetSnapshot().Difficulty).Name+" · "+session.Game.MineCount+" 雷\n用时 "+FormatTime(session.ElapsedMilliseconds,true)+(session.IsNewBest?"\n刷新本档最佳纪录":""),
                 "再来一局",()=>StartGame(session.Game.GetSnapshot().Difficulty,true),"选择难度",ReturnToSelection,"查看棋盘",()=>results.Inspect(CloseDialog));
+            DialogOutsideTap.Bind(dialog.GetComponent<Image>(), () => results.Inspect(CloseDialog));
         }
         public void Save()
         {
@@ -274,6 +275,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             pauseText.text=session.Blocked?"游戏已遮挡":!session.Foreground?"游戏已暂停":"已暂停";
             pauseButton.interactable=focusPause.interactable=!session.IsTerminal&&!cover;
             RenderView();
+            if (cover) DialogFocusScope.ObserveVisible(pauseCover.transform);
         }
         private void RenderView()
         {

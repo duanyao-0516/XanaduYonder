@@ -1,15 +1,16 @@
 'use strict';
 // Real original game, local assets, Chromium touchscreen. NODE_PATH may point to a
 // separately installed playwright-core. Use --source DIR to check a candidate build.
+const { settingsMetrics, swipeSettings, swipeUp } = require('../../Tests/WebDialogs/metrics.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require('playwright-core');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright-core');
 const root = path.resolve(__dirname, '../..');
 const sourceArg = process.argv.indexOf('--source');
 if (sourceArg >= 0 && !process.argv[sourceArg + 1]) throw new Error('--source requires a directory');
 const content = sourceArg < 0 ? path.join(root, 'artifacts/zhaoyun-adou/content') : path.resolve(process.argv[sourceArg + 1]);
-const evidence = path.join(path.dirname(content), 'browser-evidence');
+const evidence = process.env.ZHAOYUN_DIALOG_OUTPUT || path.join(path.dirname(content), 'browser-evidence');
 const origin = 'https://zhaoyun-adou.xanadu.invalid';
 const key = 'xanadu.zhaoyun-adou.player.v1';
 const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.ls':'application/json','.lh':'application/json','.png':'image/png','.mp3':'audio/mpeg','.wav':'audio/wav','.atlas':'text/plain','.txt':'text/plain'};
@@ -199,7 +200,7 @@ async function choose(panel, label, value, expectedCount, item) {
 }
 
 async function submit(page, panel, name) {
-  // The real panel debounces repeated changes for 450 ms across all four tabs.
+  // The editor shares its 450 ms debounce across all settings groups.
   await page.waitForTimeout(460);
   await button(panel, name).tap();
 }
@@ -250,7 +251,7 @@ async function editLegacyRank(page) {
   const cat=await catalog(page);
   assert.deepEqual(cat.ranks.map(({id,name})=>({id,name})),ranks);
   await checkRank(page,50,103);
-  await button(panel,'段位').tap();
+  await panel.getByRole('heading',{name:'段位',exact:true}).scrollIntoViewIfNeeded();
   const stars=field(panel,'段内星数');
   const combo=panel.getByRole('combobox',{name:'个人段位',exact:true});
   assert((await combo.innerText()).includes(ranks[50].name));assert.equal(await stars.inputValue(),'103');
@@ -274,10 +275,10 @@ async function editLegacyRank(page) {
       season:data._seasonId,finalRanks:data._seasonFinalRanks};
   };
   // Leave unsaved settings in the form. The rank button commits only the rank command.
-  await button(panel,'设置').tap();
+  await panel.getByRole('heading',{name:'设置',exact:true}).scrollIntoViewIfNeeded();
   await field(panel,'金币').fill('99999');
   await field(panel,'跨天保留技能道具').tap();
-  await button(panel,'段位').tap();
+  await panel.getByRole('heading',{name:'段位',exact:true}).scrollIntoViewIfNeeded();
   for (const [id,level] of [[7,4],[7,2],[50,101]]) {
     await choose(panel,'个人段位',String(id),51);
     await stars.fill(String(level));await submit(page,panel,'保存段位');
@@ -437,7 +438,7 @@ async function editWeapons(page, panel, initial) {
   assert.deepEqual(initial.weapons.map(w=>w.id).sort((a,b)=>a-b),definitions.map(w=>w.id).sort((a,b)=>a-b));
   const sample = initial.weapons.find(w=>!w.count && byId(definitions,w.id).threshold>1);
   assert(sample);
-  await button(panel,'武器').tap();
+  await panel.getByRole('heading',{name:'武器',exact:true}).scrollIntoViewIfNeeded();
   await choose(panel,'选择武器',String(sample.id),46,sample);
   await field(panel,'整把数量').fill('2');
   await submit(page,panel,'添加武器');
@@ -496,11 +497,11 @@ async function editProps(page,panel) {
   await rejected(page,propOp(c.id)); await rejected(page,propOp(passive[6].id));
   await rejected(page,propOp(c.id,1,passive[0].id));
   await rejected(page,propOp(c.id,1,a.id),true);
-  await button(panel,'道具').tap();
+  await panel.getByRole('heading',{name:'道具',exact:true}).scrollIntoViewIfNeeded();
   // Reopen after API fixture grants, so the panel takes a fresh inventory snapshot for replacement.
   await closeEditor(panel);
   panel = await openEditor(page);
-  await button(panel,'道具').tap();
+  await panel.getByRole('heading',{name:'道具',exact:true}).scrollIntoViewIfNeeded();
   await choose(panel,'选择道具',String(c.id),24,c);
   assert.equal(await panel.getByRole('combobox',{name:'道具等级'}).count(),0,'single-level skills must hide the level picker');
   await submit(page,panel,'保存道具');
@@ -521,7 +522,7 @@ async function editProps(page,panel) {
   };
   for (const n of [1,2,3]) {
     await preview(n);
-    assert.equal(await panel.locator('.panel-option-description:visible').count(),1,'one selected effect preview');
+    assert.equal(await panel.getByRole('region',{name:'道具',exact:true}).locator('.panel-option-description:visible').count(),1,'one selected effect preview in the item group');
     assert.equal(byId((await catalog(page)).props,22).level,0,'preview must not equip the item');
   }
   await choose(panel,'替换道具',String(passive[0].id),undefined,passive[0]);
@@ -550,7 +551,7 @@ async function editGenerals(page,panel) {
   assert.equal(initial.generals.length,15);
   assert(initial.generals.filter(g=>g.id<12).every(g=>g.recruitable));
   assert.deepEqual(initial.generals.filter(g=>!g.recruitable).map(g=>g.id).sort((a,b)=>a-b),[12,13,14]);
-  await button(panel,'武将').tap();
+  await panel.getByRole('heading',{name:'武将',exact:true}).scrollIntoViewIfNeeded();
   await choose(panel,'选择武将','2',15,byId(initial.generals,2));
   assert(await button(panel,'授予招募资格').isDisabled(), 'ordinary Ma Chao is already available');
   const before = await disk(page);
@@ -602,20 +603,125 @@ async function verifyBattle(page) {
   note('real battle starts by touch, only the player pool adds seven special letters; editor is absent during battle');
 }
 
+async function checkSettingsSheets(page) {
+  await touchMain(page, 'settingBtn');
+  const settings = page.getByRole('dialog', {name:'游戏设置'});
+  await settings.waitFor();
+  const surface = await settings.boundingBox(), view = page.viewportSize();
+  assert.equal(surface.width, view.width);
+  assert.equal(surface.y + surface.height, view.height);
+  report.settings=await settingsMetrics(settings,'button');
+  await page.screenshot({path:path.join(evidence,'game-settings.png')});
+  const sheetElement = await settings.elementHandle();
+  await page.setViewportSize({width:568,height:264});
+  await swipeSettings(page,settings.locator('.xanadu-setting-options'));
+  assert(await sheetElement.evaluate(node=>node===document.querySelector('.xanadu-settings > section')));
+  await page.screenshot({path:path.join(evidence,'game-settings-landscape-scroll.png')});
+  await page.setViewportSize(view);
+  const damage = settings.getByRole('switch', {name:'显示伤害数字'});
+  const previous = await damage.isChecked();
+  await damage.tap();
+  assert.equal((await disk(page))._setting.showDamageNum,!previous);
+  await damage.tap();
+  const smooth = settings.getByRole('switch',{name:'流畅模式'});
+  const originalSmooth = await smooth.isChecked();
+  await smooth.tap();
+  assert.equal((await disk(page))._setting.iosBetterMode,!originalSmooth);
+  assert(await sheetElement.evaluate(node=>node.isConnected && document.querySelectorAll('[role=dialog]').length===1));
+  await smooth.tap();
+  const slider = settings.getByRole('slider', {name:'音乐'});
+  await slider.fill('72');
+  assert.equal((await disk(page))._setting.musicVolume,.72);
+  await page.touchscreen.tap(4,4);
+  await settings.waitFor({state:'hidden'});
+  await page.waitForFunction(()=>!__XanaduZhaoyunInternals.SceneMgr.instance().co('SettingScene')?.parent);
+  await touchMain(page, 'avatarArea');
+  await page.waitForFunction(()=>__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')?.getChildByName('settingsSurface'));
+  await page.waitForTimeout(300);
+  const avatar = () => page.evaluate(()=>__XanaduZhaoyunInternals.AvatarMgr.instance().U0);
+  const selected = await avatar();
+  const position = await page.evaluate(()=>{
+    const scene = __XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene'), paper = scene.getChildByName('settingsSurface');
+    const control=scene.closeBtn.localToGlobal(new Laya.Point(0,0));
+    return {bottom:paper.y+paper.height,height:scene.height,top:paper.y,close:control.y};
+  });
+  assert.equal(position.bottom,position.height);
+  assert(position.close>=position.top,'the avatar controls must follow the sheet after the scene opens');
+  await page.screenshot({path:path.join(evidence,'avatar-settings.png')});
+  await page.setViewportSize({width:568,height:280});
+  const avatarViewport = () => page.evaluate(() => {
+    const scene = __XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene');
+    const panel = scene?.getChildByName('settingsSurface')?.getChildByName('avatarOptions');
+    if (!panel) return null;
+    const p = panel.localToGlobal(new Laya.Point(panel.width*.12,panel.height*.78));
+    const canvas = document.querySelector('canvas').getBoundingClientRect(), ratio = canvas.height/Laya.stage.height;
+    return {scroll:panel.vScrollBar?.value || 0,max:panel.vScrollBar?.max || 0,
+      x:canvas.left+p.x*canvas.width/Laya.stage.width,y:canvas.top+p.y*ratio,travel:panel.height*ratio*.49};
+  });
+  await page.waitForFunction(()=>__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')
+    ?.getChildByName('settingsSurface')?.getChildByName('avatarOptions')?.vScrollBar?.max>0);
+  const area = await avatarViewport();
+  await swipeUp(page,area.x,area.y,area.travel);
+  await page.waitForFunction(()=>__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')
+    ?.getChildByName('settingsSurface')?.getChildByName('avatarOptions')?.vScrollBar?.value>0);
+  await page.screenshot({path:path.join(evidence,'avatar-settings-landscape-scroll.png')});
+  await page.touchscreen.tap(4,4);
+  await page.waitForFunction(()=>!__XanaduZhaoyunInternals.SceneMgr.instance().co('AvatarSettingScene')?.parent);
+  assert.equal(await avatar(), selected);
+  await page.setViewportSize(view);
+  note('game and avatar settings use bottom sheets; original audio/toggles persist and outside cancellation leaves the avatar intact');
+}
+
+async function checkEditorSections(page, panel) {
+  const scrollBody = panel.locator('.save-editor-body');
+  const groupNames = ['设置','段位','道具','武器','武将'];
+  const shots = ['settings','rank','items','weapons','generals'];
+  const card = await panel.elementHandle();
+  for (const label of await panel.locator('.save-editor-check').all()) {
+    const gap = await label.evaluate(row => {
+      const range = document.createRange();
+      range.selectNodeContents(row.querySelector('span'));
+      return row.querySelector('[role=switch]').getBoundingClientRect().left-range.getBoundingClientRect().right;
+    });
+    assert(gap >= 0 && gap <= 14, 'save preference labels stay adjacent to their switches');
+  }
+  await swipeSettings(page,scrollBody);
+  for (const [i, name] of groupNames.entries()) {
+    const group = panel.getByRole('region',{name,exact:true});
+    assert(await group.isVisible());
+    await group.evaluate(node => {
+      const scroll = node.parentElement;
+      scroll.scrollTop += node.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
+    });
+    assert(await card.evaluate(node => node === document.querySelector('.save-editor-card')));
+    await page.screenshot({path:path.join(evidence,'save-editor-group-'+shots[i]+'.png')});
+  }
+  assert(await scrollBody.evaluate(node=>node.scrollTop>node.clientHeight));
+  await panel.getByRole('heading',{name:'设置',exact:true}).scrollIntoViewIfNeeded();
+}
+
 async function fresh(browser) {
   const {context,page} = await launchGame(browser,320,568);
   try {
+    await checkSettingsSheets(page);
     await checkCoinGestures(page);
     let panel = await openEditor(page);
     assert.equal(await page.locator('.xanadu-save-editor').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0.4)');
-    await closeEditor(panel);
+    await checkEditorSections(page,panel);
+    const goldBeforeDismiss = (await disk(page))._gold;
+    await field(panel,'金币').fill(String(goldBeforeDismiss+100));
+    const surface=await panel.boundingBox();
+    assert.equal(surface.y+surface.height,568);
+    await page.touchscreen.tap(4,4);
+    await panel.waitFor({state:'hidden'});
+    assert.equal((await disk(page))._gold,goldBeforeDismiss);
     note('fresh 320×568 opens and closes the menu editor by touch');
     panel = await openEditor(page);
     const initial = await catalog(page), first = await disk(page);
     assert.equal(initial.keepSkills,true);
     assert.equal(initial.protectStars,false);
     assert(!await field(panel,'失败不掉星').isChecked());
-    await button(panel,'段位').tap();
+    await panel.getByRole('heading',{name:'段位',exact:true}).scrollIntoViewIfNeeded();
     const saveRank=button(panel,'保存段位');
     assert(await saveRank.isVisible());assert.equal(await field(panel,'段内星数').inputValue(),'1');
     if (await saveRank.isEnabled()) await submit(page,panel,'保存段位');
@@ -633,7 +739,7 @@ async function fresh(browser) {
     assert(backBounds && backBounds.y >= 0 && backBounds.y + backBounds.height <= 320);
     await page.screenshot({path:path.join(evidence,'save-rank-568x320.png')});
     await page.setViewportSize({width:320,height:568});
-    await button(panel,'设置').tap();
+    await panel.getByRole('heading',{name:'设置',exact:true}).scrollIntoViewIfNeeded();
     await field(panel,'金币').fill('718');
     await submit(page,panel,'保存设置');
     assert.equal((await disk(page))._gold,718);
@@ -683,17 +789,17 @@ async function dates(browser, first) {
     assert.equal(loaded._winDay,0); assert.equal(loaded._loseDay,0); assert.equal(loaded._isGetLastRankReward,0);
     assert.equal(loaded._curStar,old._curStar); assert.equal(loaded._lastStar,loaded._curStar);
     assert.equal(loaded._win,old._win); assert.equal(loaded._lose,old._lose);
-    await button(panel,'道具').tap();
+    await panel.getByRole('heading',{name:'道具',exact:true}).scrollIntoViewIfNeeded();
     const promotion = byId(cat.props,22), beforeProps = (await disk(page))._props;
     await choose(panel,'选择道具','22:1',24,{...promotion,...promotion.levelDetails[0],rarityName:'卓越 · 1级'});
     await closeEditor(panel);
     assert.deepEqual((await disk(page))._props,beforeProps,'closing a preview cannot change a saved level 3');
     panel = await openEditor(page);
-    await button(panel,'道具').tap();
+    await panel.getByRole('heading',{name:'道具',exact:true}).scrollIntoViewIfNeeded();
     await choose(panel,'选择道具','11',24,byId(cat.props,11));
     await choose(panel,'选择道具','22:3',24,{...promotion,...promotion.levelDetails[2],rarityName:'传说 · 3级'});
     assert.equal(byId((await catalog(page)).props,22).level,3);
-    await button(panel,'设置').tap();
+    await panel.getByRole('heading',{name:'设置',exact:true}).scrollIntoViewIfNeeded();
     assert(await field(panel,'跨天保留技能道具').isChecked());
     await field(panel,'跨天保留技能道具').tap();
     await submit(page,panel,'保存设置');
@@ -701,6 +807,13 @@ async function dates(browser, first) {
     await closeEditor(panel);
     await touchMain(page,'rankBtn');
     const claim = page.getByRole('button',{name:/领取每日段位奖励/});
+    await page.screenshot({path:path.join(evidence,'rank-reward.png')});
+    const untouched=await disk(page);
+    await page.touchscreen.tap(3,3);
+    await claim.waitFor({state:'hidden'});
+    assert.equal((await disk(page))._gold,untouched._gold);
+    assert.equal((await disk(page))._isGetLastRankReward,untouched._isGetLastRankReward);
+    await touchMain(page,'rankBtn');
     await claim.tap();
     const receipt = await disk(page);
     assert.equal(receipt._isGetLastRankReward,1); assert(receipt._gold>loaded._gold);
@@ -842,7 +955,8 @@ async function battleAid(browser) {
     const resume = page.getByRole('dialog',{name:'对局已暂停'});
     assert(await resume.isVisible());
     assert(await panel.isHidden(),'host pause hides the open aid panel and its scrim');
-    await button(resume,'继续游戏').tap();
+    await page.screenshot({path:path.join(evidence,'resume-overlay.png')});
+    await page.touchscreen.tap(3,3);
     assert(await panel.isVisible(),'continuing restores the open aid panel');
     const paused = await rackState(page);
     await button(panel,'发放姓名字').tap();
@@ -861,7 +975,8 @@ async function battleAid(browser) {
     assert.match(await panel.getByRole('status').innerText(),/腾出.*1.*格/);
     const failed=await rackState(page);
     assert.deepEqual(failed.player,after.player,'second three-letter request must not overwrite or partially fill either empty slot');
-    await button(panel,'返回战斗').tap();
+    await page.screenshot({path:path.join(evidence,'battle-aid-dialog.png')});
+    await page.touchscreen.tap(3,3);
     await panel.waitFor({state:'hidden'});
     note('fresh low-rank battle aid creates three rendered player cards and rejects insufficient space without changing either occupied cards or progress');
     const cells = await page.evaluate(() => {
@@ -890,6 +1005,49 @@ async function battleAid(browser) {
   } finally { await context.close(); }
 }
 
+async function canvasDialogs(browser) {
+  const {context,page} = await launchGame(browser,360,640);
+  const shots = path.join(evidence, 'canvas-dialogs');
+  fs.mkdirSync(shots,{recursive:true});
+  try {
+    const names = ['NoticeDialog','SmoothModeTipDialog','DeletePropsTipDialog','WeaponResetTipDialog',
+      'RecycleWeaponDialog','NewWeaponDialog','NewSeasonDialog','RankRewardDialog','ReplacePropsTipDialog',
+      'DeckDialog','PauseDialog','BossTipDialog','WeaponIntroDialog'];
+    for (const name of names) {
+      await page.evaluate(async name=>{
+        let data;
+        const manager=window.__XanaduZhaoyunInternals.SceneMgr.instance();
+        if (name === 'DeletePropsTipDialog') data=11;
+        if (name === 'WeaponIntroDialog') data={weaponId:1};
+        if (name === 'NewSeasonDialog') data={Ftt:1,Utt:1,Ctt:1};
+        if (name === 'RankRewardDialog') data={bestRank:1,bestLevel:1};
+        if (name === 'NewWeaponDialog') {
+          const weapon=XanaduSaveEditorData.catalog().weapons[0];
+          data={list:[{weaponId:weapon.id,count:1,name:weapon.name}]};
+        }
+        if (name === 'ReplacePropsTipDialog') {
+          const active=XanaduSaveEditorData.catalog().props.filter(prop=>prop.kind==='active');
+          for (const prop of active.slice(0,2)) {
+            const result=XanaduSaveEditorData.apply({kind:'prop',id:prop.id,level:1});
+            if (!result.ok) throw new Error(result.error);
+          }
+          data=active[2].id;
+        }
+        await manager.uo(name,true,data);
+      },name);
+      await page.waitForTimeout(1300); // The upstream card draws its entrance after its promise resolves.
+      const before = await disk(page);
+      await page.screenshot({path:path.join(shots,name+'.png')});
+      await page.touchscreen.tap(4,4);
+      await page.waitForFunction(name=>!__XanaduZhaoyunInternals.SceneMgr.instance().ho.get(name)?.parent,name,{timeout:3500});
+      const after = await disk(page);
+      for (const key of ['_gold','_props','_curStar','_isGetLastRankReward','_setting','_equip'])
+        assert.deepEqual(after[key],before[key],name+' backdrop modified '+key);
+      note(name+' closed by outside touch with progression intact');
+    }
+  } finally { await context.close(); }
+}
+
 async function run(browser) {
   const first = await fresh(browser);
   await starProtection(browser,first);
@@ -903,7 +1061,17 @@ async function run(browser) {
   try {
     report.contentDigest = JSON.parse(fs.readFileSync(path.join(content,'../content-build.json'),'utf8')).contentDigest;
     report.browserVersion = browser.version();
-    await run(browser);
+    if (process.argv.includes('--settings-sheets')) {
+      const {context,page} = await launchGame(browser,320,568);
+      try {
+        await checkSettingsSheets(page);
+        await tripleTapCoin(page);
+        const panel = await openEditor(page);
+        await checkEditorSections(page,panel);
+        await closeEditor(panel);
+      } finally { await context.close(); }
+    } else if (process.argv.includes('--canvas-dialogs')) await canvasDialogs(browser);
+    else await run(browser);
     assert.deepEqual(report.errors, []); assert.deepEqual(report.missing, []); assert.deepEqual(report.remote, []);
     report.passed = true;
   } catch (error) {
@@ -911,7 +1079,9 @@ async function run(browser) {
   } finally {
     await browser.close();
     fs.mkdirSync(evidence,{recursive:true});
-    const basename = process.argv.includes('--baseline') ? 'save-editor-baseline.json' : 'save-editor.json';
+    const basename = process.argv.includes('--canvas-dialogs') ? 'canvas-dialogs.json'
+      : process.argv.includes('--settings-sheets') ? 'settings-sheets.json'
+      : process.argv.includes('--baseline') ? 'save-editor-baseline.json' : 'save-editor.json';
     fs.writeFileSync(path.join(evidence,basename),JSON.stringify(report,null,2));
     console.log(JSON.stringify(report,null,2));
   }

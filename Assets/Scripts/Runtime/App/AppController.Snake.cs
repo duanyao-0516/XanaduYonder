@@ -21,7 +21,7 @@ namespace XanaduYonder.Runtime
             var root=UiFactory.Rect(frame,"Snake page",0,0,720,1320);
             UiFactory.Stretch(root);
             snakePage=root.gameObject.AddComponent<SnakePage>();
-            snakePage.Initialize(root,ShowLobby,after=>OpenSettings(after),
+            snakePage.Initialize(root,ShowLobby,SetFeedbackSetting,
                 ()=>activePage==Page.Snake&&modal==null&&!paused&&focused,
                 ()=>data.SoundEnabled,()=>data.HapticsEnabled,feedback,SetStatus);
             snakePage.Changed+=RefreshSnakeRecord;

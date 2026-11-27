@@ -1,5 +1,6 @@
 // Computer-only integration checks. Real Ruffle/SWF; native feedback ACKs are
 // explicitly simulated. This does not verify physical audio or phone vibration.
+const { settingsMetrics, swipeSettings } = require('../../Tests/WebDialogs/metrics.cjs');
 const fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const root=path.resolve(__dirname,'../..'),content=path.join(root,'artifacts/bomb-it/content');
@@ -46,29 +47,30 @@ fs.mkdirSync(output,{recursive:true});
       await page.locator('#settings').tap();
       assert.equal(await page.locator('#modal').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0.4)');
       const box=await page.locator('.sheet-scroll').evaluate(e=>({height:e.clientHeight,scroll:e.scrollHeight}));
-      assert(box.scroll<=box.height+1,'settings should fit without scrolling');
-      assert((await page.locator('.sheet').boundingBox()).width<=320,'settings should not use the wide help-dialog width');
+      const settingsCard=await page.locator('.sheet').elementHandle();
+      const shape=await page.locator('.sheet').evaluate(e=>({width:e.getBoundingClientRect().width,bottom:e.getBoundingClientRect().bottom,topRadius:getComputedStyle(e).borderTopLeftRadius,bottomRadius:getComputedStyle(e).borderBottomLeftRadius}));
+      assert.equal(shape.width,width);assert.equal(shape.bottom,height);assert.equal(shape.topRadius,'20px');assert.equal(shape.bottomRadius,'0px');
       assert.notEqual(await page.locator('.sheet').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)','sheet must have an opaque readable surface');
+      box.typography=await settingsMetrics(page.locator('.sheet'),'#modal-confirm',24);
       await shot('settings-'+width+'x'+height);
       const beforeSound=sound;
       await page.locator('#sound-label').tap();await waitSound(!beforeSound);
       await page.locator('#sound-setting').tap();await waitSound(beforeSound);
-      await page.locator('#control-preferences').tap();
+      if(box.scroll>box.height+1) box.afterSwipe=await swipeSettings(page,page.locator('.sheet-scroll'));
+      await page.locator('#direction-diameter').scrollIntoViewIfNeeded();
+      assert(await settingsCard.evaluate(card=>card===document.querySelector('[role=dialog]')&&card.parentElement.dataset.kind==='settings'));
       assert(await page.locator('#direction-diameter').isVisible());
       await shot('control-settings-'+width+'x'+height);
-      await page.getByRole('button',{name:'返回设置'}).tap();
-      assert(await page.locator('#haptics-setting').isVisible());
-      await page.touchscreen.tap(5,5);assert(await page.locator('#modal').isHidden());
+      await page.touchscreen.tap(5,5);await page.locator('#modal').waitFor({state:'hidden'});
       note('compact settings and backdrop '+width+'x'+height,box);
     }
     await page.setViewportSize({width:320,height:568});
     await page.locator('#settings').tap();
     await shot('settings-320x568');
-    await page.locator('#control-preferences').tap();
+    await page.locator('#direction-diameter').scrollIntoViewIfNeeded();
     await shot('control-settings-320x568');
-    await page.getByRole('button',{name:'返回设置'}).tap();
     await page.locator('#modal-confirm').tap();
-    assert(await page.locator('#modal').isHidden());
+    await page.locator('#modal').waitFor({state:'hidden'});
     await page.setViewportSize({width:844,height:390});await page.evaluate(()=>BombItHost.setViewportInsets(24,0,0,21));
     for(const id of ['hall','settings','help'])assert.notEqual(await page.locator('#'+id).evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
     await page.locator('#settings').tap();await page.locator('#sound-setting').tap();await waitSound(false);
@@ -84,6 +86,33 @@ fs.mkdirSync(output,{recursive:true});
     await page.evaluate(v=>BombItHost.feedbackSettingsResult(v),{...late,ok:true,soundEnabled:false,hapticsEnabled:false});
     assert.equal(await page.locator('#sound-setting').getAttribute('aria-checked'),'true');hold=false;
     await page.locator('#modal-close').tap();note('old native token cannot overwrite current preferences');
+    const exitsBefore=messages.filter(m=>m.type==='exit-intent').length;
+    await page.locator('#hall').tap();await shot('confirm-return');await page.touchscreen.tap(4,4);
+    await page.locator('#modal').waitFor({state:'hidden'});
+    assert.equal(messages.filter(m=>m.type==='exit-intent').length,exitsBefore);
+    const modeBefore=(await state()).mode;
+    await page.locator('[data-mode="single"]').tap();await shot('confirm-mode');await page.touchscreen.tap(4,4);
+    await page.locator('#modal').waitFor({state:'hidden'});assert.equal((await state()).mode,modeBefore);
+    await page.locator('[data-mode="single"]').tap();
+    await page.evaluate(()=>{
+      const player=document.querySelector('ruffle-player'),create=player.ruffle;
+      player.ruffle=function(...args){
+        const api=create.apply(this,args),invoke=api.callExternalInterface;
+        api.callExternalInterface=function(method,...values){
+          if(method==='xanaduFlushSave'){
+            player.ruffle=create;
+            return {saveOk:false};
+          }
+          return invoke.call(this,method,...values);
+        };
+        return api;
+      };
+    });
+    await page.locator('#modal-confirm').tap();
+    await page.locator('#modal[data-kind="save-error"]').waitFor();
+    await shot('save-error');await page.touchscreen.tap(4,4);
+    await page.locator('#modal').waitFor({state:'hidden'});
+    assert.equal((await state()).mode,modeBefore,'a failed save cannot switch players');
     await page.locator('[data-mode="single"]').tap();await page.locator('#modal-confirm').tap();await ready();
     const tapSwf=async(x,y)=>{const b=await page.locator('#player-frame').boundingBox();await page.touchscreen.tap(b.x+x*b.width/550,b.y+y*b.height/400);await page.waitForTimeout(200);};
     await tapSwf(450,215);await page.waitForFunction(()=>BombItHost.status().phase==='select');
@@ -110,7 +139,9 @@ fs.mkdirSync(output,{recursive:true});
     token='browser-native-3';await page.reload();await ready();assert(await page.locator('#continue-run').isVisible());await shot('continue-menu');
     assert.equal(await page.locator('#continue-run').textContent(),'继续闯关 · '+({easy:'简单',normal:'普通',hard:'困难'})[saved.difficulty]+' · 第'+saved.stage+'/'+saved.totalStages+'关');
     await page.locator('#continue-run').tap();assert((await page.locator('#modal-copy').textContent()).includes('地图重新生成'));
-    await page.locator('#modal-confirm').tap();await page.waitForFunction(()=>BombItHost.status().phase==='battle'&&!BombItHost.status().game.restoring);
+    await shot('confirm-continue');await page.touchscreen.tap(4,4);await page.locator('#modal').waitFor({state:'hidden'});
+    assert.deepEqual((await state()).continueInfo,saved);
+    await page.locator('#continue-run').tap();await page.locator('#modal-confirm').tap();await page.waitForFunction(()=>BombItHost.status().phase==='battle'&&!BombItHost.status().game.restoring);
     const resumed=await state();assert.equal(resumed.stage,saved.stage);assert.equal(resumed.mode,saved.mode);assert(resumed.remainingTime>175);
     assert.equal(resumed.continueInfo.totalScore1,saved.totalScore1);await shot('continued-battle');
     note('real checkpoint survives document reload and continue UI restores the saved stage', {saved,resumed});

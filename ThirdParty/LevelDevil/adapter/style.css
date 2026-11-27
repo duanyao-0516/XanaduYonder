@@ -9,9 +9,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
 #level-menu-tools button{width:36px;height:36px;padding:7px;box-shadow:0 2px 0 #d5ddcf}#level-menu-tools svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
 #level-menu-dialog{position:fixed;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;padding:max(12px,var(--ld-safe-top,0px)) max(20px,var(--ld-safe-right,0px)) max(12px,var(--ld-safe-bottom,0px)) max(20px,var(--ld-safe-left,0px))}
 #level-menu-dialog section{background:var(--xy-surface);width:min(380px,100%);max-height:100%;min-height:0;padding:14px 18px;border-radius:var(--xy-radius-surface);display:flex;flex-direction:column;box-shadow:0 15px 55px #112b2355}
-#level-menu-dialog header{display:flex;align-items:center;justify-content:space-between;flex:none;gap:16px;margin-bottom:8px}#level-menu-dialog h2{font-size:18px;margin:0}#level-menu-close{width:36px;height:36px;border:0!important;font-size:25px!important;background:transparent!important}
-.level-menu-scroll{min-height:0;overflow:auto;touch-action:pan-y}.level-menu-scroll p{font-size:13px;line-height:1.65;margin:8px 0}
-#level-menu-settings .level-hint{font-size:11px;color:#7a877f}#level-feedback-status{color:#8c4c28}#level-feedback-retry{padding:6px 10px}
+#level-menu-dialog header{display:flex;align-items:center;justify-content:space-between;flex:none;gap:16px;margin-bottom:8px}#level-menu-dialog h2{font-size:var(--xy-title);margin:0}#level-menu-close{width:44px;height:44px;border:0!important;font-size:20px!important;background:transparent!important}
+.level-menu-scroll{min-height:0;overflow:auto;touch-action:pan-y}.level-menu-scroll p{font-size:.8125rem;line-height:1.65;margin:8px 0}
+#level-menu-settings .level-hint{font-size:var(--xy-note);color:#7a877f}#level-feedback-status{color:#8c4c28}#level-feedback-retry{padding:6px 10px}
 #level-menu-dialog footer{display:flex;justify-content:flex-end;margin-top:10px;flex:none}
-
-#level-menu-dialog[data-kind=settings] section{width:min(304px,100%)}

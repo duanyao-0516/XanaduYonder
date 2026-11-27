@@ -87,6 +87,8 @@ def suites():
 
 
 def run_suite(name, command):
+    if os.environ.get("XANADU_DIALOG_AUDIT"):
+        os.environ["XANADU_DIALOG_SUITE"] = name
     if name not in EDITOR_CHECKS:
         return subprocess.run(command, cwd=ROOT).returncode == 0
 

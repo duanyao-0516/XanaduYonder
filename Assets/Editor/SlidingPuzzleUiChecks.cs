@@ -190,6 +190,11 @@ namespace XanaduYonder.EditorTools
                 f.Root.sizeDelta = originalSizeDelta; page.LayoutNow(); yield return null;
                 Require(page.HasDialog && f.ContainsText("下一关"), "Restoring the safe area preserves the win dialog");
                 f.Capture("campaign-win-after-layout");
+                f.Click(f.Find("Home"), f.Find("SlidingPuzzle dialog overlay"));
+                Require(!page.HasDialog && page.Session.Game.Won && profile.CompletedCount == 1,
+                    "Tapping outside the result exposes the solved board");
+                f.Click(f.Find("查看结算"));
+                Require(page.HasDialog, "A solved board can reopen the original result");
                 page.Save(); page.Save(); Require(profile.CompletedCount == 1, "Repeated terminal saves do not duplicate completion");
                 moves = page.Session.Game.Moves; page.Move(6);
                 Require(page.Session.Game.Moves == moves, "Completed board cannot move");
@@ -417,6 +422,7 @@ namespace XanaduYonder.EditorTools
                     int before = page.Session.Game.Moves; page.Move(5); yield return new WaitForSeconds(.18f);
                     Require(page.Session.Game.Moves == before + 1, "Board moves again after actual host settings/background cycle");
                     f.Click(f.Find("Settings")); Get<Action>(host, "dismissModal")();
+                    yield return new WaitForSecondsRealtime(.30f);
                     Require(Get<GameObject>(host, "modal") == null && !page.Session.Blocked, "Host Back dismissal resumes the page");
                     report.AppendLine("PASS actual host: shared settings, pause/resume and Back callback; no player store created");
                 }
@@ -644,9 +650,9 @@ namespace XanaduYonder.EditorTools
                 if (data.pointerPress != null) ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerUpHandler);
             }
             public void TapBoard(RectTransform tile, RectTransform board) { var data = Begin(tile, board); Release(data, data.position); }
-            public void Click(RectTransform rect)
+            public void Click(RectTransform rect, RectTransform receiver = null)
             {
-                var data = Begin(rect, rect); var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(data.pointerCurrentRaycast.gameObject);
+                var data = Begin(rect, receiver ?? rect); var clicked = ExecuteEvents.GetEventHandler<IPointerClickHandler>(data.pointerCurrentRaycast.gameObject);
                 Release(data, data.position);
                 if (clicked != null && data.pointerPress == clicked) ExecuteEvents.Execute(clicked, data, ExecuteEvents.pointerClickHandler);
             }

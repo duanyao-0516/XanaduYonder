@@ -11,6 +11,7 @@ namespace XanaduYonder.Runtime.Sokoban
             CancelInput(); CloseDialog(); feedback.Stop(); session.SetBlocked(true); Save();
             float s=Scale,width=Mathf.Min((picker?320:360)*s,root.rect.width-32*s);
             var overlay = DialogUi.ModalOverlay(root, "Sokoban dialog overlay");
+            DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             dialog = overlay.gameObject;
             float height=Mathf.Min(cssHeight*s,root.rect.height-64*s);
             var panel=Shape(overlay.transform,"Sokoban dialog",0,0,width,height,DialogCorners.Surface * .5f * s,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;

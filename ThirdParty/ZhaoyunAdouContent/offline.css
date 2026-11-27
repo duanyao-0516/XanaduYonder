@@ -4,7 +4,7 @@ canvas{touch-action:none}
 #offline-loading img{width:min(80vw,420px);height:auto;object-fit:contain}
 .xanadu-local-panel { position:fixed; inset:0; z-index:2147483001; display:grid; place-items:center; padding:16px; box-sizing:border-box; touch-action:manipulation; }
 .xanadu-local-panel section { width:min(100%,400px); box-sizing:border-box; padding:22px; border-radius:var(--xy-radius-surface); background:var(--xy-surface); color:var(--xy-ink); max-height:100%; overflow:auto; touch-action:pan-y; }
-.xanadu-local-panel h2 { margin:0 0 12px; font-size:21px; }
+.xanadu-local-panel h2 { margin:0 0 12px; font-size:var(--xy-title); }
 .xanadu-local-panel p { line-height:1.55; }
 .xanadu-local-panel button { width:100%; margin-top:8px; }
 .xanadu-local-panel p:empty { display:none; }
@@ -21,7 +21,7 @@ canvas{touch-action:none}
   box-sizing: border-box;
   padding: 12px;
   color: var(--xy-ink);
-  font: 16px/1.45 sans-serif;
+  font: var(--xy-body)/1.45 sans-serif;
   touch-action: pan-y;
 }
 .save-editor-card {
@@ -45,7 +45,7 @@ canvas{touch-action:none}
   border-bottom: 1px solid var(--xy-line);
   color: var(--xy-ink);
 }
-.save-editor-card h2 { margin: 0; font-size: 22px; }
+.save-editor-card h2 { margin: 0; font-size: var(--xy-title); }
 .save-editor-card button,
 .save-editor-card .panel-select summary,
 .save-editor-card input[type="text"] {
@@ -69,16 +69,6 @@ canvas{touch-action:none}
   outline: 2px solid #2b6386;
   outline-offset: -2px;
 }
-.save-editor-card nav {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(44px, 1fr));
-  overflow-x: auto;
-  gap: 4px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--xy-line);
-}
-.save-editor-card nav button { padding-inline: 2px; }
-.save-editor-card nav button[aria-pressed="true"],
 .save-editor-card .save-editor-submit {
   color: white;
   background: var(--xy-accent);
@@ -110,18 +100,21 @@ canvas{touch-action:none}
 .save-editor-field input[type="text"] { user-select: text; -webkit-user-select: text; }
 .save-editor-check {
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 8px;
   min-height: 44px;
   touch-action: manipulation;
 }
 
+.save-editor-body > section + section { border-top:1px solid var(--xy-line); margin-top:16px; padding-top:12px; }
+.save-editor-body > section h3 { margin:0 0 8px; font-size:var(--xy-body); color:var(--xy-ink); }
 .save-editor-card section p { margin: 8px 0 12px; }
 .save-editor-submit { width: 100%; }
 .save-editor-message {
   margin: 0;
   padding: 8px 12px;
+  font-size: var(--xy-note);
   overflow-wrap: anywhere;
   color: #22572f;
   background: var(--xy-secondary);
@@ -178,7 +171,7 @@ canvas{touch-action:none}
 .panel-option-type,
 .panel-option-description,
 .panel-option-quality {
-  font-size: 14px;
+  font-size: var(--xy-note);
   line-height: 1.4;
 }
 .panel-option-quality {
@@ -190,3 +183,23 @@ canvas{touch-action:none}
 .panel-option-description { white-space: pre-line; }
 .panel-select-value { gap: 6px; }
 .panel-select-value::after { flex-shrink: 0; }
+
+body::before { padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); margin-left:16px; }
+@media (min-width:360px) { body::before { margin-left:20px; } }
+@media (orientation:landscape) and (min-width:480px) { body::before { margin-left:24px; } }
+.xanadu-settings .xanadu-volume { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:46px; }
+.xanadu-settings .xanadu-volume input { width:min(62%,200px); accent-color:var(--xy-accent); }
+.xanadu-settings .xy-switch { justify-content:flex-start; gap:12px; }
+.xanadu-settings .xy-switch .xy-switch-label { flex:none; }
+.xy-sheet .save-editor-card > header,
+.xy-sheet .save-editor-card > .save-editor-body,
+.xy-sheet .save-editor-card > .save-editor-message { padding-inline:0; }
+.xanadu-settings .xanadu-volume { justify-content:flex-start; }
+.xanadu-settings .xanadu-volume input { height:44px; }
+
+.xanadu-settings > section { display:flex; flex-direction:column; overflow:hidden; }
+.xanadu-setting-options { min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; }
+.xanadu-setting-options h3 { margin:10px 0 2px; color:var(--xy-muted); font-size:var(--xy-note); }
+.xanadu-setting-options h3:first-child { margin-top:0; }
+.xanadu-settings h2, .xanadu-settings button { flex:none; }
+.xanadu-avatar-backdrop { position:fixed; inset:0 0 auto; z-index:2147483001; touch-action:manipulation; }

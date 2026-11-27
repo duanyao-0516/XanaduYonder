@@ -9,7 +9,7 @@ namespace XanaduYonder.Runtime.GoldMiner
     {
         private Action modalBack;
 
-        private RectTransform ModalPanel(float width, float height, bool illustrated = false, Color? scrim = null)
+        private RectTransform ModalPanel(float width, float height, bool illustrated = false, Color? scrim = null, Action sheetBack = null)
         {
             FlushBeforePause();
             session.Suspend(GoldMinerSuspendReason.BlockingModal);
@@ -18,11 +18,20 @@ namespace XanaduYonder.Runtime.GoldMiner
             CloseModal();
             var shade = DialogUi.ModalOverlay(view, "Gold Miner modal", scrim);
             modal = shade.rectTransform;
+            DialogOutsideTap.Bind(shade, () => modalBack?.Invoke());
+            if (sheetBack != null)
+            {
+                var body = DialogSheetLayout.Create(shade, "Gold Miner settings sheet", width, height, sheetBack);
+                modalBack = DialogSheetLayout.AfterClose(body, sheetBack);
+                return body;
+            }
             width = Mathf.Min(width, layout.Safe.width - 48);
             height = Mathf.Min(height, layout.Safe.height - 72);
             float left = layout.Safe.center.x - width * .5f, top = layout.Safe.center.y - height * .5f;
-            return illustrated ? ArtPanel(modal, "Dialog panel", left, top, width, height) :
+            var panel = illustrated ? ArtPanel(modal, "Dialog panel", left, top, width, height) :
                 DialogCorners.Panel(modal, "Dialog panel", left, top, width, height, DialogUi.Surface, DialogCorners.Surface).rectTransform;
+            DialogOutsideTap.Protect(panel);
+            return panel;
         }
 
         private RectTransform Dialog(string title, string description, float height = 510, float descriptionTop = 100)
@@ -108,7 +117,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             else
             {
                 var readyArt = FitHeaderArtwork(panel, 450, 300, -150, 152);
-                GoldMinerSceneView.Picture(panel, "Ready miner", art.Get("characters/ready-thumbsup-miner-v2"), readyArt.x, readyArt.y, readyArt.width, readyArt.height);
+                GoldMinerSceneView.Picture(panel, "Ready miner", art.Get("characters/ready-thumbsup-miner-v2"), readyArt.x, readyArt.y, readyArt.width, readyArt.height).raycastTarget = true;
                 TextLabel(panel, "第 " + state.LevelIndex + " 关", 25, 160, w - 50, 105, 66, Forest, TextAnchor.MiddleCenter, true);
                 AmountRow(panel, "Ready target", 36, 280, w - 72, 98, "目标金额", state.Target, true, UiFactory.Hex("BA3B1F"));
                 AmountRow(panel, "Ready funds", 52, 393, w - 104, 78, "当前资金", state.Cash);
@@ -130,7 +139,13 @@ namespace XanaduYonder.Runtime.GoldMiner
             var state = session.GetStateSnapshot();
             if (state == null) { ShowSelection(); return; }
             if (state.Phase == GoldMinerPhase.Ready) { ShowReady(); return; }
-            if (state.Phase == GoldMinerPhase.Shop) { ConfirmExit(ShowSelection); return; }
+            if (state.Phase == GoldMinerPhase.Shop)
+            {
+                var run = session.GetRunSnapshot();
+                if (AtSourceSaveLimit(run)) ShowResult(run);
+                else ConfirmExit(ShowSelection);
+                return;
+            }
             if (state.Phase == GoldMinerPhase.Won || state.Phase == GoldMinerPhase.Failed || state.Phase == GoldMinerPhase.Completed)
             { ShowResult(session.GetRunSnapshot()); return; }
             var panel = ModalPanel(500, 466);
@@ -148,16 +163,28 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         private void ShowPauseOptions()
         {
-            var panel = ModalPanel(540, 474);
-            float width = panel.rect.width - 72;
-            float scale = Mathf.Min(1, panel.rect.height / 474);
-            TextLabel(panel, "更多选项", 36, 25 * scale, width, 65 * scale, 32, Forest, TextAnchor.MiddleCenter, true);
-            DialogUi.FeedbackSwitches(panel, 36, 104 * scale, width, 68 * scale, 14, soundEnabled(), hapticsEnabled(),
+            var panel = ModalPanel(540, 474, sheetBack: ShowPause);
+            var sections = new DialogSheetSections(panel, 90, 36, 68, 12);
+            TextLabel(panel, "更多选项", sections.Inset, 22, sections.Width, 62, 30, Forest, TextAnchor.MiddleLeft, true);
+            sections.Heading("声音与触感");
+            DialogUi.FeedbackSwitches(panel, sections.Inset, sections.Reserve(68), sections.Width, 68, 14, soundEnabled(), hapticsEnabled(),
                 value => { setSound(value); SettingsChanged(); }, value => setHaptics(value));
-            DialogUi.Disclosure(panel, "玩法说明", 36, 184 * scale, width, 68 * scale, ShowHelp);
-            DialogUi.ActionButton(panel, "返回大厅", 36, 264 * scale, width, 68 * scale, () => ConfirmExit(lobby));
-            DialogUi.ActionButton(panel, "返回暂停菜单", 36, 354 * scale, width, 76 * scale, ShowPause, true);
-            modalBack = ShowPause;
+            bool coop = session.ActiveMode == GoldMinerMode.Coop;
+            bool source = session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Source;
+            sections.Heading(coop ? "双人合作 · 玩法说明" : "单人闯关 · 玩法说明");
+            if (coop)
+            {
+                HelpControl(panel, sections.Inset, sections.Reserve(110), sections.Width, "左半屏点击", "P1 出钩", Amber);
+                HelpControl(panel, sections.Inset, sections.Reserve(110), sections.Width, "右半屏点击", "P2 出钩", Teal);
+            }
+            else HelpControl(panel, sections.Inset, sections.Reserve(110), sections.Width, "看准摆动方向", "点击矿区出钩", Amber);
+            sections.Body("矿物回到地面才入账，重物回收更慢。炸药可丢弃钩上物品，加快回收。"
+                + (source ? "时间到立即结算，未送回的矿物不计入资金。" : "时间到后，已出发的钩子会完成最后一趟。")
+                + (coop ? source ? "两人共同达成目标，炸药共享。" : "两人共同达成目标，炸药各自使用。" : "达成目标后，还能继续赚取资金。"), 22);
+            sections.Heading("对局操作");
+            sections.Action("返回大厅", DialogSheetLayout.AfterClose(panel, () => ConfirmExit(lobby)));
+            sections.Action("返回暂停菜单", modalBack, true);
+            sections.Finish();
         }
 
         private void SetGameplayElementsVisible(bool visible, params string[] names)
@@ -170,49 +197,11 @@ namespace XanaduYonder.Runtime.GoldMiner
             }
         }
 
-        private void SetHelpBackdropVisible(bool visible)
-        {
-            SetGameplayElementsVisible(visible, "Mine HUD", "Mine touch hint", "左半屏点击出钩", "右半屏点击出钩");
-            if (layout != null && !layout.Cooperative) SetGameplayElementsVisible(visible, "Dynamite P1");
-        }
-
-        private void ShowHelp()
-        {
-            bool coop = session.ActiveMode == GoldMinerMode.Coop;
-            // Controls are taught in their actual left/right positions on the mine.
-            var ignored = ModalPanel(1, 1, illustrated: true, scrim: DialogUi.TutorialScrim);
-            ignored.gameObject.SetActive(false);
-            SetHelpBackdropVisible(false);
-            var safe = layout.Safe;
-            var title = ArtPanel(modal, "Help heading", safe.center.x - Mathf.Min(300, safe.width * .45f), safe.y + 14,
-                Mathf.Min(600, safe.width * .9f), 68);
-            title.GetComponent<Image>().pixelsPerUnitMultiplier = 3.2f;
-            TextLabel(title, coop ? "双人合作 · 玩法说明" : "单人闯关 · 玩法说明", 20, 0, title.rect.width - 40, 68, 31, Forest, TextAnchor.MiddleCenter, true);
-            float cardY = layout.Mine.y + 28;
-            if (coop)
-            {
-                HelpControl(modal, safe.x + safe.width * .14f, cardY, safe.width * .31f, "左半屏点击", "P1 出钩", Amber);
-                HelpControl(modal, safe.x + safe.width * .55f, cardY, safe.width * .31f, "右半屏点击", "P2 出钩", Teal);
-            }
-            else HelpControl(modal, safe.x + 75, cardY, safe.width - 150, "看准摆动方向", "点击矿区出钩", Amber);
-            var tips = ArtPanel(modal, "Help tips", safe.center.x - Mathf.Min(380, (safe.width - 72) * .5f),
-                safe.yMax - (coop ? 280 : 500), Mathf.Min(760, safe.width - 72), coop ? 120 : 245);
-            bool source = session.GetRunSnapshot().BalanceProfile == GoldMinerBalanceProfile.Source;
-            string instructions = source
-                ? "矿物回到地面才入账 · 重物回收更慢\n炸药可丢弃钩上物品，加快回收\n时间到立即结算，未送回的矿物不计入资金"
-                : "矿物回到地面才入账 · 重物回收更慢\n炸药可丢弃钩上物品，加快回收\n时间到后，已出发的钩子会完成最后一趟";
-            TextLabel(tips, instructions, 22, 16, tips.rect.width - 44, tips.rect.height - 32,
-                coop ? 20 : 23, Forest, TextAnchor.MiddleCenter);
-            TextLabel(modal, coop ? source ? "共同达成目标，炸药两人共享" : "共同达成目标，炸药各自使用" : "达成目标后，还能继续赚取资金", safe.x + 30, safe.yMax - 146,
-                safe.width - 60, 38, 24, UiFactory.Hex("FFE6A0"), TextAnchor.MiddleCenter, true);
-            DialogUi.ActionButton(modal, "知道了", safe.center.x - 170, safe.yMax - 95, 340, 72, ShowPauseOptions, true);
-            modalBack = ShowPauseOptions;
-        }
-
         private void HelpControl(Transform parent, float x, float y, float width, string title, string action, Color playerColor)
         {
             var panel = BorderedPanel(parent, "Help control " + action, x, y, width, 110,
                 playerColor == Amber ? UiFactory.Hex("FFF0C9") : UiFactory.Hex("E1F4EC"), playerColor, 28, 2);
+            DialogOutsideTap.Protect((RectTransform)panel.transform);
             var tap = UiFactory.CirclePanel(panel.transform, "Tap target", 22, 24, 60, playerColor);
             UiFactory.CirclePanel(tap.transform, "Tap ring", 7, 7, 46, Cream);
             UiFactory.CirclePanel(tap.transform, "Tap centre", 15, 15, 30, playerColor);
@@ -237,7 +226,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             {
                 SetGameplayElementsVisible(false, "Mine HUD", "Mine touch hint", "Dynamite P1", "Dynamite P2", "左半屏点击出钩", "右半屏点击出钩");
                 var victoryArt = FitHeaderArtwork(panel, coop ? 300 : 360, coop ? 200 : 260, coop ? -95 : -85, titleY - 8);
-                GoldMinerSceneView.Picture(panel, "Victory badge", art.Get("ui/badge-victory"), victoryArt.x, victoryArt.y, victoryArt.width, victoryArt.height);
+                GoldMinerSceneView.Picture(panel, "Victory badge", art.Get("ui/badge-victory"), victoryArt.x, victoryArt.y, victoryArt.width, victoryArt.height).raycastTarget = true;
             }
             else
             {
@@ -245,7 +234,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 float artHeight = artWidth * 1064 / 1478;
                 var failureArt = FitHeaderArtwork(panel, artWidth, artHeight, coop ? -90 : -120, coop ? 172 : 302);
                 float artScale = failureArt.height / artHeight;
-                GoldMinerSceneView.Picture(panel, "Retry miner", art.Get("characters/result-failed-miner-sign-v2"), failureArt.x, failureArt.y, failureArt.width, failureArt.height);
+                GoldMinerSceneView.Picture(panel, "Retry miner", art.Get("characters/result-failed-miner-sign-v2"), failureArt.x, failureArt.y, failureArt.width, failureArt.height).raycastTarget = true;
                 titleX = failureArt.x + failureArt.width * .11f;
                 titleWidth = failureArt.width * .78f;
                 titleY = failureArt.y + (coop ? 201 : 325) * artScale;
@@ -304,6 +293,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 DialogUi.ActionButton(panel, "返回大厅", 68, h - 117, w - 136, 72, lobby, false);
             }
             modalBack = ShowSelection;
+            DialogOutsideTap.Bind(modal.GetComponent<Image>(), CloseModal);
         }
 
         private void Contribution(Transform parent, int player, float x, float y, float width, long value)
@@ -358,13 +348,14 @@ namespace XanaduYonder.Runtime.GoldMiner
                 32, Forest, TextAnchor.MiddleCenter, true);
         }
 
-        private void ShowOperationError(Action retry)
+        private void ShowOperationError(Action retry, bool returnToLobby = false)
         {
             var panel = Dialog("暂时无法继续", message ?? "屏幕切换尚未完成，请重试。", 410);
             float w = panel.rect.width;
-            DialogUi.ActionButton(panel, "返回模式", 28, panel.rect.height - 82, 170, 58, ShowSelection, false);
+            Action cancel = returnToLobby ? lobby : ShowSelection;
+            DialogUi.ActionButton(panel, returnToLobby ? "返回大厅" : "返回模式", 28, panel.rect.height - 82, 170, 58, cancel, false);
             DialogUi.ActionButton(panel, "重试", 214, panel.rect.height - 82, w - 242, 58, retry, true);
-            modalBack = ShowSelection;
+            modalBack = cancel;
         }
 
         private void ShowSaveFailure()

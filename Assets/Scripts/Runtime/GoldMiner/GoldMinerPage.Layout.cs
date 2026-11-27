@@ -92,7 +92,7 @@ namespace XanaduYonder.Runtime.GoldMiner
                 if (!visible || !selecting) return;
                 session.Resume(GoldMinerSuspendReason.OrientationPending);
                 BuildSelection();
-            }, generation => ShowOperationError(ShowSelection));
+            }, generation => ShowOperationError(ShowSelection, returnToLobby: true));
         }
 
         private void BuildSelection()

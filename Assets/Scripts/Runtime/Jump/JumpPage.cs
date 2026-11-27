@@ -20,7 +20,9 @@ namespace XanaduYonder.Runtime.Jump
         private Func<bool> soundEnabled;
         private Func<bool> hapticsEnabled;
         private Action<string> setStatus;
-        private Action<string, string, string, Action, string, Action> showDialog;
+        private Action<string, string, string, Action, string, Action, Action> showDialog;
+        private Button reviewResult;
+        private Text instructions;
         private Action returnLobby;
         private Text score;
         private Text best;
@@ -38,7 +40,7 @@ namespace XanaduYonder.Runtime.Jump
 
         public void Initialize(RectTransform root, Action lobby, Action settings, Func<bool> acceptsInput,
             Func<bool> sound, Func<bool> haptics, GameFeedback commonFeedback, Action<string> status,
-            Action<string, string, string, Action, string, Action> dialog)
+            Action<string, string, string, Action, string, Action, Action> dialog)
         {
             returnLobby = lobby;
             shellAcceptsInput = acceptsInput;
@@ -81,7 +83,14 @@ namespace XanaduYonder.Runtime.Jump
             UiFactory.Panel(controls, "Charge track", 56, 0, 608, 10, UiFactory.Hex("DDE5DA"));
             chargeFill = UiFactory.Panel(controls, "Charge amount", 56, 0, 0, 10, UiFactory.Accent);
             var tip = UiFactory.Band(root, "Jump instructions", 1200, 42, 1);
-            UiFactory.Label(tip, "连续落在中心，加分更多。", 56, 0, 608, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            instructions = UiFactory.Label(tip, "连续落在中心，加分更多。", 56, 0, 608, 42, 23, UiFactory.Muted, TextAnchor.MiddleCenter);
+            reviewResult = DialogUi.ActionButton(tip, "查看结算", 230, -18, 260, 78, () =>
+            {
+                reviewResult.gameObject.SetActive(false);
+                instructions.enabled = true;
+                CheckEndState();
+            }, true);
+            reviewResult.gameObject.SetActive(false);
             scene.Render(game.GetSnapshot());
             RefreshScores();
             Debug.Log("XanaduYonder jump ready; save=" + store.SavePath);
@@ -107,6 +116,8 @@ namespace XanaduYonder.Runtime.Jump
         public void Enter()
         {
             visible = true;
+            reviewResult.gameObject.SetActive(false);
+            instructions.enabled = true;
             gameObject.SetActive(true);
             scene.SetVisible(true);
             scene.Render(game.GetSnapshot());
@@ -219,14 +230,19 @@ namespace XanaduYonder.Runtime.Jump
 
         public void CheckEndState()
         {
-            if (!visible || animating || !shellAcceptsInput() || !game.GetSnapshot().IsGameOver) return;
+            if (!visible || animating || reviewResult.gameObject.activeSelf || !shellAcceptsInput() || !game.GetSnapshot().IsGameOver) return;
             showDialog("下一次，再远一点。", "本局得分  " + game.GetSnapshot().Score + "\n最高纪录  " + data.BestScore,
-                "再来一局", Restart, "返回大厅", returnLobby);
+                "再来一局", Restart, "返回大厅", returnLobby, () =>
+                {
+                    hint.text = "本局已结束";
+                    instructions.enabled = false;
+                    reviewResult.gameObject.SetActive(true);
+                });
         }
 
         private void ConfirmRestart()
         {
-            showDialog("重新开始这一局？", "当前跳跃进度将被清空，\n最高纪录和设置会保留。", "重新开始", Restart, "继续当前游戏", CheckEndState);
+            showDialog("重新开始这一局？", "当前跳跃进度将被清空，\n最高纪录和设置会保留。", "重新开始", Restart, "继续当前游戏", CheckEndState, null);
         }
 
         private void Restart()
@@ -239,7 +255,7 @@ namespace XanaduYonder.Runtime.Jump
 
         private void ShowHelp()
         {
-            showDialog("找到跳跃的节奏", "按住蓄力，松手起跳；按越久跳越远。\n落台得1分；连续中心得2、4、6…分。\n落空结束，短跳留在原台可继续。\n落地或落空有短触感；说明见大厅设置。", "知道了", CheckEndState, null, null);
+            showDialog("找到跳跃的节奏", "按住蓄力，松手起跳；按越久跳越远。\n落台得1分；连续中心得2、4、6…分。\n落空结束，短跳留在原台可继续。\n落地或落空有短触感；说明见大厅设置。", "知道了", CheckEndState, null, null, null);
         }
 
         private void RefreshScores()

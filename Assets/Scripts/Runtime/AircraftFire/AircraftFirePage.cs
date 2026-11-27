@@ -74,7 +74,7 @@ namespace XanaduYonder.Runtime.AircraftFire
             selectedMode = mode; selectedCrazy = mode == AircraftMode.Classic && crazy;
             game = new AircraftGame(mode, selectedCrazy, NewSeed(), WorldHeight);
             entry.gameObject.SetActive(false); battleHud.gameObject.SetActive(true);
-            scene.Reset(); elapsedPresentation = 0; sinceSave = 0; terminalPresentation = 0;
+            reviewingResult = false; scene.Reset(); elapsedPresentation = 0; sinceSave = 0; terminalPresentation = 0;
             LayoutNow(); Refresh();
         }
         private static uint NewSeed() => unchecked((uint)DateTime.UtcNow.Ticks ^ (uint)Environment.TickCount) | 1u;
@@ -193,7 +193,7 @@ namespace XanaduYonder.Runtime.AircraftFire
             if (dialog == null)
             {
                 if (game.Phase == AircraftPhase.Paused) ShowPause();
-                else if (terminal && terminalPresentation >= .8f)
+                else if (terminal && !reviewingResult && terminalPresentation >= .8f)
                 { Save(); ShowResult(); }
             }
             Refresh(); audioPlayer.Tick(CanPlay, terminal && terminalPresentation < 1.2f);

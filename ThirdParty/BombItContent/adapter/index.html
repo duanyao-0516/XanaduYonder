@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
   <title>Q版泡泡堂</title>
-  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="dialogs.css">
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="dialogs.css"><script src="dialogs.js"></script>
   <script src="feedback.js" defer></script>
   <script src="guide.js" defer></script>
   <script src="host.js" defer></script>
@@ -97,6 +97,7 @@
         <div class="sheet-scroll">
           <div id="modal-copy"></div>
           <div id="settings-content" hidden>
+            <h3 class="setting-group-title">声音与触感</h3>
             <div class="xy-feedback-switches">
               <button id="sound-setting" class="xy-switch" type="button" role="switch" aria-labelledby="sound-label" aria-checked="true"><span id="sound-label" class="xy-switch-label">声音</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
               <button id="haptics-setting" class="xy-switch" type="button" role="switch" aria-labelledby="haptics-label" aria-checked="true"><span id="haptics-label" class="xy-switch-label">触感</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
@@ -104,9 +105,7 @@
             <p class="setting-hint">触感用于放弹按键，也受系统触感设置影响。</p>
             <p id="feedback-status" role="status" hidden></p>
             <button id="feedback-retry" class="xy-secondary" type="button" hidden>重试保存</button>
-            <button id="control-preferences" type="button" aria-haspopup="dialog">操作设置 <span aria-hidden="true">›</span></button>
-          </div>
-          <div id="control-settings-content" hidden>
+            <h3 class="setting-group-title">操作</h3>
             <div class="setting-row"><span>操作方式</span><div id="input-settings" role="group" aria-label="操作方式">
               <button data-input-style="joystick" type="button" aria-pressed="true">摇杆</button>
               <button data-input-style="dpad" type="button" aria-pressed="false">方向键</button>

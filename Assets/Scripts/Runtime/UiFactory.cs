@@ -86,6 +86,7 @@ namespace XanaduYonder.Runtime
             label.horizontalOverflow = HorizontalWrapMode.Wrap;
             // Noto CJK uses a 1.448 em line box; truncation can hide an entire large heading.
             label.verticalOverflow = VerticalWrapMode.Overflow;
+            DialogTypography.TextCreated(label);
             return label;
         }
 
@@ -148,10 +149,12 @@ namespace XanaduYonder.Runtime
             icon.raycastTarget = false;
         }
 
-        internal static Button ConfigureButton(Graphic image, Action action)
+        internal static Button ConfigureButton(Graphic image, Action action) => ConfigureButton<Button>(image, action);
+
+        internal static T ConfigureButton<T>(Graphic image, Action action) where T : Button
         {
             image.raycastTarget = true;
-            var button = image.gameObject.AddComponent<Button>();
+            var button = image.gameObject.AddComponent<T>();
             button.targetGraphic = image;
             var colors = button.colors;
             colors.highlightedColor = new Color(.94f, .96f, .92f);

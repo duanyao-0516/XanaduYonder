@@ -109,6 +109,7 @@
     element.addEventListener('keydown', event => {
       if (event.key === 'Escape' && element.open) {
         event.preventDefault();
+        event.stopPropagation();
         element.open = false;
         summary.focus();
       } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

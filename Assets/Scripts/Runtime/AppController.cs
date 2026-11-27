@@ -295,7 +295,7 @@ namespace XanaduYonder.Runtime
             idiomPage.Initialize(root, ShowLobby,
                 () => activePage == Page.Idiom && modal == null && !paused &&
                     (focused || (idiomPage.KeyboardVisible && idiomPage.KeyboardForeground)),
-                SetStatus, OpenTextGameModal, CloseModal);
+                SetStatus, OpenTextGameModal, CloseModal, CreateSheet);
             idiomPage.Changed += RefreshIdiomRecord;
         }
 
@@ -474,7 +474,9 @@ namespace XanaduYonder.Runtime
             jumpPage = root.gameObject.AddComponent<JumpPage>();
             jumpPage.Initialize(root, ShowLobby, OpenSettings,
                 () => activePage == Page.Jump && modal == null && !paused && focused,
-                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog);
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus,
+                (title, message, primary, confirm, secondary, cancel, outside) =>
+                    ShowMessageDialog(title, message, primary, confirm, secondary, cancel, false, outside));
             jumpPage.Changed += RefreshJumpBest;
             jumpPage.Leave();
         }
@@ -486,9 +488,9 @@ namespace XanaduYonder.Runtime
             var root = UiFactory.Rect(frame, "Sheep page", 0, 0, 720, 1320);
             UiFactory.Stretch(root);
             sheepPage = root.gameObject.AddComponent<SheepPage>();
-            sheepPage.Initialize(root, ShowLobby, after => OpenSettings(after),
+            sheepPage.Initialize(root, ShowLobby, AddFeedbackControls,
                 () => activePage == Page.Sheep && modal == null && !paused && focused,
-                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog, OpenSheepModal, CloseModal);
+                () => data.SoundEnabled, () => data.HapticsEnabled, feedback, SetStatus, ShowDialog, OpenSheepModal, CloseModal, CreateSheet);
             sheepPage.Changed += RefreshSheepRecord;
             sheepPage.Leave();
         }
@@ -1315,7 +1317,7 @@ namespace XanaduYonder.Runtime
             else if (activePage == Page.Gomoku) gomokuPage.HandleSystemBack(ConfirmSystemBackExit);
             else if (activePage == Page.ClassicBoards) boardPage.Back(ConfirmSystemBackExit);
             else if (activePage != Page.Lobby) { if (ConfirmSystemBackExit()) ShowLobby(); }
-            else ShowDialog("暂时离开？", "进度已经保存在这台手机上。", "退出应用", Application.Quit, "再待一会儿", () => { });
+            else ShowDialog("退出应用？", null, "退出", Application.Quit, "取消");
         }
     }
 }

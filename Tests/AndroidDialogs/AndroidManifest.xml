@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="net.xanadu.validation">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
+  <application android:label="Web host validation" />
+  <instrumentation android:name=".Runner" android:targetPackage="com.duanyao.xanaduyonder"/>
+</manifest>

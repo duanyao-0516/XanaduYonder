@@ -10,17 +10,27 @@ namespace XanaduYonder.Runtime.AircraftFire
         private enum DialogKind { None, Pause, Restart, Help, Records, Result }
         private GameObject dialog;
         private DialogKind dialogKind;
+        private bool reviewingResult;
 
         private RectTransform Dialog(DialogKind kind, string title, float height)
         {
             CloseDialog(); pointer.Cancel();
             var overlay = DialogUi.ModalOverlay(hud, "Aircraft " + kind + " overlay");
+            DialogOutsideTap.Bind(overlay, DismissOutside);
             dialog = overlay.gameObject; dialogKind = kind;
             var panel = DialogCorners.Panel(overlay.transform, "Aircraft dialog", 0, 0, 568, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 24, 24, 520, 54, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             return panel.rectTransform;
         }
+        private void DismissOutside()
+        {
+            if (dialogKind == DialogKind.Restart) { ShowPause(); return; }
+            if (dialogKind == DialogKind.Pause) { Continue(); return; }
+            if (dialogKind == DialogKind.Result) reviewingResult = true;
+            CloseDialog();
+        }
+
         private void CloseDialog()
         {
             if (dialog != null) { dialog.SetActive(false); Destroy(dialog); dialog = null; }
@@ -71,6 +81,7 @@ namespace XanaduYonder.Runtime.AircraftFire
         }
         private void ShowResult()
         {
+            reviewingResult = false;
             var won = game.Phase == AircraftPhase.Completed;
             var panel = Dialog(DialogKind.Result, won ? "全部通关" : "游戏结束", 560);
             UiFactory.Label(panel, game.Score.ToString("N0"), 28, 92, 512, 68, 48, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);

@@ -22,7 +22,7 @@ namespace XanaduYonder.Runtime.HappyBall
         private Action<Action> openSettings;
         private Action<string> setStatus;
         private Action<string, string, string, Action, string, Action> showDialog;
-        private bool visible, foreground = true, manuallyPaused = true, dirty;
+        private bool visible, foreground = true, manuallyPaused = true, dirty, coverDismissed;
         private double accumulator, pendingRotation;
         private float sinceSave, lastPulse, deathFeedbackRemaining;
         private string hostWarning, loadWarning;
@@ -67,7 +67,7 @@ namespace XanaduYonder.Runtime.HappyBall
         public void Enter()
         {
             deathFeedbackRemaining = 0;
-            visible = true; manuallyPaused = true; accumulator = pendingRotation = 0;
+            visible = true; manuallyPaused = true; coverDismissed = false; accumulator = pendingRotation = 0;
             gameObject.SetActive(true); scene.SetVisible(true); scene.Reset(game.GetSnapshot());
             input.Cancel(); RefreshScores(); RefreshOverlay(); RefreshError();
             setStatus(SaveError ?? loadWarning ?? "");
@@ -111,6 +111,8 @@ namespace XanaduYonder.Runtime.HappyBall
 
         private void TogglePause()
         {
+            if (coverDismissed && game.GameOver) { coverDismissed = false; RefreshOverlay(); return; }
+            coverDismissed = false;
             if (IsRunning) { Suspend(); Save(); }
             else Resume();
         }
@@ -207,7 +209,7 @@ namespace XanaduYonder.Runtime.HappyBall
         private void Restart()
         {
             Suspend();
-            game = new HappyBallGame(NewSeed()); data.Game = game.GetSnapshot();
+            coverDismissed = false; game = new HappyBallGame(NewSeed()); data.Game = game.GetSnapshot();
             data.HasStarted = false; data.ResultRecorded = false;
             loadWarning = null;
             scene.Reset(data.Game); RefreshScores(); RefreshOverlay(); Save();
@@ -247,7 +249,7 @@ namespace XanaduYonder.Runtime.HappyBall
             if (scoreText == null || game == null) return;
             scoreText.text = game.Score.ToString(CultureInfo.InvariantCulture);
             bestText.text = data.BestScore.ToString(CultureInfo.InvariantCulture);
-            if (pauseText != null) pauseText.text = IsRunning ? "暂停" : "继续";
+            if (pauseText != null) pauseText.text = game.GameOver && coverDismissed ? "结算" : IsRunning ? "暂停" : "继续";
         }
 
         private void RefreshOverlay()
@@ -258,13 +260,14 @@ namespace XanaduYonder.Runtime.HappyBall
             overlayTitle.text = over ? "本局 " + game.Score : data.HasStarted ? "已暂停" : "准备好了";
             overlayDetail.text = over ? "最高纪录 " + data.BestScore : "";
             resumeText.text = over ? "再来一局" : data.HasStarted ? "继续游戏" : "开始游戏";
-            pauseText.text = IsRunning ? "暂停" : "继续";
-            pauseButton.interactable = !over;
+            pauseText.text = over && coverDismissed ? "结算" : IsRunning ? "暂停" : "继续";
+            pauseButton.interactable = !over || coverDismissed;
+            if (pauseOverlay.activeInHierarchy) DialogFocusScope.ObserveVisible(pauseOverlay.transform);
         }
 
         private void RefreshCoverVisibility()
         {
-            bool show = deathFeedbackRemaining <= 0 && (manuallyPaused || game.GameOver) && acceptsInput();
+            bool show = !coverDismissed && deathFeedbackRemaining <= 0 && (manuallyPaused || game.GameOver) && acceptsInput();
             if (pauseOverlay.activeSelf != show) pauseOverlay.SetActive(show);
         }
 

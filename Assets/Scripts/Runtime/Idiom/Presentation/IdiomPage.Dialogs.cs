@@ -12,13 +12,18 @@ namespace XanaduYonder.Runtime.Idiom
 
         private RectTransform Dialog(string title, float height, Action back)
         {
+            return OpenDialog(title, height, back, false);
+        }
+
+        private RectTransform OpenDialog(string title, float height, Action back, bool settings)
+        {
             Save(); HideKeyboard(); Suspend();
             CloseDialog();
-            var panel = openModal(title, height, ReturnFromDialog);
+            var panel = (settings ? openSheet : openModal)(title, height, ReturnFromDialog);
             modalOpen = true; modalBack = back;
             dialogNotice = null;
             foreach (var text in panel.GetComponentsInChildren<Text>()) text.supportRichText = false;
-            UiFactory.CircleButton(panel, UiIconKind.Close, panel.rect.width - 72, 43, 48, ReturnFromDialog);
+            if (!settings) UiFactory.CircleButton(panel, UiIconKind.Close, panel.rect.width - 72, 43, 48, ReturnFromDialog);
             return panel;
         }
 
@@ -223,60 +228,83 @@ namespace XanaduYonder.Runtime.Idiom
 
         private void ShowMenu()
         {
-            Save();
-            var panel = Dialog("成语接龙 · 设置", 626, null);
-            IdiomPreferenceSwitch.Create(panel, "发送后收起键盘", 114, data == null || data.CloseKeyboardAfterSend, data != null, value =>
+            var panel = OpenDialog("成语接龙 · 设置", 640, null, true);
+            var sections = new DialogSheetSections(panel);
+            sections.Heading("输入与显示");
+            sections.Switch("发送后收起键盘", data == null || data.CloseKeyboardAfterSend, value =>
             {
                 data.CloseKeyboardAfterSend = value; Save();
-            });
-            IdiomPreferenceSwitch.Create(panel, "是否显示拼音", 192, data != null && data.ShowPinyin, data != null, value =>
+            }, data != null);
+            sections.Switch("是否显示拼音", data != null && data.ShowPinyin, value =>
             {
                 data.ShowPinyin = value; Save(); Refresh();
-            });
-            IdiomPreferenceSwitch.Create(panel, "双人对战发送固定右侧", 270, data == null || data.FixedLocalActionSides, data != null, value =>
+            }, data != null);
+            sections.Switch("双人对战发送固定右侧", data == null || data.FixedLocalActionSides, value =>
             {
                 data.FixedLocalActionSides = value; Save(); Refresh();
-            });
-            DialogUi.Disclosure(panel, "玩法说明", 32, 350, 532, 68, () => ShowHelp(ShowMenu));
-            DialogUi.Disclosure(panel, "对局管理", 32, 428, 532, 68, ShowGameActions);
-            DialogUi.ActionButton(panel, "继续", 32, 526, 532, 66, ReturnFromDialog, true);
-        }
+            }, data != null);
 
-        private void ShowGameActions()
-        {
-            bool recoverCurrent = Game != null && store != null && store.NeedsRecovery;
-            var panel = Dialog("对局管理", recoverCurrent ? 550 : 468, ShowMenu);
-            var finish = DialogUi.ActionButton(panel, "结束本轮", 32, 112, 532, 70, () =>
+            sections.Heading("对局管理");
+            sections.Body("结束本轮后仍可回顾。开启新局会替换本局进度，最佳记录与生词本会保留。");
+            Action cancelPending = null;
+            void ConfirmInline(string title, string confirm, bool enabled, Action next)
             {
-                Confirm("结束这一轮？", "已完成的成语仍可回看，\n生词本会一直保留。", "回顾本轮", () =>
+                float top = sections.Reserve(88);
+                float half = (sections.Width - 12) / 2;
+                Button open = null, cancel = null, apply = null;
+                void Pending(bool pending)
                 {
-                    Game.Finish(); Save(); Refresh(); Changed?.Invoke(); ShowSummary();
-                }, ShowGameActions);
-            });
-            finish.interactable = Game != null && Game.IsStarted && !Game.IsEnded;
-            var restart = DialogUi.ActionButton(panel, "新一局", 32, 198, 532, 70, () =>
+                    open.gameObject.SetActive(!pending);
+                    cancel.gameObject.SetActive(pending);
+                    apply.gameObject.SetActive(pending);
+                }
+                open = DialogUi.ActionButton(panel, title, sections.Inset, top, sections.Width, 88, () =>
+                {
+                    cancelPending?.Invoke();
+                    Pending(true);
+                    cancelPending = () => Pending(false);
+                    if (UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject == null)
+                        cancel.Select();
+                });
+                open.interactable = enabled;
+                cancel = DialogUi.ActionButton(panel, "取消", sections.Inset, top, half, 88, () =>
+                {
+                    Pending(false); cancelPending = null;
+                });
+                apply = DialogUi.ActionButton(panel, confirm, sections.Inset + half + 12, top, half, 88,
+                    DialogSheetLayout.AfterClose(panel, () => { CloseDialog(); next(); }), true);
+                Pending(false);
+            }
+            bool active = Game != null && Game.IsStarted && !Game.IsEnded;
+            ConfirmInline("结束本轮", "回顾本轮", active, () =>
             {
-                CloseDialog(); RestartWithReturn(ShowGameActions);
+                Game.Finish(); Save(); Refresh(); Changed?.Invoke(); ShowSummary();
             });
-            restart.interactable = Game != null;
-            if (recoverCurrent)
-                DialogUi.ActionButton(panel, "保留旧档，保存当前进度", 32, 284, 532, 70,
-                    () => ConfirmCurrentGameRecoveryWithReturn(ShowGameActions), false, 23);
-            DialogUi.ActionButton(panel, "返回设置", 32, panel.rect.height - 102, 532, 66, ReturnFromDialog, true);
+            if (active) ConfirmInline("新一局", "确认新一局", true, ResetMode);
+            else sections.Action("新一局", DialogSheetLayout.AfterClose(panel, () => { CloseDialog(); ResetMode(); }), enabled: Game != null);
+            if (Game != null && store != null && store.NeedsRecovery)
+            {
+                sections.Body("恢复保存时会把旧档保留为诊断备份，再保存所有模式的进度与生词本。");
+                ConfirmInline("保留旧档，保存当前进度", "保留并保存", true, () => RecoverCurrentGame());
+            }
+            sections.Heading("玩法说明");
+            sections.Body(HelpText);
+            sections.Action("继续", DialogSheetLayout.AfterClose(panel, ReturnFromDialog), true);
+            sections.Finish();
         }
 
-        private void ShowHelp(Action back)
-        {
-            var panel = Dialog("成语接龙 · 玩法", 750, back);
-            IdiomUi.ScrollText(panel,
-                "同字：上一词末字，接下一词首字。\n同音：首尾读音相同即可，声调不限。\n\n" +
+        private const string HelpText = "同字：上一词末字，接下一词首字。\n同音：首尾读音相同即可，声调不限。\n\n" +
                 "人机对战可选机器或你先开始；双人本地对战可选左方或右方先开始，之后轮流接词。双方本局用过的成语都不能重复。\n\n" +
                 "提示一直免费。每回合给一组，查看同组不重复计次。人机模式你有 3 次；双人模式双方各 3 次。第 3 次提示后仍可选词继续，提示用尽后按钮变为“认输”。除了主动认输或结束本轮，只有完整词库没有未用过的合法接法时，才会自动结算。\n\n" +
                 "人机模式统计你接出的成语；双人模式统计总数和双方各自的数量。没有倒计时，也没有错误次数限制。\n\n" +
                 "点开成语查看各词库的原拼音、释义和典故，加入生词本。APP 会适时带你复习生词。\n\n" +
                 "人机对战中，生词本外独立接出的词会进入个人熟悉词；本回合提示过或查看过释义的词不算独立输入。生词仍由你点击“我记住了”确认。双人不会积累个人熟悉词。\n\n" +
-                "生词本中的“我记住了”会把词转为熟悉词；单纯移出只取消收藏。四种对局各自续玩，生词本共用。",
-                32, 116, 532, panel.rect.height - 218);
+                "生词本中的“我记住了”会把词转为熟悉词；单纯移出只取消收藏。四种对局各自续玩，生词本共用。";
+
+        private void ShowHelp(Action back)
+        {
+            var panel = Dialog("成语接龙 · 玩法", 750, back);
+            IdiomUi.ScrollText(panel, HelpText, 32, 116, 532, panel.rect.height - 218);
             DialogUi.ActionButton(panel, "知道了", 32, panel.rect.height - 84, 532, 62, ReturnFromDialog, true);
         }
 
@@ -343,15 +371,19 @@ namespace XanaduYonder.Runtime.Idiom
         {
             Confirm("恢复保存当前进度？", "旧文件先保留为诊断备份，\n再保存所有模式的当前进度。\n生词本不受影响。", "保留并保存", () =>
             {
-                string error;
-                if (!store.TryResetProtected(out error))
-                {
-                    saveError = error ?? "旧档暂未能归档，请重试。";
-                    setStatus(saveError); Refresh(); return;
-                }
-                initialWarning = null;
-                Save(); Refresh(); Changed?.Invoke(); back?.Invoke();
+                if (RecoverCurrentGame()) back?.Invoke();
             }, back);
+        }
+
+        private bool RecoverCurrentGame()
+        {
+            if (!store.TryResetProtected(out var error))
+            {
+                saveError = error ?? "旧档暂未能归档，请重试。";
+                setStatus(saveError); Refresh(); return false;
+            }
+            initialWarning = null;
+            Save(); Refresh(); Changed?.Invoke(); return true;
         }
 
         private void OpenNotebook(bool fromSummary)

@@ -82,6 +82,7 @@ namespace XanaduYonder.EditorTools
                         fixture.Open("ShowSettings"); fixture.Capture("settings");
                         fixture.Open("ShowHelp"); fixture.Capture("help");
                     }
+                    if (size.x == 1515 || size.x == 720 && size.y == 1320) fixture.CheckPauseDirectory();
                     Report.AppendLine("PASS production UI render " + size.x + "x" + size.y);
                 }
                 using (var fixture = new Fixture(720, 960))
@@ -253,6 +254,31 @@ namespace XanaduYonder.EditorTools
             }
 
             internal void Open(string method) { Invoke(page, method); }
+
+            internal void CheckPauseDirectory()
+            {
+                Ready(); Pause(); Open("ConfirmRestart");
+                var confirmation = Get<RectTransform>(page, "overlay");
+                Require(Array.Exists(confirmation.GetComponentsInChildren<Button>(), b => b.name == "继续当前游戏"), "An active run can cancel restarting.");
+                DialogScreenshotAudit.CaptureCurrent(confirmation);
+                Open("ShowPauseOptions");
+                var overlay = Get<RectTransform>(page, "overlay");
+                Require(overlay.GetComponentInChildren<DialogSheetLayout>() != null, "More settings opens a real sheet.");
+                DialogScreenshotAudit.CaptureCurrent(overlay);
+                var sheet = overlay.GetComponentInChildren<DialogSheetLayout>();
+                var labels = overlay.GetComponentsInChildren<Text>();
+                Require(Array.Exists(labels, l => l.text == "声音与触感") && Array.Exists(labels, l => l.text == "玩法说明")
+                    && Array.Exists(labels, l => l.text.Contains("64574fa0")), "Controls, play instructions and full license share a single settings owner.");
+                sheet.NormalizedPosition = 0;
+                Require(!sheet.IsDismissing && Get<RectTransform>(page, "overlay") == overlay, "Reading the license preserves the settings sheet.");
+                DialogScreenshotAudit.CaptureCurrent(overlay);
+                Open("ShowHelp");
+                foreach (var button in Get<RectTransform>(page, "overlay").GetComponentsInChildren<Button>())
+                    if (button.name == "素材与许可") { button.onClick.Invoke(); break; }
+                DialogScreenshotAudit.CaptureCurrent(Get<RectTransform>(page, "overlay"));
+                Open("ConfirmChange");
+                DialogScreenshotAudit.CaptureCurrent(Get<RectTransform>(page, "overlay"));
+            }
 
             internal void CheckDuckCrash()
             {

@@ -74,7 +74,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         public void Enter()
         {
             settingsGeneration++; settingsBlocked=false; hostBlocked=false;
-            CloseDialog(); session=new FlappySession(NewSeed()); scene.Reset();
+            reviewingResult = false; CloseDialog(); session=new FlappySession(NewSeed()); scene.Reset();
             visible=true; gameObject.SetActive(true); pointer.ResetContacts();
             LayoutNow(); Refresh(); setStatus?.Invoke(SaveError??loadWarning??"");
         }
@@ -114,6 +114,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         internal void TogglePause()
         {
             if(!visible||!foreground||settingsBlocked||!HostAllows||dialog!=null) return;
+            if (reviewingResult && session.Phase == FlappyPhase.Result) { reviewingResult = false; ShowResult(); return; }
             if(session.Phase==FlappyPhase.Result||session.Phase==FlappyPhase.Dying) return;
             Suspend(); Save(); ShowPause();
         }
@@ -127,7 +128,7 @@ namespace XanaduYonder.Runtime.FlappyBird
             if(!visible||!foreground||settingsBlocked||!HostAllows) return;
             if(session.Phase==FlappyPhase.Result&&!session.CanRestart) return;
             if(session.Phase!=FlappyPhase.Ready&&session.Phase!=FlappyPhase.Paused&&session.Phase!=FlappyPhase.Result) return;
-            Save(); CloseDialog(); pointer.Cancel(); session.Restart(NewSeed()); scene.Reset(); Refresh();
+            reviewingResult = false; Save(); CloseDialog(); pointer.Cancel(); session.Restart(NewSeed()); scene.Reset(); Refresh();
         }
         internal void RequestHome() { RequestSystemHome(null); }
         private void RequestSystemHome(Func<bool> confirmExit)
@@ -223,13 +224,14 @@ namespace XanaduYonder.Runtime.FlappyBird
             readyHint.SetActive(session.Phase==FlappyPhase.Ready);
             countdownHint.SetActive(session.Phase==FlappyPhase.Countdown);
             countdownText.text=session.CountdownNumber.ToString();
-            pauseButton.interactable=session.Phase!=FlappyPhase.Dying&&session.Phase!=FlappyPhase.Result;
+            pauseButton.interactable=session.Phase!=FlappyPhase.Dying&&(session.Phase!=FlappyPhase.Result||reviewingResult);
+            pauseCaption.text = reviewingResult ? "结算" : "暂停";
             if(render&&scene!=null) scene.Render(session,0,false);
             if(settingsBlocked) return;
             if(dialog==null)
             {
                 if(session.Phase==FlappyPhase.Paused) ShowPause();
-                else if(session.Phase==FlappyPhase.Result) ShowResult();
+                else if(session.Phase==FlappyPhase.Result && !reviewingResult) ShowResult();
             }
             if(resultRestart!=null) resultRestart.interactable=session.CanRestart;
         }

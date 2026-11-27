@@ -12,7 +12,7 @@ namespace XanaduYonder.Runtime.BoardGames
     {
         private const float CheckersComputerTurnPause = 1f;
         private enum ScreenKind { Setup, Formation, Match, Tutorial, Replay }
-        private enum PanelKind { None, Rules, Settings, Resume, Replace, Undo, Promote, Result, Record, Leave, Lessons, Preferences, Feedback, Manage }
+        private enum PanelKind { None, Rules, Settings, Replace, Promote, Result, Leave, Lessons }
         private RectTransform root, view;
         private Action leave;
         private Func<bool> canUseHost, sound, haptics;
@@ -42,7 +42,7 @@ namespace XanaduYonder.Runtime.BoardGames
         private int xiangqiMotionActor;
         private BoardMove[] promotions = Array.Empty<BoardMove>();
         private bool shown, foreground, paused, handoff, saveFailed, feedbackSaveFailed, aiError, routeIsStep;
-        private bool lastFeedbackWasSound;
+        private bool lastFeedbackWasSound, boardPromptCollapsed;
         private string warning, notice;
         private Vector2 layoutSize;
         private CancellationTokenSource cancellation;
@@ -205,6 +205,7 @@ namespace XanaduYonder.Runtime.BoardGames
             CancelSearch();
             xiangqiMotion = BoardMove.None;
             profile.Options = value.Options;
+            boardPromptCollapsed = false;
             match = value;
             suggestion = BoardMove.None;
             screen = ScreenKind.Match;
@@ -459,6 +460,7 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void Commit(BoardMove move)
         {
+            boardPromptCollapsed = false;
             if (screen == ScreenKind.Tutorial)
             {
                 var lesson = lessons[lessonIndex];
@@ -525,13 +527,6 @@ namespace XanaduYonder.Runtime.BoardGames
             notice = null;
         }
 
-        private void RequestUndo()
-        {
-            if (!InMatch || !match.CanUndo || !Allowed) return;
-            if (match.Options.Local) OpenPanel(PanelKind.Undo);
-            else Undo();
-        }
-
         private void ClaimDraw()
         {
             if (!CanClaimDraw) return;
@@ -554,6 +549,7 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void Pause()
         {
+            boardPromptCollapsed = false;
             if (!InMatch || match.Terminal) return;
             CancelSearch();
             xiangqiMotion = BoardMove.None;
@@ -567,6 +563,7 @@ namespace XanaduYonder.Runtime.BoardGames
         {
             if (!Allowed) return;
             handoff = false;
+            boardPromptCollapsed = false;
             if (screen != ScreenKind.Tutorial) paused = aiError = false;
             Render();
         }
@@ -575,13 +572,18 @@ namespace XanaduYonder.Runtime.BoardGames
         {
             if (kind != panel) dialogFocus.Remove(kind);
             CancelSearch();
-            if (kind == PanelKind.Record)
+            if (kind == PanelKind.Settings)
             {
-                int viewer = -1;
-                if (game == BoardGameId.Army && !handoff && (!match.Options.Local || !paused))
-                    viewer = match.Options.Local ? match.Position.CurrentSide : match.Options.Human;
-                recordLines = match.DescribeHistory(viewer);
-                recordScrollOffset = 0;
+                confirmSettingsUndo = false;
+                settingsPosition = 1;
+                recordStart = 0;
+                if (InMatch)
+                {
+                    int viewer = -1;
+                    if (game == BoardGameId.Army && !handoff && (!match.Options.Local || !paused))
+                        viewer = match.Options.Local ? match.Position.CurrentSide : match.Options.Human;
+                    recordLines = match.DescribeHistory(viewer);
+                }
             }
             panel = kind;
             Render();
@@ -589,24 +591,24 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void ClosePanel()
         {
+            if (settingsBack != null) settingsBack();
+            else ClosePanelImmediately();
+        }
+
+        private void ClosePanelImmediately()
+        {
             if (panel == PanelKind.Promote) { ClearDraft(); }
-            switch (panel)
-            {
-                case PanelKind.Resume: panel = PanelKind.Manage; break;
-                case PanelKind.Record:
-                case PanelKind.Preferences:
-                case PanelKind.Feedback:
-                case PanelKind.Manage: panel = PanelKind.Settings; break;
-                default: panel = PanelKind.None; break;
-            }
+            panel = PanelKind.None;
+            confirmSettingsUndo = false;
             Render();
         }
 
         private void SetFeedback(bool soundSetting, bool value)
         {
             lastFeedbackWasSound = soundSetting;
+            bool previous = feedbackSaveFailed;
             feedbackSaveFailed = !setFeedback(soundSetting, value);
-            Render();
+            if (previous != feedbackSaveFailed) DrawSettings();
         }
 
         private void StartTutorial()

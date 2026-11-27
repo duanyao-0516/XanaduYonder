@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 一份入口支持三种大厅布局 | 在[大厅目录](../Assets/Scripts/Runtime/Lobby/AppController.Lobby.cs)配置稳定 ID、分类、纪录和进入回调，由 [LobbyView](../Assets/Scripts/Runtime/Lobby/LobbyView.cs)显示 | 2048 启动时恢复对局，用 `SetRecord` 更新纪录。抓大鹅在首次进入时创建页面 |
 | 大厅、说明、设置和返回按钮 | [UiFactory.NavigationButton](../Assets/Scripts/Runtime/UiFactory.cs) 提供图标按钮，[GameNavigationLayout](../Assets/Scripts/Runtime/Navigation/GameNavigationLayout.cs) 计算位置 | [推箱子顶栏](../Assets/Scripts/Runtime/Sokoban/SokobanPage.Layout.cs)只复用位置，沿用页面的点击热区 |
-| 对话框、设置子页和底部面板 | [宿主弹窗](../Assets/Scripts/Runtime/App/AppController.Dialogs.cs)提供居中框和底部面板。自有画布复用 [DialogUi.ModalOverlay](../Assets/Scripts/Runtime/Navigation/DialogUi.cs) 管理蒙层和焦点 | [抓大鹅设置](../Assets/Scripts/Runtime/App/AppController.BakeryBasket.cs)从分类进入子页。[声音与触感说明](../Assets/Scripts/Runtime/App/AppController.FeedbackHelp.cs)是全屏二级页，固定返回入口、独立滚动正文 |
+| 对话框与底部设置面板 | [宿主弹窗](../Assets/Scripts/Runtime/App/AppController.Dialogs.cs)提供居中框和底部面板。自有画布复用 [DialogUi.ModalOverlay](../Assets/Scripts/Runtime/Navigation/DialogUi.cs) 管理蒙层和焦点 | [抓大鹅设置](../Assets/Scripts/Runtime/App/AppController.BakeryBasket.cs)按分组展示主题与开关。[声音与触感说明](../Assets/Scripts/Runtime/App/AppController.FeedbackHelp.cs)直接排入大厅设置 |
 | 面板形状与安全区 | [DialogCorners](../Assets/Scripts/Runtime/Navigation/DialogCorners.cs)提供面板、按钮与开关圆角。[DialogSheetLayout.Attach](../Assets/Scripts/Runtime/Navigation/DialogSheetLayout.cs)将贴底外观与安全内容区分开布局 | [大厅展示方式](../Assets/Scripts/Runtime/Lobby/LobbyView.cs)使用自己的 390 宽坐标，与 720 宽宿主共用圆角比例和贴底规则 |
 | 主次按钮、布尔与互斥选择 | [DialogUi](../Assets/Scripts/Runtime/Navigation/DialogUi.cs) 提供 `ActionButton`、`Disclosure`、`SwitchRow`、`FeedbackSwitches` 和 `ScrollText`，短互斥项用 [DialogChoices.Create](../Assets/Scripts/Runtime/Navigation/DialogChoices.cs) | `FeedbackSwitches` 将共用声音与触感并排，每个格子各自响应整格点击并即时写入。带「保存」与「取消」的设置先更新本页草稿 |
 | 结算后查看原局面 | [ResultPresentation](../Assets/Scripts/Runtime/ResultPresentation.cs) 管理等待、回看与重新打开，页面提供局面身份和可展示条件 | [五子棋](../Assets/Scripts/Runtime/Gomoku/GomokuPage.Dialogs.cs)使用自己的结算动作。先冻结并保存结果，再允许回看 |
@@ -17,24 +17,25 @@
 
 ## 示例一：设置里的数量显示
 
-抓大鹅把「数量显示」「3D 主题」「声音与触感」放在设置首页。玩家点进数量显示后，有两个独立开关和一个返回动作。下面摘自同一入口，坐标沿用面板的设计单位。
+抓大鹅在同一张底部面板中依次展示「数量显示」「3D 主题」「声音与触感」。使用 [DialogSheetSections](../Assets/Scripts/Runtime/Navigation/DialogSheetSections.cs) 放置标题和对应控件，每一项按前一项的实际高度向下排。全部控件创建完成后调用 `Finish()`，短屏自动启用纵向滚动。
 
 ```csharp
-var panel = CreateSheet("数量显示", 408, OpenBakerySettings);
-float width = panel.rect.width - 64;
-DialogUi.SwitchRow(panel, "篮中剩余数量", 32, 190, width, 72,
-    bakeryPreferences.ShowRemaining, value =>
-    {
-        bakeryPreferences.ShowRemaining = value;
-        SaveBakeryDisplay();
-    });
-DialogUi.ActionButton(panel, "返回设置", 32, 308, width, 72, OpenBakerySettings, true);
-SetModalBack(OpenBakerySettings);
+var panel = CreateSheet("设置", 440);
+var sections = new DialogSheetSections(panel);
+sections.Heading("数量显示");
+sections.Switch("篮中剩余数量", bakeryPreferences.ShowRemaining, value =>
+{
+    bakeryPreferences.ShowRemaining = value;
+    SaveBakeryDisplay();
+});
+AddFeedbackControls(panel, sections);
+sections.Action("完成", dismissModal, true);
+sections.Finish();
 ```
 
-`CreateSheet` 返回安全内容区，标题、开关和按钮都挂在这个节点下。父节点负责绘制贯穿所属画布底边的面板底色，用 `DialogCorners.ApplyTop` 处理上方两角。自行创建底部面板的页面把背景和内容节点传给 `DialogSheetLayout.Attach`，由它按实际画布和系统手势区留出底部空间。各类控件的半径和真机边缘检查见[弹窗规范](dialogs.md#圆角与屏幕边缘)。
+`CreateSheet` 返回整张面板的安全内容区。自有画布使用 `DialogSheetLayout.Create`，传入蒙层、尺寸和安全关闭回调。各分组复用同一份草稿和内容节点。修改某一项时只刷新对应值。各类控件的半径和真机边缘检查见[弹窗规范](dialogs.md#圆角与屏幕边缘)。
 
-上例中面板外点击、返回按钮与系统返回都回到设置首页。玩法有自己的画布时，先取消当前连续输入，再调用 `DialogUi.ModalOverlay`。组件负责蒙层与背景按钮焦点，页面负责时钟、草稿、对局与关闭回调。
+面板外点击、完成和系统返回按当前业务的保存或取消语义关闭整张面板，退场后恢复来源页面。切换到后台或销毁页面时，宿主立即清理面板及其回调。玩法有自己的画布时，先取消当前连续输入，再调用 `DialogUi.ModalOverlay`。组件负责蒙层与背景按钮焦点。自绘对话框通过 `DialogOutsideTap.Bind` 绑定取消、返回或回看，并通过 `DialogOutsideTap.Protect` 保护面板空白。页面负责时钟、草稿、对局与关闭回调。
 
 ## 示例二：保存一次操作
 

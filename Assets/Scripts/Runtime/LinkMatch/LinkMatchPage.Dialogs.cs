@@ -6,7 +6,7 @@ namespace XanaduYonder.Runtime.LinkMatch
 {
     internal sealed partial class LinkMatchPage
     {
-        internal void ShowPause() { if(isEntry||session==null||session.IsTerminal) {CheckEndState();return;} TickClock();if(session.IsTerminal){CheckEndState();return;}ShowDialog("pause");Save(); }
+        internal void ShowPause() { if(isEntry||session==null||session.IsTerminal) {reviewingResult=false;CheckEndState();return;} TickClock();if(session.IsTerminal){CheckEndState();return;}ShowDialog("pause");Save(); }
         internal void ResumeGame()
         {
             if(!foreground||settingsBlocked||session==null||session.IsTerminal) {CheckEndState();return;}
@@ -21,7 +21,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         private void CloseDialog()
         {
-            if(dialog!=null){dialog.SetActive(false);Destroy(dialog);dialog=null;}dialogKind=null;
+            if(dialog!=null){DialogFocusScope.ObserveVisible(dialog.transform);dialog.SetActive(false);Destroy(dialog);dialog=null;}dialogKind=null;
         }
         private void ShowDialog(string kind)
         {
@@ -33,11 +33,13 @@ namespace XanaduYonder.Runtime.LinkMatch
             float s=S,cssWidth=(float)layout.CssWidth,width=Math.Min(316,cssWidth-48)*s;
             var shade = DialogUi.ModalOverlay(root, "LinkMatch dialog shade");
             dialog = shade.gameObject;
+            DialogOutsideTap.Bind(shade, DismissOutside);
             bool result=dialogKind=="won",help=dialogKind=="help",restart=dialogKind=="restart",timeout=dialogKind=="timeout";
             float height=(result?428:help?423:restart?294:timeout?294:346)*s;
             height=Math.Min(height,root.rect.height-48*s);
             var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,DialogCorners.Surface * .5f * s,DialogUi.Surface);
             panel.BorderWidth=s;panel.BorderColor=UiFactory.Hex("D9DFD0");
+            panel.raycastTarget = true;
             if(dialogKind=="patterns")
             {
                 Label(panel.transform,"再选一些图案",24*s,31*s,width-48*s,38*s,22,UiFactory.Ink,TextAnchor.MiddleCenter);
@@ -94,6 +96,19 @@ namespace XanaduYonder.Runtime.LinkMatch
                 }
             }
         }
+        private void DismissOutside()
+        {
+            if (dialogKind == "won" || dialogKind == "timeout")
+            {
+                reviewingResult = true;
+                CloseDialog();
+                RefreshBoard();
+            }
+            else if (dialogKind == "pause") ShowEntry();
+            else if (dialogKind == "restart" || !isEntry) ShowPause();
+            else { CloseDialog(); RefreshBoard(); }
+        }
+
         private void DialogButton(Transform parent,string name,string label,float x,float y,float width,Action action,bool primary)
         {
             DialogUi.ActionButton(parent, label, x, y, width, 46 * S, action, primary, Mathf.RoundToInt(12 * S), unitScale: .5f * S).name = name;

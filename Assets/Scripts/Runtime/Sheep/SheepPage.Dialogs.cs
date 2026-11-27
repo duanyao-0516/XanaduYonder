@@ -54,67 +54,71 @@ namespace XanaduYonder.Runtime.Sheep
         {
             if (data.Preferences.SkipDifficultyPrompt) { Begin(SheepMode.Challenge, data.Preferences.DefaultDifficulty); return; }
             var selected = data.Preferences.DefaultDifficulty;
-            var panel = openModal("选择第二关难度", 526, ShowModes);
-            var description = UiFactory.Label(panel, DifficultyDescription(selected), 32, 200, 532, 52, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
+            var panel = openSheet("选择第二关难度", 526, ShowModes);
+            var description = UiFactory.Label(panel, DifficultyDescription(selected), 32, 200, panel.rect.width - 64, 52, 22, UiFactory.Muted, TextAnchor.MiddleCenter);
             DifficultyChoices(panel, 122, selected, value => { selected = value; description.text = DifficultyDescription(value); });
             bool remember = false;
-            DialogUi.SwitchRow(panel, "下次直接使用此难度", 32, 266, 532, 66, false, value => remember = value);
-            DialogUi.ActionButton(panel, "开始挑战", 32, 350, 532, 64, () => {
+            DialogUi.SwitchRow(panel, "下次直接使用此难度", 32, 266, panel.rect.width - 64, 66, false, value => remember = value);
+            DialogUi.ActionButton(panel, "开始挑战", 32, 350, panel.rect.width - 64, 64, DialogSheetLayout.AfterClose(panel, () => {
                 closeModal(); Suspend(); session.StartChallenge(selected, remember, NewSeed()); Save(); Refresh();
                 setStatus(warning ?? "第 2 关 · " + DifficultyName(selected) + " · 挑战开始");
-            }, true);
-            DialogUi.ActionButton(panel, "返回模式选择", 32, 434, 532, 52, ShowModes);
+            }), true);
+            DialogUi.ActionButton(panel, "返回模式选择", 32, 434, panel.rect.width - 64, 52, DialogSheetLayout.AfterClose(panel, ShowModes));
         }
 
         private void OpenSettings() { if (AcceptsInput) OpenSettings(false); }
-        private void OpenSettings(bool fromModes, SheepPreferences initial = null)
+        private void OpenSettings(bool fromModes)
         {
-            var draft = (initial ?? data.Preferences).Copy();
+            var draft = data.Preferences.Copy();
             Action finish = () => { closeModal(); if (fromModes || game == null) ShowModes(); else CheckEndState(); };
-            var panel = openModal("旸了个旸 · 设置", 624, finish);
-            Action back = () => OpenSettings(fromModes, draft);
-            DialogUi.Disclosure(panel, "第二关难度 · " + DifficultyName(draft.DefaultDifficulty), 32, 106, 532, 72,
-                () => EditDifficulty(draft, back));
-            DialogUi.Disclosure(panel, "新局道具次数", 32, 190, 532, 72, () => EditQuotas(draft, back));
-            DialogUi.Disclosure(panel, "声音与触感", 32, 274, 532, 72, () => { closeModal(); commonSettings(back); });
-            DialogUi.ActionButton(panel, "恢复默认", 32, 364, 532, 62, () => OpenSettings(fromModes, new SheepPreferences()));
-            UiFactory.Label(panel, "难度与道具设置从下一局生效。", 32, 444, 532, 46, 22, UiFactory.Muted);
-            DialogUi.ActionButton(panel, "取消", 32, 516, 172, 70, finish);
-            DialogUi.ActionButton(panel, "保存设置", 220, 516, 344, 70, () => { session.SetPreferences(draft); Save(); finish(); }, true);
-        }
-
-        private void EditDifficulty(SheepPreferences draft, Action back)
-        {
-            var panel = openModal("第二关难度", 508, back);
-            var description = UiFactory.Label(panel, DifficultyDescription(draft.DefaultDifficulty), 32, 208, 532, 52, 22, UiFactory.Muted);
-            DifficultyChoices(panel, 124, draft.DefaultDifficulty, value =>
+            var panel = openSheet("旸了个旸 · 设置", 620, finish);
+            var sections = new DialogSheetSections(panel);
+            sections.Heading("第二关难度");
+            float choicesTop = sections.Reserve(88);
+            var description = sections.Body(DifficultyDescription(draft.DefaultDifficulty));
+            var choices = DifficultyChoices(panel, choicesTop, draft.DefaultDifficulty, value =>
             {
                 draft.DefaultDifficulty = value;
                 description.text = DifficultyDescription(value);
+            }, sections.Inset, 88);
+            var skip = sections.Switch("直接使用默认难度", draft.SkipDifficultyPrompt, value => draft.SkipDifficultyPrompt = value);
+            sections.Heading("新局道具次数");
+            sections.Body("每种道具可用 0–99 次，0 表示禁用。无尽换波不补次数。自定义次数的对局不计入标准无尽纪录。");
+            var remove = Stepper(panel, sections, "移出", draft.RemoveLimit, value => draft.RemoveLimit = value);
+            var undo = Stepper(panel, sections, "撤回", draft.UndoLimit, value => draft.UndoLimit = value);
+            var shuffle = Stepper(panel, sections, "洗牌", draft.ShuffleLimit, value => draft.ShuffleLimit = value);
+            commonSettings(panel, sections);
+            sections.Body("声音与触感在所有游戏中立即生效。");
+            sections.Heading("玩法设置");
+            sections.Body("保存后，难度与道具次数从下一局生效。");
+            sections.Action("恢复玩法默认值", () =>
+            {
+                draft = new SheepPreferences();
+                PaintDifficulties(choices, draft.DefaultDifficulty);
+                description.text = DifficultyDescription(draft.DefaultDifficulty);
+                skip.GetComponent<DialogSwitch>().SetValueWithoutNotify(draft.SkipDifficultyPrompt);
+                remove.Set(draft.RemoveLimit);
+                undo.Set(draft.UndoLimit);
+                shuffle.Set(draft.ShuffleLimit);
             });
-            DialogUi.SwitchRow(panel, "直接使用默认难度", 32, 284, 532, 68, draft.SkipDifficultyPrompt,
-                value => draft.SkipDifficultyPrompt = value);
-            DialogUi.ActionButton(panel, "返回设置", 32, 402, 532, 68, back, true);
+            float top = sections.Reserve(88);
+            float half = (sections.Width - 12) / 2;
+            DialogUi.ActionButton(panel, "取消修改", sections.Inset, top, half, 88, DialogSheetLayout.AfterClose(panel, finish));
+            DialogUi.ActionButton(panel, "保存玩法设置", sections.Inset + half + 12, top, half, 88, DialogSheetLayout.AfterClose(panel, () =>
+            {
+                session.SetPreferences(draft); Save(); finish();
+            }), true);
+            sections.Finish();
         }
 
-        private void EditQuotas(SheepPreferences draft, Action back)
-        {
-            var panel = openModal("新局道具次数", 602, back);
-            UiFactory.Label(panel, "每种道具可用 0–99 次，0 表示禁用。", 32, 110, 532, 48, 22, UiFactory.Muted);
-            Stepper(panel, "移出", 184, draft.RemoveLimit, value => draft.RemoveLimit = value);
-            Stepper(panel, "撤回", 260, draft.UndoLimit, value => draft.UndoLimit = value);
-            Stepper(panel, "洗牌", 336, draft.ShuffleLimit, value => draft.ShuffleLimit = value);
-            UiFactory.Label(panel, "无尽换波不补次数。自定义次数的对局不计入标准无尽纪录。", 32, 408, 532, 72, 21, UiFactory.Muted);
-            DialogUi.ActionButton(panel, "返回设置", 32, 502, 532, 66, back, true);
-        }
-
-        private static Button[] DifficultyChoices(RectTransform panel, float top, SheepDifficulty selected, Action<SheepDifficulty> select)
+        private static Button[] DifficultyChoices(RectTransform panel, float top, SheepDifficulty selected, Action<SheepDifficulty> select, float inset = 32, float height = 58)
         {
             var buttons = new Button[4];
+            float cell = (panel.rect.width - inset * 2 - 36) / 4;
             for (var i = 0; i < buttons.Length; i++)
             {
                 var difficulty = (SheepDifficulty)i;
-                buttons[i] = DialogUi.ActionButton(panel, DifficultyName(difficulty), 32 + i * 136, top, 124, 58,
+                buttons[i] = DialogUi.ActionButton(panel, DifficultyName(difficulty), inset + i * (cell + 12), top, cell, height,
                     () => { select(difficulty); PaintDifficulties(buttons, difficulty); });
             }
             PaintDifficulties(buttons, selected); return buttons;
@@ -147,14 +151,17 @@ namespace XanaduYonder.Runtime.Sheep
             public void Set(int value) { Value = Mathf.Clamp(value, 0, 99); Label.text = Value.ToString(); Less.interactable = Value > 0; More.interactable = Value < 99; Changed(Value); }
         }
 
-        private static void Stepper(RectTransform panel, string name, float top, int initial, Action<int> changed)
+        private static QuotaStepper Stepper(RectTransform panel, DialogSheetSections sections, string name, int initial, Action<int> changed)
         {
-            UiFactory.Label(panel, name, 32, top, 240, 54, 25, UiFactory.Ink);
+            float top = sections.Reserve(88);
+            float right = sections.Inset + sections.Width;
+            UiFactory.Label(panel, name, sections.Inset, top, sections.Width - 272, 88, 24, UiFactory.Ink);
             var stepper = new QuotaStepper { Changed = changed };
-            stepper.Less = DialogUi.ActionButton(panel, "−", 316, top, 68, 54, () => stepper.Set(stepper.Value - 1));
-            stepper.Label = UiFactory.Label(panel, "", 396, top, 88, 54, 28, UiFactory.Ink, TextAnchor.MiddleCenter);
-            stepper.More = DialogUi.ActionButton(panel, "+", 496, top, 68, 54, () => stepper.Set(stepper.Value + 1));
+            stepper.Less = DialogUi.ActionButton(panel, "−", right - 272, top, 88, 88, () => stepper.Set(stepper.Value - 1));
+            stepper.Label = UiFactory.Label(panel, "", right - 180, top, 88, 88, 24, UiFactory.Ink, TextAnchor.MiddleCenter);
+            stepper.More = DialogUi.ActionButton(panel, "+", right - 88, top, 88, 88, () => stepper.Set(stepper.Value + 1));
             stepper.Set(initial);
+            return stepper;
         }
     }
 }

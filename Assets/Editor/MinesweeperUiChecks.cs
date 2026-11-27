@@ -698,7 +698,9 @@ namespace XanaduYonder.EditorTools
                 f.Click(Find(page.transform, "Reopen result"));
                 Require(Get<GameObject>(page, "dialog") != null, "Explicit result entry reopens the same minefield outcome");
                 f.Capture(prefix + "-reopen");
-                f.Click(ButtonWithText(Get<GameObject>(page, "dialog").transform, "查看棋盘").transform as RectTransform);
+                f.ClickAt((RectTransform)Get<GameObject>(page, "dialog").transform, new Vector2(12, 12));
+                Require(Get<GameObject>(page, "dialog") == null && !Get<bool>(page, "choosing") && session.Game.State == expected,
+                    "Tapping outside the result returns to the same terminal board");
                 Require(!Find(root, "Pause").GetComponent<Button>().interactable, "Terminal pause control is disabled");
                 string before = BoardFingerprint(session.Game.GetSnapshot());
                 long elapsed = session.ElapsedMilliseconds;
@@ -830,6 +832,7 @@ namespace XanaduYonder.EditorTools
                 CheckOpaqueCover(f, root, false);
                 f.Capture("host-settings-active");
                 f.Click(ButtonWithText(modal.transform, "完成").transform as RectTransform);
+                DialogSheetGeometryChecks.CompleteDismissal(modal.transform);
                 Require(game.SettingsCompleted == 1 && Get<GameObject>(host.Shell, "modal") == null && session.Paused && !session.Blocked,
                     "User completion runs the real host dismiss callback but requires explicit Active resume");
                 f.Click(Find(root, "Resume"));
@@ -1004,6 +1007,7 @@ namespace XanaduYonder.EditorTools
 
         private static void CheckTutorial(Fixture f)
         {
+            foreach (bool outside in new[] { false, true })
             using (var game = new PageFixture(f, tutorialSeen: false))
             {
                 Require(game.Session == null, "Opening the first-use tutorial does not create a session");
@@ -1014,11 +1018,22 @@ namespace XanaduYonder.EditorTools
                 for (int i = 0; i < 9; i++) Require(Find(diagram, "Tutorial cell " + i) != null, "Tutorial has static example cell " + i);
                 Require(diagram.GetComponentsInChildren<Button>().Length == 0 && diagram.GetComponentInChildren<MinesweeperPointer>() == null,
                     "Tutorial diagram cannot execute a real board operation");
-                f.Capture("tutorial");
-                f.Click(ButtonWithText(dialog.transform, "跳过").transform as RectTransform);
+                var actions = dialog.GetComponentsInChildren<Button>();
+                Require(actions.Length == 1 && actions[0].GetComponentInChildren<Text>().text == "知道了",
+                    "The first-use tutorial has a single acknowledgement");
+                var text = Find(dialog.transform, "Dialog message").GetComponent<Text>();
+                var box = Find(dialog.transform, "Minesweeper dialog");
+                var bodyBounds = f.Bounds(text.rectTransform);
+                Require(text.alignment == TextAnchor.UpperLeft && box.rect.height < 650 &&
+                    f.Bounds(diagram).yMin > bodyBounds.yMax && bodyBounds.yMin > f.Bounds((RectTransform)actions[0].transform).yMax,
+                    "The illustrated example, instructions and acknowledgement form a compact vertical sequence");
+                if (outside) f.ClickAt((RectTransform)dialog.transform, new Vector2(12, 12));
+                else { f.Capture("tutorial"); f.Click((RectTransform)actions[0].transform); }
                 Require(game.Profile.TutorialSeen && game.Session == null && Get<GameObject>(game.Page, "dialog") == null,
                     "Skipping tutorial records completion without starting a game");
                 for (int i = 0; i < 3; i++) Require(game.Profile.GetSlot(i) == null, "Skipping tutorial leaves difficulty slot empty: " + i);
+                game.Page.Leave(); game.Page.Enter();
+                Require(Get<GameObject>(game.Page, "dialog") == null, "Acknowledging or dismissing the tutorial keeps it dismissed on return");
             }
         }
 

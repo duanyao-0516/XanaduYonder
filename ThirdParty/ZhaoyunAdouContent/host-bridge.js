@@ -192,6 +192,7 @@
     button.className = "xy-primary";
     button.textContent = "继续游戏";
     button.addEventListener("click", continueBattle);
+    XanaduDialogs.bindBackdrop(overlay, continueBattle);
     panel.appendChild(title);
     panel.appendChild(detail);
     panel.appendChild(button);

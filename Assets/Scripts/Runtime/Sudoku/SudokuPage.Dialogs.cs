@@ -12,7 +12,7 @@ namespace XanaduYonder.Runtime.Sudoku
     {
         private RectTransform ShowDialog(string title, string message, string primary, Action primaryAction,
             string secondary = null, Action secondaryAction = null, bool opaque = false,
-            string more = null, Action moreAction = null)
+            string more = null, Action moreAction = null, Action outsideAction = null)
         {
             CloseDialog();
             // Disable navigation as well as pointer input behind the modal.
@@ -23,17 +23,33 @@ namespace XanaduYonder.Runtime.Sudoku
                 opaque ? UiFactory.Paper : DialogUi.Scrim, false);
             UiFactory.Stretch(overlay.rectTransform); overlay.raycastTarget = true; dialog = overlay.gameObject;
             DialogBackdrop.CoverCanvas(overlay);
-            float height = Mathf.Clamp(300 + (message.Length / 21 + message.Split('\n').Length) * 34, 480, 860);
-            if (more != null) height += 76;
-            float footerHeight = more == null ? 0 : 76;
-            var panel = DialogCorners.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, height, DialogUi.Surface, DialogCorners.Surface).rectTransform;
+            const float inset = 32, width = 532, bodyTop = 110, bodyGap = 24, actionHeight = 88, actionGap = 12;
+            int actions = 1 + (secondary == null ? 0 : 1) + (more == null ? 0 : 1);
+            float footerHeight = actions * actionHeight + (actions - 1) * actionGap + inset;
+            float maxHeight = Mathf.Min(900, overlay.rectTransform.rect.height - 2 * inset);
+            float maxBodyHeight = Mathf.Max(40, maxHeight - bodyTop - bodyGap - footerHeight);
+            var panel = DialogCorners.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, maxHeight, DialogUi.Surface, DialogCorners.Surface).rectTransform;
+            panel.GetComponent<Image>().raycastTarget = true;
             UiFactory.Center(panel);
-            UiFactory.Label(panel, title, 32, 30, 532, 62, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
-            DialogUi.ScrollText(panel, message, 32, 110, 532, height - 300 - footerHeight, 24);
-            if (more != null) DialogUi.Disclosure(panel, more, 32, height - 246, 532, 60, () => { CloseDialog(); moreAction(); });
-            DialogUi.ActionButton(panel, primary, 32, height - 170, 532, 66, () => { CloseDialog(); primaryAction?.Invoke(); }, true);
-            if (secondary != null) DialogUi.ActionButton(panel, secondary, 32, height - 88, 532, 58, () => { CloseDialog(); secondaryAction?.Invoke(); });
+            UiFactory.Label(panel, title, inset, inset, width, 60, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
+            var body = DialogUi.ScrollText(panel, message, inset, bodyTop, width, maxBodyHeight, 24, fitHeight: true);
+            float y = bodyTop + Mathf.Min(body.rectTransform.rect.height, maxBodyHeight) + bodyGap;
+            panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y + footerHeight);
+            if (more != null)
+            {
+                DialogUi.Disclosure(panel, more, inset, y, width, actionHeight, () => { CloseDialog(); moreAction(); });
+                y += actionHeight + actionGap;
+            }
+            DialogUi.ActionButton(panel, primary, inset, y, width, actionHeight, () => { CloseDialog(); primaryAction?.Invoke(); }, true);
+            if (secondary != null) DialogUi.ActionButton(panel, secondary, inset, y + actionHeight + actionGap, width, actionHeight,
+                () => { CloseDialog(); secondaryAction?.Invoke(); });
             dismissDialog = () => { CloseDialog(); if (secondaryAction != null) secondaryAction(); else primaryAction?.Invoke(); };
+            DialogOutsideTap.Bind(overlay, () =>
+            {
+                if (outsideAction == null) { dismissDialog?.Invoke(); return; }
+                CloseDialog();
+                outsideAction();
+            });
             return panel;
         }
         private void CloseDialog()
@@ -58,10 +74,12 @@ namespace XanaduYonder.Runtime.Sudoku
         }
         private void ShowPause()
         {
-            ShowDialog("已暂停", "盘面已被迷雾遮住，计时已停止。\n\n准备好后，点击继续。", "继续", () => {
+            void Resume()
+            {
                 if (!session.Foreground) { ShowPause(); return; }
                 session.Resume(); Refresh(); CheckEndState();
-            }, "返回关卡", ReturnToSelection, true, "重开", ConfirmRestart);
+            }
+            ShowDialog("已暂停", "计时已停止。", "继续", Resume, "返回关卡", ReturnToSelection, true, "重开", ConfirmRestart, Resume);
         }
         private void ConfirmRestart()
         {

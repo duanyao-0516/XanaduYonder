@@ -25,11 +25,19 @@ namespace XanaduYonder.Runtime.Snake
             return panel;
         }
 
-        private RectTransform OpenDialog(string title, float height)
+        private RectTransform OpenDialog(string title, float height, Action sheetBack = null)
         {
             input.Cancel();session.Pause();board.FinishAnimation();levelDropdown.Hide();countdown.SetActive(false);CloseDialog();Save();
             var overlay = DialogUi.ModalOverlay(root, "Snake dialog overlay");
+            DialogOutsideTap.Bind(overlay, () => dismissDialog?.Invoke());
             dialog = overlay.gameObject;
+            if (sheetBack != null)
+            {
+                var body = DialogSheetLayout.Create(overlay, "Snake settings sheet", 596, height, sheetBack);
+                dismissDialog = DialogSheetLayout.AfterClose(body, sheetBack);
+                UiFactory.Label(body, title, 32, 20, 532, 72, 36, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                return body;
+            }
             var panel=DialogCorners.Panel(overlay.transform,"Snake dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,30,532,72,36,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
@@ -148,34 +156,35 @@ namespace XanaduYonder.Runtime.Snake
         private void OpenSnakeSettings(Action after)
         {
             if (!Available) return;
-            var panel = OpenDialog("贪吃蛇设置", 594);
-            UiFactory.Label(panel, "方向控制", 32, 110, 532, 44, 24, UiFactory.Ink);
-            DialogChoices.Create(panel, "方向控制选项", 32, 162, 532, 74, new[] { "圆盘四方向", "十字方向键" },
-                profile.ControlStyle == SnakeControlStyle.Disc ? 0 : 1, index =>
+            var panel = OpenDialog("贪吃蛇设置", 594, () => { CloseDialog(); after(); });
+            var sections = new DialogSheetSections(panel);
+            sections.Heading("方向控制");
+            DialogChoices.Create(panel, "方向控制选项", sections.Inset, sections.Reserve(74), sections.Width, 74,
+                new[] { "圆盘四方向", "十字方向键" }, profile.ControlStyle == SnakeControlStyle.Disc ? 0 : 1, index =>
                 {
                     profile.ControlStyle = index == 0 ? SnakeControlStyle.Disc : SnakeControlStyle.Cross;
                     RefreshControlStyle();
                     Save();
                 });
-            DialogUi.SwitchRow(panel, "吃食物停一帧", 32, 250, 532, 72, profile.PauseOnFood, value =>
+            sections.Switch("吃食物停一帧", profile.PauseOnFood, value =>
             {
                 profile.PauseOnFood = value;
                 session.PauseOnFood = value;
                 Save();
             });
-            UiFactory.Label(panel, "停顿期间仍可转向。", 44, 325, 510, 44, 21, UiFactory.Muted);
-            DialogUi.Disclosure(panel, "声音与触感", 32, 386, 532, 70, () =>
+            sections.Body("停顿期间仍可转向。", 21);
+            sections.Heading("声音与触感");
+            var warning = sections.Body("设置在所有游戏中共用。", 20);
+            void SetFeedback(bool sound, bool enabled)
             {
-                int epoch = interactionEpoch;
-                string sessionId = session.SessionId;
-                CloseDialog();
-                openSettings(() =>
-                {
-                    if (Available && epoch == interactionEpoch && session.SessionId == sessionId) OpenSnakeSettings(after);
-                });
-            });
-            dismissDialog = () => { CloseDialog(); after(); };
-            DialogUi.ActionButton(panel, "完成", 32, 492, 532, 72, dismissDialog, true);
+                bool saved = setFeedback(sound, enabled);
+                warning.text = saved ? "设置在所有游戏中共用。" : "设置未保存，请检查设备存储。";
+                warning.color = saved ? UiFactory.Muted : DialogUi.Destructive;
+            }
+            DialogUi.FeedbackSwitches(panel, sections.Inset, sections.Reserve(72), sections.Width, 72, 14,
+                soundEnabled(), hapticsEnabled(), value => SetFeedback(true, value), value => SetFeedback(false, value));
+            sections.Action("完成", dismissDialog, true);
+            sections.Finish();
         }
         private void ShowRules()
         {

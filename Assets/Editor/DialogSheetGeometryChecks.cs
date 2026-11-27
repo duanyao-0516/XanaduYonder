@@ -21,9 +21,18 @@ namespace XanaduYonder.EditorTools
             var cutout = Rect.MinMaxRect(80, 34, 850, 390);
             var compact = DialogSheetLayout.ContentBounds(landscape, cutout, 390, 850);
             Check(compact.yMin >= cutout.yMin && compact.yMax < cutout.yMax && compact.xMin > cutout.xMin &&
-                  Near(compact.center.x, cutout.center.x) && Near(compact.height / compact.width, 850f / 390),
-                "A tall sheet fits above the gesture in landscape and stays centered in the usable reading area.");
+                  Near(compact.center.x, cutout.center.x) && Near(compact.width, cutout.height) && compact.height / compact.width < 850f / 390,
+                "A tall sheet keeps the scale of its controls and scrolls within the available landscape height.");
             CheckOwnedCanvas();
+            CheckScrollableSheet();
+        }
+
+        // Synchronous render fixtures advance the same unscaled clock as a rendered frame.
+        internal static void CompleteDismissal(Transform overlay)
+        {
+            var sheet = overlay.GetComponentInChildren<DialogSheetLayout>();
+            Check(sheet != null && sheet.IsDismissing, "A user close starts the sheet transition.");
+            sheet.AdvanceDismissal(1f);
         }
 
         private static void CheckOwnedCanvas()
@@ -56,6 +65,33 @@ namespace XanaduYonder.EditorTools
                     "The existing 390-unit controls keep their design space inside the physical sheet.");
             }
             finally { UnityEngine.Object.DestroyImmediate(window); }
+        }
+
+        private static void CheckScrollableSheet()
+        {
+            var root = new GameObject("Short settings canvas", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                root.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+                var bounds = (RectTransform)root.transform;
+                bounds.sizeDelta = new Vector2(800, 360);
+                var surface = UiFactory.Rect(bounds, "Sheet", 0, 0, 0, 0);
+                var body = UiFactory.Rect(surface, "Settings", 0, 0, 540, 690);
+                var last = UiFactory.Rect(body, "Last action", 26, 600, 488, 66);
+                DialogSheetLayout.Attach(surface, body, 540, 690);
+                var scroll = surface.GetComponentInChildren<UnityEngine.UI.ScrollRect>();
+                Check(scroll != null && scroll.enabled && scroll.viewport.rect.height < body.rect.height,
+                    "Long settings can scroll in a short landscape window.");
+                Canvas.ForceUpdateCanvases();
+                scroll.verticalNormalizedPosition = 0;
+                var corners = new Vector3[4];
+                last.GetWorldCorners(corners);
+                Check(scroll.viewport.InverseTransformPoint(corners[0]).y >= scroll.viewport.rect.yMin - 1 &&
+                      scroll.viewport.InverseTransformPoint(corners[1]).y <= scroll.viewport.rect.yMax + 1 &&
+                      Mathf.Abs(bounds.InverseTransformPoint(corners[0]).y - bounds.InverseTransformPoint(corners[1]).y) >= 43,
+                    "The bottom action scrolls fully into view at its intended touch size.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
         }
 
         private static bool Near(float first, float second) => Mathf.Abs(first - second) < .01f;

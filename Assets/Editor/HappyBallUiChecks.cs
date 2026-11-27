@@ -91,6 +91,7 @@ namespace XanaduYonder.EditorTools
             private readonly RenderTexture texture;
             private readonly RectTransform frame;
             private readonly Component page;
+            private readonly AppController dialogHost;
             private readonly string directory;
             private readonly int height;
             public Fixture(int height, Type pageType)
@@ -118,13 +119,23 @@ namespace XanaduYonder.EditorTools
                 var assembly = typeof(AppController).Assembly;
                 var storeType = assembly.GetType("XanaduYonder.Runtime.HappyBall.HappyBallSaveStore");
                 var saveStore = Activator.CreateInstance(storeType, directory);
-                Action<string, string, string, Action, string, Action> dialog = (a, b, c, d, e, f) => { };
+                var hostObject = new GameObject("Dialog host");
+                hostObject.transform.SetParent(Root.transform);
+                hostObject.SetActive(false);
+                dialogHost = hostObject.AddComponent<AppController>();
+                typeof(AppController).GetField("canvasRoot", Members).SetValue(dialogHost, rootRect);
+                var activePage = typeof(AppController).GetField("activePage", Members);
+                activePage.SetValue(dialogHost, Enum.Parse(activePage.FieldType, "HappyBall"));
+                var dialog = (Action<string, string, string, Action, string, Action>)Delegate.CreateDelegate(
+                    typeof(Action<string, string, string, Action, string, Action>), dialogHost,
+                    typeof(AppController).GetMethod("ShowDialog", Members));
                 Invoke(page, "Initialize", frame, (Action)(() => { }), (Action<Action>)(after => after()),
                     (Func<bool>)(() => true), (Func<bool>)(() => false), (Func<bool>)(() => false), null,
                     (Action<string>)(_ => { }), dialog, saveStore, null);
                 SetUiLayer(canvasObject.transform);
                 Canvas.ForceUpdateCanvases();
                 Invoke(page, "Enter");
+                DialogScreenshotAudit.CaptureCurrent(frame);
             }
             private static void SetUiLayer(Transform root)
             { root.gameObject.layer = 5; foreach (Transform child in root) SetUiLayer(child); }
@@ -178,9 +189,23 @@ namespace XanaduYonder.EditorTools
                 Invoke(page, "SetHostSaveWarning", (object)null);
                 Invoke(page, "ShowHelp");
                 Require(!(bool)page.GetType().GetProperty("IsRunning").GetValue(page), "Help pauses simulation");
+                CaptureHostDialog("欢乐球球玩法", "知道了", "help");
+                Invoke(page, "ConfirmRestart");
+                CaptureHostDialog("重新开始这一局？", "继续当前游戏", "confirm-restart");
                 Invoke(page, "Resume"); Invoke(page, "OpenSettings");
                 Require(!(bool)page.GetType().GetProperty("IsRunning").GetValue(page), "Closing settings requires explicit resume");
                 Invoke(page, "Resume");
+            }
+            private void CaptureHostDialog(string title, string dismiss, string filename)
+            {
+                var modal = (GameObject)Get(dialogHost, "modal");
+                Require(modal != null && modal.GetComponentsInChildren<Text>().Any(label => label.text == title),
+                    "The game opens its host-rendered " + title);
+                SetUiLayer(modal.transform);
+                Capture(filename + "-720x" + height);
+                DialogScreenshotAudit.CaptureCurrent(modal.transform);
+                modal.GetComponentsInChildren<Button>().Single(button => button.name == dismiss).onClick.Invoke();
+                Require((GameObject)Get(dialogHost, "modal") == null, "The dialog closes through " + dismiss);
             }
             public void CheckDeathFeedback()
             {

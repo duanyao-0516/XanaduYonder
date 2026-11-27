@@ -162,7 +162,8 @@ static NSDictionary *CutSave(NSDictionary *request)
 @property(nonatomic, strong) UILabel *loading;
 @property(nonatomic, strong) UIButton *closeButton;
 @property(nonatomic, strong) NSTimer *timer;
-@property(nonatomic, strong) UIAlertController *failureAlert;
+@property(nonatomic, strong) UIView *failurePanel;
+@property(nonatomic, strong) UIButton *failureDetails;
 @property(nonatomic, copy) NSString *pendingFailure;
 @property(nonatomic, copy) NSString *exitRequest;
 @property(nonatomic) BOOL sound;
@@ -385,7 +386,7 @@ static NSDictionary *CutSave(NSDictionary *request)
 - (void)reloadPage
 {
     self.generation++; self.lifecycleRevision++; self.ready = NO; self.configured = NO; self.polling = NO;
-    self.fault = NO; self.pendingFailure = nil; self.exitRequest = nil;
+    [self clearFailureUI]; self.fault = NO; self.pendingFailure = nil; self.exitRequest = nil;
     self.viewportBounds = CGRectZero;
     self.loadingElapsed = 0; self.statusElapsed = 0; self.loading.hidden = NO; self.closeButton.enabled = YES;
     self.closeButton.hidden = YES;
@@ -480,7 +481,7 @@ static NSDictionary *CutSave(NSDictionary *request)
 - (BOOL)webFeedbackForeground
 {
     return self.hasFeedbackSettings && self.ready && self.active && !self.interrupted && !self.fault && !self.finished
-        && !self.exitRequest && !self.failureAlert && self.web.window
+        && !self.exitRequest && !self.failurePanel && self.web.window
         && UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
 }
 - (void)syncWebFeedbackSettings
@@ -563,7 +564,7 @@ static NSDictionary *CutSave(NSDictionary *request)
 {
     double now = NSProcessInfo.processInfo.systemUptime, delta = MIN(1, MAX(0, now - self.lastTick)); self.lastTick = now;
     if (self.finished || !self.active || self.interrupted) return;
-    if (self.pendingFailure && !self.failureAlert && self.view.window) { [self showFailure:self.pendingFailure]; return; }
+    if (self.pendingFailure && !self.failurePanel && !self.failureDetails && self.view.window) { [self showFailure:self.pendingFailure]; return; }
     if (self.fault) return;
     if (!self.ready) {
         self.loadingElapsed += delta;
@@ -642,7 +643,7 @@ static NSDictionary *CutSave(NSDictionary *request)
 }
 - (void)retry
 {
-    self.failureAlert = nil; self.pendingFailure = nil; self.fault = NO;
+    [self clearFailureUI]; self.pendingFailure = nil; self.fault = NO;
     if (!self.ready) { [self reloadPage]; return; }
     BOOL closing = self.exitRequest != nil;
     self.exitRequest = nil; self.closeButton.enabled = YES;
@@ -672,27 +673,132 @@ static NSDictionary *CutSave(NSDictionary *request)
         [self setMediaSuspended:YES];
         [self applyState];
     }
-    if (self.failureAlert || !self.active || !self.view.window) return;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:self.isBombIt ? @"游戏暂时无法继续" : @"游戏尚未完成保存或加载" message:self.pendingFailure preferredStyle:UIAlertControllerStyleAlert];
-    self.failureAlert = alert;
-    __weak XanaduWebGameController *weakSelf = self;
-    UIAlertAction *retry = [UIAlertAction actionWithTitle:self.ready ? (self.isBombIt ? @"重试" : @"重试保存") : @"重新加载"
-                                                  style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) { [weakSelf retry]; }];
-    [alert addAction:retry];
-    alert.preferredAction = retry;
-    [alert addAction:[UIAlertAction actionWithTitle:self.ready && !self.isBombIt ? @"返回大厅（未确认本次保存）" : @"返回大厅" style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction *action) {
-        XanaduWebGameController *owner = weakSelf; if (owner) [owner finish:owner.pendingFailure];
-    }]];
-    if (self.exitRequest && !self.isZhaoyun && !self.isCut) [alert addAction:[UIAlertAction actionWithTitle:@"留在游戏" style:UIAlertActionStyleCancel handler:^(__unused UIAlertAction *action) {
-        XanaduWebGameController *owner = weakSelf;
-        owner.failureAlert = nil; owner.pendingFailure = nil; owner.fault = NO; owner.exitRequest = nil; owner.closeButton.enabled = YES;
-        [owner evaluate:[NSString stringWithFormat:@"window.%@.cancelExit();true;", owner.eventHostObject] completion:^(__unused id result, NSError *error) { if (error) [owner showFailure:error.localizedDescription]; else [owner applyState]; }];
-    }]];
-    [self presentViewController:alert animated:YES completion:nil];
+    if (self.failurePanel || self.failureDetails || !self.active || !self.view.window) return;
+    self.web.userInteractionEnabled = NO;
+    UIView *overlay = [[UIView alloc] initWithFrame:self.view.bounds];
+    overlay.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    overlay.accessibilityViewIsModal = YES;
+    self.failurePanel = overlay;
+    [self.view addSubview:overlay];
+
+    UIButton *scrim = [UIButton buttonWithType:UIButtonTypeCustom];
+    scrim.frame = overlay.bounds;
+    scrim.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    scrim.backgroundColor = [UIColor colorWithWhite:0 alpha:.40];
+    scrim.isAccessibilityElement = NO;
+    [scrim addTarget:self action:@selector(dismissFailure) forControlEvents:UIControlEventTouchUpInside];
+    [overlay addSubview:scrim];
+
+    UIScrollView *card = [[UIScrollView alloc] init];
+    card.translatesAutoresizingMaskIntoConstraints = NO;
+    card.backgroundColor = [UIColor colorWithRed:.98 green:.98 blue:.96 alpha:1];
+    card.layer.cornerRadius = 16;
+    card.clipsToBounds = YES;
+    [overlay addSubview:card];
+    UIStackView *items = [[UIStackView alloc] init];
+    items.axis = UILayoutConstraintAxisVertical;
+    items.spacing = 8;
+    items.translatesAutoresizingMaskIntoConstraints = NO;
+    [card addSubview:items];
+    UILayoutGuide *safe = overlay.safeAreaLayoutGuide;
+    NSLayoutConstraint *width = [card.widthAnchor constraintEqualToConstant:340];
+    width.priority = UILayoutPriorityDefaultHigh;
+    NSLayoutConstraint *height = [card.heightAnchor constraintEqualToAnchor:items.heightAnchor constant:36];
+    height.priority = UILayoutPriorityDefaultHigh;
+    [NSLayoutConstraint activateConstraints:@[
+        width, height, [card.centerXAnchor constraintEqualToAnchor:safe.centerXAnchor],
+        [card.centerYAnchor constraintEqualToAnchor:safe.centerYAnchor],
+        [card.widthAnchor constraintLessThanOrEqualToAnchor:safe.widthAnchor constant:-32],
+        [card.heightAnchor constraintLessThanOrEqualToAnchor:safe.heightAnchor constant:-24],
+        [items.leadingAnchor constraintEqualToAnchor:card.contentLayoutGuide.leadingAnchor constant:18],
+        [items.trailingAnchor constraintEqualToAnchor:card.contentLayoutGuide.trailingAnchor constant:-18],
+        [items.topAnchor constraintEqualToAnchor:card.contentLayoutGuide.topAnchor constant:18],
+        [items.bottomAnchor constraintEqualToAnchor:card.contentLayoutGuide.bottomAnchor constant:-18],
+        [items.widthAnchor constraintEqualToAnchor:card.frameLayoutGuide.widthAnchor constant:-36]
+    ]];
+    UILabel *title = [[UILabel alloc] init];
+    title.text = self.isBombIt ? @"游戏暂时无法继续" : @"游戏尚未完成保存或加载";
+    title.textAlignment = NSTextAlignmentCenter;
+    title.numberOfLines = 0;
+    title.font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleHeadline] scaledFontForFont:[UIFont systemFontOfSize:16 weight:UIFontWeightSemibold]];
+    title.adjustsFontForContentSizeCategory = YES;
+    title.textColor = [UIColor colorWithWhite:.12 alpha:1];
+    [items addArrangedSubview:title];
+    UILabel *detail = [[UILabel alloc] init];
+    detail.text = self.pendingFailure;
+    detail.numberOfLines = 0;
+    detail.font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleSubheadline] scaledFontForFont:[UIFont systemFontOfSize:14]];
+    detail.adjustsFontForContentSizeCategory = YES;
+    detail.textColor = [UIColor colorWithWhite:.25 alpha:1];
+    [items addArrangedSubview:detail];
+    [items setCustomSpacing:16 afterView:detail];
+    [items addArrangedSubview:[self failureButton:self.ready ? (self.isBombIt ? @"重试" : @"重试保存") : @"重新加载" action:@selector(retry)]];
+    [items addArrangedSubview:[self failureButton:self.ready && !self.isBombIt ? @"返回大厅（未确认本次保存）" : @"返回大厅" action:@selector(leaveAfterFailure)]];
+    if (self.exitRequest && !self.isZhaoyun && !self.isCut)
+        [items addArrangedSubview:[self failureButton:@"留在游戏" action:@selector(cancelFailedExit)]];
+    else [items addArrangedSubview:[self failureButton:@"关闭" action:@selector(collapseFailure)]];
+    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, title);
+}
+- (UIButton *)failureButton:(NSString *)caption action:(SEL)action
+{
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setTitle:caption forState:UIControlStateNormal];
+    button.titleLabel.font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleBody] scaledFontForFont:[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold]];
+    button.titleLabel.adjustsFontForContentSizeCategory = YES;
+    button.titleLabel.numberOfLines = 0;
+    button.titleLabel.textAlignment = NSTextAlignmentCenter;
+    UIColor *ink = [UIColor colorWithRed:.12 green:.28 blue:.22 alpha:1];
+    BOOL primary = action == @selector(retry);
+    button.backgroundColor = primary ? ink : [UIColor colorWithRed:.89 green:.93 blue:.90 alpha:1];
+    button.tintColor = primary ? UIColor.whiteColor : ink;
+    button.layer.cornerRadius = 8;
+    [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+    [button addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
+    return button;
+}
+- (void)clearFailureUI
+{
+    [self.failurePanel removeFromSuperview]; self.failurePanel = nil;
+    [self.failureDetails removeFromSuperview]; self.failureDetails = nil;
+    self.web.userInteractionEnabled = YES;
+}
+- (void)dismissFailure
+{
+    if (self.exitRequest && !self.isZhaoyun && !self.isCut) [self cancelFailedExit];
+    else [self collapseFailure];
+}
+- (void)collapseFailure
+{
+    if (!self.failurePanel) return;
+    [self.failurePanel removeFromSuperview]; self.failurePanel = nil;
+    UIButton *details = [self failureButton:@"查看错误详情" action:@selector(reopenFailure)];
+    self.failureDetails = details;
+    details.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:details];
+    [NSLayoutConstraint activateConstraints:@[
+        [details.centerXAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerXAnchor],
+        [details.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-12],
+        [details.widthAnchor constraintGreaterThanOrEqualToConstant:156]
+    ]];
+    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, details);
+}
+- (void)reopenFailure
+{
+    [self.failureDetails removeFromSuperview]; self.failureDetails = nil;
+    [self showFailure:self.pendingFailure];
+}
+- (void)leaveAfterFailure { [self finish:self.pendingFailure]; }
+- (void)cancelFailedExit
+{
+    [self clearFailureUI]; self.pendingFailure = nil; self.fault = NO; self.exitRequest = nil; self.closeButton.enabled = YES;
+    [self evaluate:[NSString stringWithFormat:@"window.%@.cancelExit();true;", self.eventHostObject] completion:^(__unused id result, NSError *error) {
+        if (error) [self showFailure:error.localizedDescription]; else [self applyState];
+    }];
 }
 - (void)finish:(NSString *)error
 {
     if (self.finished) return;
+    [self clearFailureUI];
     self.finished = YES; self.generation++; self.lifecycleRevision++;
     [self.timer invalidate]; self.timer = nil; [NSNotificationCenter.defaultCenter removeObserver:self];
     [self setMediaSuspended:YES];

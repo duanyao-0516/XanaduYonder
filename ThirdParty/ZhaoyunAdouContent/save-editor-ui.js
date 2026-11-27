@@ -61,6 +61,7 @@
   }
 
   function close() {
+    if (overlay) XanaduDialogs.reset(overlay);
     overlay?.remove();
     overlay = null;
   }
@@ -76,7 +77,7 @@
       console.warn('无法打开存档管理：', error.message || error);
       return false;
     }
-    const screen = element('div', undefined, 'xy-dialog xanadu-save-editor');
+    const screen = element('div', undefined, 'xy-dialog xy-sheet xanadu-save-editor');
     const panel = element('div', undefined, 'save-editor-card');
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
@@ -86,15 +87,15 @@
     title.id = 'xanadu-save-editor-title';
     const back = button('返回游戏');
     back.className = 'xy-secondary';
-    back.addEventListener('click', close);
+    const dismiss = () => XanaduDialogs.finishSheet(screen, close);
+    back.addEventListener('click', dismiss);
+    XanaduDialogs.bindBackdrop(screen, dismiss);
     header.append(title, back);
-    const nav = element('nav');
-    nav.setAttribute('aria-label', '存档分类');
     const body = element('div', undefined, 'save-editor-body');
     const message = element('p', undefined, 'save-editor-message');
     message.setAttribute('role', 'status');
     message.setAttribute('aria-live', 'polite');
-    panel.append(header, nav, body, message);
+    panel.append(header, body, message);
     screen.append(panel);
     overlay = screen;
     document.body.append(screen);
@@ -105,26 +106,12 @@
       message.classList.toggle('save-editor-error', error);
     }
 
-    const tabs = [];
     function section(title) {
-      const choice = button(title);
-      const page = element('section');
-      page.setAttribute('aria-label', title);
-      tabs.push({choice, page});
-      nav.append(choice);
-      body.append(page);
-      choice.setAttribute('aria-pressed', String(tabs.length === 1));
-      page.hidden = tabs.length !== 1;
-      choice.addEventListener('click', () => {
-        if (!page.hidden) return;
-        for (const tab of tabs) {
-          tab.page.hidden = tab.page !== page;
-          tab.choice.setAttribute('aria-pressed', String(tab.page === page));
-        }
-        body.scrollTop = 0;
-        feedback('');
-      });
-      return page;
+      const group = element('section');
+      group.setAttribute('aria-label', title);
+      group.append(element('h3', title));
+      body.append(group);
+      return group;
     }
 
     let lastSubmit = -Infinity;

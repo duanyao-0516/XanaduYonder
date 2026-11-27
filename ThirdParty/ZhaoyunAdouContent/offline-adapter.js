@@ -7,7 +7,7 @@
   const ids = {
     Load:'nFCDlT3GRD-9N62vwVVE4Q', Main:'dKvUsPTsTBGGfiZxHMSqtg',
     Battle:'a1VsRozfQfKce35jblVR3w', GameOver:'36WnNn_bSKilkYpbnYn_9A',
-    Shop:'NsqY3ju_Tc-HfHc8t5EVgA', Setting:'6DGqZNBLRhuPudJfulUNKw'
+    Shop:'NsqY3ju_Tc-HfHc8t5EVgA', Setting:'6DGqZNBLRhuPudJfulUNKw', AvatarSetting:'B_zOi-00Tk29O7ykm753NA'
   };
   const scene = name => {
     const ctor = Laya.ClassUtils.getClass(ids[name]);
@@ -68,6 +68,72 @@
   const disabledDialogs=new Set(['GMDialog','GetStaminaDialog','AuthorizeDialog','PrivacyPolicyDialog','SidebarDialog','AddDeskDialog','ShareLpDialog']);
   const openDialog=I.SceneMgr.prototype.uo;
   I.SceneMgr.prototype.uo=function(name,...args){if(disabledDialogs.has(name))return Promise.resolve(null);return openDialog.call(this,name,...args);};
+  // Keep the original action handlers for purchases, rewards and progression. Opening a
+  // card alone cannot authorize its confirm action. Reused scenes bind their scrim once.
+  const canvasBack = new WeakMap();
+  const canvasCards = [
+    ['BossTipDialog','3PtiqZCFQj2dH_DSHFFblw','red','confirmBtn'],
+    ['DeckDialog','zavuCnlJRrqJycITCILMqg','maskBg','xBtn'],
+    ['DeletePropsTipDialog','2xXyn9S9TgW7FJIlQLz9sA','bg','cancelBtn'],
+    ['NewSeasonDialog','hB0pfffVTGKW7NeAR532sQ','bg'],
+    ['NewWeaponDialog','J_UH_VTZTxqrZGBtVTiZww','Box'],
+    ['NoticeDialog','fzqcLhtNToqfbC1eixpMfw','bg','xBtn'],
+    ['PauseDialog','XxMayroKT9Kz-_jp3ylB1w','bg','noBtn'],
+    ['RankRewardDialog','E1wtzHmxTJG-Q8D_3rV0oA','bg'],
+    ['RecycleWeaponDialog','q5V7n3ojRiqC1NpUBDx5hQ','bg','xBtn'],
+    ['ReplacePropsTipDialog','z_0pDWBpS5eRL3Ag4IUahQ'],
+    ['SmoothModeTipDialog','gA_PqFVjQS-Z1kVx9OpfNg','bg','cancelBtn'],
+    ['WeaponIntroDialog','HbyZPlGGQuCLkT5uT4N45g','bg','xBtn'],
+    ['WeaponResetTipDialog','5RzulNRRSKGl76pRvOidug','bg']
+  ];
+  for (const [name, id, scrimName, cancelButton] of canvasCards) {
+    wrap(Laya.ClassUtils.getClass(id).prototype, 'onOpened', function () {
+      window.XanaduGameSettings.formatCanvasDialog(this);
+      if (scrimName && canvasBack.has(this)) return;
+      let scrim = scrimName && this.getChildByName(scrimName);
+      if (!scrim) {
+        // The replacement picker fits its content. Its backdrop is a sibling so it
+        // can receive touches outside that content-sized dialog.
+        const parent = this.parent;
+        scrim = new Laya.Box();
+        scrim.name = 'cancelBackdrop';
+        scrim.bgColor = '#000000';
+        const layout = () => {
+          const first = parent.globalToLocal(new Laya.Point(0,0));
+          const last = parent.globalToLocal(new Laya.Point(Laya.stage.width,Laya.stage.height));
+          scrim.pos(first.x,first.y);
+          scrim.size(last.x-first.x,last.y-first.y);
+        };
+        parent.addChildAt(scrim,parent.getChildIndex(this));
+        layout();
+        Laya.stage.on(Laya.Event.RESIZE,scrim,layout);
+        this.once(Laya.Event.UNDISPLAY,this,() => {
+          Laya.stage.off(Laya.Event.RESIZE,scrim,layout);
+          scrim.destroy();
+        });
+      }
+      const dismiss = cancelButton
+        ? () => this[cancelButton].event(Laya.Event.CLICK, new Laya.Event())
+        : () => I.SceneMgr.instance().yo(name);
+      canvasBack.set(this,dismiss);
+      if (scrim.bgColor === '#000000') scrim.alpha = .4;
+      if (!scrim.hasListener(Laya.Event.CLICK)) {
+        scrim.mouseEnabled = true;
+        scrim.on(Laya.Event.CLICK, this, event => { if (event.target === scrim) dismiss(); });
+      }
+      // In the original layouts the card and scrim are siblings. Blank space within
+      // the illustrated card belongs to the card even when it has no button there.
+      const content = this.getChildByName('box') || this.getChildByName('Image');
+      if (content && content !== scrim) content.mouseEnabled = true;
+    });
+  }
+  window.__XanaduDismissCanvasCard = function () {
+    const cards = [...I.SceneMgr.instance().ho.values()].filter(card => card?.parent && card.visible && canvasBack.has(card));
+    const top = cards.sort((a,b) => a.parent === b.parent ? a.parent.getChildIndex(b)-a.parent.getChildIndex(a) : 0)[0];
+    if (!top) return false;
+    canvasBack.get(top)();
+    return true;
+  };
   const openScene=I.SceneMgr.prototype.ao;
   I.SceneMgr.prototype.ao=function(name,...args){
     if(name==='RankScene'){showPersonalRank();return;}
@@ -362,7 +428,16 @@
     }
   };
   wrap(battle,'Vnt',function(){hide(this.shovelAd?.getChildByName('adImg'));label(this.shovelAd,'本局援助');});
-  wrap(scene('Setting'),'onOpened',function(){hide(this.viewTxt);hide(this.uidTxt);hide(this.copyBtn);});
+  const settingsUI = window.XanaduGameSettings;
+  wrap(scene('Setting'), 'onOpened', function () { settingsUI.showSettings(this); });
+  wrap(scene('Setting'), 'onClosed', settingsUI.removeSettings);
+  wrap(scene('AvatarSetting'), 'onOpened', function () { settingsUI.showAvatar(this); });
+  wrap(scene('AvatarSetting'), 'onClosed', settingsUI.removeAvatar);
+  const closeScene = I.SceneMgr.prototype.ro;
+  I.SceneMgr.prototype.ro = function (name, ...args) {
+    if (name === 'AvatarSettingScene') return settingsUI.dismissAvatar(() => closeScene.call(this, name, ...args));
+    return closeScene.call(this, name, ...args);
+  };
 
   // An actual local progression screen, with one storage commit for reward and receipt.
   function showPersonalRank(){
@@ -383,6 +458,7 @@
       message.textContent='已领取'+entry.reward+'金币';const main=I.SceneMgr.instance().co('MainScene');if(main&&main.goldTxt)main.goldTxt.text=player.gold.toString();state();
     });
     const close=document.createElement('button');close.type='button';close.className='xy-secondary';close.textContent='返回游戏';close.addEventListener('click',()=>panel.remove());
+    XanaduDialogs.bindBackdrop(panel,()=>panel.remove());
     box.append(title,description,reward,message,close);panel.append(box);document.body.append(panel);
   }
 })();

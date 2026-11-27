@@ -22,6 +22,11 @@ namespace XanaduYonder.Runtime.BoardGames
         private void Render()
         {
             if (!shown) return;
+            if (panel == PanelKind.Settings && renderedPanel == panel && settingsBody != null && layoutSize == root.rect.size)
+            {
+                DrawSettings();
+                return;
+            }
             layoutSize = root.rect.size;
             if (Width < 40 || Height < 80) return;
             bool changingDialog = panel != PanelKind.None || renderedPanel != PanelKind.None;
@@ -58,6 +63,8 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DestroyView()
         {
+            settingsBody = null;
+            settingsBack = null;
             if (view == null) return;
             view.gameObject.SetActive(false);
             Destroy(view.gameObject);
@@ -228,10 +235,16 @@ namespace XanaduYonder.Runtime.BoardGames
 
         private void DrawBoardOverlay(Rect board, string name, string title, string button, Action action)
         {
+            if (boardPromptCollapsed)
+            {
+                GameButton(view, button, board.center.x - 112, board.yMax - 62, 224, 54, action, true);
+                return;
+            }
             var dim = UiFactory.Panel(view, name, board.x, board.y, board.width, board.height, DialogUi.Scrim);
-            dim.raycastTarget = true;
+            DialogOutsideTap.Bind(dim, () => { boardPromptCollapsed = true; Render(); });
             float width = Mathf.Min(392, board.width - 42);
             var card = UiFactory.Panel(dim.transform, "Pause controls", (board.width - width) / 2, (board.height - 188) / 2, width, 188, UiFactory.Paper);
+            card.raycastTarget = true;
             UiFactory.Label(card.transform, title, 16, 17, width - 32, 60, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             GameButton(card.transform, button, 23, 92, width - 46, 73, action, true);
         }

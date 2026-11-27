@@ -1004,6 +1004,7 @@ namespace XanaduYonder.EditorTools
             {
                 var overlay = Get<RectTransform>(Page, "overlay");
                 if (overlay == null) return false;
+                DialogScreenshotAudit.CaptureCurrent(overlay);
                 foreach (var text in overlay.GetComponentsInChildren<Text>()) if (text.text == expected) return true;
                 return false;
             }

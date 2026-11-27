@@ -58,6 +58,7 @@ public final class ZhaoyunAdouActivity extends Activity {
     private FrameLayout root;
     private WebView web;
     private View failurePanel;
+    private View failureSummary;
     private Toast backToast;
     private LocalAssetServer assetServer;
     private OnBackInvokedCallback modernBack;
@@ -394,6 +395,18 @@ public final class ZhaoyunAdouActivity extends Activity {
     @Override public void onBackPressed() { committedBack(); }
     private void committedBack() {
         if (destroyed || exiting || !resumed || !focused) return;
+        if (failureSummary != null) { failureSummary.performClick(); return; }
+        if (failurePanel != null) { collapseFailure(); return; }
+        final WebView target = web;
+        if (target != null && ready && !nativeFrozen) {
+            target.evaluateJavascript("!!(window.XanaduDialogs && (XanaduDialogs.dismissTop() || XanaduGameSettings.back()))", handled -> {
+                if (target != web || destroyed || exiting || !resumed || !focused || failurePanel != null) return;
+                if ("true".equals(handled)) resetBack();
+                else backToLobby();
+            });
+        } else backToLobby();
+    }
+    private void backToLobby() {
         if (!back.commit(SystemClock.elapsedRealtime())) {
             if (backToast != null) backToast.cancel();
             backToast = Toast.makeText(this, "再返回一次回到大厅", Toast.LENGTH_SHORT);
@@ -452,6 +465,8 @@ public final class ZhaoyunAdouActivity extends Activity {
         surface.setColor(Color.rgb(248, 247, 241));
         surface.setCornerRadius(dp(DIALOG_SURFACE_RADIUS_DP));
         content.setBackground(surface);
+        content.setClickable(true);
+        gutter.setOnClickListener(view -> collapseFailure());
         gutter.addView(content, new LinearLayout.LayoutParams(-1, -2));
         gutter.addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {
             int width = Math.min(dp(432), r - l - gutter.getPaddingLeft() - gutter.getPaddingRight());
@@ -462,10 +477,10 @@ public final class ZhaoyunAdouActivity extends Activity {
             }
         });
         TextView heading = new TextView(this);
-        heading.setText(title); heading.setTextSize(22); heading.setTextColor(Color.rgb(23, 61, 53));
+        heading.setText(title); heading.setTextSize(16); heading.setTextColor(Color.rgb(23, 61, 53));
         content.addView(heading, new LinearLayout.LayoutParams(-1, -2));
         TextView detail = new TextView(this);
-        detail.setText(message); detail.setTextSize(16); detail.setTextColor(Color.rgb(65, 85, 74));
+        detail.setText(message); detail.setTextSize(14); detail.setTextColor(Color.rgb(65, 85, 74));
         detail.setPadding(0, dp(8), 0, dp(14));
         content.addView(detail, new LinearLayout.LayoutParams(-1, -2));
         addButton(content, "重试", true, retry);
@@ -500,14 +515,35 @@ public final class ZhaoyunAdouActivity extends Activity {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
     private void addButton(LinearLayout parent, String text, boolean primary, Runnable action) {
-        Button button = new Button(this); button.setText(text); button.setAllCaps(false);
+        Button button = new Button(this); button.setText(text); button.setAllCaps(false); button.setTextSize(14);
         button.setMinHeight(dp(48));
         button.setTextColor(primary ? Color.WHITE : Color.rgb(23, 61, 53));
         button.setBackgroundTintList(ColorStateList.valueOf(primary ? Color.rgb(39, 102, 83) : Color.rgb(231, 237, 229)));
         button.setOnClickListener(view -> action.run());
         parent.addView(button, new LinearLayout.LayoutParams(-1, -2));
     }
+    // An unconfirmed save may already have ended the battle. Keep it paused until an explicit choice.
+    private void collapseFailure() {
+        if (failurePanel == null || failureSummary != null) return;
+        failurePanel.setVisibility(View.GONE);
+        Button summary = new Button(this);
+        summary.setText("游戏已暂停 · 查看处理选项");
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER);
+        if (web != null) web.setVisibility(View.INVISIBLE);
+        root.addView(summary, params);
+        failureSummary = summary;
+        summary.setOnClickListener(view -> {
+            root.removeView(summary);
+            failureSummary = null;
+            if (web != null) web.setVisibility(View.VISIBLE);
+            if (failurePanel != null) failurePanel.setVisibility(View.VISIBLE);
+        });
+    }
+
     private void clearFailure() {
+        if (failureSummary != null && root != null) root.removeView(failureSummary);
+        if (failureSummary != null && web != null) web.setVisibility(View.VISIBLE);
+        failureSummary = null;
         if (failurePanel != null && root != null) root.removeView(failurePanel);
         failurePanel = null;
     }

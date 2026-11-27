@@ -8,6 +8,18 @@ namespace XanaduYonder.Runtime
     [ExecuteAlways]
     internal sealed class DialogFocusScope : MonoBehaviour
     {
+#if UNITY_EDITOR
+        internal static System.Action<Transform, bool> VisibilityChanged;
+        internal static System.Action<Transform> BeforeInput;
+#endif
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        internal static void ObserveVisible(Transform origin)
+        {
+#if UNITY_EDITOR
+            BeforeInput?.Invoke(origin);
+#endif
+        }
+
         private readonly List<CanvasGroup> blocked = new List<CanvasGroup>();
         private readonly List<Button> focusTargets = new List<Button>();
         private Transform host;
@@ -23,6 +35,9 @@ namespace XanaduYonder.Runtime
 
         private void OnEnable()
         {
+#if UNITY_EDITOR
+            VisibilityChanged?.Invoke(transform, true);
+#endif
             if (host != null) Acquire();
         }
 
@@ -33,6 +48,7 @@ namespace XanaduYonder.Runtime
             var events = EventSystem.current;
             if (events != null && !events.alreadySelecting)
             {
+                DialogMenuButton.ReadActivationInput(events);
                 previousSelection = events.currentSelectedGameObject;
                 events.SetSelectedGameObject(null);
             }
@@ -65,6 +81,9 @@ namespace XanaduYonder.Runtime
 
         private void OnDisable()
         {
+#if UNITY_EDITOR
+            VisibilityChanged?.Invoke(transform, false);
+#endif
             if (!acquired) return;
             acquired = false;
             foreach (var group in blocked)

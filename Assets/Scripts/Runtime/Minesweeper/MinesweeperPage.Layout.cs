@@ -50,8 +50,14 @@ namespace XanaduYonder.Runtime.Minesweeper
             overviewNote=UiFactory.Label(surface,"总览 · 点选区域返回局部",10,12,628,38,21,UiFactory.Accent,TextAnchor.MiddleCenter);
             overviewNote.gameObject.SetActive(false);
             var cover=UiFactory.Panel(surface,"Pause cover",0,0,648,762,UiFactory.Paper,false); UiFactory.Stretch(cover.rectTransform);
-            cover.raycastTarget=true; pauseCover=cover.gameObject;
+            pauseCover=cover.gameObject;
+            DialogOutsideTap.Bind(cover, () =>
+            {
+                if (visible && !choosing && dialog == null && acceptsInput() && session != null &&
+                    session.Paused && !session.Blocked && session.Foreground) ReturnToSelection();
+            });
             var pauseContent=UiFactory.Rect(cover.transform,"Pause content",0,0,480,220); UiFactory.Center(pauseContent);
+            DialogOutsideTap.Protect(pauseContent);
             pauseText=UiFactory.Label(pauseContent,"已暂停",0,0,480,70,38,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             UiFactory.Label(pauseContent,"盘面已遮挡，放心休息一下。",0,76,480,46,23,UiFactory.Muted,TextAnchor.MiddleCenter);
             resumeButton=DialogUi.ActionButton(pauseContent,"继续游戏",90,142,300,76,Resume,true); resumeButton.name="Resume";

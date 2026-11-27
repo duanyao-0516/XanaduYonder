@@ -133,6 +133,7 @@ namespace XanaduYonder.EditorTools
             private readonly RenderTexture texture;
             private readonly RectTransform frame;
             private readonly TetrisPage page;
+            private readonly AppController host;
             private readonly string directory;
             private readonly int height;
             private readonly float designHeight;
@@ -153,7 +154,15 @@ namespace XanaduYonder.EditorTools
                 frame=UiFactory.Rect(rect,"Tetris page",0,0,720,designHeight);UiFactory.Stretch(frame);
                 if(EventSystem.current==null)new GameObject("Events",typeof(EventSystem),typeof(StandaloneInputModule)).transform.SetParent(root.transform);
                 page=frame.gameObject.AddComponent<TetrisPage>();
-                page.Initialize(frame,()=>{},after=>after(),()=>hostAcceptsInput,()=>false,()=>false,null,_=>{},(a,b,c,d,e,f)=>{},new TetrisSaveStore(directory));
+                var shell = new GameObject("Tetris dialog host");
+                shell.SetActive(false);
+                shell.transform.SetParent(root.transform);
+                host = shell.AddComponent<AppController>();
+                typeof(AppController).GetField("frame", Flags).SetValue(host, frame);
+                typeof(AppController).GetField("canvasRoot", Flags).SetValue(host, rect);
+                page.Initialize(frame,()=>{},after=>after(),()=>hostAcceptsInput,()=>false,()=>false,null,_=>{},
+                    (title, body, yes, confirm, no, cancel) => Invoke(host, "ShowDialog", title, body, yes, confirm, no, cancel),
+                    new TetrisSaveStore(directory));
                 SetLayer(canvasObject.transform);Canvas.ForceUpdateCanvases();page.Enter();
             }
             private static void SetLayer(Transform t){t.gameObject.layer=5;foreach(Transform child in t)SetLayer(child);}
@@ -337,7 +346,17 @@ namespace XanaduYonder.EditorTools
                 Require(JsonUtility.ToJson(page.Session.Snapshot)==beforeSwap,"Changing preference preserves every board field");
                 Invoke(page,"Load");Require(page.SwapControls,"Reload restores saved control preference");
                 page.SetSwapControls(false);
-                Invoke(page,"OpenHelp");Invoke(page,"OpenSettings");Require(page.Session.Phase==TetrisSessionPhase.Paused,"Help/settings preserve pause");
+                Invoke(page, "OpenHelp");
+                Capture("controls-help");
+                Click(DialogAction("计分与续局"));
+                Capture("scoring-help");
+                Click(DialogAction("知道了"));
+                var beforeRestart = page.Session;
+                Invoke(page, "NewRound");
+                Capture("restart-confirmation");
+                Click(DialogAction("保留本局"));
+                Require(page.Session == beforeRestart, "Declining a new round keeps the paused session");
+                Invoke(page,"OpenSettings");Require(page.Session.Phase==TetrisSessionPhase.Paused,"Help/settings preserve pause");
                 page.SetHostSaveWarning("公共设置暂未保存，请检查剩余空间。");page.View.RefreshLayout();Invoke(page,"Refresh");Capture("warning");
                 Require(frame.GetComponentsInChildren<Text>(true).Any(t=>t.text.Contains("公共设置暂未保存")),"Shared warning remains visible");
                 page.SetHostSaveWarning(null);page.View.RefreshLayout();
@@ -374,6 +393,10 @@ namespace XanaduYonder.EditorTools
                 File.Delete(file+".bak");File.WriteAllText(file,"{");Invoke(page,"Load");page.Save();Capture("corrupt-save");
                 Require(File.ReadAllText(file)=="{","Corrupt save stays intact before explicit reset");
                 Require(frame.GetComponentsInChildren<Text>(true).Any(t=>t.text=="重置损坏存档"),"Corrupt save exposes explicit reset action");
+                Invoke(page, "ConfirmReset");
+                Capture("corrupt-save-confirmation");
+                Click(DialogAction("取消"));
+                Require(File.ReadAllText(file) == "{", "Cancelling the reset confirmation preserves the damaged file");
             }
             private void CheckArenaPresentation(RectTransform overlay)
             {
@@ -467,6 +490,11 @@ namespace XanaduYonder.EditorTools
             }
             private void CheckTerminalBounds(bool valid,string message)
             {checks++;if(!valid){terminalLayoutErrors.Add("388x"+height+" "+message);Report.AppendLine("FAIL "+message);}}
+            private Button DialogAction(string label)
+            {
+                var overlay = (GameObject)Get(host, "modal");
+                return overlay.GetComponentsInChildren<Button>().Single(button => button.name == label);
+            }
             private void Click(Button button)
             {
                 SetLayer(frame.parent);Canvas.ForceUpdateCanvases();camera.Render();Canvas.ForceUpdateCanvases();

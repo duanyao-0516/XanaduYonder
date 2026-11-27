@@ -110,10 +110,10 @@ namespace XanaduYonder.Runtime.Zuma
             var background=UiFactory.Panel(canvasObject.transform,"Letterbox",0,0,1280,720,new Color(.025f,.022f,.016f),false);
             UiFactory.Stretch(background.rectTransform);
             var frame=ZumaArt.Rect(canvasObject.transform,"1280x720 safe game frame",0,0,1280,720);
-            frame.gameObject.AddComponent<RectMask2D>();
             viewport=canvasObject.AddComponent<ZumaViewport>();viewport.Initialize(frame);
             viewport.Changed+=OnViewportChanged;
             view=new ZumaView(frame,assets);
+            view.DismissOutside = () => dialogBack?.Invoke();
         }
         private ZumaLevelDefinition ResolveLevel(string id)
         {
@@ -298,11 +298,11 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void ShowFeedbackSettings()
         {
-            var panel = view.Dialog("声音与触感", height: 302);
-            DialogUi.FeedbackSwitches(panel, 65, 112, 475, 70, 14, sound(), haptics(),
+            var panel = view.Dialog("声音与触感", height: 326, sheetBack: ShowPause);
+            DialogUi.FeedbackSwitches(panel, 65, 130, 475, 70, 14, sound(), haptics(),
                 value => UpdateSetting(true, value), value => UpdateSetting(false, value));
-            DialogUi.ActionButton(panel, "返回暂停菜单", 65, 202, 475, 72, ShowPause, true);
-            dialogBack = ShowPause;
+            dialogBack = DialogSheetLayout.AfterClose(panel, ShowPause);
+            DialogUi.ActionButton(panel, "返回暂停菜单", 65, 222, 475, 72, dialogBack, true);
             ShowWarnings();
         }
         private void UpdateSetting(bool soundSetting, bool enabled)
@@ -331,7 +331,7 @@ namespace XanaduYonder.Runtime.Zuma
                 {
                     view.StatsDetails(snapshot, ShowScore);
                     dialogBack = ShowScore;
-                });
+                }, () => { view.CloseDialog(); dialogBack = null; });
                 dialogBack = AcknowledgeResult;
                 ShowWarnings();
             }

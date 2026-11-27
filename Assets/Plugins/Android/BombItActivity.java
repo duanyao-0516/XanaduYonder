@@ -2,6 +2,7 @@ package com.xanaduyonder.bombit;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import com.xanaduyonder.webgames.WebGameAlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -82,6 +83,7 @@ public final class BombItActivity extends Activity {
     private AudioFocusRequest audioFocus;
     private OnBackInvokedCallback backCallback;
     private AlertDialog errorDialog;
+    private boolean fatalDetailsHidden;
     private AlertDialog exitDialog;
     private long session = -1;
     private int exitSequence;
@@ -493,6 +495,18 @@ public final class BombItActivity extends Activity {
                     + " pending=" + (pendingExit != null) + " exitFailure=" + exitFailurePending);
             return;
         }
+        if (web != null && ready && !fatal) {
+            WebView target = web;
+            evaluate("!!(window.XanaduDialogs && XanaduDialogs.dismissTop())", handled -> {
+                if (destroyed || target != web || !resumed || !windowFocused || finishingToLobby
+                        || pendingExit != null || exitFailurePending) return;
+                if ("true".equals(handled)) resetBackGate("modal_cancelled");
+                else backToLobby();
+            });
+        } else backToLobby();
+    }
+
+    private void backToLobby() {
         long now = SystemClock.uptimeMillis();
         boolean exit = backGate.shouldExit(now);
         trace("back_decision", "uptime=" + now + " exit=" + exit
@@ -527,22 +541,22 @@ public final class BombItActivity extends Activity {
         exitFailurePending = true;
         resetBackGate("exit_failed");
         if (!resumed || !windowFocused || destroyed || isFinishing() || exitDialog != null) return;
-        exitDialog = new AlertDialog.Builder(this).setTitle("退出尚未完成")
-                .setMessage("暂时无法确认游戏已停止。可以重试退出，或留在游戏中继续。重新进入后可从已保存关卡的开局继续，地图会重新生成。")
-                .setCancelable(false)
-                .setPositiveButton("重试退出并返回", (dialog, which) -> {
+        exitDialog = WebGameAlertDialog.create(this, "退出尚未完成",
+                "暂时无法确认游戏已停止。可以重试退出，或留在游戏中继续。重新进入后可从已保存关卡的开局继续，地图会重新生成。",
+                "重试退出并返回", () -> {
                     exitDialog = null;
                     exitFailurePending = false;
                     cancelGameExit();
                     beginExit();
-                })
-                .setNegativeButton("留在游戏", (dialog, which) -> {
-                    exitDialog = null;
-                    exitFailurePending = false;
-                    cancelGameExit();
-                    syncHostState();
-                }).create();
+                }, "留在游戏", this::stayAfterExitFailure, this::stayAfterExitFailure);
         exitDialog.show();
+    }
+
+    private void stayAfterExitFailure() {
+        exitDialog = null;
+        exitFailurePending = false;
+        cancelGameExit();
+        syncHostState();
     }
 
     private void cancelGameExit() {
@@ -754,11 +768,17 @@ public final class BombItActivity extends Activity {
     }
 
     private void showFatalDialog() {
-        if (!fatal || !resumed || destroyed || isFinishing() || errorDialog != null) return;
+        if (!fatal || fatalDetailsHidden || !resumed || destroyed || isFinishing() || errorDialog != null) return;
         if (exitDialog != null) { exitDialog.dismiss(); exitDialog = null; }
-        errorDialog = new AlertDialog.Builder(this).setTitle("暂时无法打开")
-                .setMessage("游戏页面无法继续运行，请返回大厅后重试。")
-                .setCancelable(false).setPositiveButton("返回大厅", (dialog, which) -> finishToLobby()).create();
+        errorDialog = WebGameAlertDialog.create(this, "暂时无法打开", "游戏页面无法继续运行，请返回大厅后重试。",
+                "返回大厅", this::finishToLobby, null, null, () -> {
+                    errorDialog = null;
+                    fatalDetailsHidden = true;
+                    if (loading != null) {
+                        loading.setText("游戏暂时无法继续 · 查看处理选项");
+                        loading.setOnClickListener(view -> { fatalDetailsHidden = false; showFatalDialog(); });
+                    }
+                });
         errorDialog.show();
     }
 
