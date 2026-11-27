@@ -268,14 +268,14 @@ namespace XanaduYonder.Runtime.Dino
         {
             float w = viewport.Width;
             var nav = UiFactory.Rect(content, "Dino navigation", 0, 0, w, 92);
-            UiFactory.IconButton(nav, gameControls ? UiIconKind.Back : UiIconKind.Home, 56, 34, 58, 58, Back);
-            if (gameControls) UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.NavigationButton(nav, gameControls ? UiIconKind.Back : UiIconKind.Home, Back, w);
+            if (gameControls) UiFactory.NavigationButton(nav, UiIconKind.Restart, ConfirmRestart, w);
             var brand = UiFactory.Label(nav, "XANADU / YONDER", w * .5f - 150, 34, 300, 58, 19,
                 UiFactory.Muted, TextAnchor.MiddleCenter);
             ResultPresentation.For(this, root).SetReopenSlot(
                 UiFactory.Rect(nav, "Result review slot", w * .5f - 116, 34, 232, 58), brand);
-            UiFactory.IconButton(nav, UiIconKind.Book, w - 184, 34, 58, 58, ShowHelp);
-            UiFactory.IconButton(nav, UiIconKind.Settings, w - 114, 34, 58, 58, ShowSettings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowHelp, w);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, ShowSettings, w);
         }
 
         private void BuildHeading(float y, bool wide)

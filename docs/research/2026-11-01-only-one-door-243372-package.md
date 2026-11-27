@@ -1,5 +1,7 @@
 # 只有一道门 2.1：网页发布包下载与完整性验证
 
+本次下载包和浏览器截图仅保存在当时的本地调研目录。已纳入主线的原始 JS、PAK、音频及其摘要可通过[来源清单](../../ThirdParty/LevelDevil/source-manifest.json)核对，[内容构建说明](../../ThirdParty/LevelDevil/README.md)给出离线运行和检查命令。
+
 日期：2026-11-01。
 
 已取得此 4399 版本在支持 MP3 的 Chrome 中运行所需的网页发布文件，并打包保存。取得的是 Stencyl 导出的 Haxe/OpenFL/Lime 产物，不是原始可编辑工程或 Android APK。未接入 XanaduYonder，也未修改 Unity 业务代码。
@@ -20,8 +22,8 @@
 | 交付物 | 文件数 | 字节数 |
 | --- | ---: | ---: |
 | `original/` 原始网页发布文件 | 24 | 5,229,774 |
-| [原始包 ZIP](../../artifacts/research/only-one-door-243372/only-one-door-2.1-4399-original.zip) | 24 | 2,085,341 |
-| [本地试玩包 ZIP](../../artifacts/research/only-one-door-243372/only-one-door-2.1-local-playable.zip) | 26 | 2,086,482 |
+| 原始包 ZIP（`artifacts/research/only-one-door-243372/only-one-door-2.1-4399-original.zip`） | 24 | 2,085,341 |
+| 本地试玩包 ZIP（`artifacts/research/only-one-door-243372/only-one-door-2.1-local-playable.zip`） | 26 | 2,086,482 |
 
 原件包括 `index.html`、`Level Devil.js`、`poki-sdk.js`、动态注入的 `poki-sdk-core.js`、`lib/default.pak` 和 19 个 `assets/sfx/*.mp3`。
 
@@ -45,7 +47,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - 源站 19 个 OGG 路径返回 HTTP 404，未伪造或转码补齐。引擎将 `pathGroup=[mp3,ogg]` 交给 Howler，由浏览器选择支持的首个格式。Chrome 实测加载了全部 19 个 MP3，没有请求 OGG。这是缺失的备用编码，不代表已取得清单中的每种编码文件。
 - `config/game-config.json` 是主 JS 内嵌 Base64 内容，不需要额外网络请求。
 
-完整报告：[audit-summary.json](../../artifacts/research/only-one-door-243372/evidence/audit/audit-summary.json)。可复验工具：[audit-package.py](../../artifacts/research/only-one-door-243372/tools/audit-package.py)。下载来源、大小及 SHA256：[download-manifest.json](../../artifacts/research/only-one-door-243372/evidence/download-manifest.json)。
+完整报告：`artifacts/research/only-one-door-243372/evidence/audit/audit-summary.json`。可复验工具：`artifacts/research/only-one-door-243372/tools/audit-package.py`。下载来源、大小及 SHA256：`artifacts/research/only-one-door-243372/evidence/download-manifest.json`。
 
 ## 实际运行验证与边界
 
@@ -57,7 +59,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - 未逐关通关，未验证长时间稳定性、所有浏览器、存档全路径、音效听感或 Android 真机；没有进行 Unity 编译或回归，因为本轮仅下载和调研。
 - 两份 ZIP 的 CRC 检查通过，解压内容逐项与对应本地目录一致；原件 24 项 SHA256 重新校验通过。
 
-运行记录：[playable-browser.json](../../artifacts/research/only-one-door-243372/evidence/playable-browser.json)。截图：[单人开局](../../artifacts/research/only-one-door-243372/evidence/playable-one-player-select.png)、[移动后](../../artifacts/research/only-one-door-243372/evidence/playable-one-player-moved.png)、[双人开局](../../artifacts/research/only-one-door-243372/evidence/playable-two-player.png)。
+运行记录：`artifacts/research/only-one-door-243372/evidence/playable-browser.json`。截图：单人开局（`artifacts/research/only-one-door-243372/evidence/playable-one-player-select.png`）、移动后（`artifacts/research/only-one-door-243372/evidence/playable-one-player-moved.png`）、双人开局（`artifacts/research/only-one-door-243372/evidence/playable-two-player.png`）。
 
 ## ZIP 哈希
 

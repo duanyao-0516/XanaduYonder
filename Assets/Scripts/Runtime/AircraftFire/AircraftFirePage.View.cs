@@ -27,9 +27,10 @@ namespace XanaduYonder.Runtime.AircraftFire
 
             entry = UiFactory.Rect(hud, "Aircraft original entry", 0, 0, 640, 1136);
             UiFactory.Stretch(entry);
-            UiFactory.IconButton(entry, UiIconKind.Home, 14, 8, 60, 60, Exit).name = "Aircraft home";
-            UiFactory.IconButton(entry, UiIconKind.Book, 492, 8, 60, 60, ShowRules).name = "Aircraft help";
-            UiFactory.IconButton(entry, UiIconKind.Settings, 566, 8, 60, 60, Settings).name = "Aircraft settings";
+            var entryNavigation = new GameNavigationLayout(640, 14, 8, 60, 14);
+            UiFactory.NavigationButton(entry, UiIconKind.Home, Exit, entryNavigation).name = "Aircraft home";
+            UiFactory.NavigationButton(entry, UiIconKind.Book, ShowRules, entryNavigation).name = "Aircraft help";
+            UiFactory.NavigationButton(entry, UiIconKind.Settings, Settings, entryNavigation).name = "Aircraft settings";
             titleArtwork = UiFactory.Rect(entry, "Aircraft original title", 192, 100, 256, 64);
             var title = titleArtwork.gameObject.AddComponent<RawImage>();
             title.texture = Resources.Load<Texture2D>("AircraftFire/Title"); title.raycastTarget = false;

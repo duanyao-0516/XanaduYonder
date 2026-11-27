@@ -265,9 +265,10 @@ namespace XanaduYonder.Runtime.Tetris
             float s = (float)Layout.Scale, width = size.x, content = (float)Layout.ContentWidth;
             for (int i = 0; i < labels.Count; i++) labels[i].fontSize = Mathf.Max(1, Mathf.RoundToInt(fontSizes[i] * s));
             Place(navigation, 0, 0, width, 56 * s);
-            LayoutNavigation(homeControl, 11.5f * s, s);
-            LayoutNavigation(helpControl, width - 107.5f * s, s);
-            LayoutNavigation(settingsControl, width - 59.5f * s, s);
+            var navigationLayout = new GameNavigationLayout(width, 11.5f * s, 4 * s, 48 * s, 0);
+            LayoutNavigation(homeControl, navigationLayout.Bounds(UiIconKind.Home), s);
+            LayoutNavigation(helpControl, navigationLayout.Bounds(UiIconKind.Book), s);
+            LayoutNavigation(settingsControl, navigationLayout.Bounds(UiIconKind.Settings), s);
             Place(brand.rectTransform, 108 * s, 12 * s, 172 * s, 32 * s);
             Place(ReviewSlot, 128 * s, 6 * s, 132 * s, 44 * s);
             Place(title.rectTransform, 19.5f * s, 56 * s, 264 * s, 44 * s);
@@ -461,9 +462,9 @@ namespace XanaduYonder.Runtime.Tetris
             return control;
         }
 
-        private static void LayoutNavigation(Control control, float x, float s)
+        private static void LayoutNavigation(Control control, Rect bounds, float s)
         {
-            Place(control.Target, x, 4 * s, 48 * s, 48 * s);
+            Place(control.Target, bounds.x, bounds.y, bounds.width, bounds.height);
             Place(control.Background.rectTransform, 8 * s, 8 * s, 32 * s, 32 * s);
             control.Background.Radius = 10 * s;
             Place((RectTransform)control.Target.Find("Navigation icon"), 14 * s, 14 * s, 20 * s, 20 * s);

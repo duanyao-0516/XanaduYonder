@@ -238,7 +238,7 @@ namespace XanaduYonder.Runtime.Idiom
             {
                 data.FixedLocalActionSides = value; Save(); Refresh();
             });
-            IdiomUi.Button(panel, "玩法说明", 32, 356, 532, 72, ShowHelp);
+            IdiomUi.Button(panel, "玩法说明", 32, 356, 532, 72, () => ShowHelp(ShowMenu));
             var finish = IdiomUi.Button(panel, "结束本轮", 32, 452, 258, 72, () =>
             {
                 Confirm("结束这一轮？", "已完成的成语仍可回看，\n生词本会一直保留。", "回顾本轮", () =>
@@ -254,9 +254,9 @@ namespace XanaduYonder.Runtime.Idiom
             IdiomUi.Button(panel, "继续", 32, panel.rect.height - 104, 532, 62, ReturnFromDialog);
         }
 
-        private void ShowHelp()
+        private void ShowHelp(Action back)
         {
-            var panel = Dialog("成语接龙 · 玩法", 750, ShowMenu);
+            var panel = Dialog("成语接龙 · 玩法", 750, back);
             IdiomUi.ScrollText(panel,
                 "同字：上一词末字，接下一词首字。\n同音：首尾读音相同即可，声调不限。\n\n" +
                 "人机对战可选机器或你先开始；双人本地对战可选左方或右方先开始，之后轮流接词。双方本局用过的成语都不能重复。\n\n" +

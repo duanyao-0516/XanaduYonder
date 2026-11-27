@@ -155,10 +155,10 @@ namespace XanaduYonder.EditorTools
                 string sudokuSummary = LobbyDesignChecks.RecordForCheck(shell, "Sudoku").text;
                 Require(sudokuSummary.Contains("5/2000") && sudokuSummary.Contains("入门 2") && sudokuSummary.Contains("困难 1"), "Sudoku lobby summarizes global and per-difficulty progress");
                 var content = lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "ArmyChess", "Xiangqi", "Chess", "ChineseCheckers", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "BakeryBasket", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom", "Feihualing" };
-                string[] routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterArmyChess", "EnterXiangqi", "EnterChess", "EnterChineseCheckers", "EnterCutTheRope", "EnterZhaoyunAdou", "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom", "EnterFeihualing" };
+                var names = LobbyDesignChecks.ExpectedNames;
+                var routes = LobbyDesignChecks.ExpectedRoutes;
                 float lastBottom = 0;
-                for (int i = 0; i < names.Length; i++)
+                for (int i = 0; i < names.Count; i++)
                 {
                     var card = LobbyDesignChecks.FindCard(content, names[i]);
                     float top = LobbyDesignChecks.CardTop(content, card);
@@ -175,7 +175,7 @@ namespace XanaduYonder.EditorTools
                 int cardCount = 0;
                 foreach (var button in content.GetComponentsInChildren<Button>())
                     if (button.name.EndsWith(" game card", StringComparison.Ordinal)) cardCount++;
-                Require(cardCount == names.Length, "Lobby contains exactly " + names.Length + " ordered game cards");
+                Require(cardCount == names.Count, "Lobby contains exactly " + names.Count + " ordered game cards");
                 Require(Array.Exists(LobbyDesignChecks.FindCard(content, "BakeryBasket").GetComponentsInChildren<Text>(),
                     label => label.text == "抓大鹅"), "Lobby displays the renamed Goose game");
                 var fruit = LobbyDesignChecks.FindCard(content, "LinkMatch").GetComponentsInChildren<RawImage>();
@@ -192,7 +192,7 @@ namespace XanaduYonder.EditorTools
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Max(0, content.rect.height - viewport.rect.height));
                 f.Capture("lobby-footer");
-                var finalCard = LobbyDesignChecks.FindCard(content, names[names.Length - 1]);
+                var finalCard = LobbyDesignChecks.FindCard(content, names[names.Count - 1]);
                 Require(-status.rectTransform.anchoredPosition.y > LobbyDesignChecks.CardTop(content, finalCard) + finalCard.rect.height,
                     "Lobby footer follows the final card without overlap");
                 var ids = new string[2000];
@@ -390,6 +390,19 @@ namespace XanaduYonder.EditorTools
             {
                 page.Enter();
                 f.Capture("sudoku-selection");
+                var previousPage = Get<Button>(page, "previousPage");
+                var nextPage = Get<Button>(page, "nextPage");
+                foreach (var turn in new[] { previousPage, nextPage })
+                {
+                    var background = turn.GetComponent<Image>();
+                    Require(background.sprite == UiFactory.Disc && background.alphaHitTestMinimumThreshold == 0,
+                        "Sudoku pagination shares the circle image and keeps rectangular hit targets");
+                }
+                Require(!previousPage.interactable && nextPage.interactable, "Only forward pagination is active on the first page");
+                f.Click((RectTransform)nextPage.transform);
+                Require(Get<int>(page, "levelPage") == 1 && previousPage.interactable, "Next opens the following level page");
+                f.Click((RectTransform)previousPage.transform);
+                Require(Get<int>(page, "levelPage") == 0 && !previousPage.interactable, "Previous restores the first level page");
                 var dropdown = Get<SudokuDifficultyDropdown>(page, "difficultyDropdown");
                 // This complete page is created and exercised synchronously before
                 // Unity's next Start phase; initialize Dropdown's own tween runner.

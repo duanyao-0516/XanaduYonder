@@ -19,10 +19,10 @@ namespace XanaduYonder.Runtime.Sudoku
             var page = UiFactory.Rect(root, "Sudoku level selection", 0, 0, 720, 1320); UiFactory.Stretch(page); selectionRoot = page.gameObject;
             selectionInput = page.gameObject.AddComponent<CanvasGroup>();
             var nav = UiFactory.Band(page, "Selection navigation", 0, 92, 0);
-            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, () => { if (CanSelect) returnLobby(); });
+            UiFactory.NavigationButton(nav, UiIconKind.Home, () => { if (CanSelect) returnLobby(); });
             UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
-            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => { if (CanSelect) { difficultyDropdown.Hide(); openSettings(); } });
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, () => { if (CanSelect) { difficultyDropdown.Hide(); openSettings(); } });
             var title = UiFactory.Band(page, "Selection heading", 108, 96, .05f);
             UiFactory.Label(title, "数独", 36, 0, 260, 80, 52, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(title, "基础九宫 · 离线 2,000 关", 280, 20, 404, 50, 24, UiFactory.Muted, TextAnchor.MiddleRight);

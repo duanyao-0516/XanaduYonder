@@ -11,7 +11,6 @@ namespace XanaduYonder.Runtime.Sudoku
     internal sealed class SudokuIcon : MaskableGraphic
     {
         public SudokuIconKind Kind;
-        private static Sprite circle;
 
         public static SudokuIcon Add(Transform parent, SudokuIconKind kind, float x, float y, float size)
         {
@@ -26,21 +25,10 @@ namespace XanaduYonder.Runtime.Sudoku
             button.name = name;
             if (round)
             {
-                if (circle == null)
-                {
-                    const int n = 96;
-                    var texture = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "Sudoku circular control", filterMode = FilterMode.Bilinear };
-                    var pixels = new Color[n * n];
-                    for (int row = 0; row < n; row++)
-                    for (int column = 0; column < n; column++)
-                    {
-                        float distance = new Vector2(column + .5f - n / 2f, row + .5f - n / 2f).magnitude;
-                        pixels[row * n + column] = new Color(1, 1, 1, Mathf.Clamp01(n / 2f - distance));
-                    }
-                    texture.SetPixels(pixels); texture.Apply();
-                    circle = Sprite.Create(texture, new Rect(0, 0, n, n), new Vector2(.5f, .5f));
-                }
-                var background = button.GetComponent<Image>(); background.sprite = circle; background.type = Image.Type.Simple;
+                // The circular artwork sits inside a full rectangular page-turn target.
+                var background = button.GetComponent<Image>();
+                background.sprite = UiFactory.Disc;
+                background.type = Image.Type.Simple;
             }
             float iconSize = kind == SudokuIconKind.Book ? 34 : 28;
             Add(button.transform, kind, (size - iconSize) / 2, (size - iconSize) / 2, iconSize);

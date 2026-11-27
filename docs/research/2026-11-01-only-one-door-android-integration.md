@@ -1,5 +1,7 @@
 # 只有一道门 2.1：Android 完整离线接入调查与建议设计
 
+本文的调查报告和调用日志使用当时的本地 `artifacts/` 路径。要复查现行适配，请使用[受版本管理的原始资源及宿主检查](../../ThirdParty/LevelDevil/README.md)。
+
 日期：2026-11-01。基线：`1f99287016f353fd92ee0ca94a761c2e6bd433e9`，分支 `p/duanyao.0516/codex/only-one-door-package`。
 
 本文件记录最初的宿主、原游戏内容与平台依赖调查。用户随后已批准实施；当前工作与验收进展以[实施计划](../superpowers/plans/2026-11-01-level-devil-android.md)为准。此前已取得的包与浏览器抽测见[下载记录](2026-11-01-only-one-door-243372-package.md)。
@@ -40,7 +42,7 @@ PAK 中2138项已逐项gzip校验。包含1709图像、57文本和372二进制�
 
 **保留策略：PAK及19个MP3逐字节保留，184组场景数据全部随包；不重编码图片、声音，不按“看起来没用”删资源。** 两个Poki SDK从生产包删除；它们作为来源证据可保留在非运行目录。广告图标等素材即使仍在原PAK内，广告专用展示/行为必须停用。
 
-完整分类、ID和引用检查见 [content-audit.json](../../artifacts/research/only-one-door-243372/integration-audit/content/content-audit.json)。
+完整分类、ID和引用检查见 `artifacts/research/only-one-door-243372/integration-audit/content/content-audit.json`。
 
 ## 3. 职责与实际宿主接点
 
@@ -60,7 +62,7 @@ PAK 中2138项已逐项gzip校验。包含1709图像、57文本和372二进制�
 
 布局使用完整原游戏视口，在Android安全区内等比适配，保留原控件位置。按用户最终确认，第一次系统Back显示“再返回一次，回到大厅”，2.5秒内第二次Back发起存档并退出；不注入游戏ESC，不使用WebView浏览历史。原画面内的返回/回选关仍保持游戏内语义。取消的预测返回手势不计数，后台/失焦重置计数。当前targetSdk36下不能直接复制旧`onBackPressed`/`KEYCODE_BACK`路径：API33+注册平台`OnBackInvokedDispatcher`/`OnBackInvokedCallback`，API26–32使用旧回调，统一交给同一游戏返回处理；不为此关闭整个App的预测返回。API36的手势返回和三键返回都须实测。[Android 16行为说明](https://developer.android.com/about/versions/16/behavior-changes-16#predictive-back)
 
-源码依据：[宿主审计](../../artifacts/research/only-one-door-243372/integration-audit/host/host-audit.md)。
+源码依据：宿主审计（`artifacts/research/only-one-door-243372/integration-audit/host/host-audit.md`）。
 
 ## 4. 本地加载、断网与权限约束
 
@@ -96,7 +98,7 @@ PAK 中2138项已逐项gzip校验。包含1709图像、57文本和372二进制�
 
 离线continuation必须异步且恰好一次，绑定当前页面session；销毁后作废。回调只能释放其自己的暂停原因，不能在Android后台或用户暂停期间恢复游戏。
 
-依据：[平台审计](../../artifacts/research/only-one-door-243372/integration-audit/platform/platform-audit.md)、[调用点清单](../../artifacts/research/only-one-door-243372/integration-audit/platform/platform-callsites.json)、[SDK运行探针](../../artifacts/research/only-one-door-243372/integration-audit/platform/sdk-runtime.json)。
+依据：平台审计（`artifacts/research/only-one-door-243372/integration-audit/platform/platform-audit.md`）、调用点清单（`artifacts/research/only-one-door-243372/integration-audit/platform/platform-callsites.json`）、SDK运行探针（`artifacts/research/only-one-door-243372/integration-audit/platform/sdk-runtime.json`）。
 
 ## 6. 生命周期、触摸、声音与存档
 

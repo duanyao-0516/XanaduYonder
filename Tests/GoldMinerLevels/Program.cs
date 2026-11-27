@@ -9,6 +9,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using XanaduYonder.Core.GoldMiner;
+using XanaduYonder.Runtime.GoldMiner;
 partial class Program
 {
     static readonly string DirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets/Resources/GoldMiner/Levels");
@@ -96,7 +97,7 @@ partial class Program
                 layouts.Add(EncodeLayout(layout));
                 Console.WriteLine(layout.Id + " income=" + layout.Witness.ExpectedIncome + "/" + layout.Witness.RequiredIncome + " inputs=" + layout.Witness.Inputs.Length + " candidates=" + candidates + " expanded=" + expanded + " seconds=" + elapsed.Elapsed.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture));
             }
-            var shard = new JObject { ["schemaVersion"] = 1, ["rulesVersion"] = GoldMinerRules.Version, ["catalogVersion"] = 1, ["mode"] = Token(mode), ["levelIndex"] = level, ["layouts"] = new JArray(layouts.OrderBy(x => (string)x["id"], StringComparer.Ordinal)) };
+            var shard = new JObject { ["schemaVersion"] = 1, ["rulesVersion"] = GoldMinerLevelCatalog.ClassicRulesVersion, ["catalogVersion"] = 1, ["mode"] = Token(mode), ["levelIndex"] = level, ["layouts"] = new JArray(layouts.OrderBy(x => (string)x["id"], StringComparer.Ordinal)) };
             string shardText = shard.ToString(Formatting.None) + "\n";
             File.WriteAllText(path, shardText, new UTF8Encoding(false, true));
             LevelReports.WriteGenerationShard(file, shardText, statistics);
@@ -108,7 +109,7 @@ partial class Program
             if (!File.Exists(path)) continue;
             shards.Add(new JObject { ["mode"] = Token(mode), ["levelIndex"] = level, ["file"] = file, ["sha256"] = Hash(File.ReadAllText(path, new UTF8Encoding(false, true))) });
         }
-        if (shards.Count == 20) File.WriteAllText(Path.Combine(DirectoryPath, "catalog.json"), new JObject { ["schemaVersion"] = 1, ["rulesVersion"] = GoldMinerRules.Version, ["catalogVersion"] = 1, ["shards"] = shards }.ToString(Formatting.None) + "\n", new UTF8Encoding(false, true));
+        if (shards.Count == 20) File.WriteAllText(Path.Combine(DirectoryPath, "catalog.json"), new JObject { ["schemaVersion"] = 1, ["rulesVersion"] = GoldMinerLevelCatalog.ClassicRulesVersion, ["catalogVersion"] = 1, ["shards"] = shards }.ToString(Formatting.None) + "\n", new UTF8Encoding(false, true));
         Console.WriteLine("Generation elapsed " + all.Elapsed + ", complete shards=" + shards.Count);
     }
     static void Verify()
@@ -120,7 +121,7 @@ partial class Program
         try
         {
         var catalog = JObject.Parse(File.ReadAllText(Path.Combine(DirectoryPath, "catalog.json"))); Check(((JArray)catalog["shards"]).Count == 20, "20 shards");
-        Check((int)catalog["rulesVersion"] == GoldMinerRules.Version, "catalog witnesses must match the active balance version");
+        Check((int)catalog["rulesVersion"] == GoldMinerLevelCatalog.ClassicRulesVersion, "catalog witnesses must match the classic balance version");
         int total = 0; var allIds = new HashSet<string>(); var files = new HashSet<string>();
         foreach (var shard in catalog["shards"])
         {
@@ -129,7 +130,7 @@ partial class Program
             Check(Encoding.UTF8.GetByteCount(text) <= 512 * 1024, "shard size"); Check(Hash(text) == (string)shard["sha256"], "shard SHA-256");
             var generation = LevelReports.ReadGenerationShard((string)shard["file"], Hash(text));
             var json = JObject.Parse(text); var mode = (GoldMinerMode)Enum.Parse(typeof(GoldMinerMode), (string)json["mode"], true); int level = (int)json["levelIndex"];
-            Check((int)json["rulesVersion"] == GoldMinerRules.Version, "shard witnesses must match the active balance version");
+            Check((int)json["rulesVersion"] == GoldMinerLevelCatalog.ClassicRulesVersion, "shard witnesses must match the classic balance version");
             var ids = new List<string>(); var patterns = new Dictionary<string, int>();
             foreach (var token in json["layouts"])
             {

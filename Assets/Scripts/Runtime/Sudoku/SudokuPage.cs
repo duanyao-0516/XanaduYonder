@@ -90,13 +90,13 @@ namespace XanaduYonder.Runtime.Sudoku
             var page = UiFactory.Rect(root, "Sudoku game", 0, 0, 720, 1320); UiFactory.Stretch(page); gameRoot = page.gameObject;
             gameInput = gameRoot.AddComponent<CanvasGroup>();
             var nav = UiFactory.Band(page, "Navigation", 0, 92, 0);
-            UiFactory.IconButton(nav, UiIconKind.Back, 56, 34, 58, 58, ReturnToSelection);
-            UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.NavigationButton(nav, UiIconKind.Back, ReturnToSelection);
+            UiFactory.NavigationButton(nav, UiIconKind.Restart, ConfirmRestart);
             var brand = UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
             ResultPresentation.For(this, root).SetReopenSlot(
                 UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58), brand);
-            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
-            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, () => { if (Interactive) { CancelHint(); CloseDialog(); openSettings(); } });
             var heading = UiFactory.Band(page, "Heading", 108, 70, .03f);
             UiFactory.Label(heading, "数独", 36, 0, 200, 70, 49, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "九宫之间，找到唯一。", 240, 10, 444, 58, 25, UiFactory.Muted, TextAnchor.MiddleRight);

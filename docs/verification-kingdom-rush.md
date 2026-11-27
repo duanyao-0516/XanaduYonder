@@ -37,4 +37,4 @@
 
 本轮 APK 包含最新 master 新增的战争进化史等内容，不能与旧 0.7.0 宿主直接比较总大小。相对用户验收的回退 APK，塔防 `game.love` 仅增加 4,874 B；Unity 内容区的压缩体积从 91,955,089 B 增至 216,601,048 B，主要包体增长位于此次同步的宿主内容。
 
-复现：内容和运行库按 [构建说明](../ThirdParty/KingdomRushContent/README.md)生成；大厅运行 `scripts/test-lobby-design.sh`，截图与报告位于 `artifacts/lobby-design/`；APK 使用 `scripts/build-kingdom-rush.sh`。同一工作树的 Unity 检查与构建串行执行。源码、主机检查、Android 构建和设备试玩分别记录，不互相替代。
+复现：内容和运行库按 [构建说明](https://github.com/duanyao-0516/XanaduYonder/blob/18a4f3ea3ec33d303eeca3d44f73a1a1a203f5cb/ThirdParty/KingdomRushContent/README.md)生成；大厅运行 `scripts/test-lobby-design.sh`，截图与报告位于 `artifacts/lobby-design/`；APK 使用 `scripts/build-kingdom-rush.sh`。同一工作树的 Unity 检查与构建串行执行。源码、主机检查、Android 构建和设备试玩分别记录，不互相替代。

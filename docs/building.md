@@ -22,6 +22,8 @@ iOS 入口完成的是 Unity 导出，后续仍需 Xcode 编译、签名和安�
 
 ## 平台内容
 
+下表是当前源码的大厅清单。构建版本由 [ProjectBuild](../Assets/Editor/ProjectBuild.cs) 定义，当前为 **0.9.8 / build 17**。已发布附件的内容和设备覆盖范围另见[发布记录](README.md#历史验证与发布)。
+
 | 内容 | Android | iOS |
 | --- | --- | --- |
 | Unity 原生玩法（含黄金矿工、Zuma、飞机大战、抓大鹅、四款新棋类和飞花令） | 25 个入口 | 25 个入口 |
@@ -62,4 +64,4 @@ python3 scripts/cut-the-rope/prepare-build-input.py --export-bundle artifacts/cu
 
 日常开发、单项测试见[开发说明](development.md)，目录及存档契约见[架构说明](architecture.md)。编译成功、编辑器渲染、真机操作和人工听感／震感分别记录，不能相互替代。
 
-本次入口整理的构建结果、Android 实测范围及未验证项见[双平台整合验证](verification-platform-integration.md)。
+本轮构建和模拟器实测见[项目重构验收记录](project-refactor-baseline.md#本轮验证结果)。此前的构建入口整合保留在[双平台整合验证](verification-platform-integration.md)。

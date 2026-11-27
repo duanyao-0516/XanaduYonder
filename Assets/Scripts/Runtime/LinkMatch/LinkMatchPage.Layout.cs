@@ -25,9 +25,10 @@ namespace XanaduYonder.Runtime.LinkMatch
             float s=S,w=root.rect.width,margin=(float)layout.Margin;
             Shape(content,"LinkMatch paper",0,0,w,root.rect.height,0,UiFactory.Paper);
             float navInset=layout.CssWidth<=370?8:13.5f,ny=layout.Compact?2:8;
-            Nav("Home",UiIconKind.Home,navInset,ny,Home);
-            Nav("Book",UiIconKind.Book,(float)layout.CssWidth-navInset-88-(layout.CssWidth<=370?0:4),ny,ShowRules);
-            Nav("Settings",UiIconKind.Settings,(float)layout.CssWidth-navInset-44,ny,Settings);
+            var slots = new GameNavigationLayout((float)layout.Width, navInset * s, ny * s, 44 * s, layout.CssWidth <= 370 ? 0 : 4 * s);
+            Nav("Home", UiIconKind.Home, slots, Home);
+            Nav("Book", UiIconKind.Book, slots, ShowRules);
+            Nav("Settings", UiIconKind.Settings, slots, Settings);
             Label(content,"XANADU / YONDER",(w-150*s)/2,ny*s,150*s,44*s,layout.CssWidth<=370?8:9,UiFactory.Muted,TextAnchor.MiddleCenter).name="LinkMatch brand";
             var title=Label(content,"连连看",margin,(float)layout.NavHeight,w-2*margin,(float)layout.HeadingHeight-(layout.Compact?3:7)*s,layout.Compact?25:27,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);title.name="LinkMatch title";
             if(isEntry)
@@ -109,9 +110,10 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         private void Toast(string text)
         {if(toastPanel==null)return;toastText.text=text;toastRemaining=2.2f;toastPanel.SetAsLastSibling();toastPanel.gameObject.SetActive(true);}
-        private void Nav(string name,UiIconKind kind,float x,float y,Action action)
+        private void Nav(string name, UiIconKind kind, GameNavigationLayout slots, Action action)
         {
-            var button=Button(content,name,x*S,y*S,44*S,44*S,action,0,Color.clear);
+            Rect bounds = slots.Bounds(kind);
+            var button=Button(content,name,bounds.x,bounds.y,bounds.width,bounds.height,action,0,Color.clear);
             Shape(button.transform,name+" background",6*S,6*S,32*S,32*S,10*S,UiFactory.Hex("E7EDE4"));
             var icon=UiFactory.Rect(button.transform,name+" icon",12*S,12*S,20*S,20*S).gameObject.AddComponent<UiIconGraphic>();icon.Kind=kind;icon.color=UiFactory.Ink;icon.raycastTarget=false;
         }

@@ -24,11 +24,12 @@ namespace XanaduYonder.Runtime.Idiom
         {
             gameRoot = UiFactory.Rect(root, "Idiom game", 0, 0, 720, 1320); UiFactory.Stretch(gameRoot);
             bookRoot = UiFactory.Rect(root, "Idiom notebook", 0, 0, 720, 1320); UiFactory.Stretch(bookRoot);
-            UiFactory.IconButton(gameRoot, UiIconKind.Home, 56, 34, 58, 58, () => { if (CanNavigate) goLobby(); });
-            var title = IdiomUi.Label(gameRoot, "成语接龙", 200, 30, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            UiFactory.NavigationButton(gameRoot, UiIconKind.Home, () => { if (CanNavigate) goLobby(); });
+            var title = IdiomUi.Label(gameRoot, "成语接龙", 264, 30, 192, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             title.name = "Idiom centered title";
-            bookButton = UiFactory.IconButton(gameRoot, UiIconKind.Notebook, 536, 34, 58, 58, () => { if (CanNavigate) OpenNotebook(false); });
-            UiFactory.IconButton(gameRoot, UiIconKind.Settings, 606, 34, 58, 58, () => { if (CanNavigate) ShowMenu(); });
+            bookButton = UiFactory.NavigationButton(gameRoot, UiIconKind.Notebook, () => { if (CanNavigate) OpenNotebook(false); });
+            UiFactory.NavigationButton(gameRoot, UiIconKind.Book, () => { if (CanNavigate) ShowHelp(null); });
+            UiFactory.NavigationButton(gameRoot, UiIconKind.Settings, () => { if (CanNavigate) ShowMenu(); });
             computerMatch = IdiomUi.Button(gameRoot, "人机对战", 32, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Computer));
             localMatch = IdiomUi.Button(gameRoot, "双人本地对战", 368, 108, 320, 58, () => ChangeMatchKind(IdiomMatchKind.Local));
             countText = IdiomUi.Label(gameRoot, "", 210, 184, 300, 52, 23, UiFactory.Muted, TextAnchor.MiddleCenter);

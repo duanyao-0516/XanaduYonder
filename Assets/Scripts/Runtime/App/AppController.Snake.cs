@@ -43,7 +43,7 @@ namespace XanaduYonder.Runtime
             StopAnimation();CloseModal();sudokuPage.Leave();jumpPage.Leave();sheepPage.Leave();
             minesweeperPage?.Leave();idiomPage?.Leave();watermelonPage?.Leave();
             frame.GetComponent<SafeDesignFrame>().WidthOnly=false;
-            activePage=Page.Snake;lobbyPage.SetActive(false);gamePage.SetActive(false);
+            SetActivePage(Page.Snake);
             if(status!=null)status.gameObject.SetActive(false);
             snakePage.SetHostSaveWarning(saveFailed?saveWarning:null);
             snakePage.Enter();

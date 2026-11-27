@@ -106,6 +106,10 @@ namespace XanaduYonder.EditorTools
         private static readonly string[] Routes = { "EnterSudoku", "EnterMinesweeper", "EnterSlidingPuzzle", "EnterSokoban", "EnterGomoku", "EnterArmyChess", "EnterXiangqi", "EnterChess", "EnterChineseCheckers", "EnterCutTheRope", "EnterZhaoyunAdou",
             "EnterGame", "EnterWatermelon", "EnterBakeryBasket", "EnterSheep", "EnterLinkMatch", "EnterZuma", "EnterTetris", "EnterJump", "EnterDino", "EnterFlappyBird", "EnterSnake", "EnterHappyBall", "EnterGoldMiner", "EnterLevelDevil", "EnterBombIt", "EnterAircraftFire", "EnterIdiom", "EnterFeihualing" };
         private static readonly int[] Ordinals = { 6, 7, 14, 12, 10, 29, 30, 31, 32, 21, 23, 1, 4, 28, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5, 33 };
+        internal static IReadOnlyList<string> ExpectedNames => Names;
+        internal static IReadOnlyList<string> ExpectedRoutes => Routes;
+        internal static IReadOnlyList<int> ExpectedOrdinals => Ordinals;
+
         private static string Category(int i) { return i < 11 ? "逻辑策略" : i < 18 ? "合成消除" : i < 27 ? "敏捷挑战" : "文字语言"; }
 
         private static object Property(object owner, string name)

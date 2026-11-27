@@ -1,5 +1,7 @@
 # 贪吃蛇实现与验证
 
+下文的 APK 和截图按当时执行机器上的路径记录。当前源码的图形检查和独立包可分别用 [Snake UI 检查](../../scripts/test-snake-ui.sh) 和[专用构建脚本](../../scripts/build-snake-validation.sh)生成。
+
 ## 2026-11-09 方向盘与倒数修正
 
 默认使用208×208的四扇区圆盘，完整放入原304×256右侧操作框，设置可切回十字键；棋盘滑动和原单指输入仲裁保留。schema 1增加可选 `controlStyle`，旧档缺字段默认 `Disc`，合法值为 `Disc`/`Cross`，非法值拒绝。关卡下拉使用原矢量锁图标，不再追加“· 锁定”。倒数使用共享 `BoardCountdownView`，仅覆盖实际棋盘并继承圆角裁切。纯规则/会话42项、存档211断言和Unity UGUI8885断言通过；当前截图在 `artifacts/validation/snake-ui/`，包括 `classic-disc-running`、`classic-cross-running`、`settings-controls`、`campaign-lock-icons`、`classic-countdown`，覆盖720×1320/1582。下文是原开发与交付记录，不替代本轮设备验收。
@@ -58,7 +60,7 @@ Unity 记录位于 `artifacts/validation/snake-ui/report.txt`、`artifacts/valid
 
 ## Android 验证产物
 
-- [XanaduYonder-0.4.0-snake-validation.apk](../../artifacts/builds/XanaduYonder-0.4.0-snake-validation.apk)，77,963,933 字节。
+- `artifacts/builds/XanaduYonder-0.4.0-snake-validation.apk`，77,963,933 字节。
 - 包名 `com.duanyao.xanaduyonder.snaketest`，显示名「Xanadu 贪吃蛇测试」，versionName `0.4.0` / versionCode `4`，minSdk 26 / targetSdk 36，ABI `arm64-v8a`。
 - SHA-256：`9ea4b40cc3d247fcbc8d9565c6485827e1b24615530cdaaf21c688ef68e67cc5`。
 - 本地 Debug 签名、Development APK；生成的 Unity manifest 含 `INTERNET` 权限。该包供开发验证，已按用户要求在 OPPO PKM110 安装并启动，不等同正式发布包。
@@ -79,9 +81,9 @@ Unity 记录位于 `artifacts/validation/snake-ui/report.txt`、`artifacts/valid
 
 ## 实际界面截图
 
-- [经典模式](../../artifacts/validation/snake-ui/classic-running-720x1320.png)
-- [数独样式的难度下拉](../../artifacts/validation/snake-ui/classic-difficulty-list-720x1320.png)
-- [障碍第08关](../../artifacts/validation/snake-ui/campaign-running-720x1320.png)
+- 经典模式（`artifacts/validation/snake-ui/classic-running-720x1320.png`）
+- 数独样式的难度下拉（`artifacts/validation/snake-ui/classic-difficulty-list-720x1320.png`）
+- 障碍第08关（`artifacts/validation/snake-ui/campaign-running-720x1320.png`）
 - 结算、暂停、倒计时、长屏和大厅截图见同目录。
 
 ## 验证边界

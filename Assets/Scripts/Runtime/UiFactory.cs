@@ -106,6 +106,18 @@ namespace XanaduYonder.Runtime
             return button;
         }
 
+        public static Button NavigationButton(Transform parent, UiIconKind kind, Action action,
+            float pageWidth = DesignWidth, float size = 58)
+        {
+            return NavigationButton(parent, kind, action, new GameNavigationLayout(pageWidth, 56, 34, size, 12));
+        }
+
+        public static Button NavigationButton(Transform parent, UiIconKind kind, Action action, GameNavigationLayout layout)
+        {
+            Rect bounds = layout.Bounds(kind);
+            return IconButton(parent, kind, bounds.x, bounds.y, bounds.width, bounds.height, action);
+        }
+
         public static Image CirclePanel(Transform parent, string name, float x, float y, float size, Color color)
         {
             var image = Panel(parent, name, x, y, size, size, color, false);
@@ -150,7 +162,7 @@ namespace XanaduYonder.Runtime
             return button;
         }
 
-        private static Sprite Disc
+        internal static Sprite Disc
         {
             get
             {

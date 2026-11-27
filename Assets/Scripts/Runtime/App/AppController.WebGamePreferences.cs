@@ -16,8 +16,8 @@ namespace XanaduYonder.Runtime
                 if (!data.SoundEnabled) feedback?.Stop();
             }
             webGameImportedPreferenceRevision = pending.revision;
-            // Save may fail; keep the native journal until the global save succeeds.
-            Save();
+            // Keep the native journal until its revision is durable in the host save.
+            SaveHostData();
         }
 
         private void AcknowledgeWebGameImportedPreferences()

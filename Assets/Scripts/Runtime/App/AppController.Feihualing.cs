@@ -39,9 +39,7 @@ namespace XanaduYonder.Runtime
                 feihualingPage.AnswerAccepted += () => feedback.Play(false, data.SoundEnabled, data.HapticsEnabled);
             }
             frame.GetComponent<SafeDesignFrame>().WidthOnly = true;
-            activePage = Page.Feihualing;
-            lobbyPage.SetActive(false);
-            gamePage.SetActive(false);
+            SetActivePage(Page.Feihualing);
             if (status != null) status.gameObject.SetActive(false);
             feihualingPage.Enter();
         }

@@ -38,7 +38,7 @@ namespace XanaduYonder.Runtime.Dino
         {
             Stop();
             Play(hit);
-            if (isActiveAndEnabled && hapticsEnabled != null && hapticsEnabled()) Haptic();
+            if (isActiveAndEnabled && hapticsEnabled != null && hapticsEnabled()) PlatformHaptics.Pulse();
         }
 
         private void Play(AudioClip clip)
@@ -50,26 +50,6 @@ namespace XanaduYonder.Runtime.Dino
         public void Stop()
         {
             if (source != null) source.Stop();
-        }
-
-        private static void Haptic()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-            using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
-            {
-                activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                {
-                    using (var currentPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                    using (var currentActivity = currentPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                    using (var window = currentActivity.Call<AndroidJavaObject>("getWindow"))
-                    using (var view = window.Call<AndroidJavaObject>("getDecorView"))
-                        view.Call<bool>("performHapticFeedback", 1);
-                }));
-            }
-#elif UNITY_IOS && !UNITY_EDITOR
-            IOSHaptics.Pulse();
-#endif
         }
 
         private void OnDisable() { Stop(); }

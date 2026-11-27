@@ -8,6 +8,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using XanaduYonder.Core.GoldMiner;
+using XanaduYonder.Runtime.GoldMiner;
 
 partial class Program
 {
@@ -64,13 +65,13 @@ partial class Program
                 Console.WriteLine(layout.Id + " income=" + layout.Witness.ExpectedIncome + "/" + layout.Witness.RequiredIncome +
                     " end=" + layout.Witness.EndTick + " policy=" + profileName + " attempts=" + attempts);
             }
-            shard["rulesVersion"] = GoldMinerRules.Version;
+            shard["rulesVersion"] = GoldMinerLevelCatalog.ClassicRulesVersion;
             string text = shard.ToString(Formatting.None) + "\n"; File.WriteAllText(path, text, new UTF8Encoding(false, true));
             LevelReports.WriteGenerationShard(file, text, statistics);
             shards.Add(new JObject { ["mode"] = Token(mode), ["levelIndex"] = level, ["file"] = file, ["sha256"] = Hash(text) });
         }
         File.WriteAllText(Path.Combine(DirectoryPath, "catalog.json"), new JObject { ["schemaVersion"] = 1,
-            ["rulesVersion"] = GoldMinerRules.Version, ["catalogVersion"] = 1, ["shards"] = shards }.ToString(Formatting.None) + "\n", new UTF8Encoding(false, true));
+            ["rulesVersion"] = GoldMinerLevelCatalog.ClassicRulesVersion, ["catalogVersion"] = 1, ["shards"] = shards }.ToString(Formatting.None) + "\n", new UTF8Encoding(false, true));
         Console.WriteLine("Reproved all 240 original geometries in " + all.Elapsed);
     }
 }

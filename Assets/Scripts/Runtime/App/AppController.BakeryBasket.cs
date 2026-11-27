@@ -22,9 +22,7 @@ namespace XanaduYonder.Runtime
         {
             CloseModal();
             frame.GetComponent<SafeDesignFrame>().WidthOnly = false;
-            activePage = Page.BakeryBasket;
-            lobbyPage.SetActive(false);
-            gamePage.SetActive(false);
+            SetActivePage(Page.BakeryBasket);
             if (status != null) status.gameObject.SetActive(false);
             if (bakeryPage == null)
             {

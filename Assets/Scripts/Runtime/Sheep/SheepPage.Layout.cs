@@ -9,11 +9,11 @@ namespace XanaduYonder.Runtime.Sheep
         private void BuildLayout(RectTransform root)
         {
             var nav = UiFactory.Band(root, "Sheep navigation", 0, 92, 0);
-            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, returnLobby);
-            UiFactory.IconButton(nav, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.NavigationButton(nav, UiIconKind.Home, returnLobby);
+            UiFactory.NavigationButton(nav, UiIconKind.Restart, ConfirmRestart);
             UiFactory.Label(nav, "XANADU / YONDER", 210, 34, 300, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowHelp);
-            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowHelp);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, OpenSettings);
             var heading = UiFactory.Band(root, "Sheep heading", 100, 84, 0);
             UiFactory.Label(heading, "旸了个旸", 56, 0, 430, 80, 56, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Button(heading, "切换模式", 520, 20, 144, 48, () => { if (AcceptsInput) ShowModes(); });

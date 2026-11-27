@@ -47,9 +47,7 @@ namespace XanaduYonder.Runtime
                         () => data.SoundEnabled, () => data.HapticsEnabled, feedback);
                     aircraftFirePage.Changed += RefreshAircraftFireRecord;
                 }
-                activePage = Page.AircraftFire;
-                lobbyPage.SetActive(false);
-                gamePage.SetActive(false);
+                SetActivePage(Page.AircraftFire);
                 frame.gameObject.SetActive(false);
                 aircraftFirePage.SetForeground(!paused && focused);
                 aircraftFirePage.SetHostSaveWarning(saveFailed ? saveWarning : null);

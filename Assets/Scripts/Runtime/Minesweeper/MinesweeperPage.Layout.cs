@@ -21,12 +21,12 @@ namespace XanaduYonder.Runtime.Minesweeper
             var normal=UiFactory.Rect(page,"Normal chrome",0,0,720,350); normalChrome=normal.gameObject;
             normal.anchorMin=normal.anchorMax=new Vector2(.5f,1); normal.pivot=new Vector2(.5f,1); normal.anchoredPosition=Vector2.zero;
             var nav=UiFactory.Band(normal,"Navigation",0,92,0);
-            UiFactory.IconButton(nav,UiIconKind.Back,56,34,58,58,ReturnToSelection);
-            UiFactory.IconButton(nav,UiIconKind.Restart,126,34,58,58,ConfirmRestart);
+            UiFactory.NavigationButton(nav, UiIconKind.Back, ReturnToSelection);
+            UiFactory.NavigationButton(nav, UiIconKind.Restart, ConfirmRestart);
             reviewBrand = UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
             reviewSlot = UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58);
-            UiFactory.IconButton(nav,UiIconKind.Book,536,34,58,58,ShowRules);
-            UiFactory.IconButton(nav,UiIconKind.Settings,606,34,58,58,Settings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, Settings);
             // These exact heading tokens and geometry are shared with the existing Sudoku page.
             var heading=UiFactory.Band(normal,"Heading",108,70,0);
             var title=UiFactory.Label(heading,"扫雷",36,0,200,70,49,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold); title.name="Minesweeper title";
@@ -82,10 +82,10 @@ namespace XanaduYonder.Runtime.Minesweeper
         {
             var page=UiFactory.Rect(root,"Minesweeper selection",0,0,720,1320); UiFactory.Stretch(page); selectionRoot=page.gameObject;
             var nav=UiFactory.Band(page,"Selection navigation",0,92,0);
-            UiFactory.IconButton(nav,UiIconKind.Home,56,34,58,58,returnLobby);
+            UiFactory.NavigationButton(nav, UiIconKind.Home, returnLobby);
             UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
-            UiFactory.IconButton(nav,UiIconKind.Book,536,34,58,58,ShowRules);
-            UiFactory.IconButton(nav,UiIconKind.Settings,606,34,58,58,Settings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, Settings);
             var heading=UiFactory.Band(page,"Selection heading",112,130,.05f);
             UiFactory.Label(heading,"扫雷",36,0,300,80,52,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             UiFactory.Label(heading,"从数字出发，找到安全的每一步。",36,82,648,46,24,UiFactory.Muted);

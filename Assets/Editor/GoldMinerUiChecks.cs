@@ -502,10 +502,10 @@ namespace XanaduYonder.EditorTools
             public void CheckLobby()
             {
                 var content = Lobby.GetComponentInChildren<ScrollRect>().content;
-                string[] names = { "Sudoku", "Minesweeper", "SlidingPuzzle", "Sokoban", "Gomoku", "CutTheRope", "ZhaoyunAdou", "2048", "Watermelon", "Sheep", "LinkMatch", "Zuma", "Tetris", "Jump", "Dino", "FlappyBird", "Snake", "HappyBall", "Gold Miner", "LevelDevil", "BombIt", "AircraftFire", "Idiom" };
-                int[] numbers = { 6, 7, 14, 12, 10, 21, 23, 1, 4, 3, 17, 8, 15, 2, 9, 16, 26, 11, 13, 22, 27, 20, 5 };
+                var names = LobbyDesignChecks.ExpectedNames;
+                var numbers = LobbyDesignChecks.ExpectedOrdinals;
                 float lastBottom = 0;
-                for (int i = 0; i < names.Length; i++)
+                for (int i = 0; i < names.Count; i++)
                 {
                     var card = LobbyDesignChecks.FindCard(content, names[i]);
                     Require(Mathf.Abs(card.rect.height - 143) < .1f, "Lobby uses approved single-card height: " + names[i]);
@@ -526,7 +526,7 @@ namespace XanaduYonder.EditorTools
                 var viewport = (RectTransform)content.parent;
                 content.anchoredPosition = new Vector2(0, Mathf.Clamp(LobbyDesignChecks.CardTop(content, goldRect) - (viewport.rect.height - goldRect.rect.height) / 2,
                     0, Mathf.Max(0, content.rect.height - viewport.rect.height)));
-                Require(content.rect.height > viewport.rect.height, "All twenty-two cards remain scrollable");
+                Require(content.rect.height > viewport.rect.height, "The full single-card catalog remains scrollable");
                 Capture("00-lobby-gold-card");
             }
 

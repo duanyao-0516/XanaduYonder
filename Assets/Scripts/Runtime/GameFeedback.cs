@@ -41,7 +41,7 @@ namespace XanaduYonder.Runtime
         public void Play(bool merged, bool soundEnabled, bool hapticsEnabled)
         {
             if (soundEnabled) audioSource.PlayOneShot(merged ? merge : slide);
-            if (merged && hapticsEnabled) Haptic();
+            if (merged && hapticsEnabled) PlatformHaptics.Pulse();
         }
 
         public void BeginCharge(bool soundEnabled)
@@ -65,37 +65,15 @@ namespace XanaduYonder.Runtime
         public void Land(bool perfect, bool soundEnabled, bool hapticsEnabled)
         {
             if (soundEnabled) audioSource.PlayOneShot(perfect ? this.perfect : landing);
-            if (hapticsEnabled) Haptic();
+            if (hapticsEnabled) PlatformHaptics.Pulse();
         }
         public void Miss(bool soundEnabled, bool hapticsEnabled)
         {
             if (soundEnabled) audioSource.PlayOneShot(miss);
-            if (hapticsEnabled) Haptic();
+            if (hapticsEnabled) PlatformHaptics.Pulse();
         }
 
-        public void Pulse(bool enabled) { if (enabled) Haptic(); }
-
-        private static void Haptic()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            {
-                using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
-                {
-                    activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                    {
-                        using (var currentPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                        using (var currentActivity = currentPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                        using (var window = currentActivity.Call<AndroidJavaObject>("getWindow"))
-                        using (var view = window.Call<AndroidJavaObject>("getDecorView"))
-                            view.Call<bool>("performHapticFeedback", 1);
-                    }));
-                }
-            }
-#elif UNITY_IOS && !UNITY_EDITOR
-            IOSHaptics.Pulse();
-#endif
-        }
+        public void Pulse(bool enabled) { if (enabled) PlatformHaptics.Pulse(); }
 
         public void Stop() { if (audioSource != null) audioSource.Stop(); EndCharge(); }
 

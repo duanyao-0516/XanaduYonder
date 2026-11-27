@@ -65,12 +65,12 @@ namespace XanaduYonder.Runtime.BakeryBasket
             feedback = commonFeedback;
             preferences = display;
 
-            var nav = UiFactory.Band(root, "Bakery navigation", 30, 72, 0);
-            UiFactory.IconButton(nav, UiIconKind.Home, 32, 0, 62, 62, lobby);
-            bottom = UiFactory.Label(nav, "", 110, 0, 244, 62, 21, UiFactory.Ink);
-            score = UiFactory.Label(nav, "", 356, 0, 180, 62, 22, UiFactory.Accent, TextAnchor.MiddleRight, FontStyle.Bold);
-            UiFactory.IconButton(nav, UiIconKind.Book, 552, 0, 62, 62, help);
-            UiFactory.IconButton(nav, UiIconKind.Settings, 626, 0, 62, 62, settings);
+            var nav = UiFactory.Band(root, "Bakery navigation", 0, 102, 0);
+            UiFactory.NavigationButton(nav, UiIconKind.Home, lobby, size: 62);
+            bottom = UiFactory.Label(nav, "", 126, 34, 246, 62, 19, UiFactory.Ink);
+            score = UiFactory.Label(nav, "", 374, 34, 148, 62, 22, UiFactory.Accent, TextAnchor.MiddleRight, FontStyle.Bold);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, help, size: 62);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, settings, size: 62);
 
             var heading = UiFactory.Band(root, "Bakery heading", 105, 120, .10f);
             UiFactory.Label(heading, DisplayName, 32, 0, 656, 73, 59, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);

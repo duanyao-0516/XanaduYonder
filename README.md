@@ -4,13 +4,13 @@
 
 目标是把自己开发的小游戏放进一个独立 APP，共用大厅、设置、声音、触感和本地存档，同时保持各款游戏的规则与资源独立，方便学习、迭代和接入新玩法。
 
-统一入口的历史结果见[整合验证记录](docs/verification-platform-integration.md)，当前精简与 iOS 网页适配见[本轮记录](docs/verification-ios-web-games.md)。
+开发可从[源码与存档契约](docs/architecture.md)、[模块测试](docs/development.md#按模块选择验证)或[平台构建](docs/building.md)进入。发布附件、设计原稿和各次实测按版本收录在[文档导航](docs/README.md)。
 
 Q版泡泡堂初代以净化后的原版 SWF＋Ruffle 离线运行，保留人机和同屏双人。横屏中央等比放大并贴底显示，工具集中在两侧；单人左侧移动右侧放弹，双人左右各有移动和放弹操作。齿轮设置可切换浮动摇杆／方向圆盘并记住选择；人数按钮经确认后重新开始对应模式。返回大厅会结束当前回合，后续可继续闯关：保留关数、难度、角色、剩余生命和累计分，本关地图重新生成。来源与验证边界见[接入记录](docs/bomb-it.md)。
 
 ## 当前状态
 
-当前源码版本为 **0.9.8**（build **17**），Android 与 iOS 的源码目录均包含 **29 个大厅入口**。赵云与阿斗、割绳子、只有一道门、Q版泡泡堂分别由 Android WebView／iOS WKWebView 运行。Zuma、飞机大战、抓大鹅、四款新增棋类和飞花令使用 Unity 原生实现。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。网页玩法的编译和设备结果见[迁移记录](docs/verification-ios-web-games.md)。
+当前源码版本为 **0.9.8**（build **17**），Android 与 iOS 的源码目录均包含 **29 个大厅入口**，其中 25 个为 Unity 原生玩法，4 个为离线网页玩法。赵云与阿斗、割绳子、只有一道门、Q版泡泡堂分别由 Android WebView／iOS WKWebView 运行。Zuma、飞机大战、抓大鹅、四款新增棋类和飞花令使用 Unity 原生实现。经典黄金矿工独立版本、战争进化史、王国保卫战、切水果大师已从当前构建移除，经典关卡迁入原生黄金矿工。网页玩法的编译和设备结果见[迁移记录](docs/verification-ios-web-games.md)。
 
 Android 当前发布版本为 **0.9.8**（build **17**），提供沿用正式签名的 ARM64 Release APK，正式包名为 `com.duanyao.xanaduyonder`。下载与本轮范围见[v0.9.8 发布记录](docs/releases/v0.9.8.md)。本次不构建或发布 iOS，iOS 最新公开附件仍为 [v0.9.6 的未签名 IPA](docs/releases/v0.9.6.md)，需使用自己的 Apple 签名后安装；其内容不等于当前源码。历史 v0.9.4 的 20 入口范围见[旧发布记录](docs/releases/v0.9.4.md)。
 
@@ -65,9 +65,9 @@ iOS 导出后由 Xcode 编译、签名和安装；Mac 自动续签使用固定�
 
 连连看首版三关的生产 UI、自动化和 APK 结果保留在[原开发验证记录](docs/verification-link-match.md)；五关扩展、严格迁移、新 UI 对照及设备验收边界见[扩关验证记录](docs/verification-link-match-expanded.md)。文档描述当前源码，不代表新增场景均已验证通过。
 
-大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存，图标与大 Logo 随布局展示。飞机大战与 Q版泡泡堂归入敏捷挑战，赵云与阿斗和新增棋类归入逻辑策略，抓大鹅归入合成消除。两端保持相同的 28 项目录。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
+大厅提供**双列卡片、分类目录、单列大卡**三种展示方式，按逻辑策略、合成消除、敏捷挑战、文字语言固定分类与组内顺序排列，整张卡片可直接进入游戏。默认双列，展示偏好单独保存，图标与大 Logo 随布局展示。飞机大战与 Q版泡泡堂归入敏捷挑战，赵云与阿斗和新增棋类归入逻辑策略，抓大鹅归入合成消除。飞花令和成语接龙归入文字语言。启动画面在大厅布局与输入就绪后同步退出，显示大厅时即可滚动和点击。设计与验证见[大厅 v2 记录](docs/design/lobby-v2/implementation-validation.md)。
 
-Unity 玩法中，除 Dino、Flappy Bird、飞机大战外各款游戏独立保存对局；Flappy Bird 的 `flappy-bird-v1.json` 只保存最高纪录，主动离开或进程重启后从准备页开始；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。飞机大战的 `aircraft-fire-v1.json` 只保存经典普通／疯狂／闯关最高分与最高到达关卡，不保存战场。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。Unity 玩法沿用共用声音与触感设置。旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
+各款原生游戏独立管理进度。抓大鹅保存主题和显示偏好，重新进入会生成新局。Flappy Bird 的 `flappy-bird-v1.json` 只保存最高纪录，主动离开或进程重启后从准备页开始；Dino 的 `dino-v1.json` 只保存横／竖屏最高纪录与上次成功进入的方向，不保存跑酷局面。飞机大战的 `aircraft-fire-v1.json` 只保存经典普通／疯狂／闯关最高分与最高到达关卡，不保存战场。同进程切后台可以暂停续玩，主动离开或进程重启后开始新局。2048、跳一跳与合成大西瓜记录最高分，旸了个旸记录累计通关和标准无尽最高分。Unity 玩法沿用共用声音与触感设置。旸了个旸使用 `sheep-v2.json`，成语接龙使用 `idiom-learning-v1.json` 原子保存四组对局、生词本与个人学习记录；数独使用独立 `sudoku-v2.json`，自动承接原单局存档，每档最多保留一局，不修改其他游戏的存档协议。旸了个旸当前 schema 2 不迁移旧版 `sheep-v1.json`；无尽每波 144 张、固定正常难度，按实际消除张数计分，换波不恢复整局道具与复活次数。
 
 **v0.9.4** 的正式发布附件仅为 `XanaduYonder-0.9.4-android-arm64.apk`，入口为 [GitHub Release](https://github.com/duanyao-0516/XanaduYonder/releases/tag/v0.9.4)。正式包沿用既有应用身份与签名，可覆盖升级同签名正式版；此前 `com.duanyao.xanaduyonder.aircrafttest` 测试包的数据不会自动导入正式应用。v0.9.2／v0.9.3 及 v0.9.4 先前误传的测试 APK 不属于本次正式交付。当时的 v0.9.4 发布操作按用户要求未追加测试或成品校验；该历史记录不代表当前源码的设备回归结果。素材与第三方代码来源见[第三方许可说明](THIRD_PARTY_NOTICES.md)。
 
@@ -79,84 +79,15 @@ Unity 玩法中，除 Dino、Flappy Bird、飞机大战外各款游戏独立保�
 
 在 Unity Hub 中添加仓库根目录，打开 `Assets/Scenes/Bootstrap.unity` 并点击 Play。2048 在棋盘上滑动，编辑器还支持方向键；跳一跳在游戏区域按住蓄力、松手跳跃，编辑器支持鼠标和空格键；旸了个旸点击未被遮挡的牌，编辑器使用鼠标点击；成语接龙输入后点击发送，点击气泡查看释义；数独点击格子和数字，支持铅笔候选与快速输入；合成大西瓜拖动瞄准后松手投球。扫雷点击翻格、长按 0.4 秒立即标记，单指拖动、双指缩放和平移；编辑器右键松手可直接插旗/拔旗。 Zuma 从大厅进入横屏，拖动瞄准、松手单发。Dino 先选择方向，轻按跑道或右侧按钮短跳，按住长跳并在落地后续跳；左侧按住下蹲，编辑器支持空格／↑ 跳跃与 ↓ 下蹲。
 
+从仓库根目录检查工具链，然后选择本次改动对应的验证入口。
+
 ```bash
 scripts/check-environment.sh
-scripts/test-flappy-bird.sh
-scripts/test-flappy-bird-session.sh
-scripts/test-flappy-bird-persistence.sh
-scripts/test-flappy-bird-ui.sh
-scripts/test-core.sh
-scripts/test-input.sh
-scripts/test-persistence.sh
-scripts/test-jump.sh
-scripts/test-jump-persistence.sh
-scripts/test-sheep.sh
-scripts/test-sheep-persistence.sh
-scripts/test-sheep-layouts.sh
-scripts/test-sheep-session.sh
-scripts/test-sheep-presentation.sh
-scripts/test-sheep-difficulty.sh
-scripts/test-idiom.sh
-scripts/test-idiom-persistence.sh
-scripts/test-idiom-resources.sh
-scripts/test-idiom-presentation.sh
-scripts/test-idiom-ui.sh
-scripts/test-minigame-ui.sh
-scripts/test-lobby-design.sh
-scripts/test-startup-handoff.sh
-scripts/test-sudoku.sh
-scripts/test-sudoku-content.sh --bank
-scripts/test-sudoku-persistence.sh
-scripts/test-sudoku-session.sh
-scripts/test-sudoku-profile.sh
-scripts/test-sudoku-selection.sh
-scripts/test-watermelon.sh
-scripts/test-watermelon-persistence.sh
-scripts/test-watermelon-pointer.sh
-scripts/test-minesweeper.sh
-scripts/test-minesweeper-session.sh
-scripts/test-minesweeper-input.sh
-scripts/test-minesweeper-persistence.sh
-scripts/test-minesweeper-ui.sh
-scripts/test-zuma.sh
-scripts/test-zuma-input.sh
-scripts/test-zuma-persistence.sh
-python3 scripts/test-zuma-assets.py
-scripts/test-zuma-help.sh
-scripts/test-dino.sh
-scripts/test-dino-session.sh
-scripts/test-dino-persistence.sh
-scripts/test-dino-presentation.sh
-scripts/test-gomoku.sh
-scripts/test-gomoku-session.sh
-scripts/test-gomoku-persistence.sh
-scripts/test-gomoku-input.sh
-scripts/test-gomoku-ui.sh
-scripts/test-happy-ball.sh
-scripts/test-happy-ball-input.sh
-scripts/test-happy-ball-persistence.sh
-scripts/test-happy-ball-ui.sh
-scripts/test-sokoban.sh
-scripts/test-sokoban-content.sh
-scripts/test-sokoban-persistence.sh
-scripts/test-sokoban-input.sh
-scripts/test-sokoban-ui.sh
-scripts/test-sliding-puzzle.sh
-scripts/test-sliding-puzzle-persistence.sh
-scripts/test-sliding-puzzle-ui.sh
-
-scripts/test-tetris.sh
-scripts/test-tetris-input.sh
-scripts/test-tetris-persistence.sh
-scripts/test-tetris-layout.sh
-scripts/test-tetris-ui.sh
-scripts/build-tetris-validation.sh
-scripts/test-link-match.sh
-scripts/test-link-match-input.sh
-scripts/test-link-match-persistence.sh
-scripts/test-link-match-ui.sh
-./scripts/build.sh android --install DEVICE_SERIAL
+python3 scripts/test.py --list
+python3 scripts/test.py core input feihualing-storage
 ```
+
+玩法规则、存档、内容数据和平台宿主各有独立用例。完整命令和运行条件见[开发指南](docs/development.md#按模块选择验证)。
 
 扫雷验证使用专用 `scripts/build-minesweeper-validation.sh` 和 `com.duanyao.xanaduyonder.minesweepertest`，操作步骤见[扫雷独立验证](docs/development.md#扫雷独立验证)。UI 检查与构建须在同一本工作树中串行执行，不覆盖正式应用。
 
@@ -168,7 +99,7 @@ scripts/test-link-match-ui.sh
 
 连连看使用 `scripts/build-link-match-validation.sh`，输出 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-link-match-validation.apk`，独立包名为 `com.duanyao.xanaduyonder.linkmatchtest`。UI 检查与构建使用本树独立 Gradle／ADB 环境并串行执行，正常开发包和正式包的名称、输出路径不变；命令及验收范围见[连连看独立验证](docs/development.md#连连看独立验证)。48 张 Fluent 3D 原图（水果、食物、动物、自然与物品）和完整 MIT 许可随项目保存，文件来源、固定版本及哈希见[生产素材清单](Assets/Resources/LinkMatch/manifest.json)。
 
-运行 `./scripts/build.sh android --install DEVICE_SERIAL` 构建并覆盖安装独立应用 **XanaduYonder Debug**（`com.duanyao.xanaduyonder.debug`）；仅打包用 `./scripts/build.sh android`，两者都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`。Debug 使用本地 debug 签名，与正式版并存、分别保存进度；它关闭 Unity Development、Android debuggable、Development Console 和 PlayerConnection，不是 `run-as` 诊断包。所有小游戏 validation/preview 也采用相同的非 Development 约束，保留各自独立包名。Unity 构建日志保存在 `artifacts/logs/build-android.log`，版本统一从 `ProjectBuild.Version` 读取，当前为 0.9.5。安装脚本参数见[通用 Android Debug](docs/development.md#通用-android-debug)。
+运行 `./scripts/build.sh android --install DEVICE_SERIAL` 构建并覆盖安装独立应用 **XanaduYonder Debug**（`com.duanyao.xanaduyonder.debug`）；仅打包用 `./scripts/build.sh android`，两者都生成 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`。Debug 使用本地 debug 签名，与正式版并存、分别保存进度；它关闭 Unity Development、Android debuggable、Development Console 和 PlayerConnection，不是 `run-as` 诊断包。所有小游戏 validation/preview 也采用相同的非 Development 约束，保留各自独立包名。Unity 构建日志保存在 `artifacts/logs/build-android.log`，版本与 Android versionCode 统一取自 [ProjectBuild](Assets/Editor/ProjectBuild.cs)。安装脚本参数见[通用 Android Debug](docs/development.md#通用-android-debug)。
 
 运行 `./scripts/build.sh android --configuration release --install DEVICE_SERIAL` 构建原主包 `com.duanyao.xanaduyonder`，使用既有私有 release 签名，校验成功后才发布产物并覆盖安装同包名、同签名的正式应用。仅打包用 `./scripts/build.sh android --configuration release`，输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-android-arm64.apk`。两种安装命令均可省略序列号，沿用 `ANDROID_SERIAL` 或选择唯一已授权的 ARM64 真机；支持 Android 8.0 及以上。签名配置与安装方法见[正式发布 APK](docs/development.md#正式发布-apk)。
 

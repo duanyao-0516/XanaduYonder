@@ -11,7 +11,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         private Text scoreText,bestText,bestCaption,warningText,countdownText;
         private Text brandText,titleText,subtitleText;
         private RectTransform navigation;
-        private readonly Button[] navigationButtons=new Button[3];
+        private Button homeNavigation, rulesNavigation, settingsNavigation;
         private Button pauseButton,retryButton;
         private GameObject readyHint,countdownHint;
         private float scale=1;
@@ -21,9 +21,10 @@ namespace XanaduYonder.Runtime.FlappyBird
             layout=UiFactory.Rect(root,"Flappy layout",0,0,388,784);
             UiFactory.Stretch(FlappyScene.Shape(layout,"Flappy paper",0,0,388,784,0,UiFactory.Paper).rectTransform);
             navigation=UiFactory.Rect(layout,"Flappy navigation",0,0,388,68);
-            navigationButtons[0]=NavButton(navigation,"Home",UiIconKind.Home,19.5f,RequestHome);
-            navigationButtons[1]=NavButton(navigation,"Book",UiIconKind.Book,280.5f,ShowRules);
-            navigationButtons[2]=NavButton(navigation,"Settings",UiIconKind.Settings,328.5f,Settings);
+            var slots = NavigationLayout(388);
+            homeNavigation = NavButton("Home", UiIconKind.Home, slots, RequestHome);
+            rulesNavigation = NavButton("Book", UiIconKind.Book, slots, ShowRules);
+            settingsNavigation = NavButton("Settings", UiIconKind.Settings, slots, Settings);
             brandText=Label(navigation,"XANADU / YONDER",67.5f,14,205,40,10,UiFactory.Muted,TextAnchor.MiddleCenter);
             brandText.name="Flappy brand";
             titleText=Label(layout,"Flappy Bird",19.5f,68,260,43,28,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold); titleText.name="Flappy title";
@@ -63,12 +64,27 @@ namespace XanaduYonder.Runtime.FlappyBird
             countdownText=Label(countdown.transform,"3",0,235,360,100,76,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             Label(countdown.transform,"准备继续",0,336,360,28,13,UiFactory.Ink,TextAnchor.MiddleCenter);
         }
-        private Button NavButton(Transform navigation,string name,UiIconKind kind,float x,Action action)
+        private static GameNavigationLayout NavigationLayout(float width)
         {
-            var button=ActionButton(navigation,name,x,14,40,40,action,11);
+            bool narrow = width <= 350;
+            float size = narrow ? 36 : 40;
+            return new GameNavigationLayout(width, narrow ? 16 : 19.5f, (68 - size) / 2, size, narrow ? 6 : 8);
+        }
+
+        private Button NavButton(string name, UiIconKind kind, GameNavigationLayout layout, Action action)
+        {
+            Rect bounds = layout.Bounds(kind);
+            var button=ActionButton(navigation,name,bounds.x,bounds.y,bounds.width,bounds.height,action,11);
             var symbol=UiFactory.Rect(button.transform,name+" symbol",9,9,22,22).gameObject.AddComponent<UiIconGraphic>();
             symbol.Kind=kind; symbol.color=UiFactory.Ink; symbol.raycastTarget=false;
             UiFactory.Center(symbol.rectTransform); return button;
+        }
+
+        private static void PlaceNavigation(Button button, Rect bounds)
+        {
+            var rect = (RectTransform)button.transform;
+            rect.anchoredPosition = new Vector2(bounds.x, -bounds.y);
+            rect.sizeDelta = bounds.size;
         }
         private static Text Label(Transform parent,string value,float x,float y,float w,float h,int size,Color color,TextAnchor align=TextAnchor.MiddleLeft,FontStyle weight=FontStyle.Normal)
         {
@@ -138,12 +154,15 @@ namespace XanaduYonder.Runtime.FlappyBird
             scale=Mathf.Max(.01f,size.x/cssWidth);
             float height=Mathf.Max(1,size.y/scale);
             layout.sizeDelta=new Vector2(cssWidth,height); layout.localScale=Vector3.one*scale;
-            float inset=narrow?16:19.5f,buttonSize=narrow?36:40,gap=narrow?6:8,inner=cssWidth-inset*2;
+            var slots = NavigationLayout(cssWidth);
+            Rect home = slots.Bounds(UiIconKind.Home), rules = slots.Bounds(UiIconKind.Book), settings = slots.Bounds(UiIconKind.Settings);
+            float inset = home.x, inner = cssWidth - inset * 2, gap = settings.xMin - rules.xMax;
             navigation.sizeDelta=new Vector2(cssWidth,68);
-            float[] navX={inset,cssWidth-inset-buttonSize*2-gap,cssWidth-inset-buttonSize};
-            for(int i=0;i<3;i++) { var rect=(RectTransform)navigationButtons[i].transform; rect.anchoredPosition=new Vector2(navX[i],-(68-buttonSize)/2); rect.sizeDelta=new Vector2(buttonSize,buttonSize); }
-            float brandLeft=inset+buttonSize+gap;
-            brandText.rectTransform.anchoredPosition=new Vector2(brandLeft,-14); brandText.rectTransform.sizeDelta=new Vector2(navX[1]-gap-brandLeft,40); brandText.fontSize=narrow?9:10;
+            PlaceNavigation(homeNavigation, home);
+            PlaceNavigation(rulesNavigation, rules);
+            PlaceNavigation(settingsNavigation, settings);
+            float brandLeft=home.xMax+gap;
+            brandText.rectTransform.anchoredPosition=new Vector2(brandLeft,-14); brandText.rectTransform.sizeDelta=new Vector2(rules.xMin-gap-brandLeft,40); brandText.fontSize=narrow?9:10;
             titleText.fontSize=narrow?26:28; titleText.rectTransform.anchoredPosition=new Vector2(inset,-68);
             subtitleText.rectTransform.anchoredPosition=new Vector2(cssWidth-inset-83.5f,-71); subtitleText.fontSize=narrow?9:10;
             information.anchoredPosition=new Vector2(inset,narrow?-115.4f:-118); information.sizeDelta=new Vector2(inner,44);

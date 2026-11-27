@@ -21,9 +21,11 @@ namespace XanaduYonder.Runtime.Sokoban
         {
             float s=Scale,w=root.rect.width;
             navigation=UiFactory.Rect(root,"Sokoban navigation",0,0,w,63*s);
-            NavButton("Home",UiIconKind.Home,(388*.07778f-6)*s,Home);
-            NavButton("Book",UiIconKind.Book,(388*.95f-92)*s,ShowRules);
-            NavButton("Settings",UiIconKind.Settings,(388*.95f-44)*s,Settings);
+            var slots = new GameNavigationLayout(388 * s, 388 * .05f * s, 6 * s, 44 * s, 4 * s,
+                leftInset: (388 * .07778f - 6) * s);
+            NavButton("Home", UiIconKind.Home, slots, Home);
+            NavButton("Book", UiIconKind.Book, slots, ShowRules);
+            NavButton("Settings", UiIconKind.Settings, slots, Settings);
             var brand=Label(navigation,"XANADU / YONDER",(388-180)/2*s,12*s,180*s,32*s,10.3f,UiFactory.Muted,TextAnchor.MiddleCenter);
             brand.name="Sokoban brand";
             ResultPresentation.For(this, root).SetReopenSlot(
@@ -68,10 +70,11 @@ namespace XanaduYonder.Runtime.Sokoban
             var value=Label(information,"",0,0,80*Scale,44*Scale,10,UiFactory.Muted,TextAnchor.MiddleRight); value.name=name;
             value.supportRichText=true; value.horizontalOverflow=HorizontalWrapMode.Overflow; return value;
         }
-        private void NavButton(string name,UiIconKind icon,float x,Action action)
+        private void NavButton(string name, UiIconKind icon, GameNavigationLayout slots, Action action)
         {
             float s=Scale;
-            var button=ActionButton(navigation,name,x,6*s,44*s,44*s,action,0,true);
+            Rect bounds = slots.Bounds(icon);
+            var button=ActionButton(navigation,name,bounds.x,bounds.y,bounds.width,bounds.height,action,0,true);
             Shape(button.transform,name+" background",6*s,6*s,32*s,32*s,10*s,UiFactory.Hex("E7EDE4"));
             var rect=UiFactory.Rect(button.transform,name+" icon",12*s,12*s,20*s,20*s);
             var symbol=rect.gameObject.AddComponent<UiIconGraphic>(); symbol.Kind=icon; symbol.color=UiFactory.Ink; symbol.raycastTarget=false;

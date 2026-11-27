@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using XanaduYonder.Core;
+using XanaduYonder.Core.Jump;
 using XanaduYonder.Core.Watermelon;
 using XanaduYonder.Runtime;
+using XanaduYonder.Runtime.Jump;
 using XanaduYonder.Runtime.Watermelon;
 using Object = UnityEngine.Object;
 
@@ -11,6 +15,91 @@ namespace XanaduYonder.EditorTools
 {
     public static partial class MiniGameUiChecks
     {
+        // Edit mode allows a real AppController move without Awake opening player saves.
+        public static void CheckHostSaveIsolation()
+        {
+            if (Application.isPlaying) throw new InvalidOperationException("Run the save isolation check in edit mode.");
+            var directory = Path.Combine(Path.GetTempPath(), "xanadu-host-save-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            var root = new GameObject("Save isolation fixture", typeof(RectTransform));
+            var oldFont = UiFactory.Font;
+            try
+            {
+                UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
+                var shell = root.AddComponent<AppController>();
+                var game = new Game2048(new GameSnapshot { cells = new[] { 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
+                    Get<IRandomSource>(shell, "random"));
+                var store = new LocalSaveStore(directory);
+                var data = new SaveData { Game = game.GetSnapshot(), SoundEnabled = false, HapticsEnabled = false };
+                Require(store.TrySave(data, out var error), error);
+                Set(shell, "data", data);
+                Set(shell, "game", game);
+                Set(shell, "store", store);
+                Set(shell, "frame", (RectTransform)root.transform);
+                Set(shell, "canvasRoot", (RectTransform)root.transform);
+                Set(shell, "feedback", root.AddComponent<GameFeedback>());
+                Set(shell, "activePage", Enum.Parse(typeof(AppController).GetNestedType("Page", System.Reflection.BindingFlags.NonPublic), "Game2048"));
+                Invoke(shell, "BuildGame");
+
+                var jump = root.AddComponent<JumpPage>();
+                Set(jump, "feedback", Get<GameFeedback>(shell, "feedback"));
+                var jumpStore = new JumpSaveStore(directory);
+                var jumpGame = new JumpGame(923u);
+                var jumpData = new JumpSaveData { Game = jumpGame.GetSnapshot() };
+                Require(jumpStore.TrySave(jumpData, out error), error);
+                var jumpBefore = File.ReadAllText(jumpStore.SavePath);
+                Set(jump, "game", jumpGame);
+                Set(jump, "store", jumpStore);
+                Set(jump, "data", jumpData);
+                Set(shell, "jumpPage", jump);
+
+                Invoke(shell, "Move", Direction.Left);
+                Require(store.Load(out _).Game.score == 4, "A valid 2048 swipe persists the merged score");
+                Require(File.ReadAllText(jumpStore.SavePath) == jumpBefore && !File.Exists(jumpStore.SavePath + ".bak"),
+                    "A 2048 swipe must not rewrite the Jump save or rotate its backup");
+
+                Directory.CreateDirectory(store.SavePath + ".tmp");
+                Require(!(bool)Invoke(shell, "SetFeedbackSetting", false, true), "The host reports a failed preference save");
+                Require(!store.Load(out _).HapticsEnabled, "Failed writes preserve the previous preference");
+                Directory.Delete(store.SavePath + ".tmp");
+                Require((bool)Invoke(shell, "SetFeedbackSetting", false, true), "Retrying the preference save succeeds");
+                Require(store.Load(out _).HapticsEnabled && File.Exists(store.SavePath + ".bak"), "The retry persists haptics and a recoverable host backup");
+                Require(!File.Exists(jumpStore.SavePath + ".bak"), "Preference writes and retries leave other games untouched");
+                ClearEditorTiles(shell);
+                Invoke(shell, "Restart");
+                Require(store.Load(out _).Game.score == 0 && store.Load(out _).BestScore == 4, "Restarting resets the current score and keeps the record");
+                Require(!File.Exists(jumpStore.SavePath + ".bak"), "Restarting 2048 keeps the Jump save untouched");
+                ClearEditorTiles(shell);
+                var gamePage = Get<GameObject>(shell, "gamePage");
+                Array.Find(gamePage.GetComponentsInChildren<Button>(), button => button.name == "Settings button").onClick.Invoke();
+                var settings = Get<GameObject>(shell, "modal");
+                var toggle = Array.Find(settings.GetComponentsInChildren<Button>(), button => button.name.StartsWith("触感", StringComparison.Ordinal));
+                toggle.onClick.Invoke();
+                Require(!store.Load(out _).HapticsEnabled && toggle.GetComponentInChildren<Text>().text.Contains("关闭"),
+                    "The settings button persists its new value and updates its caption");
+                Require(Get<GameObject>(shell, "modal") == settings && !File.Exists(jumpStore.SavePath + ".bak"),
+                    "The settings sheet remains open and no unrelated save is written");
+                Invoke(shell, "OnApplicationQuit");
+                Require(File.Exists(jumpStore.SavePath + ".bak"), "The full exit checkpoint still saves the initialized Jump page");
+                Debug.Log("HOST_SAVE_ISOLATION_PASS");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                UiFactory.Font = oldFont;
+                Directory.Delete(directory, true);
+            }
+        }
+
+        // The engine defers tile destruction in a player. An edit-mode fixture must
+        // release the preceding render before invoking another action that redraws.
+        private static void ClearEditorTiles(AppController shell)
+        {
+            var tiles = Get<List<RectTransform>>(Get<BoardView>(shell, "board"), "tiles");
+            foreach (var tile in tiles) Object.DestroyImmediate(tile.gameObject);
+            tiles.Clear();
+        }
+
         private static void Check2048Terminals(Fixture fixture)
         {
             foreach (string outcome in new[] { "won", "lost", "won-and-blocked" })
@@ -36,6 +125,8 @@ namespace XanaduYonder.EditorTools
                 Set(shell, "status", footer);
                 try
                 {
+                    if (outcome == "won")
+                        CheckRulesNavigation(fixture, shell, pageRoot.Find("2048 page/Game navigation"), "让相同的数字相遇");
                     Invoke(shell, "CheckEndState");
                     CaptureHostTerminal(fixture, shell, shell, pageRoot, "terminal-2048-" + outcome);
                     if (outcome == "won-and-blocked")
@@ -85,6 +176,8 @@ namespace XanaduYonder.EditorTools
                 Invoke(page, "Render", game.GetSnapshot());
                 try
                 {
+                    if (theme == 0 && won)
+                        CheckRulesNavigation(fixture, shell, root.Find("Watermelon navigation"), "合成图鉴 · " + WatermelonArtwork.ThemeNames[theme]);
                     page.CheckEndState();
                     CaptureHostTerminal(fixture, shell, page, root, "terminal-watermelon-theme-" + theme + (won ? "-goal" : "-lost"));
                     Require(!Get<bool>(page, "manuallyPaused"), "Terminal inspection did not substitute a paused-board cover");
@@ -92,6 +185,23 @@ namespace XanaduYonder.EditorTools
                 }
                 finally { Invoke(shell, "CloseModal"); Object.DestroyImmediate(root.gameObject); Object.DestroyImmediate(inert); }
             }
+        }
+
+        private static void CheckRulesNavigation(Fixture fixture, AppController shell, Transform navigation, string rulesTitle)
+        {
+            var home = (RectTransform)Icon(navigation, UiIconKind.Home).transform;
+            var rules = (RectTransform)Icon(navigation, UiIconKind.Book).transform;
+            var settings = (RectTransform)Icon(navigation, UiIconKind.Settings).transform;
+            Require(home.anchoredPosition == new Vector2(56, -34) &&
+                rules.anchoredPosition == new Vector2(536, -34) && settings.anchoredPosition == new Vector2(606, -34),
+                navigation.name + " aligns Home, rules and settings across game pages");
+            Require(home.sizeDelta == new Vector2(58, 58) && rules.sizeDelta == home.sizeDelta && settings.sizeDelta == home.sizeDelta,
+                navigation.name + " preserves the complete navigation touch targets");
+            fixture.Click(rules);
+            var modal = Get<GameObject>(shell, "modal");
+            Require(modal != null && modal.transform.Find("Dialog safe area/Dialog/" + rulesTitle) != null,
+                navigation.name + " opens its own game rules");
+            Invoke(shell, "CloseModal");
         }
 
         private static void CaptureHostTerminal(Fixture fixture, AppController shell, MonoBehaviour page, RectTransform root, string name)

@@ -58,14 +58,14 @@ namespace XanaduYonder.Runtime.BoardGames
             UiFactory.Label(nav, title, 226, 34, 268, 58, 36, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             if (screen == ScreenKind.Setup || screen == ScreenKind.Tutorial || screen == ScreenKind.Replay || trainingFormation)
             {
-                UiFactory.IconButton(nav, UiIconKind.Back, 56, 34, 58, 58, () => Back(() => true));
+                UiFactory.NavigationButton(nav, UiIconKind.Back, () => Back(() => true));
                 if (screen == ScreenKind.Tutorial)
                     GameButton(nav, "教程目录", 536, 34, 128, 58, () => OpenPanel(PanelKind.Lessons));
                 return;
             }
-            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, RequestLeave);
-            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, () => OpenPanel(PanelKind.Rules));
-            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, () => OpenPanel(PanelKind.Settings));
+            UiFactory.NavigationButton(nav, UiIconKind.Home, RequestLeave);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, () => OpenPanel(PanelKind.Rules));
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, () => OpenPanel(PanelKind.Settings));
         }
 
         private void DrawSetup()

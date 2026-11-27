@@ -25,9 +25,35 @@ Unity Hub 的账号登录、编辑器许可和首次条款需由使用者完成�
 
 2048 在手机上滑动，编辑器支持鼠标滑动和方向键；跳一跳按住蓄力、松手起跳，编辑器也支持空格键；旸了个旸点击未被盖住的牌，编辑器用鼠标点击；成语接龙输入四字词后点发送，点击对话查看释义；数独点击格子和数字，支持铅笔候选与快速输入；04 合成大西瓜在棋盘上拖动瞄准、松手投球，编辑器使用鼠标拖动与释放。07 扫雷支持点击翻开、长按 0.4 秒立即标记、单指平移与双指缩放和平移，编辑器右键松手直接标记。大厅按固定分类纵向滚动，支持双列卡片、分类目录、单列大卡；直接点击整张卡片进入游戏。规则、公共设置和各自存档逻辑均与手机共用。
 
-大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。当前大厅两端均为 22 项，三个网页游戏分别使用各平台 WebView，详见[平台构建矩阵](building.md)。
+大厅 UI 的批准稿、设计尺寸与图标接入见 [大厅 v2 设计归档](design/lobby-v2/README.md)。`AppController` 负责入口和真实纪录，`LobbyView` 只负责展示。展示偏好独立使用 `xanadu.lobby.display.v1`，不改各游戏存档；没有自定义排序。两端共用 29 个入口，其中 25 个由 Unity 渲染，4 个由平台 WebView 承载，详见[平台构建矩阵](building.md)。
 
-## 命令
+## 按模块选择验证
+
+在仓库根目录列出可用测试，按名称或组运行。
+
+```bash
+python3 scripts/test.py --list
+python3 scripts/test.py core input feihualing-storage
+python3 scripts/test.py --group dotnet
+```
+
+`dotnet` 组运行规则、输入和存档用例。`data` 组校验内容和文档。`platform` 组检查 Web 宿主和随包资源，使用 Node、Python 和 Unity Android OpenJDK，内容输入按[构建指南](building.md)准备。`unity` 组逐项运行编辑器检查，其中启动遮罩需要可交互的 GameView。运行 Unity 组前关闭同一工作树的交互编辑器。需要传入模块专属参数时直接使用下列脚本。每次验收记录提交、命令、产物和实际运行平台。
+
+改动 Markdown 后运行 `python3 scripts/test.py doc-links`。它检查 Git 已跟踪及工作树新增文档的仓内文件链接、图片和标题跳转。
+
+| 改动位置 | 第一项检查 | 需要补验的行为 |
+| --- | --- | --- |
+| 2048 与共用输入、存档 | `scripts/test-core.sh`、`scripts/test-input.sh`、`scripts/test-persistence.sh` | 真实设备上的滑动、退后台及坏档恢复 |
+| 大厅及页面切换 | `scripts/test-lobby-design.sh`、`scripts/test-startup-handoff.sh`、`scripts/test-startup-overlay.sh` | 首次可点击、页面返回与方向恢复 |
+| 军棋、象棋、国际象棋、跳棋 | 在 [Tests](../Tests/) 中按 `BoardArmy`、`BoardXiangqi`、`BoardChess`、`BoardCheckers` 选择测试项目，例如 `dotnet run --project Tests/BoardChess/BoardChessTests.csproj -c Release` | `board-game-persistence` 检查共用存储，`classic-boards-ui` 检查 Unity 棋盘和交互 |
+| 抓大鹅 | `dotnet run --project Tests/BakeryBasket/BakeryBasketTests.csproj -c Release` | `bakery-basket-ui` 检查 Unity 表现。真机拾取、遮挡与前后台恢复的场景见[原型记录](bakery-basket-prototype.md) |
+| 成语接龙与飞花令 | 成语用 `scripts/test-idiom-data.sh` 和 `scripts/test-idiom-persistence.sh`，飞花令用 `scripts/test-feihualing-core.sh`、`scripts/test-feihualing-storage.sh` | `feihualing-ui` 检查 Unity 交互。数据核验见[诗库生成](../Data/Feihualing/README.md)和[成语数据](idiom-data.md)，输入法另做真机检查 |
+| 动作与表现 | 飞机用 `scripts/test-aircraft-fire.sh`，Dino 画面用 `scripts/test-dino-visual.sh`，黄金矿工源战役用 `scripts/test-gold-miner-source.sh`，Zuma 转场用 `scripts/test-zuma-navigation.sh` | 物理触摸、多指取消、横竖屏、声音和触感 |
+| 四个网页玩法 | 内容输入与宿主检查见[赵云与阿斗](../scripts/zhaoyun-adou/)、[割绳子](../scripts/cut-the-rope/)、[只有一道门](../ThirdParty/LevelDevil/README.md)、[泡泡堂](bomb-it.md) | 在 Android WebView 与 iOS WKWebView 分别验证离线启动、存档、暂停和系统返回 |
+
+`git ls-files 'scripts/test-*' 'Tests/*.csproj'` 可列出跟踪的专用脚本和 .NET 项目。内容导入与打包说明在[文档导航](README.md)，[设备与发布证据](README.md#历史验证与发布)列出已执行的记录。
+
+## 常用命令
 
 在仓库根目录执行：
 
@@ -74,7 +100,7 @@ scripts/test-link-match-ui.sh
 ./scripts/build.sh android --install DEVICE_SERIAL
 ```
 
-`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查当前二十二张大厅卡片顺序，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
+`scripts/test-minigame-ui.sh` 在 Unity 中渲染两种高度的页面，检查原有数独填写/剩余计数、工具点击、玩法弹窗的输入隔离与计时恢复，并检查当前大厅卡片数量、顺序和可点击性，输出 `artifacts/validation/minigame-ui/` 截图和报告；这些编辑器检查不代替 Android 真机回归。
 
 `scripts/test-sheep.sh` 直接编译生产规则代码，检查叠层遮挡、7 槽三消、工具、快照与多种子解法重放；`scripts/test-sheep-persistence.sh` 使用真实 Newtonsoft 解析器和临时目录检查新游戏存档。独立测试不能代替 Unity 编译与设备输入/表现验证。
 
@@ -82,7 +108,7 @@ scripts/test-link-match-ui.sh
 
 构建脚本默认使用 `/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app/Contents/MacOS/Unity`。非默认安装位置用 `UNITY_EDITOR=/absolute/path/to/Unity` 覆盖；ADB 可用 `ADB` 覆盖，测试脚本可用 `DOTNET_ROOT` 指定 SDK 目录。
 
-默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.6，Android versionCode 为 15。无参数构建与 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
+默认构建输出为 `artifacts/builds/XanaduYonder-<ProjectBuild.Version>-debug.apk`，日志为 `artifacts/logs/build-android.log`。构建脚本统一从 `Assets/Editor/ProjectBuild.cs` 读取版本，当前为 0.9.8，Android versionCode 为 17。`./scripts/build.sh android` 和追加的 `--install` 都使用独立 `.debug` 包名和本机 Android debug 签名，不会自动发布新版。
 
 全部 APK 构建入口，包括 Debug、Release 及小游戏 validation/preview，都关闭 Unity Development、脚本调试、Profiler 连接和 Deep Profiling。产物不带 Android debuggable、Development Console 或 PlayerConnection；debug 仅指本地签名，不提供 `run-as` 数据访问。小游戏测试包继续保留各自独立包名。黄金矿工帧性能日志、旸了个旸生成耗时日志受 `DEVELOPMENT_BUILD || UNITY_EDITOR` 控制，当前 APK 不包含这些诊断日志，编辑器仍保留。
 

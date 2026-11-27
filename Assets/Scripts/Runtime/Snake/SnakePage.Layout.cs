@@ -11,12 +11,12 @@ namespace XanaduYonder.Runtime.Snake
             var surface=UiFactory.Rect(root,"Snake game",0,0,720,1320);UiFactory.Stretch(surface);
             gameInput=surface.gameObject.AddComponent<CanvasGroup>();
             var nav=UiFactory.Band(surface,"Snake navigation",0,92,0);
-            UiFactory.IconButton(nav,UiIconKind.Home,56,34,58,58,()=>{if(Available){Suspend();returnLobby();}});
+            UiFactory.NavigationButton(nav, UiIconKind.Home, ()=>{if(Available){Suspend();returnLobby();}});
             var brand = UiFactory.Label(nav,"XANADU / YONDER",210,34,300,58,19,UiFactory.Muted,TextAnchor.MiddleCenter);
             ResultPresentation.For(this, root).SetReopenSlot(
                 UiFactory.Rect(nav, "Result review slot", 244, 34, 232, 58), brand);
-            UiFactory.IconButton(nav,UiIconKind.Book,536,34,58,58,ShowRules);
-            UiFactory.IconButton(nav,UiIconKind.Settings,606,34,58,58,ShowSettings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, ShowSettings);
             var heading=UiFactory.Band(surface,"Snake heading",108,64,.03f);
             UiFactory.Label(heading,"贪吃蛇",36,0,290,64,52,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             modeButton=UiFactory.Button(heading,"经典无限",474,5,210,54,ChooseMode);modeButton.name="Mode";

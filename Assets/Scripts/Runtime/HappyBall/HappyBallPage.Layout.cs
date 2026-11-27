@@ -14,12 +14,12 @@ namespace XanaduYonder.Runtime.HappyBall
         private void Build(RectTransform root)
         {
             var navigation = UiFactory.Band(root, "HappyBall navigation", 0, 92, 0);
-            UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, returnLobby);
-            UiFactory.IconButton(navigation, UiIconKind.Restart, 126, 34, 58, 58, ConfirmRestart);
+            UiFactory.NavigationButton(navigation, UiIconKind.Home, returnLobby);
+            UiFactory.NavigationButton(navigation, UiIconKind.Restart, ConfirmRestart);
             var title = UiFactory.Label(navigation, "欢乐球球", 210, 34, 300, 58, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            UiFactory.IconButton(navigation, UiIconKind.Book, 536, 34, 58, 58, ShowHelp);
-            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
+            UiFactory.NavigationButton(navigation, UiIconKind.Book, ShowHelp);
+            UiFactory.NavigationButton(navigation, UiIconKind.Settings, OpenSettings);
 
             var band = UiFactory.Band(root, "HappyBall single-line score", 108, 64, 0);
             var panel = UiFactory.Panel(band, "Score strip", 56, 0, 608, 64, UiFactory.Hex("E7EDE4"));

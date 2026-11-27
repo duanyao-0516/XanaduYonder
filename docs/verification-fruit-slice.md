@@ -76,7 +76,7 @@ Native 有界阶段日志的 API 36 编译通过，证据为 `artifacts/validati
 | Unity 实际大厅检查 | 现有 `scripts/test-lobby-design.sh` 通过，3,757 项断言，覆盖 720×1320、720×1582 与三种布局；17.85 秒结束，未触发 180 秒限定。生成 28 张新截图，人工查看三布局底部截图，入口 21、敏捷挑战 7 款、图标与封面可见。证据：`artifacts/lobby-design/report.txt`、`artifacts/validation/fruit-slice/lobby/result.json` |
 | 工作区格式检查 | 当前 `git diff --check` 通过。未提交或推送代码 |
 
-原始第三方文件保持在忽略的下载证据目录，转换源码与来源记录纳入跟踪；生成内容位于忽略的 `Assets/StreamingAssets/fruit-slice/`。内容生成与检查命令及边界见 [离线内容说明](../ThirdParty/FruitSliceContent/README.md)。临时主机验证夹具保存在忽略的 `artifacts/validation/fruit-slice/`，不是新增正式测试源码。已有大厅检查的入口/路由/序号列表同步为 21 项；未新增常驻单元测试文件。
+原始第三方文件保持在忽略的下载证据目录，转换源码与来源记录纳入跟踪；生成内容位于忽略的 `Assets/StreamingAssets/fruit-slice/`。内容生成与检查命令及边界见 [离线内容说明](https://github.com/duanyao-0516/XanaduYonder/blob/18a4f3ea3ec33d303eeca3d44f73a1a1a203f5cb/ThirdParty/FruitSliceContent/README.md)。临时主机验证夹具保存在忽略的 `artifacts/validation/fruit-slice/`，不是新增正式测试源码。已有大厅检查的入口/路由/序号列表同步为 21 项；未新增常驻单元测试文件。
 
 ## 历史运行结果与尚未验证部分
 

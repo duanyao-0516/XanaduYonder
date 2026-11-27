@@ -29,9 +29,7 @@ namespace XanaduYonder.Runtime
                     () => data.SoundEnabled, () => data.HapticsEnabled, SetFeedbackSetting, feedback);
             }
             else boardPage.Leave();
-            activePage = Page.ClassicBoards;
-            lobbyPage.SetActive(false);
-            gamePage.SetActive(false);
+            SetActivePage(Page.ClassicBoards);
             if (status != null) status.gameObject.SetActive(false);
             boardPage.Enter(game, !paused && focused);
         }

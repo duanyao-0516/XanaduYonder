@@ -13,6 +13,7 @@ namespace XanaduYonder.Runtime.GoldMiner
     /// <summary>Loads only shipped, verified layouts. Selection never mutates the caller's run.</summary>
     public sealed class GoldMinerLevelCatalog
     {
+        public const int ClassicRulesVersion = (int)GoldMinerBalanceProfile.Classic;
         public const int MaximumCatalogBytes = 64 * 1024;
         public const int MaximumShardBytes = 512 * 1024;
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
@@ -410,7 +411,7 @@ namespace XanaduYonder.Runtime.GoldMiner
         private static void Versions(JObject item)
         {
             Integer(item["schemaVersion"], 1, 1);
-            Integer(item["rulesVersion"], 4, 4);
+            Integer(item["rulesVersion"], ClassicRulesVersion, ClassicRulesVersion);
             Integer(item["catalogVersion"], 1, 1);
         }
         private static JObject Object(JToken token)

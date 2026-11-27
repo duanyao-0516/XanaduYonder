@@ -221,17 +221,19 @@ namespace XanaduYonder.EditorTools
             var gameRoot = Get<RectTransform>(page, "gameRoot");
             var home = (RectTransform)gameRoot.Find("Home button");
             var notebook = (RectTransform)Get<Button>(page, "bookButton").transform;
+            var rules = (RectTransform)gameRoot.Find("Book button");
             var settings = (RectTransform)gameRoot.Find("Settings button");
             var title = (RectTransform)gameRoot.Find("Idiom centered title");
             CheckScreenRect(fixture, home, 56, 34, 58, 58, label + " home");
-            CheckScreenRect(fixture, notebook, 536, 34, 58, 58, label + " notebook");
+            CheckScreenRect(fixture, notebook, 466, 34, 58, 58, label + " notebook");
+            CheckScreenRect(fixture, rules, 536, 34, 58, 58, label + " rules");
             CheckScreenRect(fixture, settings, 606, 34, 58, 58, label + " settings");
-            CheckScreenRect(fixture, title, 200, 30, 320, 66, label + " title");
+            CheckScreenRect(fixture, title, 264, 30, 192, 66, label + " title");
             Require(title.GetComponent<Text>().fontSize == 35 && Get<Text>(page, "countText").fontSize == 23,
                 label + " game title and count retain their font sizes");
             var titleBounds = ScreenRect(fixture, title);
             Near(titleBounds.center.x, fixture.Width * .5f, label + " title stays centered in screen");
-            foreach (var button in new[] { home, notebook, settings })
+            foreach (var button in new[] { home, notebook, rules, settings })
             {
                 var bounds = ScreenRect(fixture, button);
                 Near(bounds.center.y, titleBounds.center.y, label + " navigation shares title row");
@@ -398,7 +400,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back),
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back),
                     () => DestroyModal(shell));
                 var lexicon = TestLexicon(); Set(page, "lexicon", lexicon);
                 var data = (IdiomSaveData)Invoke(page, "NewSave");
@@ -413,7 +415,13 @@ namespace XanaduYonder.EditorTools
                 var firstRow = Get<List<IdiomVirtualList.Row>>(chat, "rows")[0];
                 var compactHeight = firstRow.Root.rect.height;
                 var historyCount = game.History.Count;
-                fixture.Click(Center((RectTransform)Get<RectTransform>(page, "gameRoot").Find("Settings button")));
+                var gameRoot = Get<RectTransform>(page, "gameRoot");
+                fixture.Click(Center((RectTransform)gameRoot.Find("Book button")));
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "知道了").transform));
+                Require(Get<GameObject>(shell, "modal") == null, "Closing rules opened from the game returns to the conversation");
+                fixture.Click(Center((RectTransform)gameRoot.Find("Settings button")));
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "玩法说明").transform));
+                fixture.Click(Center((RectTransform)FindNamedButton(Get<GameObject>(shell, "modal"), "知道了").transform));
                 var show = FindNamedButton(Get<GameObject>(shell, "modal"), "是否显示拼音 switch");
                 var close = FindNamedButton(Get<GameObject>(shell, "modal"), "发送后收起键盘 switch");
                 var fixedSides = FindNamedButton(Get<GameObject>(shell, "modal"), "双人对战发送固定右侧 switch");
@@ -476,7 +484,7 @@ namespace XanaduYonder.EditorTools
         private static Button FindNamedButton(GameObject root, string name)
         {
             foreach (var button in root.GetComponentsInChildren<Button>()) if (button.name == name) return button;
-            throw new InvalidOperationException("Missing actual setting switch: " + name);
+            throw new InvalidOperationException("Missing button: " + name);
         }
 
         private static void CheckViewportAnchors(Fixture fixture)
@@ -587,7 +595,7 @@ namespace XanaduYonder.EditorTools
             var backCount = 0;
             var contentCount = 0;
             var closeCount = 0;
-            var panel = (RectTransform)Invoke(shell, "OpenIdiomModal", "点击范围检查", 560f, (Action)(() => backCount++));
+            var panel = (RectTransform)Invoke(shell, "OpenTextGameModal", "点击范围检查", 560f, (Action)(() => backCount++));
             try
             {
                 var content = UiFactory.Button(panel, "内容按钮", 32, 180, 532, 70, () => contentCount++);
@@ -635,7 +643,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = actualPageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(actualPageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back),
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back),
                     () => DestroyModal(shell));
                 Set(page, "visible", true);
                 var returned = 0;
@@ -786,7 +794,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back), () => DestroyModal(shell));
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell));
                 var entries = new List<IdiomEntry>();
                 var middles = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉";
                 for (var i = 0; i < middles.Length; i++)
@@ -887,7 +895,7 @@ namespace XanaduYonder.EditorTools
             {
                 var page = pageRoot.gameObject.AddComponent<IdiomPage>();
                 page.Initialize(pageRoot, () => { }, () => true, _ => { },
-                    (title, height, back) => (RectTransform)Invoke(shell, "OpenIdiomModal", title, height, back), () => DestroyModal(shell));
+                    (title, height, back) => (RectTransform)Invoke(shell, "OpenTextGameModal", title, height, back), () => DestroyModal(shell));
                 var lexicon = TestLexicon();
                 Set(page, "lexicon", lexicon);
                 var data = (IdiomSaveData)Invoke(page, "NewSave");

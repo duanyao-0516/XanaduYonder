@@ -21,9 +21,11 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             if (page != null) { page.gameObject.SetActive(false); Destroy(page.gameObject); }
             float s = Scale;
             page = UiFactory.Rect(root, "SlidingPuzzle content", (root.rect.width - ReferenceWidth * s) / 2, 0, ReferenceWidth * s, root.rect.height);
-            var home = UiFactory.IconButton(page, UiIconKind.Home, 28*s, 25*s, 58*s/(720f/390), 58*s/(720f/390), Home); home.name = "Home";
-            var book = UiFactory.IconButton(page, UiIconKind.Book, 289.17f*s, 25*s, 58*s/(720f/390), 58*s/(720f/390), ShowRules); book.name = "Book";
-            var settings = UiFactory.IconButton(page, UiIconKind.Settings, 330.58f*s, 25*s, 58*s/(720f/390), 58*s/(720f/390), Settings); settings.name = "Settings";
+            var navigation = new GameNavigationLayout(ReferenceWidth * s, 28 * s, 25 * s,
+                58 * s * ReferenceWidth / UiFactory.DesignWidth, 10 * s);
+            UiFactory.NavigationButton(page, UiIconKind.Home, Home, navigation).name = "Home";
+            UiFactory.NavigationButton(page, UiIconKind.Book, ShowRules, navigation).name = "Book";
+            UiFactory.NavigationButton(page, UiIconKind.Settings, Settings, navigation).name = "Settings";
             Label(page,"SlidingPuzzle brand","XANADU / YONDER",105,25,180,31.42f,10,UiFactory.Muted,TextAnchor.MiddleCenter);
             Label(page,"SlidingPuzzle title","数字华容道",28,89,334,41.25f,33,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             Label(page,"SlidingPuzzle subtitle","留一格空白，让数字慢慢归位。",28,140.25f,334,20.8f,13,Secondary);

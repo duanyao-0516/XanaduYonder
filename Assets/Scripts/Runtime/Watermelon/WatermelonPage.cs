@@ -73,8 +73,9 @@ namespace XanaduYonder.Runtime.Watermelon
             var navigation = UiFactory.Band(root, "Watermelon navigation", 0, 94, 0);
             ResultPresentation.For(this, root).SetReopenSlot(
                 UiFactory.Rect(navigation, "Result review slot", 244, 34, 232, 58));
-            UiFactory.IconButton(navigation, UiIconKind.Home, 56, 34, 58, 58, lobby);
-            UiFactory.IconButton(navigation, UiIconKind.Settings, 606, 34, 58, 58, () => { Suspend(); Save(); settings(); });
+            UiFactory.NavigationButton(navigation, UiIconKind.Home, lobby);
+            UiFactory.NavigationButton(navigation, UiIconKind.Book, ShowHelp);
+            UiFactory.NavigationButton(navigation, UiIconKind.Settings, () => { Suspend(); Save(); settings(); });
             var heading = UiFactory.Band(root, "Watermelon title", 108, 76, 0);
             UiFactory.Label(heading, "合成大西瓜", 56, 0, 500, 76, 48, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "04", 582, 8, 82, 58, 30, UiFactory.Accent, TextAnchor.MiddleRight);
@@ -116,10 +117,9 @@ namespace XanaduYonder.Runtime.Watermelon
             var hintBand = UiFactory.Band(root, "Watermelon hint", 1120, 48, .82f);
             hint = UiFactory.Label(hintBand, "拖动瞄准，松手投放", 56, 0, 608, 48, 23, UiFactory.Accent, TextAnchor.MiddleCenter);
             var actions = UiFactory.Band(root, "Watermelon actions", 1196, 64, 1);
-            UiFactory.Button(actions, "重新开始", 56, 0, 192, 64, ConfirmRestart);
-            var pause = UiFactory.Button(actions, "暂停", 264, 0, 192, 64, TogglePause);
+            UiFactory.Button(actions, "重新开始", 56, 0, 296, 64, ConfirmRestart);
+            var pause = UiFactory.Button(actions, "暂停", 368, 0, 296, 64, TogglePause);
             pauseLabel = pause.GetComponentInChildren<Text>();
-            UiFactory.Button(actions, "玩法 / 图鉴", 472, 0, 192, 64, ShowHelp);
         }
 
         private static Text Stat(Transform parent, string title, float x)

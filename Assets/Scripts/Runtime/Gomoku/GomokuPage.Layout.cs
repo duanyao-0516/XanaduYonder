@@ -16,10 +16,10 @@ namespace XanaduYonder.Runtime.Gomoku
         {
             ResultPresentation.For(this, root).UseExistingReopenAction();
             var nav = UiFactory.Band(root, "Gomoku navigation", 0, 92, 0);
-            UiFactory.IconButton(nav, UiIconKind.Home, 56, 34, 58, 58, RequestLeave);
+            UiFactory.NavigationButton(nav, UiIconKind.Home, RequestLeave);
             UiFactory.Label(nav, "XANADU / YONDER", 226, 34, 278, 58, 19, UiFactory.Muted, TextAnchor.MiddleCenter);
-            UiFactory.IconButton(nav, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
-            UiFactory.IconButton(nav, UiIconKind.Settings, 606, 34, 58, 58, Settings);
+            UiFactory.NavigationButton(nav, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(nav, UiIconKind.Settings, Settings);
             var heading = UiFactory.Band(root, "Gomoku heading", 106, 78, .05f);
             UiFactory.Label(heading, "五子棋", 56, 0, 300, 78, 48, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             UiFactory.Label(heading, "一黑一白，落子有声。", 346, 20, 318, 50, 22, UiFactory.Muted, TextAnchor.MiddleRight);

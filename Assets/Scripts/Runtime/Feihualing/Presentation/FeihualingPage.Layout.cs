@@ -47,13 +47,13 @@ namespace XanaduYonder.Runtime.Feihualing
         {
             column = UiFactory.Rect(root, "Feihualing centered column", 0, 0, 720, 1320);
             var header = UiFactory.Rect(column, "Feihualing header", 0, 0, 720, 104);
-            homeButton = UiFactory.IconButton(header, UiIconKind.Home, 56, 34, 58, 58, BackFromPage);
-            backButton = UiFactory.IconButton(header, UiIconKind.Back, 56, 34, 58, 58, BackFromPage);
-            var title = IdiomUi.Label(header, "飞花令", 200, 31, 320, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
+            homeButton = UiFactory.NavigationButton(header, UiIconKind.Home, BackFromPage);
+            backButton = UiFactory.NavigationButton(header, UiIconKind.Back, BackFromPage);
+            var title = IdiomUi.Label(header, "飞花令", 264, 31, 192, 66, 35, UiFactory.Ink, TextAnchor.MiddleCenter, true);
             title.name = "Feihualing centered title";
-            UiFactory.IconButton(header, UiIconKind.Notebook, 466, 34, 58, 58, OpenNotebook);
-            UiFactory.IconButton(header, UiIconKind.Book, 536, 34, 58, 58, ShowRules);
-            UiFactory.IconButton(header, UiIconKind.Settings, 606, 34, 58, 58, OpenSettings);
+            UiFactory.NavigationButton(header, UiIconKind.Notebook, OpenNotebook);
+            UiFactory.NavigationButton(header, UiIconKind.Book, ShowRules);
+            UiFactory.NavigationButton(header, UiIconKind.Settings, OpenSettings);
 
             startup = UiFactory.Rect(column, "Feihualing startup", 32, 200, BodyWidth, 340);
             startupTitle = IdiomUi.Label(startup, "", 0, 32, BodyWidth, 66, 34, UiFactory.Ink, TextAnchor.MiddleCenter, true);

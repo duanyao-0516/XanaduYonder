@@ -32,15 +32,15 @@
 | 解压总长 | 4,098,468 | 11,707,784 |
 | SHA-256 | `5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1` | `b7dc9f9654add56e87234381e5272695592e3837bbd8489f836ed7225b81960c` |
 
-一代 7k7k 文件与前期测量的 MaxGames 文件有字节差异，不能混用版本结论；二代与前期 MaxGames 样本逐字节一致。文件和下载清单在[下载目录](/Users/bytedance/Downloads/age-of-war-research-20261030)。
+一代 7k7k 文件与前期测量的 MaxGames 文件有字节差异，不能混用版本结论；二代与前期 MaxGames 样本逐字节一致。文件和下载清单在 `~/Downloads/age-of-war-research-20261030/`。
 
 使用官方 **JPEXS FFDec 26.4.0 / Java 17** 导出脚本、图形、音频、字体、文本和符号映射；完整 SWF 保留时间轴。正式导出退出码均为 0，日志未见反编译失败标记。通过官方解析库的 `Tag.getNeededCharacters` 检查数值资源引用；这不是对任意动态脚本路径的形式化证明。工具依据：[CLI](https://github.com/jindrapetrik/jpexs-decompiler/wiki/Commandline-arguments)、[功能说明](https://github.com/jindrapetrik/jpexs-decompiler/wiki/Features)。
 
-稳定证据目录：
+下列 `analysis/` 路径相对于上述本地取证目录。
 
-- [一代清单与脚本](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow1)，含 `inventory.json`、`tag-inventory.json`、分析器、导出日志和动画样本。
-- [二代清单与脚本](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow2)，含 `outer`、30 包映射、`embedded-swf`、`embedded`、`data.xml` 和 `reference-check.tsv`。
-- [运行证据](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-evidence)、[本地预览包](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-preview.zip)。大文件留在 Downloads，没有加入 Unity Assets 或 Git。
+- 一代清单与脚本（`analysis/aow1`），含 `inventory.json`、`tag-inventory.json`、分析器、导出日志和动画样本。
+- 二代清单与脚本（`analysis/aow2`），含 `outer`、30 包映射、`embedded-swf`、`embedded`、`data.xml` 和 `reference-check.tsv`。
+- 运行证据（`analysis/runtime-evidence`）、本地预览包（`analysis/runtime-preview.zip`）。大文件留在 Downloads，没有加入 Unity Assets 或 Git。
 - [仓库内测量摘要](2026-10-30-age-of-war-source-assets-measurements.json)保存输入指纹、导出数量和验证范围。
 
 ## 实际取得哪些内容
@@ -72,7 +72,7 @@
 4. **流式声音已补提取，但尚未试听。** 二代 SPONSOR 的 sprite58 内含 1 个 SoundStreamHead、185 个流式块，默认 sound CLI 未生成文件；随后通过官方 `getRanges()` 和 `SoundExporter` 成功补提取为 546,092 B、44.1 kHz 单声道 PCM WAV。独立声音共 54 + 1 个文件，WAV 结构已验证；这解决了批量导出的已知遗漏，不等于所有声音已听感验收。
 5. **没有全量动画正确性结论。** 只检查了一代 Club man 的行走/攻击和二代 Clubman 的待机前 12 帧（12 张 541×480 PNG、382,562 B，非空且像素各异）。二代该角色时间轴有 206 帧，攻击从 91、命中事件标签从 112、行走起步从 142、循环行走从 147、死亡从 171 帧开始；该样本没有覆盖这些动作。遮罩、形变、颜色变换、复杂技能、全部单位的命中点与效果仍需逐项验收；没有重编译 AS 或重建 FLA。
 
-![一代 Club man 行走与攻击抽样](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow1/clubman-contact-sheet.png)
+一代 Club man 行走与攻击抽样（`analysis/aow1/clubman-contact-sheet.png`）
 
 ## 目标版本的规则已经能从代码确认
 
@@ -86,7 +86,7 @@
 | AI | 按计时、数量门槛和随机出兵、进化，并非和玩家共用对称经济 | 内嵌 AI XML 驱动时间事件与出兵 |
 | 加速 | 无本轮确认的二倍速入口 | HUD 切换 1/2 倍速，主战斗循环使用该倍率 |
 
-一代数据入口：`analysis/aow1/export/scripts/frame_13/DoAction.as:2–8`，进化为 `DefineButton2_188/BUTTONCONDACTION on(press).as:4–9`。二代数据入口：`analysis/aow2/outer/scripts/net/louissi/Alpha1/Global/Ressources_DATA_CLASS.as`，XML 已原样提取到 [data.xml](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow2/data.xml)。详细路径和行号见两份子报告：[一代](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow1/summary.md)、[二代](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/aow2/summary.md)。
+一代数据入口：`analysis/aow1/export/scripts/frame_13/DoAction.as:2–8`，进化为 `DefineButton2_188/BUTTONCONDACTION on(press).as:4–9`。二代数据入口：`analysis/aow2/outer/scripts/net/louissi/Alpha1/Global/Ressources_DATA_CLASS.as`，XML 已原样提取到 `analysis/aow2/data.xml`。详细路径和行号见两份子报告：一代（`analysis/aow1/summary.md`）、二代（`analysis/aow2/summary.md`）。
 
 对微信文章的修正：
 
@@ -107,7 +107,7 @@
 | 外部请求 | 二代 MochiBot 的 `http://core.mochibot.com/my/core.swf` 被 CSP 拦截，仍进入并持续进行上述对局；一代此抽样未记录到外部资源请求 |
 | 声音 | 运行时统一静音；声音文件已导出，尚未试听、验证音频手势或手机后台漏音 |
 
-证据：[一代战斗](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-evidence/aow1-battle.jpg)、[二代战斗](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-evidence/aow2-battle.jpg)、[暂停](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-evidence/aow2-paused.jpg)、[失败结算](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-evidence/aow2-defeat.jpg)。未覆盖全部时代、技能、进化、所有难度、胜利通关或移动设备。
+证据：一代战斗（`analysis/runtime-evidence/aow1-battle.jpg`）、二代战斗（`analysis/runtime-evidence/aow2-battle.jpg`）、暂停（`analysis/runtime-evidence/aow2-paused.jpg`）、失败结算（`analysis/runtime-evidence/aow2-defeat.jpg`）。未覆盖全部时代、技能、进化、所有难度、胜利通关或移动设备。
 
 **二代有一项模式限制：Insane 按加载地址判断 MaxGames 域名。** 整体启动域名锁为空，但 `Screens/Author.as:66–77` 设置 `onMaxGames`，`Difficulty.as:44–50,113–122` 决定真实 Insane 按钮或跳转按钮。Easy/Medium/Hard 不走此限制，实测仅 Easy。没有修改域名判断或原文件，不能承诺四种难度全部离线可用。
 
@@ -117,7 +117,7 @@ MochiBot 属于统计调用；Kongregate API 分支存在但构造参数关闭�
 
 ## 接入当前 App 的两条路线
 
-当前项目为 Unity 6000.3.27f1、Android ARM64/IL2CPP；`Core` 无 Unity 依赖，[AppController](/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/Assets/Scripts/Runtime/AppController.cs) 显式管理页面和保存。构建强制竖屏，公共 Canvas 为 720×1320，已有[独立存档契约](/Users/bytedance/.codex/worktrees/age-of-war-research/XanaduYonder/docs/architecture.md)。没有现成 WebView/Ruffle 容器。
+调研基线项目为 Unity 6000.3.27f1、Android ARM64/IL2CPP；`Core` 无 Unity 依赖，[AppController](https://github.com/duanyao-0516/XanaduYonder/blob/41a235dd81adb66c45f380f5b6c837e0a92dead0/Assets/Scripts/Runtime/AppController.cs) 显式管理页面和保存。构建强制竖屏，公共 Canvas 为 720×1320，已有[独立存档契约](https://github.com/duanyao-0516/XanaduYonder/blob/41a235dd81adb66c45f380f5b6c837e0a92dead0/docs/architecture.md)。没有现成 WebView/Ruffle 容器。
 
 ### 路线 A：原 SWF + 本地 Ruffle + Android WebView
 
@@ -140,11 +140,11 @@ MochiBot 属于统计调用；Kongregate API 分支存在但构造参数关闭�
 - 独立快照保存双方资源/时代/基地、单位稳定 ID/坐标/HP/冷却、队列、弹体、持续技能、升级、AI/RNG、终局已记账标志。沿用严格 Codec、原子 Store 和合法备份；恢复不能重复扣款、奖励或结算。
 - AppController 只增加入口、Enter/Leave、Save、设置、暂停和返回分发。不要将战争规则塞进公共宿主，也无需先重写通用游戏注册框架。离开时仅 `SetActive(false)` 不等于释放图集。
 
-完整宿主证据和行号见[宿主复核](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/app-integration-review.md)。
+完整宿主证据和行号见宿主复核（`analysis/app-integration-review.md`）。
 
 ## 增量估算与实施验证顺序
 
-实际生成的本地研究包包含 HTML、两份 SWF、Ruffle JS/WASM 和许可，共 **10 文件、44,275,614 B 展开（42.22 MiB）、25,211,341 B ZIP（24.043 MiB）**。去掉 source maps，保留两个 WASM 变体；ZIP 使用 Deflate 6。这是可复核的运行资源包，**不是 APK/AAB 增量、安装占用或运行内存**。测量见[本地 JSON](/Users/bytedance/Downloads/age-of-war-research-20261030/analysis/runtime-bundle-measurements.json)。
+实际生成的本地研究包包含 HTML、两份 SWF、Ruffle JS/WASM 和许可，共 **10 文件、44,275,614 B 展开（42.22 MiB）、25,211,341 B ZIP（24.043 MiB）**。去掉 source maps，保留两个 WASM 变体；ZIP 使用 Deflate 6。这是可复核的运行资源包，**不是 APK/AAB 增量、安装占用或运行内存**。测量见本地 JSON（`analysis/runtime-bundle-measurements.json`）。
 
 | 方案 | 当前可用预算 | 本轮能否把它升级为实测 |
 | --- | --- | --- |

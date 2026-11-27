@@ -1,6 +1,6 @@
 # Age of War 1 runtime differential trace
 
-On 2026-10-30 the fixed original SWF ran in local **Ruffle 0.7.1 Web/WASM**, in a separate Chrome tab. Its original 315 action byte arrays remain byte-for-byte present after instrumentation: the injector hashes their multiset before modification and verifies every hash/count in the serialized output. Only additional DoAction tags are compiled. The downloaded SWF is never overwritten. Input SHA-256 is `5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1`. Exact tool, hook, runtime and fixture hashes are in [metadata.json](../Tests/AgeOfWarParity/One/fixtures/metadata.json).
+On 2026-10-30 the fixed original SWF ran in local **Ruffle 0.7.1 Web/WASM**, in a separate Chrome tab. Its original 315 action byte arrays remain byte-for-byte present after instrumentation: the injector hashes their multiset before modification and verifies every hash/count in the serialized output. Only additional DoAction tags are compiled. The downloaded SWF is never overwritten. Input SHA-256 is `5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1`. Exact tool, hook, runtime and fixture hashes are in [metadata.json](https://github.com/duanyao-0516/XanaduYonder/blob/18a4f3ea3ec33d303eeca3d44f73a1a1a203f5cb/Tests/AgeOfWarParity/One/fixtures/metadata.json).
 
 ## Observed scenario and result
 
