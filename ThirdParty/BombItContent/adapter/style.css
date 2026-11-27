@@ -57,7 +57,7 @@ body[data-controls=single] .right .bomb{width:86px;height:86px;border-radius:50%
 /* Stable controls and compact sheets; scrolling belongs to help content only. */
 body[data-phase=battle] .joystick:not(.held),.joystick:not(.held){opacity:.62}
 .joystick.held{opacity:.88}
-.sheet{display:flex;flex-direction:column;width:min(480px,100%);max-height:100%;min-height:0;padding:16px 18px;overflow:hidden;border-radius:18px;background:var(--xy-surface);color:var(--xy-ink);box-shadow:0 15px 55px #112b2355;touch-action:pan-y}
+.sheet{display:flex;flex-direction:column;width:min(480px,100%);max-height:100%;min-height:0;padding:16px 18px;overflow:hidden;border-radius:var(--xy-radius-surface);background:var(--xy-surface);color:var(--xy-ink);box-shadow:0 15px 55px #112b2355;touch-action:pan-y}
 #modal[data-kind=settings] .sheet,#modal[data-kind=controls] .sheet{width:min(304px,100%)}
 .sheet-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;margin-bottom:8px}
 .sheet h2{font-size:18px;margin:0}
@@ -72,8 +72,8 @@ body[data-phase=battle] .joystick:not(.held),.joystick:not(.held){opacity:.62}
 #modal[data-kind=help] .sheet-actions{justify-content:flex-end;margin-top:14px}
 .sheet-actions button{min-height:38px;padding:7px 15px;font-size:13px}
 .setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:46px;border-bottom:1px solid #d5ddcf88;font-size:14px}
-#input-settings{display:flex;gap:3px;margin:0;padding:2px;border:1px solid var(--line);border-radius:11px}
-#input-settings button{display:block;min-height:34px;min-width:76px;padding:6px 12px;font-size:13px;border:0;border-radius:8px;box-shadow:none;background:transparent}
+#input-settings{display:flex;gap:3px;margin:0;padding:2px;border:1px solid var(--line);border-radius:var(--xy-radius-row)}
+#input-settings button{display:block;min-height:34px;min-width:76px;padding:6px 12px;font-size:13px;border:0;border-radius:calc(var(--xy-radius-row) - 2px);box-shadow:none;background:transparent}
 #input-settings [aria-pressed=true]{background:var(--ink);color:var(--paper)}
 .setting-row>label{white-space:nowrap}
 .diameter-setting{flex:1;justify-content:flex-end;display:flex;align-items:center;gap:8px;min-width:0}

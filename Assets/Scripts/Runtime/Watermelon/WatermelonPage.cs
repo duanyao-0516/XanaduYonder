@@ -110,7 +110,7 @@ namespace XanaduYonder.Runtime.Watermelon
             var overlay = UiFactory.Panel(board, "Paused overlay", 0, 0, BoardWidth, BoardHeight, DialogUi.Scrim, false);
             overlay.raycastTarget = true;
             pauseOverlay = overlay.gameObject;
-            var card = UiFactory.Panel(overlay.transform, "Pause card", 0, 0, BoardWidth - 72, 308, DialogUi.Surface).rectTransform;
+            var card = DialogCorners.Panel(overlay.transform, "Pause card", 0, 0, BoardWidth - 72, 308, DialogUi.Surface, DialogCorners.Surface).rectTransform;
             UiFactory.Center(card);
             UiFactory.Label(card, "已暂停", 20, 20, card.rect.width - 40, 76, 42, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             UiFactory.Label(card, "这一局的进度，会一直为你保留。", 20, 108, card.rect.width - 40, 48, 23, UiFactory.Muted, TextAnchor.MiddleCenter);

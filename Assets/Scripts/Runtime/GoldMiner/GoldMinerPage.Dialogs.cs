@@ -22,7 +22,7 @@ namespace XanaduYonder.Runtime.GoldMiner
             height = Mathf.Min(height, layout.Safe.height - 72);
             float left = layout.Safe.center.x - width * .5f, top = layout.Safe.center.y - height * .5f;
             return illustrated ? ArtPanel(modal, "Dialog panel", left, top, width, height) :
-                UiFactory.Panel(modal, "Dialog panel", left, top, width, height, DialogUi.Surface).rectTransform;
+                DialogCorners.Panel(modal, "Dialog panel", left, top, width, height, DialogUi.Surface, DialogCorners.Surface).rectTransform;
         }
 
         private RectTransform Dialog(string title, string description, float height = 510, float descriptionTop = 100)
@@ -148,17 +148,15 @@ namespace XanaduYonder.Runtime.GoldMiner
 
         private void ShowPauseOptions()
         {
-            var panel = ModalPanel(540, 578);
+            var panel = ModalPanel(540, 474);
             float width = panel.rect.width - 72;
-            float scale = Mathf.Min(1, panel.rect.height / 578);
+            float scale = Mathf.Min(1, panel.rect.height / 474);
             TextLabel(panel, "更多选项", 36, 25 * scale, width, 65 * scale, 32, Forest, TextAnchor.MiddleCenter, true);
-            DialogUi.SwitchRow(panel, "声音", 36, 104 * scale, width, 68 * scale, soundEnabled(),
-                value => { setSound(value); SettingsChanged(); });
-            DialogUi.SwitchRow(panel, "触感", 36, 182 * scale, width, 68 * scale, hapticsEnabled(),
-                value => setHaptics(value));
-            DialogUi.Disclosure(panel, "玩法说明", 36, 268 * scale, width, 68 * scale, ShowHelp);
-            DialogUi.ActionButton(panel, "返回大厅", 36, 352 * scale, width, 68 * scale, () => ConfirmExit(lobby));
-            DialogUi.ActionButton(panel, "返回暂停菜单", 36, 458 * scale, width, 76 * scale, ShowPause, true);
+            DialogUi.FeedbackSwitches(panel, 36, 104 * scale, width, 68 * scale, 14, soundEnabled(), hapticsEnabled(),
+                value => { setSound(value); SettingsChanged(); }, value => setHaptics(value));
+            DialogUi.Disclosure(panel, "玩法说明", 36, 184 * scale, width, 68 * scale, ShowHelp);
+            DialogUi.ActionButton(panel, "返回大厅", 36, 264 * scale, width, 68 * scale, () => ConfirmExit(lobby));
+            DialogUi.ActionButton(panel, "返回暂停菜单", 36, 354 * scale, width, 76 * scale, ShowPause, true);
             modalBack = ShowPause;
         }
 

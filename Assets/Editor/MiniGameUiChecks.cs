@@ -65,6 +65,7 @@ namespace XanaduYonder.EditorTools
             {
                 UiFactory.Font = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Require(UiFactory.Font != null, "Bundled font loads");
+                DialogSheetGeometryChecks.Run();
                 foreach (int height in new[] { 1320, 1582 })
                 using (var fixture = new Fixture(height))
                 {

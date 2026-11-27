@@ -13,7 +13,7 @@ namespace XanaduYonder.Runtime
             if (options == null || options.Length < 2 || selected < 0 || selected >= options.Length)
                 throw new ArgumentException("A choice group needs multiple options and a valid selection.");
 
-            var track = UiFactory.Panel(parent, name, x, y, width, height, DialogUi.Secondary);
+            var track = DialogCorners.Panel(parent, name, x, y, width, height, DialogUi.Secondary, DialogCorners.Row);
             float inset = Mathf.Min(height * .08f, 6);
             float segment = (width - 2 * inset) / options.Length;
             var buttons = new Button[options.Length];

@@ -13,7 +13,7 @@ namespace XanaduYonder.Runtime.Minesweeper
             Save(); Refresh();
             var overlay = DialogUi.ModalOverlay(root, "Minesweeper dialog overlay");
             dialog = overlay.gameObject;
-            var panel=UiFactory.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
+            var panel=DialogCorners.Panel(overlay.transform,"Minesweeper dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,28,532,70,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             float actions=tertiary!=null?260:secondary!=null?172:90;
             var body = reading ? DialogUi.ScrollText(panel.transform, message, 32, 116, 532, height - actions - 140, 24) :

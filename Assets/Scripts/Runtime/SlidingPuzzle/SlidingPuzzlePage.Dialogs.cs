@@ -16,7 +16,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
             CancelInput();CloseDialog();
             var overlay = DialogUi.ModalOverlay(root, "SlidingPuzzle dialog overlay");
             dialog = overlay.gameObject;
-            var panel=Panel(overlay.transform,"SlidingPuzzle dialog",0,0,342,height,DialogUi.Surface,14);UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
+            var panel=Panel(overlay.transform,"SlidingPuzzle dialog",0,0,342,height,DialogUi.Surface,DialogCorners.Surface * .5f);UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             Label(panel.transform,"Dialog title",title,21,25,300,40,26,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             dismissDialog=CloseDialog;SynchronizeGate();Save();return panel.rectTransform;
         }
@@ -25,7 +25,7 @@ namespace XanaduYonder.Runtime.SlidingPuzzle
         {
             float scale = Scale;
             DialogUi.ActionButton(parent, title, x * scale, y * scale, w * scale, h * scale,
-                action, primary, Mathf.RoundToInt(size * scale)).name = name;
+                action, primary, Mathf.RoundToInt(size * scale), unitScale: .5f * scale).name = name;
         }
         private void CloseDialog()
         {

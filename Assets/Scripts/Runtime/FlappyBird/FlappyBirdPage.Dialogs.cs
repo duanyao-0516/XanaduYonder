@@ -18,7 +18,7 @@ namespace XanaduYonder.Runtime.FlappyBird
             pointer?.Cancel(); CloseDialog();
             var overlay = DialogUi.ModalOverlay(layout, "Flappy dialog overlay");
             dialog=overlay.gameObject; dialogKind=kind;
-            var panel=FlappyScene.Shape(overlay.transform,"Flappy dialog "+kind,0,0,300,height,19,DialogUi.Surface);
+            var panel=FlappyScene.Shape(overlay.transform,"Flappy dialog "+kind,0,0,300,height,DialogCorners.Surface * .5f,DialogUi.Surface);
             panel.raycastTarget=true; dialogPanel=panel.rectTransform; UiFactory.Center(dialogPanel); FitDialog();
             return dialogPanel;
         }
@@ -35,7 +35,7 @@ namespace XanaduYonder.Runtime.FlappyBird
         }
         private Button DialogButton(RectTransform panel,string title,float y,Action action,bool primary=true,bool quiet=false)
         {
-            return DialogUi.ActionButton(panel, title, 24, y, 252, 44, action, primary, quiet ? 13 : 15);
+            return DialogUi.ActionButton(panel, title, 24, y, 252, 44, action, primary, quiet ? 13 : 15, unitScale: .5f);
         }
         private void DialogHeading(RectTransform panel,string title,float y)
         { Label(panel,title,24,y,252,38,24,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold); }

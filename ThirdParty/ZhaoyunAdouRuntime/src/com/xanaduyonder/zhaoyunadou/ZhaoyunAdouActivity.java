@@ -47,6 +47,7 @@ import org.json.JSONTokener;
 @SuppressWarnings("deprecation")
 public final class ZhaoyunAdouActivity extends Activity {
     private static final String ENTRY = AssetRequestPolicy.ORIGIN + "index.html";
+    private static final int DIALOG_SURFACE_RADIUS_DP = 16;
     private static final long CALL_TIMEOUT_MS = 6000;
     private static final long STARTUP_TIMEOUT_MS = 60000;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -449,7 +450,7 @@ public final class ZhaoyunAdouActivity extends Activity {
         content.setPadding(dp(20), dp(18), dp(20), dp(14));
         GradientDrawable surface = new GradientDrawable();
         surface.setColor(Color.rgb(248, 247, 241));
-        surface.setCornerRadius(dp(18));
+        surface.setCornerRadius(dp(DIALOG_SURFACE_RADIUS_DP));
         content.setBackground(surface);
         gutter.addView(content, new LinearLayout.LayoutParams(-1, -2));
         gutter.addOnLayoutChangeListener((v, l, t, r, b, oldL, oldT, oldR, oldB) -> {

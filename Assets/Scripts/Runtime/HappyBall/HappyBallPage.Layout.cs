@@ -38,7 +38,7 @@ namespace XanaduYonder.Runtime.HappyBall
 
             var cover = UiFactory.Panel(stageRect, "Session cover", 0, 0, 720, 1140, DialogUi.Scrim, false);
             UiFactory.Stretch(cover.rectTransform); cover.raycastTarget = true; pauseOverlay = cover.gameObject;
-            var content = UiFactory.Panel(cover.transform, "Session controls", 0, 0, 480, 340, DialogUi.Surface).rectTransform;
+            var content = DialogCorners.Panel(cover.transform, "Session controls", 0, 0, 480, 340, DialogUi.Surface, DialogCorners.Surface).rectTransform;
             UiFactory.Center(content);
             overlayTitle = UiFactory.Label(content, "", 0, 20, 480, 66, 40, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             overlayDetail = UiFactory.Label(content, "", 0, 90, 480, 44, 23, UiFactory.Muted, TextAnchor.MiddleCenter);

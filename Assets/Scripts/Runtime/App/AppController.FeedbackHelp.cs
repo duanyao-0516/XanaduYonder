@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace XanaduYonder.Runtime
 {
@@ -7,8 +8,17 @@ namespace XanaduYonder.Runtime
     {
         private void ShowFeedbackHelp(Action after)
         {
-            var panel = CreateSheet("声音与触感说明", 900);
-            float height = panel.rect.height;
+            var frame = CreateDialogFrame(DialogUi.Surface);
+            var page = UiFactory.Rect(frame, "Feedback help page", 0, 0, 720, 0);
+            page.anchorMin = new Vector2(.5f, 0);
+            page.anchorMax = new Vector2(.5f, 1);
+            page.pivot = new Vector2(.5f, .5f);
+            page.anchoredPosition = Vector2.zero;
+            Action back = () => { CloseModal(); OpenSettings(after); };
+            SetModalBack(back);
+            DialogUi.ActionButton(page, "返回设置", 32, 24, 168, 84, back);
+            UiFactory.Label(page, "声音与触感说明", 32, 132, 656, 64, 38, UiFactory.Ink,
+                TextAnchor.MiddleLeft, FontStyle.Bold);
             string message = "所有游戏共用声音与触感设置，可分别开关。\n\n" +
                 "声音\n打开应用内的“声音”，并调高系统媒体音量。\n\n" +
                 "触感\n触感是短促的震动反馈，不是持续震动，也不是每次点击都会触发。" +
@@ -30,12 +40,24 @@ namespace XanaduYonder.Runtime
 #else
             message += "系统与设备\n应用内触感开关仍受设备能力和系统触感设置影响。";
 #endif
-            float width = panel.rect.width - 64;
-            DialogUi.ScrollText(panel, message, 32, 112, width, height - 254, 24);
-
-            Action back = () => { CloseModal(); OpenSettings(after); };
-            DialogUi.ActionButton(panel, "返回设置", 32, height - 116, width, 88, back, true);
-            dismissModal = back;
+            var viewport = UiFactory.Rect(page, "Reading area", 0, 0, 0, 0);
+            UiFactory.Stretch(viewport);
+            viewport.offsetMin = new Vector2(32, 48);
+            viewport.offsetMax = new Vector2(-32, -220);
+            viewport.gameObject.AddComponent<Image>().color = Color.clear;
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var text = UiFactory.Label(viewport, message, 0, 0, 0, 0, 27, UiFactory.Ink, TextAnchor.UpperLeft);
+            text.supportRichText = false;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.lineSpacing = 1.15f;
+            var fit = text.gameObject.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = text.rectTransform;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = text.fontSize;
         }
     }
 }

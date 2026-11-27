@@ -13,21 +13,19 @@ namespace XanaduYonder.Runtime
             Action finish = () => { CloseModal(); if (after != null) after(); else CheckEndState(); };
             bool tetrisSettings = activePage == Page.Tetris && tetrisPage != null;
             bool poetrySettings = activePage == Page.Feihualing && feihualingPage != null && feihualingPage.ShowsAutoCompanionSetting;
-            var panel = CreateSheet("设置", tetrisSettings || poetrySettings ? 642 : 540);
+            var panel = CreateSheet("设置", tetrisSettings || poetrySettings ? 530 : 428);
             float width = panel.rect.width - 64;
-            DialogUi.SwitchRow(panel, "声音", 32, 104, width, 88, data.SoundEnabled, value =>
+            DialogUi.FeedbackSwitches(panel, 32, 98, width, 98, 16, data.SoundEnabled, data.HapticsEnabled, value =>
             {
                 SetFeedbackSetting(true, value);
                 goldMinerPage?.SettingsChanged();
-            });
-            DialogUi.SwitchRow(panel, "触感", 32, 202, width, 88, data.HapticsEnabled,
-                value => SetFeedbackSetting(false, value));
-            DialogUi.Disclosure(panel, "声音与触感说明", 32, 300, width, 88, () => ShowFeedbackHelp(after));
+            }, value => SetFeedbackSetting(false, value));
+            DialogUi.Disclosure(panel, "声音与触感说明", 32, 212, width, 84, () => ShowFeedbackHelp(after));
             if (tetrisSettings)
-                DialogUi.SwitchRow(panel, "方向与旋转对调", 32, 408, width, 88, tetrisPage.SwapControls,
+                DialogUi.SwitchRow(panel, "方向与旋转对调", 32, 312, width, 84, tetrisPage.SwapControls,
                     tetrisPage.SetSwapControls, tetrisPage.CanChangeSwapControls);
             if (poetrySettings)
-                DialogUi.SwitchRow(panel, "离线陪练", 32, 408, width, 88, feihualingPage.AutoCompanionEnabled,
+                DialogUi.SwitchRow(panel, "离线陪练", 32, 312, width, 84, feihualingPage.AutoCompanionEnabled,
                     feihualingPage.SetAutoCompanion);
             DialogUi.ActionButton(panel, "完成", 32, panel.rect.height - 116, width, 88, finish, true);
             SetModalBack(finish);
@@ -75,20 +73,37 @@ namespace XanaduYonder.Runtime
 
         private RectTransform CreateModal(string title, float requestedHeight = 488, Action outsideDismiss = null)
         {
-            return CreateModalSurface(title, requestedHeight, outsideDismiss, false);
+            var frame = CreateDialogFrame(DialogUi.Scrim, outsideDismiss);
+            var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, frame.rect.height - 64));
+            const float width = 596;
+            var panel = DialogCorners.Panel(frame, "Dialog", 0, 0, width, height, DialogUi.Surface, DialogCorners.Surface);
+            panel.raycastTarget = true;
+            UiFactory.Center(panel.rectTransform);
+            float inset = outsideDismiss != null ? 98 : 32;
+            UiFactory.Label(panel.transform, title, inset, 36, width - 2 * inset, 62, 33, UiFactory.Ink,
+                TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
+            return panel.rectTransform;
         }
 
         private RectTransform CreateSheet(string title, float height, Action dismiss = null)
         {
-            return CreateModalSurface(title, height, dismiss, true);
+            var frame = CreateDialogFrame(DialogUi.Scrim, dismiss);
+            var panel = UiFactory.Panel(frame, "Dialog", 0, 0, 720, height, DialogUi.Surface, false);
+            DialogCorners.ApplyTop(panel, DialogCorners.Sheet);
+            panel.raycastTarget = true;
+            var content = UiFactory.Rect(panel.transform, "Sheet content", 0, 0, 720, height);
+            DialogSheetLayout.Attach(panel.rectTransform, content, 720, height);
+            UiFactory.Label(content, title, 32, 18, 656, 64, 33, UiFactory.Ink,
+                TextAnchor.MiddleLeft, FontStyle.Bold).supportRichText = false;
+            return content;
         }
 
-        private RectTransform CreateModalSurface(string title, float requestedHeight, Action outsideDismiss, bool sheet)
+        private RectTransform CreateDialogFrame(Color background, Action outsideDismiss = null)
         {
             if (inGame || activePage == Page.Lobby) Settle2048Animation();
             else StopAnimation();
             CloseModal();
-            var overlay = DialogUi.ModalOverlay(canvasRoot, "Dialog overlay");
+            var overlay = DialogUi.ModalOverlay(canvasRoot, "Dialog overlay", background);
             modal = overlay.gameObject;
             if (outsideDismiss != null)
             {
@@ -105,27 +120,7 @@ namespace XanaduYonder.Runtime
             }
             var modalFrame = UiFactory.Rect(modal.transform, "Dialog safe area", 0, 0, 720, 1320);
             modalFrame.gameObject.AddComponent<SafeDesignFrame>().Initialize(modalFrame, canvasRoot);
-            var height = Mathf.Clamp(requestedHeight, 300, Mathf.Max(488, modalFrame.rect.height - 64));
-            float width = sheet ? 656 : 596;
-            var panel = UiFactory.Panel(modalFrame, "Dialog", 0, 0, width, height, DialogUi.Surface);
-            panel.raycastTarget = true;
-            if (sheet)
-            {
-                var rect = panel.rectTransform;
-                rect.anchorMin = rect.anchorMax = new Vector2(.5f, 0);
-                rect.pivot = new Vector2(.5f, 0);
-                rect.anchoredPosition = new Vector2(0, 24);
-                UiFactory.Label(rect, title, 32, 28, width - 64, 62, 33, UiFactory.Ink,
-                    TextAnchor.MiddleLeft, FontStyle.Bold).supportRichText = false;
-            }
-            else
-            {
-                UiFactory.Center(panel.rectTransform);
-                float inset = outsideDismiss != null ? 98 : 32;
-                UiFactory.Label(panel.transform, title, inset, 36, width - 2 * inset, 62, 33, UiFactory.Ink,
-                    TextAnchor.MiddleCenter, FontStyle.Bold).supportRichText = false;
-            }
-            return panel.rectTransform;
+            return modalFrame;
         }
 
         private void CloseModal()

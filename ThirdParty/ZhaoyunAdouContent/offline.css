@@ -3,7 +3,7 @@ canvas{touch-action:none}
 #offline-loading{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#ead9b4;color:#40301f;font:16px sans-serif}
 #offline-loading img{width:min(80vw,420px);height:auto;object-fit:contain}
 .xanadu-local-panel { position:fixed; inset:0; z-index:2147483001; display:grid; place-items:center; padding:16px; box-sizing:border-box; touch-action:manipulation; }
-.xanadu-local-panel section { width:min(100%,400px); box-sizing:border-box; padding:22px; border-radius:18px; background:var(--xy-surface); color:var(--xy-ink); max-height:100%; overflow:auto; touch-action:pan-y; }
+.xanadu-local-panel section { width:min(100%,400px); box-sizing:border-box; padding:22px; border-radius:var(--xy-radius-surface); background:var(--xy-surface); color:var(--xy-ink); max-height:100%; overflow:auto; touch-action:pan-y; }
 .xanadu-local-panel h2 { margin:0 0 12px; font-size:21px; }
 .xanadu-local-panel p { line-height:1.55; }
 .xanadu-local-panel button { width:100%; margin-top:8px; }
@@ -33,7 +33,7 @@ canvas{touch-action:none}
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--xy-line);
-  border-radius: 18px;
+  border-radius: var(--xy-radius-surface);
   background: var(--xy-surface);
 }
 .save-editor-card header {
@@ -53,7 +53,7 @@ canvas{touch-action:none}
   box-sizing: border-box;
   font: inherit;
   border: 1px solid var(--xy-line);
-  border-radius: 10px;
+  border-radius: var(--xy-radius-action);
   touch-action: manipulation;
 }
 .save-editor-card button {
@@ -145,7 +145,7 @@ canvas{touch-action:none}
   min-height: 44px;
   box-sizing: border-box;
   border: 1px solid var(--xy-line);
-  border-radius: 10px;
+  border-radius: var(--xy-radius-row);
 }
 .panel-select-value::after { content: '▾'; }
 .panel-select[open] .panel-select-value::after { content: '▴'; }

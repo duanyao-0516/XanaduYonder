@@ -462,11 +462,11 @@ namespace XanaduYonder.Runtime.Dino
         private void ShowSettingsWithReturn(Action back)
         {
             Suspend();
-            var panel=OpenPanel("声音与触感",488);
+            var panel=OpenPanel("声音与触感",386);
             PanelLabel(panel,"设置在所有游戏中共用",104,42,23);
-            DialogUi.SwitchRow(panel, "声音", 32, 176, panel.rect.width - 64, 70, soundEnabled(), value => { toggleSound(); sound.Stop(); });
-            DialogUi.SwitchRow(panel, "触感", 32, 264, panel.rect.width - 64, 70, hapticsEnabled(), value => toggleHaptics());
-            PanelButton(panel,"完成",370,back,true);
+            DialogUi.FeedbackSwitches(panel, 32, 166, panel.rect.width - 64, 70, 14, soundEnabled(), hapticsEnabled(),
+                value => { toggleSound(); sound.Stop(); }, value => toggleHaptics());
+            PanelButton(panel,"完成",266,back,true);
             overlayBack=back;
         }
         private void ReturnFromInfo()
@@ -633,7 +633,7 @@ namespace XanaduYonder.Runtime.Dino
             CloseOverlay();ClearPhysicalInputs();
             overlay = DialogUi.ModalOverlay(root, "Dino modal overlay").rectTransform;
             float w=Mathf.Min(596,viewport.Width-64),h=Mathf.Min(requestedHeight,viewport.Height-32);
-            var panel=UiFactory.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h,DialogUi.Surface);
+            var panel=DialogCorners.Panel(overlay,"Dino dialog",(viewport.Width-w)*.5f,(viewport.Height-h)*.5f,w,h, DialogUi.Surface, DialogCorners.Surface);
             panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,36,w-64,62,33,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;

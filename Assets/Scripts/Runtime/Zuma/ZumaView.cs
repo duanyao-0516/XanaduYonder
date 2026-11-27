@@ -229,11 +229,11 @@ namespace XanaduYonder.Runtime.Zuma
                 var c=f.Text.color;c.a=Mathf.Clamp01(1.4f-f.Age);f.Text.color=c;
             }
         }
-        public RectTransform Dialog(string title, float width = 605)
+        public RectTransform Dialog(string title, float width = 605, float height = 484)
         {
             CloseDialog();
             dialog = DialogUi.ModalOverlay(root, "Dialog input blocker").rectTransform;
-            var panel = UiFactory.Panel(dialog, "Zuma dialog", (1280 - width) / 2, 118, width, 484, DialogUi.Surface);
+            var panel = DialogCorners.Panel(dialog, "Zuma dialog", (1280 - width) / 2, (720 - height) / 2, width, height, DialogUi.Surface, DialogCorners.Surface);
             panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 32, 32, width - 64, 62, 34, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             warning.transform.SetAsLastSibling();

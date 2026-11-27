@@ -16,7 +16,7 @@ namespace XanaduYonder.Runtime.AircraftFire
             CloseDialog(); pointer.Cancel();
             var overlay = DialogUi.ModalOverlay(hud, "Aircraft " + kind + " overlay");
             dialog = overlay.gameObject; dialogKind = kind;
-            var panel = UiFactory.Panel(overlay.transform, "Aircraft dialog", 0, 0, 568, height, DialogUi.Surface);
+            var panel = DialogCorners.Panel(overlay.transform, "Aircraft dialog", 0, 0, 568, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 24, 24, 520, 54, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             return panel.rectTransform;

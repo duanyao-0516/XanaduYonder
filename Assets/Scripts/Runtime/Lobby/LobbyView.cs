@@ -256,31 +256,36 @@ namespace XanaduYonder.Runtime
             DialogBackdrop.CoverCanvas(overlay);
             displayOptions = overlay.gameObject;
             UiFactory.ConfigureButton(overlay, CloseDisplayOptions);
-            var sheet = RoundedPanel(overlay.transform, "Display options sheet", 20, 0, 350, 334,
-                DialogUi.Surface, 22);
-            sheet.rectTransform.anchorMin = sheet.rectTransform.anchorMax = new Vector2(.5f, 0);
-            sheet.rectTransform.pivot = new Vector2(.5f, 0);
-            sheet.rectTransform.anchoredPosition = new Vector2(0, 16);
+            const float height = 334, inset = 18;
+            const float rowWidth = LogicalWidth - 2 * inset;
+            const float units = LogicalWidth / 720f;
+            var sheet = UiFactory.Panel(overlay.transform, "Display options sheet", 0, 0, LogicalWidth, height,
+                DialogUi.Surface, false);
+            DialogCorners.ApplyTop(sheet, DialogCorners.Sheet * units);
             sheet.raycastTarget = true;
             sheet.gameObject.AddComponent<LobbyModalSurface>();
-            Label(sheet.transform, "Display options title", "展示方式", 20, 20, 240, 40,
+            var content = UiFactory.Rect(sheet.transform, "Sheet content", 0, 0, LogicalWidth, height);
+            DialogSheetLayout.Attach(sheet.rectTransform, content, LogicalWidth, height);
+            Label(content, "Display options title", "展示方式", inset, 20, 240, 40,
                 20, UiFactory.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            var close = RoundedPanel(sheet.transform, "Close display options", 290, 20, 40, 40, ControlColor, 12);
+            var close = DialogCorners.Panel(content, "Close display options", LogicalWidth - inset - 48, 14,
+                48, 48, ControlColor, DialogCorners.Action * units);
             var closeButton = UiFactory.ConfigureButton(close, CloseDisplayOptions);
-            Icon(close.transform, "Close icon", "x", 10, 10, 20);
+            Icon(close.transform, "Close icon", "x", 14, 14, 20);
             for (int i = 0; i < ModeTitles.Length; i++)
             {
                 var mode = (LobbyDisplayMode)i;
                 bool selected = Mode == mode;
-                var option = RoundedPanel(sheet.transform, "Display mode " + mode, 20, 84 + i * 81, 310, 65,
-                    selected ? UiFactory.Accent : DialogUi.Row, 14);
+                var option = DialogCorners.Panel(content, "Display mode " + mode, inset, 84 + i * 81, rowWidth, 65,
+                    selected ? UiFactory.Accent : DialogUi.Row, DialogCorners.Row * units);
                 if (selected)
-                    RoundedPanel(option.transform, "Selected option fill", 1, 1, 308, 63, UiFactory.Hex("DFE8DE"), 13);
+                    DialogCorners.Panel(option.transform, "Selected option fill", 1, 1, rowWidth - 2, 63,
+                        UiFactory.Hex("DFE8DE"), DialogCorners.Row * units - 1);
                 UiFactory.ConfigureButton(option, () => ChooseMode(mode));
-                Label(option.transform, "Display mode name", ModeTitles[i], 14, 10, 240, 23, 16, UiFactory.Ink);
-                Label(option.transform, "Display mode description", ModeNotes[i], 14, 37, 265, 16,
+                Label(option.transform, "Display mode name", ModeTitles[i], 14, 10, rowWidth - 56, 23, 16, UiFactory.Ink);
+                Label(option.transform, "Display mode description", ModeNotes[i], 14, 37, rowWidth - 56, 16,
                     11, SecondaryText);
-                if (selected) Icon(option.transform, "Selected mode check", "check", 276, 22.5f, 20);
+                if (selected) Icon(option.transform, "Selected mode check", "check", rowWidth - 34, 22.5f, 20);
             }
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(closeButton.gameObject);
         }

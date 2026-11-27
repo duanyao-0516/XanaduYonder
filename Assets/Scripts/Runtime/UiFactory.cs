@@ -191,27 +191,32 @@ namespace XanaduYonder.Runtime
         {
             get
             {
-                if (rounded != null) return rounded;
-                const int size = 48;
-                const float radius = 16;
-                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = "UI rounded rectangle";
-                texture.filterMode = FilterMode.Bilinear;
-                var pixels = new Color[size * size];
-                for (var y = 0; y < size; y++)
-                for (var x = 0; x < size; x++)
-                {
-                    var dx = Mathf.Max(radius - x - .5f, x + .5f - (size - radius));
-                    var dy = Mathf.Max(radius - y - .5f, y + .5f - (size - radius));
-                    var distance = new Vector2(Mathf.Max(0, dx), Mathf.Max(0, dy)).magnitude;
-                    pixels[y * size + x] = new Color(1, 1, 1, Mathf.Clamp01(radius - distance + .5f));
-                }
-                texture.SetPixels(pixels);
-                texture.Apply();
-                rounded = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), 100, 0,
-                    SpriteMeshType.FullRect, new Vector4(radius, radius, radius, radius));
+                if (rounded == null) rounded = CreateRoundedSprite(16, false);
                 return rounded;
             }
+        }
+
+        internal static Sprite CreateRoundedSprite(int radius, bool topOnly)
+        {
+            int size = radius * 3;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.name = topOnly ? "UI top rounded rectangle" : "UI rounded rectangle";
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            var pixels = new Color32[size * size];
+            for (var y = 0; y < size; y++)
+            for (var x = 0; x < size; x++)
+            {
+                var dx = Mathf.Max(radius - x - .5f, x + .5f - (size - radius));
+                var dy = y + .5f - (size - radius);
+                if (!topOnly) dy = Mathf.Max(dy, radius - y - .5f);
+                var distance = new Vector2(Mathf.Max(0, dx), Mathf.Max(0, dy)).magnitude;
+                pixels[y * size + x] = new Color(1, 1, 1, Mathf.Clamp01(radius - distance + .5f));
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), 100, 0,
+                SpriteMeshType.FullRect, new Vector4(radius, topOnly ? 0 : radius, radius, radius));
         }
     }
 

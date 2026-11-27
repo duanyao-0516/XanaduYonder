@@ -15,7 +15,7 @@ namespace XanaduYonder.Runtime.Zuma
 
         public ZumaHelpView(RectTransform root,Action close)
         {
-            var paper=UiFactory.Panel(root,"Xanadu Zuma help",48,32,1184,656,DialogUi.Surface);
+            var paper=DialogCorners.Panel(root,"Xanadu Zuma help",48,32,1184,656, DialogUi.Surface, DialogCorners.Surface);
             paper.raycastTarget=true;panel=paper.rectTransform;
             UiFactory.Label(panel,"Zuma · 玩法说明",28,16,900,58,34,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold);
             DialogUi.ActionButton(panel,"关闭",1008,20,148,52,close);

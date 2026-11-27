@@ -30,7 +30,7 @@ namespace XanaduYonder.Runtime.Snake
             input.Cancel();session.Pause();board.FinishAnimation();levelDropdown.Hide();countdown.SetActive(false);CloseDialog();Save();
             var overlay = DialogUi.ModalOverlay(root, "Snake dialog overlay");
             dialog = overlay.gameObject;
-            var panel=UiFactory.Panel(overlay.transform,"Snake dialog",0,0,596,height,DialogUi.Surface);
+            var panel=DialogCorners.Panel(overlay.transform,"Snake dialog",0,0,596,height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform);panel.raycastTarget=true;
             UiFactory.Label(panel.transform,title,32,30,532,72,36,UiFactory.Ink,TextAnchor.MiddleCenter,FontStyle.Bold);
             return panel.rectTransform;

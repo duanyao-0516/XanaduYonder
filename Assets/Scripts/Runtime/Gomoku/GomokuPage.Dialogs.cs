@@ -19,7 +19,7 @@ namespace XanaduYonder.Runtime.Gomoku
             CancelSearch(); board.CancelInput(); session?.SetBlocked(true);
             var overlay = DialogUi.ModalOverlay(root, "Gomoku dialog overlay");
             dialog = overlay.gameObject;
-            var panel = UiFactory.Panel(overlay.transform, "Gomoku dialog", 0, 0, 596, height, DialogUi.Surface);
+            var panel = DialogCorners.Panel(overlay.transform, "Gomoku dialog", 0, 0, 596, height, DialogUi.Surface, DialogCorners.Surface);
             UiFactory.Center(panel.rectTransform); panel.raycastTarget = true;
             UiFactory.Label(panel.transform, title, 32, 24, 532, 70, 33, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             Refresh();

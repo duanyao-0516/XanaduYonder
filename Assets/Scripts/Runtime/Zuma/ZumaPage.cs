@@ -298,10 +298,10 @@ namespace XanaduYonder.Runtime.Zuma
         }
         private void ShowFeedbackSettings()
         {
-            var panel = view.Dialog("声音与触感");
-            DialogUi.SwitchRow(panel, "声音", 65, 116, 475, 70, sound(), value => UpdateSetting(true, value));
-            DialogUi.SwitchRow(panel, "触感", 65, 208, 475, 70, haptics(), value => UpdateSetting(false, value));
-            DialogUi.ActionButton(panel, "返回暂停菜单", 65, 362, 475, 72, ShowPause, true);
+            var panel = view.Dialog("声音与触感", height: 302);
+            DialogUi.FeedbackSwitches(panel, 65, 112, 475, 70, 14, sound(), haptics(),
+                value => UpdateSetting(true, value), value => UpdateSetting(false, value));
+            DialogUi.ActionButton(panel, "返回暂停菜单", 65, 202, 475, 72, ShowPause, true);
             dialogBack = ShowPause;
             ShowWarnings();
         }

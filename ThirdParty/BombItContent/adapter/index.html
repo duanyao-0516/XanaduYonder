@@ -97,8 +97,10 @@
         <div class="sheet-scroll">
           <div id="modal-copy"></div>
           <div id="settings-content" hidden>
-            <button id="sound-setting" class="xy-switch" type="button" role="switch" aria-labelledby="sound-label" aria-checked="true"><span id="sound-label" class="xy-switch-label">声音</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
-            <button id="haptics-setting" class="xy-switch" type="button" role="switch" aria-labelledby="haptics-label" aria-checked="true"><span id="haptics-label" class="xy-switch-label">触感</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+            <div class="xy-feedback-switches">
+              <button id="sound-setting" class="xy-switch" type="button" role="switch" aria-labelledby="sound-label" aria-checked="true"><span id="sound-label" class="xy-switch-label">声音</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+              <button id="haptics-setting" class="xy-switch" type="button" role="switch" aria-labelledby="haptics-label" aria-checked="true"><span id="haptics-label" class="xy-switch-label">触感</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+            </div>
             <p class="setting-hint">触感用于放弹按键，也受系统触感设置影响。</p>
             <p id="feedback-status" role="status" hidden></p>
             <button id="feedback-retry" class="xy-secondary" type="button" hidden>重试保存</button>

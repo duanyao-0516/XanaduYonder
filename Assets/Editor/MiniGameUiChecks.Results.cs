@@ -29,6 +29,15 @@ namespace XanaduYonder.EditorTools
             var sound = FindCaption(settings.transform, "声音").GetComponent<DialogSwitch>();
             var haptics = FindCaption(settings.transform, "触感").GetComponent<DialogSwitch>();
             Require(sound != null && haptics != null && sound != haptics, "Both feedback preferences have independent switches");
+            var soundRect = (RectTransform)sound.transform;
+            var hapticsRect = (RectTransform)haptics.transform;
+            Require(Mathf.Approximately(soundRect.anchoredPosition.y, hapticsRect.anchoredPosition.y) &&
+                hapticsRect.anchoredPosition.x > soundRect.anchoredPosition.x + soundRect.rect.width,
+                "Sound and haptics have separate touch targets on the same row");
+            var caption = sound.GetComponentInChildren<Text>();
+            var track = (RectTransform)sound.transform.Find("Switch track");
+            float gap = track.anchoredPosition.x - caption.rectTransform.anchoredPosition.x - caption.preferredWidth;
+            Require(gap > 0 && gap <= caption.fontSize + 1, "The sound switch stays within one glyph of its label");
             var initial = haptics.Value;
             fixture.Click((RectTransform)haptics.transform);
             Require(haptics.Value != initial && Get<SaveData>(host, "data").HapticsEnabled == haptics.Value,
@@ -39,7 +48,8 @@ namespace XanaduYonder.EditorTools
             Require(detail != settings && FindCaption(detail.transform, "返回设置") != null,
                 "Feedback help has a dedicated detail view and return action");
             Require(detail.transform.parent.GetComponentsInChildren<DialogFocusScope>().Length == 1 &&
-                detail.GetComponent<Image>().color == DialogUi.Scrim, "The detail replaces the previous scrim without stacking");
+                detail.GetComponent<Image>().color == DialogUi.Surface && detail.GetComponentInChildren<ScrollRect>() != null,
+                "Long feedback help opens as one opaque, scrollable page");
             fixture.Capture("dialog-feedback-details");
             Invoke(host, "HandleBack");
             var reopened = Get<GameObject>(host, "modal");

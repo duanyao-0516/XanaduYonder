@@ -15,12 +15,12 @@ namespace XanaduYonder.Runtime.BoardGames
             float height = panel == PanelKind.Record ? 664 : panel == PanelKind.Rules || panel == PanelKind.Lessons ? Mathf.Min(980, Height - 80) :
                 panel == PanelKind.Settings ? 540 + (InMatch ? 74 : 0) + (saveFailed ? 74 : 0) :
                 panel == PanelKind.Preferences ? (game == BoardGameId.Chess ? 580 : 504) :
-                panel == PanelKind.Feedback ? (feedbackSaveFailed ? 492 : 370) :
+                panel == PanelKind.Feedback ? (feedbackSaveFailed ? 412 : 276) :
                 panel == PanelKind.Manage ? 366 + (InMatch ? 76 : 0) + (InMatch && game != BoardGameId.Army ? 76 : 0) +
                     (CanClaimDraw ? 76 : 0) :
                 panel == PanelKind.Resume ? 202 + 76 * profile.Matches.Count : panel == PanelKind.Result && CanReplay ? 438 : 340;
-            var sheet = UiFactory.Panel(block.transform, "Board modal sheet", (Width - width) * .5f, (Height - height) * .5f,
-                width, height, DialogUi.Surface);
+            var sheet = DialogCorners.Panel(block.transform, "Board modal sheet", (Width - width) * .5f, (Height - height) * .5f,
+                width, height, DialogUi.Surface, DialogCorners.Surface);
             switch (panel)
             {
                 case PanelKind.Rules:
@@ -151,12 +151,12 @@ namespace XanaduYonder.Runtime.BoardGames
         private void DrawFeedback(Transform sheet, float width, float height)
         {
             DialogTitle(sheet, width, "声音与触感");
-            DialogUi.SwitchRow(sheet, "声音", 26, 100, width - 52, 66, sound(), value => SetFeedback(true, value));
-            DialogUi.SwitchRow(sheet, "触感", 26, 176, width - 52, 66, haptics(), value => SetFeedback(false, value));
+            DialogUi.FeedbackSwitches(sheet, 26, 100, width - 52, 66, 14, sound(), haptics(),
+                value => SetFeedback(true, value), value => SetFeedback(false, value));
             if (feedbackSaveFailed)
             {
-                UiFactory.Label(sheet, "声音和触感设置暂未保存", 28, 252, width - 56, 40, 22, UiFactory.Muted);
-                DialogUi.ActionButton(sheet, "重试保存", 26, 302, width - 52, 66,
+                UiFactory.Label(sheet, "声音和触感设置暂未保存", 28, 178, width - 56, 40, 22, UiFactory.Muted);
+                DialogUi.ActionButton(sheet, "重试保存", 26, 230, width - 52, 66,
                     () => SetFeedback(lastFeedbackWasSound, lastFeedbackWasSound ? sound() : haptics()));
             }
             DialogUi.ActionButton(sheet, "返回设置", 26, height - 88, width - 52, 66, ClosePanel);

@@ -353,7 +353,7 @@ namespace XanaduYonder.Runtime.Tetris
             float buttons = ((hasPrimary ? 56 : 0) + (hasSecondary ? 56 : 0) + (hasInspect ? 56 : 0)) * s;
             float height = 26 * s + 34 * s + 8 * s + detailHeight + 27 * s + buttons + 22 * s;
             Place(dialog, (root.rect.width - width) / 2, (root.rect.height - height) / 2, width, height);
-            dialog.GetComponent<TetrisGraphic>().Radius = 20 * s;
+            dialog.GetComponent<TetrisGraphic>().Radius = DialogCorners.Surface * .5f * s;
             Place(overlayTitle.rectTransform, 22 * s, 22 * s, inner, 38 * s);
             Place(overlayDetail.rectTransform, 22 * s, 68 * s, inner, detailHeight);
             overlayDetail.resizeTextForBestFit = true;
@@ -376,6 +376,7 @@ namespace XanaduYonder.Runtime.Tetris
             for (int i = 0; i < buttons.Length; i++)
             {
                 Control control = buttons[i];
+                DialogCorners.Apply(control.Button.image, DialogCorners.Action * .5f * s);
                 Place(control.Target, left + i * 140 * s, top + 60 * s, 128 * s, 44 * s);
                 Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
             }
@@ -383,6 +384,7 @@ namespace XanaduYonder.Runtime.Tetris
 
         private static void LayoutDialogControl(Control control, float width, float top, float s)
         {
+            DialogCorners.Apply(control.Button.image, DialogCorners.Action * .5f * s);
             Place(control.Target, 22 * s, top, width, 48 * s);
             Place(control.Label.rectTransform, 8 * s, 0, width - 16 * s, 48 * s);
         }
@@ -407,6 +409,7 @@ namespace XanaduYonder.Runtime.Tetris
             for (int i = 0; i < buttons.Length; i++)
             {
                 Control control = buttons[i];
+                DialogCorners.Apply(control.Button.image, DialogCorners.Action * .5f * s);
                 Place(control.Target, left + i * 140 * s, top + 198 * s, 128 * s, 44 * s);
                 Place(control.Label.rectTransform, 8 * s, 0, 112 * s, 44 * s);
             }
@@ -468,7 +471,7 @@ namespace XanaduYonder.Runtime.Tetris
 
         private Control MakeDialogControl(Transform parent, string name, string title, bool primary)
         {
-            var button = DialogUi.ActionButton(parent, title, 0, 0, 128, 44, null, primary, 14);
+            var button = DialogUi.ActionButton(parent, title, 0, 0, 128, 44, null, primary, 14, unitScale: .5f);
             button.name = name;
             var text = button.GetComponentInChildren<Text>();
             text.name = "Button label";

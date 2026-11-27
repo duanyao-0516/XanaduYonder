@@ -25,10 +25,11 @@ namespace XanaduYonder.Runtime
         }
 
         public static Button ActionButton(Transform parent, string title, float x, float y, float w,
-            float h, Action action, bool primary = false, int fontSize = 25, bool destructive = false)
+            float h, Action action, bool primary = false, int fontSize = 25, bool destructive = false,
+            float unitScale = 1f)
         {
             var fill = destructive ? Destructive : primary ? UiFactory.Accent : Secondary;
-            var surface = UiFactory.Panel(parent, title, x, y, w, h, fill);
+            var surface = DialogCorners.Panel(parent, title, x, y, w, h, fill, DialogCorners.Action * unitScale);
             var button = MenuButton(surface, action);
             float inset = Mathf.Min(fontSize * .48f, w * .08f);
             Caption(surface.transform, title, inset, w - 2 * inset, h, fontSize,
@@ -37,9 +38,9 @@ namespace XanaduYonder.Runtime
         }
 
         public static Button Disclosure(Transform parent, string title, float x, float y, float w,
-            float h, Action action, int fontSize = 25)
+            float h, Action action, int fontSize = 25, float unitScale = 1f)
         {
-            var row = UiFactory.Panel(parent, title, x, y, w, h, Row);
+            var row = DialogCorners.Panel(parent, title, x, y, w, h, Row, DialogCorners.Row * unitScale);
             var button = MenuButton(row, action);
             float inset = Mathf.Min(fontSize * .75f, w * .08f);
             Caption(row.transform, title, inset, w - 2 * inset - fontSize, h, fontSize,
@@ -55,14 +56,39 @@ namespace XanaduYonder.Runtime
         public static Button SwitchRow(Transform parent, string title, float x, float y, float w, float h,
             bool value, Action<bool> changed, bool interactable = true, int fontSize = 25)
         {
-            var row = UiFactory.Panel(parent, title, x, y, w, h, Row);
+            return SwitchControl(parent, title, x, y, w, h, value, changed, interactable, fontSize, false);
+        }
+
+        public static void FeedbackSwitches(Transform parent, float x, float y, float width, float height,
+            float gap, bool sound, bool haptics, Action<bool> changeSound, Action<bool> changeHaptics, int fontSize = 25)
+        {
+            float cell = (width - gap) * .5f;
+            SwitchControl(parent, "声音", x, y, cell, height, sound, changeSound, true, fontSize, true);
+            SwitchControl(parent, "触感", x + cell + gap, y, cell, height, haptics, changeHaptics, true, fontSize, true);
+        }
+
+        private static Button SwitchControl(Transform parent, string title, float x, float y, float w,
+            float h, bool value, Action<bool> changed, bool interactable, int fontSize, bool compact)
+        {
+            var row = DialogCorners.Panel(parent, title, x, y, w, h, Row, DialogCorners.Row);
             float inset = Mathf.Min(fontSize * .75f, w * .08f);
             float diameter = Mathf.Min(fontSize * 1.45f, h * .7f, w * .18f);
             float trackWidth = diameter * 1.85f;
-            Caption(row.transform, title, inset, w - trackWidth - 3 * inset, h, fontSize,
+            float gap = compact ? Mathf.Min(fontSize, w * .1f) : inset;
+            float labelWidth = Mathf.Max(1, w - trackWidth - 2 * inset - gap);
+            var label = Caption(row.transform, title, inset, labelWidth, h, fontSize,
                 interactable ? UiFactory.Ink : UiFactory.Muted, TextAnchor.MiddleLeft);
+            float trackX = w - inset - trackWidth;
+            if (compact)
+            {
+                labelWidth = Mathf.Min(labelWidth, Mathf.Ceil(label.preferredWidth));
+                float left = (w - labelWidth - gap - trackWidth) * .5f;
+                label.rectTransform.sizeDelta = new Vector2(labelWidth, h);
+                label.rectTransform.anchoredPosition = new Vector2(left, 0);
+                trackX = left + labelWidth + gap;
+            }
             var state = row.gameObject.AddComponent<DialogSwitch>();
-            state.Initialize(w - inset - trackWidth, (h - diameter) * .5f, diameter, trackWidth, value);
+            state.Initialize(trackX, (h - diameter) * .5f, diameter, trackWidth, value);
             var button = MenuButton(row, () =>
             {
                 bool next = !state.Value;

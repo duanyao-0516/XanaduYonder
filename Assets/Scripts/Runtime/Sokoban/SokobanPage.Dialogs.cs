@@ -13,7 +13,7 @@ namespace XanaduYonder.Runtime.Sokoban
             var overlay = DialogUi.ModalOverlay(root, "Sokoban dialog overlay");
             dialog = overlay.gameObject;
             float height=Mathf.Min(cssHeight*s,root.rect.height-64*s);
-            var panel=Shape(overlay.transform,"Sokoban dialog",0,0,width,height,22*s,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
+            var panel=Shape(overlay.transform,"Sokoban dialog",0,0,width,height,DialogCorners.Surface * .5f * s,DialogUi.Surface); UiFactory.Center(panel.rectTransform); panel.raycastTarget=true;
             panel.BorderWidth=s; panel.BorderColor=UiFactory.Hex("D4D8C9");
             float padding=(picker?25:29)*s;
             var headingText=Label(panel.transform,heading,padding,(picker?33:37)*s,width-2*padding,31*s,22,UiFactory.Ink,TextAnchor.MiddleLeft,FontStyle.Bold); headingText.name="Sokoban dialog title";
@@ -39,7 +39,7 @@ namespace XanaduYonder.Runtime.Sokoban
                     CloseDialog();
                     action?.Invoke();
                     Refresh();
-                }, main, Mathf.RoundToInt(13 * s)).name = name;
+                }, main, Mathf.RoundToInt(13 * s), unitScale: .5f * s).name = name;
             }
             ActionRow("Dialog primary", primary, primaryY, primaryAction, true);
             if (secondary != null) ActionRow("Dialog secondary", secondary, primaryY + 52 * s, secondaryAction);

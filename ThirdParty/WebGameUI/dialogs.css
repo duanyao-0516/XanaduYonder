@@ -1,6 +1,11 @@
 /* Shared phone menus. Gameplay canvases and on-screen controls never use these classes. */
 .xy-dialog {
   background: rgba(0, 0, 0, .40);
+  --xy-radius-surface: 16px;
+  --xy-radius-sheet: 20px 20px 0 0;
+  --xy-radius-row: 8px;
+  --xy-radius-action: 8px;
+  --xy-radius-pill: 999px;
   --xy-surface: #f8f7f1;
   --xy-ink: #173d35;
   --xy-accent: #276653;
@@ -30,6 +35,24 @@
   touch-action: manipulation;
 }
 .xy-switch .xy-switch-label { flex: 1; }
+.xy-feedback-switches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.xy-feedback-switches .xy-switch {
+  justify-content: center;
+  gap: min(3vw, 12px);
+  padding: 0 4px;
+  border: 0;
+  background: var(--xy-secondary);
+  border-radius: var(--xy-radius-row);
+}
+.xy-feedback-switches .xy-switch-label { flex: none; }
+.xy-feedback-switches .switch-value { display: none; }
+@media (max-width: 270px) {
+  .xy-feedback-switches { grid-template-columns: 1fr; }
+}
 .xy-switch .switch-value { font-size: 13px; color: var(--xy-muted); }
 .xy-switch .switch-track,
 .xy-dialog input.xy-switch-input {
@@ -41,7 +64,7 @@
   padding: 0;
   margin: 0;
   border: 0;
-  border-radius: 20px;
+  border-radius: var(--xy-radius-pill);
   background: #748579;
 }
 .xy-dialog input.xy-switch-input { appearance: none; -webkit-appearance: none; }
@@ -64,7 +87,7 @@
   min-height: 44px;
   padding: 8px 16px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--xy-radius-action);
   box-shadow: none;
   font: inherit;
   font-size: 15px;

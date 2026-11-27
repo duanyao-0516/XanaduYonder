@@ -26,7 +26,7 @@ namespace XanaduYonder.Runtime.Sudoku
             float height = Mathf.Clamp(300 + (message.Length / 21 + message.Split('\n').Length) * 34, 480, 860);
             if (more != null) height += 76;
             float footerHeight = more == null ? 0 : 76;
-            var panel = UiFactory.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, height, DialogUi.Surface).rectTransform;
+            var panel = DialogCorners.Panel(overlay.transform, "Sudoku dialog", 0, 0, 596, height, DialogUi.Surface, DialogCorners.Surface).rectTransform;
             UiFactory.Center(panel);
             UiFactory.Label(panel, title, 32, 30, 532, 62, 32, UiFactory.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             DialogUi.ScrollText(panel, message, 32, 110, 532, height - 300 - footerHeight, 24);

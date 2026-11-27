@@ -36,7 +36,7 @@ namespace XanaduYonder.Runtime.LinkMatch
             bool result=dialogKind=="won",help=dialogKind=="help",restart=dialogKind=="restart",timeout=dialogKind=="timeout";
             float height=(result?428:help?423:restart?294:timeout?294:346)*s;
             height=Math.Min(height,root.rect.height-48*s);
-            var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,20*s,DialogUi.Surface);
+            var panel=Shape(shade.transform,"LinkMatch dialog",(root.rect.width-width)/2,(root.rect.height-height)/2,width,height,DialogCorners.Surface * .5f * s,DialogUi.Surface);
             panel.BorderWidth=s;panel.BorderColor=UiFactory.Hex("D9DFD0");
             if(dialogKind=="patterns")
             {
@@ -96,7 +96,7 @@ namespace XanaduYonder.Runtime.LinkMatch
         }
         private void DialogButton(Transform parent,string name,string label,float x,float y,float width,Action action,bool primary)
         {
-            DialogUi.ActionButton(parent, label, x, y, width, 46 * S, action, primary, Mathf.RoundToInt(12 * S)).name = name;
+            DialogUi.ActionButton(parent, label, x, y, width, 46 * S, action, primary, Mathf.RoundToInt(12 * S), unitScale: .5f * S).name = name;
         }
     }
 }

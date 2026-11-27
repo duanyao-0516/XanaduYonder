@@ -14,8 +14,10 @@
     <header><h2 id="level-menu-title">设置</h2><button id="level-menu-close" type="button" aria-label="关闭弹窗">×</button></header>
     <div class="level-menu-scroll">
       <div id="level-menu-settings">
-        <button id="level-sound" class="xy-switch" type="button" role="switch" aria-labelledby="level-sound-label" aria-checked="true"><span id="level-sound-label" class="xy-switch-label">声音</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
-        <button id="level-haptics" class="xy-switch" type="button" role="switch" aria-labelledby="level-haptics-label" aria-checked="true"><span id="level-haptics-label" class="xy-switch-label">触感</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+        <div class="xy-feedback-switches">
+          <button id="level-sound" class="xy-switch" type="button" role="switch" aria-labelledby="level-sound-label" aria-checked="true"><span id="level-sound-label" class="xy-switch-label">声音</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+          <button id="level-haptics" class="xy-switch" type="button" role="switch" aria-labelledby="level-haptics-label" aria-checked="true"><span id="level-haptics-label" class="xy-switch-label">触感</span><span class="switch-value" aria-hidden="true">开启</span><span class="switch-track" aria-hidden="true"></span></button>
+        </div>
         <p class="level-hint">触感用于跳跃按键，也受系统触感设置影响。</p>
         <p id="level-feedback-status" role="status" hidden></p><button id="level-feedback-retry" class="xy-secondary" type="button" hidden>重试保存</button>
       </div>
